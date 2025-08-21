@@ -85,8 +85,28 @@ const TypeCascade = ({
       cascadeParent === 'administrator.sqlite' ? prevAdmAnswer || [] : parentId || [0];
     const nationalAdm = dataSource?.find((ds) => !ds?.parent);
     const defaultAdm = value?.[0] ? dataSource?.find((ds) => ds?.id === value[0]) : null;
+
+    // Helper function to resolve value (string name to ID or keep ID)
+    const resolveValue = (options, defaultValue) => {
+      if (!defaultValue) {
+        return null;
+      }
+
+      if (typeof defaultValue === 'string') {
+        const found = options.find((o) => o?.name === defaultValue);
+        return found ? found.id : null;
+      }
+
+      if (Array.isArray(value) && value.length) {
+        const found = options.find((o) => value.includes(o?.id));
+        return found?.id || options?.[options.length - 1]?.id || null;
+      }
+
+      return defaultValue;
+    };
+
+    // Handle case where defaultAdm exists (reconstruct path)
     if (defaultAdm) {
-      // split path and remove empty strings
       const pathParts = [
         ...defaultAdm.path
           .split('.')
@@ -96,13 +116,12 @@ const TypeCascade = ({
         defaultAdm?.id,
       ];
 
-      // Find the first matching element between pathParts and parentIDs
       const matchIndex = pathParts.findIndex((part) => parentIDs.includes(part));
       const modifiedPathParts = matchIndex !== -1 ? pathParts.slice(matchIndex) : pathParts;
 
       return modifiedPathParts.map((part, px) => {
         const options = dataSource?.filter((d) =>
-          px === 0 ? d?.id === part : d?.parent === modifiedPathParts?.[px - 1],
+          px === 0 ? parentIDs.includes(d?.id) : d?.parent === modifiedPathParts?.[px - 1],
         );
         return {
           options,
@@ -110,12 +129,14 @@ const TypeCascade = ({
         };
       });
     }
+
+    // Filter data source based on cascadeType and parentIDs
     const filterDs = dataSource
       ?.filter((ds) => {
         if (cascadeType && ds?.entity) {
           return ds.entity === cascadeType;
         }
-        return ds;
+        return true;
       })
       ?.filter((ds) => {
         if (cascadeParent) {
@@ -129,26 +150,29 @@ const TypeCascade = ({
         );
       });
 
+    // Handle administrator.sqlite case
     if (cascadeParent === 'administrator.sqlite') {
-      if (filterDs?.length) {
-        const defaultValue = filterDs.find(
-          (d) => d?.name === value?.[0] || d?.id === value?.[0],
-        )?.id;
-        return [
-          {
-            options: filterDs,
-            value: defaultValue || value?.[0] || null,
-          },
-        ];
-      }
-      return [];
+      if (!filterDs?.length) return [];
+
+      const defaultValue = filterDs.find((d) => d?.name === value?.[0] || d?.id === value?.[0])?.id;
+
+      return [
+        {
+          options: filterDs,
+          value: defaultValue || value?.[0] || null,
+        },
+      ];
     }
+
+    // Group by parent and handle national group special case
     const groupedDs = groupBy(filterDs, 'parent');
-    // Modify groupedDs if one of the group key is national id
-    if (parentIDs.length > 1 && Object.keys(groupedDs).length > 1) {
+    const hasMultipleGroups = parentIDs.length > 1 && Object.keys(groupedDs).length > 1;
+
+    if (hasMultipleGroups) {
       const nationalGroup = Object.entries(groupedDs).find(
         ([key]) => parseInt(key, 10) === nationalAdm?.id,
       );
+
       if (nationalGroup) {
         return [
           {
@@ -157,45 +181,22 @@ const TypeCascade = ({
           },
         ];
       }
-      return Object.values(groupedDs).map((options, ox) => {
-        const defaultValue = value?.[ox] || null;
-        let answer = defaultValue;
-        if (typeof defaultValue === 'string') {
-          const found = options.find((o) => o?.name === defaultValue);
-          if (found) {
-            answer = found.id;
-          }
-        }
 
-        if (Array.isArray(value) && value.length) {
-          const found = options.find((o) => value.includes(o?.id));
-          answer = found?.id || options?.[options.length - 1]?.id || null;
-        }
-        return {
-          options,
-          value: answer,
-        };
-      });
+      // For multiple groups without national group, take the first available group
+      const firstGroupOptions = Object.values(groupedDs)[0];
+      return [
+        {
+          options: firstGroupOptions,
+          value: resolveValue(firstGroupOptions, value?.[0]),
+        },
+      ];
     }
-    return Object.values(groupedDs).map((options, ox) => {
-      const defaultValue = value?.[ox] || null;
-      let answer = defaultValue;
-      if (typeof defaultValue === 'string') {
-        const found = options.find((o) => o?.name === defaultValue);
-        if (found) {
-          answer = found.id;
-        }
-      }
 
-      if (Array.isArray(value) && value.length) {
-        const found = options.find((o) => value.includes(o?.id));
-        answer = found?.id || options?.[options.length - 1]?.id || null;
-      }
-      return {
-        options,
-        value: answer,
-      };
-    });
+    // Map all grouped data to dropdown items (single group case)
+    return Object.values(groupedDs).map((options, ox) => ({
+      options,
+      value: resolveValue(options, value?.[ox]),
+    }));
   }, [dataSource, cascadeParent, cascadeType, parentId, prevAdmAnswer, value]);
 
   const loadCascadeData = useCallback(async () => {
