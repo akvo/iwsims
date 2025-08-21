@@ -38,9 +38,10 @@ const SubtitleContent = ({ index, answer, type, source = null, option = [] }) =>
       return;
     }
     if (source) {
-      const [csValue, db] = await cascades.loadDataSource(source, cascadeID);
-      setCascadeValue(csValue);
-      await db.closeAsync();
+      const csValue = await cascades.loadDataSource(source, cascadeID);
+      if (csValue) {
+        setCascadeValue(csValue);
+      }
     }
   }, [answer, source]);
 
