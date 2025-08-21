@@ -21,6 +21,7 @@ const TypeCascade = ({
 }) => {
   const [dataSource, setDataSource] = useState([]);
   const [dropdownItems, setDropdownItems] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
   const prevAdmAnswer = FormState.useState((s) => s.prevAdmAnswer);
   const cascadesValue = FormState.useState((s) => s.cascades?.[id]);
   const activeLang = FormState.useState((s) => s.lang);
@@ -83,6 +84,32 @@ const TypeCascade = ({
     const parentIDs =
       cascadeParent === 'administrator.sqlite' ? prevAdmAnswer || [] : parentId || [0];
     const nationalAdm = dataSource?.find((ds) => !ds?.parent);
+    const defaultAdm = value?.[0] ? dataSource?.find((ds) => ds?.id === value[0]) : null;
+    if (defaultAdm) {
+      // split path and remove empty strings
+      const pathParts = [
+        ...defaultAdm.path
+          .split('.')
+          .filter(Boolean)
+          .map((part) => part.trim())
+          .map((part) => parseInt(part, 10)),
+        defaultAdm?.id,
+      ];
+
+      // Find the first matching element between pathParts and parentIDs
+      const matchIndex = pathParts.findIndex((part) => parentIDs.includes(part));
+      const modifiedPathParts = matchIndex !== -1 ? pathParts.slice(matchIndex) : pathParts;
+
+      return modifiedPathParts.map((part, px) => {
+        const options = dataSource?.filter((d) =>
+          px === 0 ? d?.id === part : d?.parent === modifiedPathParts?.[px - 1],
+        );
+        return {
+          options,
+          value: part,
+        };
+      });
+    }
     const filterDs = dataSource
       ?.filter((ds) => {
         if (cascadeType && ds?.entity) {
@@ -172,27 +199,29 @@ const TypeCascade = ({
   }, [dataSource, cascadeParent, cascadeType, parentId, prevAdmAnswer, value]);
 
   const loadCascadeData = useCallback(async () => {
-    const [rows, _db] = await cascades.loadDataSource(source);
-    setDataSource(rows);
-    // Close database connection
-    await _db.closeAsync();
+    if (!isLoaded && source?.file) {
+      setIsLoaded(true);
 
-    // Update entity options if cascadeType is defined
-    if (cascadeType) {
-      FormState.update((s) => {
-        s.entityOptions[id] = rows?.filter((a) => a?.entity === cascadeType);
-      });
+      const rows = await cascades.loadDataSource(source);
+      setDataSource(rows);
+
+      // Update entity options if cascadeType is defined
+      if (cascadeType) {
+        FormState.update((s) => {
+          s.entityOptions[id] = rows?.filter((a) => a?.entity === cascadeType);
+        });
+      }
+      // Set initial cascade
+      if (!cascadesValue && value?.length) {
+        const cascadeID = value.slice(-1)?.[0];
+        // Filter rows with cascadeID instead of making another loadDataSource call
+        const csValue = rows?.find((row) => row.id === cascadeID);
+        FormState.update((s) => {
+          s.cascades = { ...s.cascades, [id]: csValue?.full_path_name };
+        });
+      }
     }
-    // Set initial cascade
-    if (!cascadesValue && value?.length) {
-      const cascadeID = value.slice(-1)?.[0];
-      // Filter rows with cascadeID instead of making another loadDataSource call
-      const csValue = rows?.find((row) => row.id === cascadeID);
-      FormState.update((s) => {
-        s.cascades = { ...s.cascades, [id]: csValue?.full_path_name };
-      });
-    }
-  }, [source, id, value, cascadesValue, cascadeType]);
+  }, [source, id, value, cascadesValue, cascadeType, isLoaded]);
 
   useEffect(() => {
     loadCascadeData();
