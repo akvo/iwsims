@@ -1,4 +1,3 @@
-import * as BackgroundFetch from 'expo-background-fetch';
 import * as Network from 'expo-network';
 import { waitFor } from '@testing-library/react-native';
 import api from '../api';
@@ -10,7 +9,6 @@ import { SUBMISSION_TYPES } from '../constants';
 jest.mock('../api');
 jest.mock('../../database/crud');
 jest.mock('../notification');
-jest.mock('expo-background-fetch');
 jest.mock('expo-task-manager');
 jest.mock('expo-network');
 
@@ -19,32 +17,6 @@ const append = jest.fn();
 global.FormData = () => ({ entries, append });
 
 describe('backgroundTask', () => {
-  const mockTaskName = 'taskName';
-  const mockTaskOption = {
-    minimumInterval: 3600,
-    startOnBoot: true,
-    stopOnTerminate: false,
-  };
-
-  describe('registerBackgroundTask', () => {
-    it('should register a background task', async () => {
-      await backgroundTask.registerBackgroundTask(mockTaskName);
-      await waitFor(() =>
-        expect(BackgroundFetch.registerTaskAsync).toHaveBeenCalledWith(
-          mockTaskName,
-          mockTaskOption,
-        ),
-      );
-    });
-  });
-
-  describe('unregisterBackgroundTask', () => {
-    it('should unregister a background task', async () => {
-      await backgroundTask.unregisterBackgroundTask(mockTaskName);
-      expect(BackgroundFetch.unregisterTaskAsync).toHaveBeenCalledWith(mockTaskName);
-    });
-  });
-
   describe('syncFormSubmission', () => {
     const mockSession = { token: 'eyjtoken', passcode: '12345', name: 'John Doe' };
     const mockForm = {

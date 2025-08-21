@@ -1,20 +1,10 @@
-import * as BackgroundFetch from 'expo-background-fetch';
-import * as TaskManager from 'expo-task-manager';
 import * as Network from 'expo-network';
 import * as Sentry from '@sentry/react-native';
-import * as SQLite from 'expo-sqlite';
 import api from './api';
-import { crudForms, crudDataPoints, crudUsers, crudConfig } from '../database/crud';
+import { crudForms, crudDataPoints, crudUsers } from '../database/crud';
 import notification from './notification';
-import crudJobs from '../database/crud/crud-jobs';
 import { UIState } from '../store';
-import {
-  DATABASE_NAME,
-  QUESTION_TYPES,
-  SYNC_FORM_SUBMISSION_TASK_NAME,
-  SYNC_FORM_VERSION_TASK_NAME,
-  SYNC_STATUS,
-} from './constants';
+import { QUESTION_TYPES, SYNC_FORM_SUBMISSION_TASK_NAME, SYNC_STATUS } from './constants';
 import MIME_TYPES from './mime_types';
 
 const syncFormVersion = async (
@@ -64,39 +54,6 @@ const syncFormVersion = async (
     Sentry.captureMessage('[background-task] syncFormVersion failed');
     Sentry.captureException(err);
   }
-};
-
-const registerBackgroundTask = async (TASK_NAME, settingsValue = null) => {
-  try {
-    const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
-      useNewConnection: true,
-    });
-    const config = await crudConfig.getConfig(db);
-    const syncInterval = settingsValue || parseInt(config?.syncInterval, 10) || 3600;
-    const res = await BackgroundFetch.registerTaskAsync(TASK_NAME, {
-      minimumInterval: syncInterval,
-      stopOnTerminate: false, // android only,
-      startOnBoot: true, // android only
-    });
-    await db.closeAsync();
-    return res;
-  } catch (err) {
-    return Promise.reject(err);
-  }
-};
-
-const unregisterBackgroundTask = async (TASK_NAME) => {
-  try {
-    const res = await BackgroundFetch.unregisterTaskAsync(TASK_NAME);
-    return res;
-  } catch (err) {
-    return Promise.reject(err);
-  }
-};
-
-const backgroundTaskStatus = async (TASK_NAME) => {
-  await BackgroundFetch.getStatusAsync();
-  await TaskManager.isTaskRegisteredAsync(TASK_NAME);
 };
 
 const handleOnUploadFiles = async (
@@ -156,7 +113,7 @@ const handleOnUploadFiles = async (
 const syncFormSubmission = async (db, activeJob = {}) => {
   const { isConnected } = await Network.getNetworkStateAsync();
   if (!isConnected) {
-    return BackgroundFetch.BackgroundFetchResult.NoData;
+    return;
   }
   try {
     // get token
@@ -233,11 +190,6 @@ const syncFormSubmission = async (db, activeJob = {}) => {
         await crudDataPoints.saveAsPending(db, d.id);
       }
 
-      if (activeJob?.id && failed === 0) {
-        // Delete job if all data points are successfully synced
-        await crudJobs.deleteJob(db, activeJob.id);
-      }
-
       if (success === totalData) {
         UIState.update((s) => {
           s.isManualSynced = false;
@@ -263,61 +215,17 @@ const syncFormSubmission = async (db, activeJob = {}) => {
         });
       }
     });
-
-    return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
     Sentry.captureMessage(`[background-task] syncFormSubmission failed`);
     Sentry.captureException(error);
-
-    if (activeJob?.id) {
-      // Delete job immediately on error
-      await crudJobs.deleteJob(db, activeJob.id);
-    }
-
-    return Promise.reject(
-      new Error({ errorCode: error?.response?.status, message: error?.message }),
-    );
   }
 };
 
 const backgroundTaskHandler = () => ({
   syncFormVersion,
-  registerBackgroundTask,
-  unregisterBackgroundTask,
-  backgroundTaskStatus,
   syncFormSubmission,
 });
 
 const backgroundTask = backgroundTaskHandler();
-
-export const defineSyncFormVersionTask = () =>
-  TaskManager.defineTask(SYNC_FORM_VERSION_TASK_NAME, async () => {
-    try {
-      await syncFormVersion({
-        sendPushNotification: notification.sendPushNotification,
-        showNotificationOnly: true,
-      });
-      return BackgroundFetch.BackgroundFetchResult.NewData;
-    } catch (err) {
-      Sentry.captureMessage(`[${SYNC_FORM_VERSION_TASK_NAME}] defineSyncFormVersionTask failed`);
-      Sentry.captureException(err);
-      return BackgroundFetch.Result.Failed;
-    }
-  });
-
-export const defineSyncFormSubmissionTask = () => {
-  TaskManager.defineTask(SYNC_FORM_SUBMISSION_TASK_NAME, async () => {
-    try {
-      await syncFormSubmission();
-      return BackgroundFetch.BackgroundFetchResult.NewData;
-    } catch (err) {
-      Sentry.captureMessage(
-        `[${SYNC_FORM_SUBMISSION_TASK_NAME}] defineSyncFormSubmissionTask failed`,
-      );
-      Sentry.captureException(err);
-      return BackgroundFetch.Result.Failed;
-    }
-  });
-};
 
 export default backgroundTask;
