@@ -2,22 +2,16 @@ import { useCallback, useEffect } from 'react';
 import * as Network from 'expo-network';
 import { useSQLiteContext } from 'expo-sqlite';
 import * as Sentry from '@sentry/react-native';
+import Storage from 'expo-sqlite/kv-store';
 import { BuildParamsState, DatapointSyncState, UIState, UserState } from '../store';
 import { backgroundTask } from '../lib';
-import crudJobs from '../database/crud/crud-jobs';
-import { crudConfig, crudDataPoints, crudForms } from '../database/crud';
+import { crudDataPoints, crudForms } from '../database/crud';
 import {
   downloadDatapointsJson,
   fetchDatapoints,
   fetchDraftDatapoints,
 } from '../lib/sync-datapoints';
-import {
-  jobStatus,
-  MAX_ATTEMPT,
-  SYNC_DATAPOINT_JOB_NAME,
-  SYNC_FORM_SUBMISSION_TASK_NAME,
-  SYNC_STATUS,
-} from '../lib/constants';
+import { SYNC_STATUS } from '../lib/constants';
 /**
  * This sync only works in the foreground service
  */
@@ -31,81 +25,17 @@ const SyncService = () => {
 
   const onSync = useCallback(async () => {
     const pendingToSync = await crudDataPoints.selectSubmissionToSync(db);
-    const activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
-    const settings = await crudConfig.getConfig(db);
-    if (pendingToSync?.length === 0 && activeJob?.id) {
-      /**
-       * If there are no pending items to sync and the job is still active,
-       * delete the job.
-       */
-      await crudJobs.deleteJob(db, activeJob.id);
+    const syncWifiOnly = (await Storage.getItem('syncWifiOnly')) === '1';
+    if (pendingToSync?.length === 0) {
       return;
     }
 
     const { type: networkType } = await Network.getNetworkStateAsync();
-    if (settings?.syncWifiOnly && networkType !== Network.NetworkStateType.WIFI) {
+    if (syncWifiOnly && networkType !== Network.NetworkStateType.WIFI) {
       return;
     }
 
-    if (activeJob?.status === jobStatus.ON_PROGRESS) {
-      if (activeJob.attempt < MAX_ATTEMPT) {
-        /**
-         * Job is still in progress,
-         * but we still have pending items; then increase the attempt value.
-         */
-        await crudJobs.updateJob(db, activeJob.id, {
-          attempt: activeJob.attempt + 1,
-        });
-      }
-
-      if (activeJob.attempt === MAX_ATTEMPT) {
-        /**
-         * If the status is still IN PROGRESS and has reached the maximum attempts,
-         * set it to PENDING when there are still pending sync items,
-         * delete the job when it's finish and there are no pending items.
-         */
-        if (pendingToSync) {
-          UIState.update((s) => {
-            s.statusBar = {
-              type: SYNC_STATUS.re_sync,
-              bgColor: '#d97706',
-              icon: 'repeat',
-            };
-          });
-          await crudJobs.updateJob(db, activeJob.id, {
-            status: jobStatus.PENDING,
-            attempt: 0, // RESET attempt to 0
-          });
-        } else {
-          UIState.update((s) => {
-            s.statusBar = {
-              type: SYNC_STATUS.success,
-              bgColor: '#16a34a',
-              icon: 'checkmark-done',
-            };
-            s.refreshPage = true;
-          });
-          await crudJobs.deleteJob(db, activeJob.id);
-        }
-      }
-    }
-
-    if (
-      activeJob?.status === jobStatus.PENDING ||
-      (activeJob?.status === jobStatus.FAILED && activeJob?.attempt <= MAX_ATTEMPT)
-    ) {
-      UIState.update((s) => {
-        s.statusBar = {
-          type: SYNC_STATUS.on_progress,
-          bgColor: '#2563eb',
-          icon: 'sync',
-        };
-      });
-      await crudJobs.updateJob(db, activeJob.id, {
-        status: jobStatus.ON_PROGRESS,
-      });
-      await backgroundTask.syncFormSubmission(db, activeJob);
-    }
+    await backgroundTask.syncFormSubmission(db);
   }, [db]);
 
   useEffect(() => {
@@ -124,84 +54,65 @@ const SyncService = () => {
   }, [syncInSecond, isOnline, isManualSynced, onSync]);
 
   const onSyncDataPoint = useCallback(async () => {
-    const activeJob = await crudJobs.getActiveJob(db, SYNC_DATAPOINT_JOB_NAME);
-
     DatapointSyncState.update((s) => {
       s.added = false;
-      s.inProgress = !!activeJob;
+      s.inProgress = true;
     });
 
-    if (activeJob && activeJob.status === jobStatus.PENDING && activeJob.attempt < MAX_ATTEMPT) {
-      await crudJobs.updateJob(db, activeJob.id, {
-        status: jobStatus.ON_PROGRESS,
+    try {
+      const monitoringRes = await fetchDatapoints();
+      const apiURLs = monitoringRes.map(
+        ({
+          url,
+          form_id: formId,
+          administration_id: administrationId,
+          last_updated: lastUpdated,
+        }) => ({
+          url,
+          formId,
+          administrationId,
+          lastUpdated,
+        }),
+      );
+
+      // Process all datapoints sequentially without transaction wrapper
+      // Individual datapoint operations will handle their own transactions
+      const processDatapointSequentially = async (urls) => {
+        // Process URLs sequentially using reduce to avoid for...of loop
+        await urls.reduce(async (previousPromise, urlData, index) => {
+          await previousPromise;
+          try {
+            await downloadDatapointsJson(db, urlData, userId);
+            // Update progress
+            DatapointSyncState.update((s) => {
+              s.progress = ((index + 1) / urls.length) * 100;
+            });
+          } catch (error) {
+            // Continue processing other datapoints even if one fails
+            Sentry.captureMessage(`Error downloading datapoint JSON for URL ${urlData.url}`);
+            Sentry.captureException(error);
+          }
+        }, Promise.resolve());
+      };
+
+      await processDatapointSequentially(apiURLs);
+
+      DatapointSyncState.update((s) => {
+        s.inProgress = false;
       });
 
-      try {
-        const monitoringRes = await fetchDatapoints();
-        const apiURLs = monitoringRes.map(
-          ({
-            url,
-            form_id: formId,
-            administration_id: administrationId,
-            last_updated: lastUpdated,
-          }) => ({
-            url,
-            formId,
-            administrationId,
-            lastUpdated,
-          }),
-        );
-
-        // Process all datapoints sequentially without transaction wrapper
-        // Individual datapoint operations will handle their own transactions
-        const processDatapointSequentially = async (urls) => {
-          // Process URLs sequentially using reduce to avoid for...of loop
-          await urls.reduce(async (previousPromise, urlData, index) => {
-            await previousPromise;
-            try {
-              await downloadDatapointsJson(db, urlData, activeJob.user);
-              // Update progress
-              DatapointSyncState.update((s) => {
-                s.progress = ((index + 1) / urls.length) * 100;
-              });
-            } catch (error) {
-              // Continue processing other datapoints even if one fails
-              Sentry.captureMessage(`Error downloading datapoint JSON for URL ${urlData.url}`);
-              Sentry.captureException(error);
-            }
-          }, Promise.resolve());
-        };
-
-        await processDatapointSequentially(apiURLs);
-
-        await crudJobs.deleteJob(db, activeJob.id);
-
-        DatapointSyncState.update((s) => {
-          s.inProgress = false;
-        });
-
-        UIState.update((s) => {
-          s.refreshPage = true;
-        });
-      } catch (error) {
-        DatapointSyncState.update((s) => {
-          s.added = true;
-        });
-        await crudJobs.updateJob(db, activeJob.id, {
-          status: jobStatus.PENDING,
-          attempt: activeJob.attempt + 1,
-          info: String(error),
-        });
-      }
-    }
-
-    if (activeJob && activeJob.status === jobStatus.PENDING && activeJob.attempt === MAX_ATTEMPT) {
-      await crudJobs.deleteJob(db, activeJob.id);
+      UIState.update((s) => {
+        s.refreshPage = true;
+      });
+    } catch (error) {
+      DatapointSyncState.update((s) => {
+        s.added = true;
+      });
       DatapointSyncState.update((s) => {
         s.inProgress = false;
       });
     }
-  }, [db]);
+  }, [db, userId]);
 
   const onSyncDraftDatapoint = useCallback(async () => {
     const allDraftSynced = await crudDataPoints.getDraftPendingSync(db);
