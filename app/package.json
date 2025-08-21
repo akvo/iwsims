@@ -1,6 +1,6 @@
 {
   "name": "dws-datapro-mobile",
-  "version": "4.1.16",
+  "version": "4.1.17",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start --port 19000",
