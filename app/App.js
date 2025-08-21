@@ -2,29 +2,17 @@ import React, { Suspense, useCallback, useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import NetInfo from '@react-native-community/netinfo';
 import * as Notifications from 'expo-notifications';
-import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
 import * as Sentry from '@sentry/react-native';
 import * as Location from 'expo-location';
-import * as SQLite from 'expo-sqlite';
 import { SENTRY_DSN, SENTRY_ENV } from '@env';
 import { SQLiteProvider } from 'expo-sqlite';
-
+import Storage from 'expo-sqlite/kv-store';
 import Navigation, { reactNavigationIntegration } from './src/navigation';
 import { UIState, AuthState, UserState, BuildParamsState } from './src/store';
-import { crudUsers, crudConfig, crudDataPoints } from './src/database/crud';
+import { crudUsers, crudDataPoints } from './src/database/crud';
 import { api } from './src/lib';
 import { NetworkStatusBar, SyncService } from './src/components';
-import backgroundTask, { defineSyncFormVersionTask } from './src/lib/background-task';
-import crudJobs from './src/database/crud/crud-jobs';
-import {
-  SYNC_FORM_SUBMISSION_TASK_NAME,
-  SYNC_FORM_VERSION_TASK_NAME,
-  DATABASE_NAME,
-  DATABASE_VERSION,
-  MAX_ATTEMPT,
-  jobStatus,
-} from './src/lib/constants';
+import { DATABASE_NAME, DATABASE_VERSION } from './src/lib/constants';
 import { tables } from './src/database';
 import sql from './src/database/sql';
 import { m03 } from './src/database/migrations';
@@ -39,62 +27,6 @@ export const setNotificationHandler = () =>
   });
 
 setNotificationHandler();
-defineSyncFormVersionTask();
-
-TaskManager.defineTask(SYNC_FORM_SUBMISSION_TASK_NAME, async () => {
-  try {
-    const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
-      useNewConnection: true,
-    });
-    const pendingToSync = await crudDataPoints.selectSubmissionToSync(db);
-    const activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
-
-    if (activeJob?.status === jobStatus.ON_PROGRESS) {
-      if (activeJob.attempt < MAX_ATTEMPT && pendingToSync.length) {
-        /**
-         * Job is still in progress,
-         * but we still have pending items; then increase the attempt value.
-         */
-        await crudJobs.updateJob(db, activeJob.id, {
-          attempt: activeJob.attempt + 1,
-        });
-      }
-
-      if (activeJob.attempt === MAX_ATTEMPT) {
-        /**
-         * If the status is still IN PROGRESS and has reached the maximum attempts,
-         * set it to PENDING when there are still pending sync items,
-         * delete the job when it's finish and there are no pending items.
-         */
-
-        if (pendingToSync.length) {
-          await crudJobs.updateJob(db, activeJob.id, {
-            status: jobStatus.PENDING,
-            attempt: 0, // RESET attempt to 0
-          });
-        } else {
-          await crudJobs.deleteJob(db, activeJob.id);
-        }
-      }
-    }
-
-    if (
-      activeJob?.status === jobStatus.PENDING ||
-      (activeJob?.status === jobStatus.FAILED && activeJob?.attempt <= MAX_ATTEMPT)
-    ) {
-      await crudJobs.updateJob(db, activeJob.id, {
-        status: jobStatus.ON_PROGRESS,
-      });
-      await backgroundTask.syncFormSubmission(db, activeJob);
-    }
-    await db.closeAsync();
-    return BackgroundFetch.BackgroundFetchResult.NewData;
-  } catch (err) {
-    Sentry.captureMessage(`[${SYNC_FORM_SUBMISSION_TASK_NAME}] Define task manager failed`);
-    Sentry.captureException(err);
-    return BackgroundFetch.Result.Failed;
-  }
-});
 
 Sentry.init({
   dsn: SENTRY_DSN,
@@ -117,46 +49,95 @@ Sentry.init({
 const App = () => {
   const serverURLState = BuildParamsState.useState((s) => s.serverURL);
   const syncValue = BuildParamsState.useState((s) => s.dataSyncInterval);
-  const gpsThreshold = BuildParamsState.useState((s) => s.gpsThreshold);
-  const gpsAccuracyLevel = BuildParamsState.useState((s) => s.gpsAccuracyLevel);
-  const geoLocationTimeout = BuildParamsState.useState((s) => s.geoLocationTimeout);
-  const appVersion = BuildParamsState.useState((s) => s.appVersion);
+  const gpsThresholdValue = BuildParamsState.useState((s) => s.gpsThreshold);
+  const gpsAccuracyLevelValue = BuildParamsState.useState((s) => s.gpsAccuracyLevel);
+  const geoLocationTimeoutValue = BuildParamsState.useState((s) => s.geoLocationTimeout);
+  const appVersionValue = BuildParamsState.useState((s) => s.appVersion);
   const locationIsGranted = UserState.useState((s) => s.locationIsGranted);
 
   const handleInitConfig = async (db) => {
-    const configExist = await crudConfig.getConfig(db);
-    const serverURL = configExist?.serverURL || serverURLState;
-    const syncInterval = configExist?.syncInterval || syncValue;
-    if (!configExist) {
-      await crudConfig.addConfig(db, {
-        appVersion,
-        serverURL,
-        syncInterval,
-        gpsThreshold,
-        gpsAccuracyLevel,
-        geoLocationTimeout,
-      });
-    }
-    if (serverURL) {
+    /**
+     * Server URL
+     */
+    const serverURL = await Storage.getItem('serverURL');
+    if (!serverURL) {
+      await Storage.setItem('serverURL', serverURLState);
+      api.setServerURL(serverURLState);
+    } else {
       BuildParamsState.update((s) => {
         s.serverURL = serverURL;
       });
       api.setServerURL(serverURL);
     }
-    if (configExist) {
-      /**
-       * Update settings values from database
-       */
+    /**
+     * App Version
+     */
+    const appVersion = await Storage.getItem('appVersion');
+    if (!appVersion) {
+      await Storage.setItem('appVersion', appVersionValue);
+    } else {
       BuildParamsState.update((s) => {
-        s.dataSyncInterval = configExist.syncInterval;
-        s.gpsThreshold = configExist.gpsThreshold;
-        s.gpsAccuracyLevel = configExist.gpsAccuracyLevel;
-        s.geoLocationTimeout = configExist.geoLocationTimeout;
+        s.appVersion = appVersion;
       });
+    }
+    /**
+     * Sync Interval
+     */
+    const syncInterval = await Storage.getItem('syncInterval');
+    if (!syncInterval) {
+      await Storage.setItem('syncInterval', `${syncValue}`);
+    } else {
+      BuildParamsState.update((s) => {
+        s.dataSyncInterval = parseInt(syncInterval, 10);
+      });
+    }
+    /**
+     * GPS Threshold
+     */
+    const gpsThreshold = await Storage.getItem('gpsThreshold');
+    if (!gpsThreshold) {
+      await Storage.setItem('gpsThreshold', `${gpsThresholdValue}`);
+    } else {
+      BuildParamsState.update((s) => {
+        s.gpsThreshold = parseInt(gpsThreshold, 10);
+      });
+    }
+    /**
+     * GPS Accuracy Level
+     */
+    const gpsAccuracyLevel = await Storage.getItem('gpsAccuracyLevel');
+    if (!gpsAccuracyLevel) {
+      await Storage.setItem('gpsAccuracyLevel', `${gpsAccuracyLevelValue}`);
+    } else {
+      BuildParamsState.update((s) => {
+        s.gpsAccuracyLevel = parseInt(gpsAccuracyLevel, 10);
+      });
+    }
 
-      UserState.update((s) => {
-        s.syncWifiOnly = configExist?.syncWifiOnly;
+    /**
+     * Geo Location Timeout
+     */
+    const geoLocationTimeout = await Storage.getItem('geoLocationTimeout');
+    if (!geoLocationTimeout) {
+      await Storage.setItem('geoLocationTimeout', `${geoLocationTimeoutValue}`);
+    } else {
+      BuildParamsState.update((s) => {
+        s.geoLocationTimeout = parseInt(geoLocationTimeout, 10);
       });
+    }
+
+    /**
+     * Check if there are new datapoints to save
+     */
+    const newDatapoints = await Storage.getItem('new_datapoints');
+    const parsedItems = newDatapoints ? JSON.parse(newDatapoints) : [];
+
+    if (parsedItems.length > 0) {
+      parsedItems.forEach((item) => {
+        crudDataPoints.saveDataPoint(db, item);
+      });
+      // Clear the storage after saving
+      await Storage.removeItem('new_datapoints');
     }
   };
 
@@ -237,25 +218,6 @@ const App = () => {
       unsubscribe();
     };
   }, []);
-
-  const handleOnRegisterTask = useCallback(async () => {
-    try {
-      const allTasks = await TaskManager.getRegisteredTasksAsync();
-
-      allTasks.forEach(async (a) => {
-        if ([SYNC_FORM_SUBMISSION_TASK_NAME, SYNC_FORM_VERSION_TASK_NAME].includes(a.taskName)) {
-          await backgroundTask.registerBackgroundTask(a.taskName);
-        }
-      });
-    } catch (error) {
-      Sentry.captureMessage(`handleOnRegisterTask`);
-      Sentry.captureException(error);
-    }
-  }, []);
-
-  useEffect(() => {
-    handleOnRegisterTask();
-  }, [handleOnRegisterTask]);
 
   const requestAccessLocation = useCallback(async () => {
     if (locationIsGranted) {
