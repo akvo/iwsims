@@ -5,11 +5,11 @@ import { Formik, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSQLiteContext } from 'expo-sqlite';
-
+import Storage from 'expo-sqlite/kv-store';
 import { BaseLayout } from '../components';
 import { UserState, UIState, AuthState } from '../store';
 import { api, cascades, i18n } from '../lib';
-import { crudForms, crudUsers, crudConfig } from '../database/crud';
+import { crudForms, crudUsers } from '../database/crud';
 
 const AddUser = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
@@ -89,8 +89,7 @@ const AddUser = ({ navigation }) => {
         AuthState.update((s) => {
           s.token = bearerToken;
         });
-
-        await crudConfig.updateConfig(db, { authenticationCode: name });
+        await Storage.setItem('authenticationCode', name);
 
         const userID = await handleActiveUser({ ...apiData, passcode: name });
 

@@ -4,11 +4,12 @@ import { View, StyleSheet, Platform, ToastAndroid } from 'react-native';
 import { Input, Button, Text } from '@rneui/themed';
 import * as Sentry from '@sentry/react-native';
 import { useSQLiteContext } from 'expo-sqlite';
+import Storage from 'expo-sqlite/kv-store';
 
 import { CenterLayout, LogoImage } from '../components';
 import { api, cascades, i18n } from '../lib';
 import { AuthState, UserState, UIState, BuildParamsState } from '../store';
-import { crudForms, crudUsers, crudConfig } from '../database/crud';
+import { crudForms, crudUsers } from '../database/crud';
 
 const ToggleEye = ({ hidden, onPress }) => {
   const iconName = hidden ? 'eye' : 'eye-off';
@@ -100,8 +101,8 @@ const AuthForm = ({ navigation }) => {
         // save session
         const bearerToken = data.syncToken;
         api.setToken(bearerToken);
-
-        await crudConfig.updateConfig(db, { authenticationCode: passcode });
+        // save authentication code
+        Storage.setItem('authenticationCode', passcode);
         await cascades.createSqliteDir();
         // update auth state
         AuthState.update((s) => {

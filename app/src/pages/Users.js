@@ -11,10 +11,12 @@ import {
 import { Button, Skeleton } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSQLiteContext } from 'expo-sqlite';
+import Storage from 'expo-sqlite/kv-store';
+
 import { BaseLayout } from '../components';
 import { UserState, UIState, AuthState } from '../store';
 import { api, i18n } from '../lib';
-import { crudConfig, crudUsers } from '../database/crud';
+import { crudUsers } from '../database/crud';
 
 const Users = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,7 @@ const Users = ({ navigation, route }) => {
   const handleSelectUser = async ({ id, name, password, token }) => {
     await crudUsers.toggleActive(db, { id: currUserID, active: 1 });
     await crudUsers.toggleActive(db, { id, active: 0 });
-    await crudConfig.updateConfig(db, { authenticationCode: password });
+    await Storage.setItem('authenticationCode', password);
     api.setToken(token);
 
     AuthState.update((s) => {

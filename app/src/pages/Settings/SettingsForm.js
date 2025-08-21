@@ -1,15 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Switch } from '@rneui/themed';
-import * as Crypto from 'expo-crypto';
-import { useSQLiteContext } from 'expo-sqlite';
+import Storage from 'expo-sqlite/kv-store';
+
 import { BaseLayout } from '../../components';
 import { config } from './config';
 import { BuildParamsState, UIState, AuthState, UserState } from '../../store';
 import DialogForm from './DialogForm';
 import { i18n } from '../../lib';
 import { accuracyLevels } from '../../lib/loc';
-import { crudConfig } from '../../database/crud';
 
 const SettingsForm = ({ route }) => {
   const [edit, setEdit] = useState(null);
@@ -48,7 +47,6 @@ const SettingsForm = ({ route }) => {
   const nonEnglish = lang !== 'en';
   const curConfig = config.find((c) => c.id === route?.params?.id);
   const pageTitle = nonEnglish ? i18n.transform(lang, curConfig)?.name : route?.params?.name;
-  const db = useSQLiteContext();
 
   const editState = useMemo(() => {
     if (edit && edit?.key) {
@@ -69,30 +67,6 @@ const SettingsForm = ({ route }) => {
     }
   };
 
-  const handleUpdateOnDB = async (field, value) => {
-    const configFields = [
-      'apVersion',
-      'authenticationCode',
-      'serverURL',
-      'syncInterval',
-      'syncWifiOnly',
-      'lang',
-      'gpsThreshold',
-      'gpsAccuracyLevel',
-      'geoLocationTimeout',
-    ];
-    if (configFields.includes(field)) {
-      await crudConfig.updateConfig(db, { [field]: value });
-    }
-    if (field === 'name') {
-      await crudConfig.updateConfig(db, { name: value });
-    }
-    if (field === 'password') {
-      const encrypted = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA1, value);
-      await crudConfig.updateConfig(db, { password: encrypted });
-    }
-  };
-
   const handleOKPress = async (inputValue) => {
     setShowDialog(false);
     if (edit && inputValue) {
@@ -105,9 +79,9 @@ const SettingsForm = ({ route }) => {
         [stateKey]: inputValue,
       });
       if (stateKey === 'dataSyncInterval') {
-        await handleUpdateOnDB('syncInterval', inputValue);
+        await Storage.setItem('syncInterval', `${inputValue}`);
       } else {
-        await handleUpdateOnDB(stateKey, inputValue);
+        await Storage.setItem(stateKey, `${inputValue}`);
       }
       setEdit(null);
     }
@@ -127,7 +101,7 @@ const SettingsForm = ({ route }) => {
       ...settingsState,
       [stateKey]: tinyIntVal,
     });
-    handleUpdateOnDB(stateKey, tinyIntVal);
+    Storage.setItem(stateKey, `${tinyIntVal}`);
   };
 
   const renderSubtitle = ({ type: inputType, name: fieldName, description }) => {

@@ -1,36 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Text, Button, Input } from '@rneui/themed';
-import { useSQLiteContext } from 'expo-sqlite';
+import Storage from 'expo-sqlite/kv-store';
+
 import { CenterLayout, LogoImage } from '../components';
 import { BuildParamsState, UIState } from '../store';
 import { api, i18n } from '../lib';
-import { crudConfig } from '../database/crud';
 
 const GetStarted = ({ navigation }) => {
   // eslint-disable-next-line global-require
-  const [currentConfig, setCurrentConfig] = useState({});
   const [IPAddr, setIPAddr] = useState(null);
   const serverURLState = BuildParamsState.useState((s) => s.serverURL);
   const authenticationType = BuildParamsState.useState((s) => s.authenticationType);
   const activeLang = UIState.useState((s) => s.lang);
   const trans = i18n.text(activeLang);
-  const db = useSQLiteContext();
-
-  const getConfig = useCallback(async () => {
-    const config = await crudConfig.getConfig(db);
-    if (config) {
-      setCurrentConfig(config);
-    }
-  }, [db]);
-
-  const isServerURLDefined = useMemo(
-    () => currentConfig?.serverURL || serverURLState,
-    [currentConfig?.serverURL, serverURLState],
-  );
-
-  useEffect(() => {
-    getConfig();
-  }, [getConfig]);
 
   const goToLogin = async () => {
     if (IPAddr) {
@@ -39,7 +21,7 @@ const GetStarted = ({ navigation }) => {
       });
       api.setServerURL(IPAddr);
       // save server URL
-      await crudConfig.updateConfig(db, { serverURL: IPAddr });
+      await Storage.setItem('serverURL', IPAddr);
     }
     setTimeout(() => {
       if (authenticationType.includes('code_assignment')) {
@@ -56,7 +38,7 @@ const GetStarted = ({ navigation }) => {
       <LogoImage />
       <CenterLayout.Titles items={titles} />
       <Text>{trans.getStartedSubTitle}</Text>
-      {!isServerURLDefined && (
+      {!serverURLState && (
         <Input
           placeholder={trans.getStartedInputServer}
           onChangeText={setIPAddr}
