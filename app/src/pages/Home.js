@@ -18,8 +18,7 @@ import {
 } from '../store';
 import { crudForms, crudUsers } from '../database/crud';
 import { api, cascades, i18n } from '../lib';
-import crudJobs from '../database/crud/crud-jobs';
-import { SYNC_STATUS, SYNC_DATAPOINT_JOB_NAME, jobStatus } from '../lib/constants';
+import { SYNC_STATUS } from '../lib/constants';
 
 const Home = ({ navigation, route }) => {
   const params = route?.params || null;
@@ -139,11 +138,6 @@ const Home = ({ navigation, route }) => {
       await runSyncSubmisionManually();
       await syncUserForms();
       await crudUsers.updateLastSynced(db, userId);
-      await crudJobs.addJob(db, {
-        user: userId,
-        type: SYNC_DATAPOINT_JOB_NAME,
-        status: jobStatus.PENDING,
-      });
       DatapointSyncState.update((s) => {
         s.inProgress = true;
         s.added = true;

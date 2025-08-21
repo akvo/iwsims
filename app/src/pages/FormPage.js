@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import * as SQLite from 'expo-sqlite';
 import * as Sentry from '@sentry/react-native';
 import * as Crypto from 'expo-crypto';
+import Storage from 'expo-sqlite/kv-store';
 import FormContainer from '../form/FormContainer';
 import { SaveDialogMenu, SaveDropdownMenu } from '../form/support';
 import { BaseLayout } from '../components';
@@ -20,8 +21,7 @@ import { crudDataPoints } from '../database/crud';
 import { UserState, UIState, FormState } from '../store';
 import { generateDataPointName, getDurationInMinutes, transformAnswers } from '../form/lib';
 import { i18n } from '../lib';
-import crudJobs from '../database/crud/crud-jobs';
-import { SYNC_FORM_SUBMISSION_TASK_NAME, QUESTION_TYPES, jobStatus } from '../lib/constants';
+import { QUESTION_TYPES } from '../lib/constants';
 
 const FormPage = ({ navigation, route }) => {
   const selectedForm = FormState.useState((s) => s.form);
@@ -83,36 +83,28 @@ const FormPage = ({ navigation, route }) => {
   };
 
   const handleOnSaveAndExit = async () => {
-    const activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
-    if (!activeJob) {
-      await crudJobs.addJob(db, {
-        user: userId,
-        type: SYNC_FORM_SUBMISSION_TASK_NAME,
-        status: jobStatus.PENDING,
-      });
-    }
     const { dpName, dpGeo } = generateDataPointName(formJSON, currentValues, cascades);
     const jsonAnswers = transformAnswers(currentValues, formJSON);
-    try {
-      const saveData = {
-        form: currentFormId,
-        user: userId,
-        name: dpName || trans.untitled,
-        submitted: 0,
-        duration: surveyDuration,
-        json: jsonAnswers,
-        uuid: route.params?.uuid || Crypto.randomUUID(),
-        geo: dpGeo,
-      };
+    const saveData = {
+      form: currentFormId,
+      user: userId,
+      name: dpName || trans.untitled,
+      submitted: 0,
+      duration: surveyDuration,
+      json: jsonAnswers,
+      uuid: route.params?.uuid || Crypto.randomUUID(),
+      geo: dpGeo,
+    };
 
-      const duration = getDurationInMinutes(surveyStart) + surveyDuration;
-      const payload = {
-        ...currentDataPoint,
-        ...saveData,
-        duration: duration === 0 ? 1 : duration,
-        repeats: Object.keys(repeats).length ? JSON.stringify(repeats) : null,
-        syncedAt: null,
-      };
+    const duration = getDurationInMinutes(surveyStart) + surveyDuration;
+    const payload = {
+      ...currentDataPoint,
+      ...saveData,
+      duration: duration === 0 ? 1 : duration,
+      repeats: Object.keys(repeats).length ? JSON.stringify(repeats) : null,
+      syncedAt: null,
+    };
+    try {
       if (isNewSubmission) {
         await crudDataPoints.saveDataPoint(db, payload);
       } else {
@@ -126,9 +118,11 @@ const FormPage = ({ navigation, route }) => {
     } catch (error) {
       Sentry.captureMessage('[FormPage] Cannot save draft submissions');
       Sentry.captureException(error);
-      if (Platform.OS === 'android') {
-        ToastAndroid.show(`SQL: ${error}`, ToastAndroid.LONG);
-      }
+      const newItems = await Storage.getItem('new_datapoints');
+      const parsedItems = newItems ? JSON.parse(newItems) : [];
+      await Storage.setItem('new_datapoints', JSON.stringify([...parsedItems, payload]));
+      refreshForm();
+      navigation.navigate('Home', { ...route?.params });
     }
   };
 
@@ -144,41 +138,32 @@ const FormPage = ({ navigation, route }) => {
   };
 
   const handleOnSubmitForm = async (values) => {
-    try {
-      const answers = transformAnswers(values.answers, formJSON);
+    const answers = transformAnswers(values.answers, formJSON);
 
-      const datapoitName = values?.name || trans.untitled;
-      const submitData = {
-        form: currentFormId,
-        user: userId,
-        name: datapoitName,
-        geo: values.geo,
-        submitted: 1,
-        duration: surveyDuration,
-        json: answers,
-        uuid: route.params?.uuid || Crypto.randomUUID(),
-      };
-      const duration = getDurationInMinutes(surveyStart) + surveyDuration;
-      const payload = {
-        ...currentDataPoint,
-        ...submitData,
-        duration: duration === 0 ? 1 : duration,
-        syncedAt: null,
-      };
+    const datapoitName = values?.name || trans.untitled;
+    const submitData = {
+      form: currentFormId,
+      user: userId,
+      name: datapoitName,
+      geo: values.geo,
+      submitted: 1,
+      duration: surveyDuration,
+      json: answers,
+      uuid: route.params?.uuid || Crypto.randomUUID(),
+    };
+    const duration = getDurationInMinutes(surveyStart) + surveyDuration;
+    const payload = {
+      ...currentDataPoint,
+      ...submitData,
+      duration: duration === 0 ? 1 : duration,
+      syncedAt: null,
+    };
+    try {
       if (isNewSubmission) {
         await crudDataPoints.saveDataPoint(db, payload);
       } else {
         await crudDataPoints.updateDataPoint(db, payload);
       }
-      /**
-       * Create a new job for syncing form submissions.
-       */
-      await crudJobs.addJob(db, {
-        user: userId,
-        type: SYNC_FORM_SUBMISSION_TASK_NAME,
-        status: jobStatus.PENDING,
-        info: route.params?.uuid,
-      });
 
       if (Platform.OS === 'android') {
         ToastAndroid.show(trans.successSubmitted, ToastAndroid.LONG);
@@ -188,9 +173,11 @@ const FormPage = ({ navigation, route }) => {
     } catch (error) {
       Sentry.captureMessage('[FormPage] Cannot submit submissions');
       Sentry.captureException(error);
-      if (Platform.OS === 'android') {
-        ToastAndroid.show(`SQL: ${error}`, ToastAndroid.LONG);
-      }
+      const newItems = await Storage.getItem('new_datapoints');
+      const parsedItems = newItems ? JSON.parse(newItems) : [];
+      await Storage.setItem('new_datapoints', JSON.stringify([...parsedItems, payload]));
+      refreshForm();
+      navigation.navigate('Home', { ...route?.params });
     }
   };
 
