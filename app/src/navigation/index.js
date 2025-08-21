@@ -25,7 +25,6 @@ import {
 } from '../pages';
 import { UIState, AuthState, FormState } from '../store';
 import { backgroundTask, notification } from '../lib';
-import { SYNC_FORM_SUBMISSION_TASK_NAME, SYNC_FORM_VERSION_TASK_NAME } from '../lib/constants';
 
 export const reactNavigationIntegration = Sentry.reactNavigationIntegration();
 
@@ -61,11 +60,6 @@ const RootNavigator = () => {
       responseListener.remove();
     };
   }, [db]);
-
-  useEffect(() => {
-    backgroundTask.backgroundTaskStatus(SYNC_FORM_VERSION_TASK_NAME);
-    backgroundTask.backgroundTaskStatus(SYNC_FORM_SUBMISSION_TASK_NAME);
-  }, []);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={currentPage}>

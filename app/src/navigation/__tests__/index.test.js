@@ -5,16 +5,6 @@ import { BackHandler } from 'react-native';
 import Navigation from '../index';
 import { AuthState, UIState } from '../../store';
 
-jest.mock('expo-background-fetch', () => ({
-  ...jest.requireActual('expo-background-fetch'),
-  Result: {
-    Failed: 'failed',
-  },
-  BackgroundFetchResult: {
-    NewData: 'new-data',
-  },
-}));
-
 jest.mock('expo-notifications');
 jest.mock('expo-task-manager');
 jest.mock('../../lib/background-task');
