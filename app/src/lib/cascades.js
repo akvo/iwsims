@@ -20,9 +20,8 @@ const download = async (downloadUrl, fileUrl, update = false) => {
   const pathSql = `${DIR_NAME}/${fileSql}`;
   const { exists } = await FileSystem.getInfoAsync(FileSystem.documentDirectory + pathSql);
   if (exists && update) {
-    const existingDB = SQLite.openDatabaseSync(fileSql);
-    existingDB.closeAsync();
-    await existingDB.deleteAsync();
+    // Remove existing file if it exists and update is true
+    await FileSystem.deleteAsync(FileSystem.documentDirectory + pathSql);
   }
   if (!exists || update) {
     await FileSystem.downloadAsync(downloadUrl, FileSystem.documentDirectory + pathSql, {
@@ -34,7 +33,7 @@ const download = async (downloadUrl, fileUrl, update = false) => {
 const loadDataSource = async (source, id = null) => {
   try {
     const { file: cascadeName } = source;
-    const db = SQLite.openDatabaseSync(cascadeName, { useNewConnection: true });
+    const db = await SQLite.openDatabaseAsync(cascadeName, { useNewConnection: true });
     const result = id
       ? await sql.getFirstRow(db, 'nodes', { id })
       : await sql.getEachRow(db, 'nodes');
