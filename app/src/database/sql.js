@@ -75,7 +75,7 @@ const getFirstRow = async (db, table, conditions = {}) => {
           .join(' AND ')
       : false;
     // Filter out null values from params since they're handled with IS NULL
-    const params = Object.values(conditions).filter(val => val !== null);
+    const params = Object.values(conditions).filter((val) => val !== null);
     const query = `
       SELECT * FROM ${table}
       ${whereClause ? `WHERE ${whereClause}` : ''}
@@ -148,23 +148,23 @@ const getFilteredRows = async (
     if (!conditions || Object.keys(conditions).length === 0) {
       throw new Error('Conditions cannot be empty');
     }
-    
+
     const whereClause = Object.keys(conditions)
       .map((key) => (conditions[key] === null ? `${key} IS NULL` : `${key} = ?`))
       .join(' AND ');
-    
+
     // Filter out null values from params since they're handled with IS NULL
-    const params = Object.values(conditions).filter(val => val !== null);
-    
+    const params = Object.values(conditions).filter((val) => val !== null);
+
     // Properly format the ORDER BY clause with COLLATE NOCASE if needed
     let orderClause = '';
     if (orderBy) {
       const collateClause = collateNoCase ? ' COLLATE NOCASE' : '';
       orderClause = `ORDER BY ${orderBy}${collateClause} ${order}`;
     }
-    
+
     const query = `SELECT * FROM ${table} WHERE ${whereClause} ${orderClause}`.trim();
-    
+
     const rows = await db.getAllAsync(query, ...params);
     return rows;
   } catch (error) {
@@ -336,7 +336,7 @@ const safeExecuteQuery = async (db, query, params = [], operation = 'query') => 
     if (params.length !== paramCount) {
       throw new Error(`Parameter count mismatch: expected ${paramCount}, got ${params.length}`);
     }
-    
+
     const result = await db.getAllAsync(query, ...params);
     return result;
   } catch (error) {
@@ -358,7 +358,7 @@ const safeGetFirstRow = async (db, query, params = [], operation = 'query') => {
     if (params.length !== paramCount) {
       throw new Error(`Parameter count mismatch: expected ${paramCount}, got ${params.length}`);
     }
-    
+
     const result = await db.getFirstAsync(query, ...params);
     return result;
   } catch (error) {
@@ -373,17 +373,19 @@ const safeGetFirstRow = async (db, query, params = [], operation = 'query') => {
  * @param {string} operation - Description of the batch operation.
  * @returns {Promise<Array>} Array of results from each query.
  */
-const executeBatch = async (db, queries, operation = 'batch operation') => 
+const executeBatch = async (db, queries, operation = 'batch operation') =>
   withTransaction(db, async (transactionDb) => {
     const executeQueryInBatch = async (queryObj) => {
       const { query, params = [] } = queryObj;
       try {
         return await safeExecuteQuery(transactionDb, query, params, operation);
       } catch (error) {
-        throw new Error(`Error in ${operation} - Query: ${query.substring(0, 50)}...: ${error.message}`);
+        throw new Error(
+          `Error in ${operation} - Query: ${query.substring(0, 50)}...: ${error.message}`,
+        );
       }
     };
-    
+
     return Promise.all(queries.map(executeQueryInBatch));
   });
 
@@ -407,7 +409,7 @@ const bulkInsert = async (db, table, records) => {
         throw new Error(`Error in bulkInsert for table ${table}: ${error.message}`);
       }
     };
-    
+
     return Promise.all(records.map(insertRecord));
   });
 };
@@ -421,21 +423,27 @@ const bulkInsert = async (db, table, records) => {
  * @param {boolean} collateNoCase - Whether to use COLLATE NOCASE
  * @returns {Object} The generated query and parameters
  */
-const testQueryGeneration = (table, conditions, orderBy = null, order = 'ASC', collateNoCase = false) => {
+const testQueryGeneration = (
+  table,
+  conditions,
+  orderBy = null,
+  order = 'ASC',
+  collateNoCase = false,
+) => {
   const whereClause = Object.keys(conditions)
     .map((key) => (conditions[key] === null ? `${key} IS NULL` : `${key} = ?`))
     .join(' AND ');
-  
-  const params = Object.values(conditions).filter(val => val !== null);
-  
+
+  const params = Object.values(conditions).filter((val) => val !== null);
+
   let orderClause = '';
   if (orderBy) {
     const collateClause = collateNoCase ? ' COLLATE NOCASE' : '';
     orderClause = `ORDER BY ${orderBy}${collateClause} ${order}`;
   }
-  
+
   const query = `SELECT * FROM ${table} WHERE ${whereClause} ${orderClause}`.trim();
-  
+
   return { query, params };
 };
 
