@@ -29,7 +29,6 @@
     "expo": "53.0.9",
     "expo-application": "~6.1.4",
     "expo-asset": "~11.1.5",
-    "expo-background-fetch": "~13.1.5",
     "expo-constants": "~17.1.5",
     "expo-crypto": "~14.1.4",
     "expo-device": "~7.1.4",
