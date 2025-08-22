@@ -241,7 +241,7 @@ const ApproversTree = () => {
                 className={`tree-col-${k + 1}`}
                 align="center"
               >
-                {adminItem.children?.map((childItem, l) => {
+                {adminItem?.children?.map((childItem, l) => {
                   const approvers =
                     dataset[k]?.children?.find(
                       (c) => c.administration.id === childItem.id
@@ -254,7 +254,8 @@ const ApproversTree = () => {
                       : `${approvers[0].first_name} ${approvers[0].last_name}`
                     : text.notAssigned;
                   const isParent =
-                    administration[k + 1]?.children[0]?.parent === childItem.id;
+                    administration[k + 1]?.children[0]?.parent ===
+                    childItem?.id;
                   const selectedAdministration = filterOption?.slice(-1)?.[0];
                   const isSelected =
                     !isParent && selectedAdministration?.id === childItem?.id;

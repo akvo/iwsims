@@ -3,7 +3,10 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.db.models import Q, Count
 from api.v1.v1_forms.models import Forms
-from api.v1.v1_profile.models import Administration
+from api.v1.v1_profile.models import (
+    Administration,
+    UserRole,
+)
 from api.v1.v1_users.models import Organisation
 from api.v1.v1_profile.tests.mixins import ProfileTestHelperMixin
 
@@ -191,3 +194,81 @@ class UserListByNonSuperUserTestCase(TestCase, ProfileTestHelperMixin):
                 user['email'],
                 [u.email for u in other_users]
             )
+
+    def test_user_list_by_multiple_user_roles(self):
+        [adm_1, adm_2] = Administration.objects.filter(
+            level__level=1
+        ).order_by("?").all()[:2]
+        # Create a new administration level 1
+        adm_3 = Administration.objects.create(
+            name="Jawa Tengah",
+            code="ID-JTG",
+            level=adm_1.level,
+            path=f"{adm_1.path}",
+        )
+        adm_3_child = Administration.objects.create(
+            parent=adm_3,
+            name="Semarang",
+            code="ID-JTG-SMG",
+            level_id=adm_3.level.id + 1,
+            path=f"{adm_3.path}{adm_3.id}.",
+        )
+        # Create a user with multiple roles
+        multi_role_user = self.create_user(
+            email="multi.role@test.com",
+            role_level=self.IS_ADMIN,
+            administration=adm_1,
+            form=self.form,
+        )
+        multi_role_user.set_password("password")
+        multi_role_user.save()
+
+        # Assign the user to multiple roles
+        role = multi_role_user.user_user_role.first().role
+        UserRole.objects.create(
+            user=multi_role_user,
+            role=role,
+            administration=adm_2
+        )
+
+        token = self.get_auth_token(
+            multi_role_user.email, "password"
+        )
+
+        # Create a user outside of user roles's administration
+        user_adm_child_3 = self.create_user(
+            email="user.semarang@test.com",
+            role_level=self.IS_ADMIN,
+            administration=adm_3_child,
+            form=self.form,
+        )
+
+        response = self.client.get(
+            "/api/v1/users",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        user_data = response.json()
+        # Check that the user with multiple roles is included
+        self.assertIn(
+            multi_role_user.email,
+            [user['email'] for user in user_data['data']]
+        )
+        # Check that the total matches the number of
+        # users in the administrations
+        total_users = UserRole.objects.filter(
+            Q(administration=adm_1) |
+            Q(administration=adm_2) |
+            Q(administration__path__startswith=f"{adm_1.path}{adm_1.id}.") |
+            Q(administration__path__startswith=f"{adm_2.path}{adm_2.id}.")
+        ).values('user').distinct().count()
+
+        self.assertEqual(user_data["total"], total_users)
+
+        # Check that the user outside of user roles's
+        # administration is not included
+        self.assertNotIn(
+            user_adm_child_3.email,
+            [user['email'] for user in user_data['data']]
+        )

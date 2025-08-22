@@ -101,7 +101,7 @@ const UserDetail = ({ record, setDeleteUser, deleting }) => {
                 }`,
               },
               ...record.roles.map((r, rx) => ({
-                key: `role-${r.role}`,
+                key: `role-${r.role}-${rx}`,
                 field: `Role #${rx + 1}`,
                 value: (
                   <ul style={{ listStyleType: "none", paddingLeft: 0 }}>

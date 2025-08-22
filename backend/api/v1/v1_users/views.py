@@ -487,34 +487,53 @@ def list_users(request, version):
 
     filter_adm = serializer.validated_data.get("administration")
     if not request.user.is_superuser:
-        user_adm = request.user.user_user_role.filter(
+        user_adm_queryset = request.user.user_user_role.filter(
             role__role_role_feature_access__type=FeatureTypes.user_access,
             role__role_role_feature_access__access=(
                 FeatureAccessTypes.invite_user
             ),
         ).order_by(
             "administration__level__level"
-        ).first()
-        if not filter_adm and user_adm:
-            filter_adm = user_adm.administration
-    if filter_adm:
-        filter_path = "{0}{1}.".format(
-            filter_adm.path, filter_adm.id
-        ) if filter_adm.path else f"{filter_adm.id}."
-        filter_descendants = list(
-            Administration.objects.filter(
-                path__startswith=filter_path
-            ).values_list("id", flat=True)
         )
-        filter_descendants.append(filter_adm.id)
-        final_set = set(filter_descendants)
+        if not filter_adm and user_adm_queryset.exists():
+            # Handle multiple user roles - collect accessible administrations
+            all_accessible_adm_ids = set()
+            for user_role in user_adm_queryset:
+                adm = user_role.administration
+                # Add the administration itself
+                all_accessible_adm_ids.add(adm.id)
+                # Add all descendants of this administration
+                filter_path = "{0}{1}.".format(
+                    adm.path, adm.id
+                ) if adm.path else f"{adm.id}."
+                descendants = Administration.objects.filter(
+                    path__startswith=filter_path
+                ).values_list("id", flat=True)
+                all_accessible_adm_ids.update(descendants)
 
-        # Apply filter by administration IDs
-        # Only apply filtering if administration level > 0 (not national level)
-        if filter_adm.level.level > 0:
+            # Apply filter by all accessible administration IDs
             filter_data["user_user_role__administration_id__in"] = list(
-                final_set
+                all_accessible_adm_ids
             )
+        elif filter_adm:
+            # Handle single administration filter (when explicitly specified)
+            filter_path = "{0}{1}.".format(
+                filter_adm.path, filter_adm.id
+            ) if filter_adm.path else f"{filter_adm.id}."
+            filter_descendants = list(
+                Administration.objects.filter(
+                    path__startswith=filter_path
+                ).values_list("id", flat=True)
+            )
+            filter_descendants.append(filter_adm.id)
+            final_set = set(filter_descendants)
+
+            # Apply filter by administration IDs
+            # Only apply filtering if administration level > 0 (not national)
+            if filter_adm.level.level > 0:
+                filter_data["user_user_role__administration_id__in"] = list(
+                    final_set
+                )
     if serializer.validated_data.get("trained") is not None:
         trained = (
             True

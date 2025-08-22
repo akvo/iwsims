@@ -95,8 +95,6 @@ class UserDetailsTestCase(TestCase, ProfileTestHelperMixin):
             user_data["roles"][0]["administration"],
             self.administration.id
         )
-        # adm_path should be None for same level
-        self.assertIsNone(user_data["roles"][0]["adm_path"])
 
     def test_get_user_detail_by_non_superuser_lower_adm_level(self):
         user = self.create_user(

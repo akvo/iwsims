@@ -786,18 +786,6 @@ class UserRoleEditSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.ANY)
     def get_adm_path(self, instance: UserRole):
-        user = self.context.get('user')
-        if not user.is_superuser:
-            invite_user = FeatureAccessTypes.invite_user
-            user_role = user.user_user_role.filter(
-                role__administration_level=instance.administration.level,
-                role__role_role_feature_access__access=invite_user,
-            ).first()
-            if (
-                user_role and
-                user_role.administration == instance.administration
-            ):
-                return None
         if instance.administration.path:
             adm = instance.administration
             return [
