@@ -24,7 +24,6 @@ import {
   FormOptionsPage,
 } from '../pages';
 import { UIState, AuthState, FormState } from '../store';
-import { backgroundTask, notification } from '../lib';
 
 export const reactNavigationIntegration = Sentry.reactNavigationIntegration();
 
@@ -33,7 +32,6 @@ const Stack = createNativeStackNavigator();
 const RootNavigator = () => {
   const currentPage = UIState.useState((s) => s.currentPage);
   const token = AuthState.useState((s) => s.token); // user already has session
-  const db = useSQLiteContext();
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -47,19 +45,6 @@ const RootNavigator = () => {
     return () => backHandler.remove();
   }, [token, currentPage]);
 
-  useEffect(() => {
-    notification.registerForPushNotificationsAsync();
-    const responseListener = Notifications.addNotificationResponseReceivedListener((res) => {
-      const notificationBody = res?.notification?.request;
-      const notificationType = notificationBody?.content?.data?.notificationType;
-      if (notificationType === 'sync-form-version') {
-        backgroundTask.syncFormVersion(db, { showNotificationOnly: false });
-      }
-    });
-    return () => {
-      responseListener.remove();
-    };
-  }, [db]);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={currentPage}>

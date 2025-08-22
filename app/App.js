@@ -5,17 +5,14 @@ import * as Notifications from 'expo-notifications';
 import * as Sentry from '@sentry/react-native';
 import * as Location from 'expo-location';
 import { SENTRY_DSN, SENTRY_ENV } from '@env';
-import { SQLiteProvider } from 'expo-sqlite';
 import Storage from 'expo-sqlite/kv-store';
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import Navigation, { reactNavigationIntegration } from './src/navigation';
 import { UIState, AuthState, UserState, BuildParamsState } from './src/store';
-import { crudUsers, crudDataPoints } from './src/database/crud';
 import { api } from './src/lib';
 import { NetworkStatusBar, SyncService } from './src/components';
-import { DATABASE_NAME, DATABASE_VERSION } from './src/lib/constants';
-import { tables } from './src/database';
-import sql from './src/database/sql';
-import { m03 } from './src/database/migrations';
+import migrations from './drizzle/migrations';
+import db from './src/db';
 
 export const setNotificationHandler = () =>
   Notifications.setNotificationHandler({
@@ -47,6 +44,7 @@ Sentry.init({
 });
 
 const App = () => {
+  const { success, error } = useMigrations(db, migrations);
   const serverURLState = BuildParamsState.useState((s) => s.serverURL);
   const syncValue = BuildParamsState.useState((s) => s.dataSyncInterval);
   const gpsThresholdValue = BuildParamsState.useState((s) => s.gpsThreshold);
@@ -55,7 +53,7 @@ const App = () => {
   const appVersionValue = BuildParamsState.useState((s) => s.appVersion);
   const locationIsGranted = UserState.useState((s) => s.locationIsGranted);
 
-  const handleInitConfig = async (db) => {
+  const handleInitConfig = useCallback(async () => {
     /**
      * Server URL
      */
@@ -126,24 +124,8 @@ const App = () => {
       });
     }
 
-    /**
-     * Check if there are new datapoints to save
-     */
-    const newDatapoints = await Storage.getItem('new_datapoints');
-    const parsedItems = newDatapoints ? JSON.parse(newDatapoints) : [];
-
-    if (parsedItems.length > 0) {
-      parsedItems.forEach((item) => {
-        crudDataPoints.saveDataPoint(db, item);
-      });
-      // Clear the storage after saving
-      await Storage.removeItem('new_datapoints');
-    }
-  };
-
-  const handleCheckSession = async (db) => {
-    // check users exist
-    const user = await crudUsers.getActiveUser(db);
+    const userState = await Storage.getItem('activeUser');
+    const user = userState ? JSON.parse(userState) : null;
     if (!user) {
       UIState.update((s) => {
         s.currentPage = 'GetStarted';
@@ -165,46 +147,35 @@ const App = () => {
         s.currentPage = 'Home';
       });
     }
-  };
+    if (!success) {
+      console.error('Database migration failed:', error);
+    }
+    if (error) {
+      console.error('Database migration error:', error);
+    }
+    // /**
+    //  * Check if there are new datapoints to save
+    //  */
+    // const newDatapoints = await Storage.getItem('new_datapoints');
+    // const parsedItems = newDatapoints ? JSON.parse(newDatapoints) : [];
 
-  const migrateDbIfNeeded = async (db) => {
-    let { user_version: currentDbVersion } = await db.getFirstAsync('PRAGMA user_version');
-    if (currentDbVersion >= DATABASE_VERSION) {
-      await handleInitConfig(db);
-      await handleCheckSession(db);
-      return;
-    }
-    if (currentDbVersion === 0) {
-      await db.execAsync(`PRAGMA journal_mode = 'wal';`);
-      currentDbVersion = 1;
-    }
-
-    if (currentDbVersion === 1) {
-      await Promise.all(
-        tables.map(async (t) => {
-          await sql.createTable(db, t.name, t.fields);
-        }),
-      );
-      currentDbVersion = 2;
-    }
-    /**
-     * This is the example of how to migrate the database
-     * if you need to add a new column to the table, you can use the migration file
-     * and add the migration function here.
-     * For example:
-     * if (currentDbVersion === 2) {
-     *  await m03.up(db);
-     *  currentDbVersion = 3;
-     * }
-     */
-    if (currentDbVersion === 2) {
-      await m03.up(db);
-      currentDbVersion = 3;
-    }
-    // eslint-disable-next-line no-console
-    console.info(`Migrating database from version ${currentDbVersion} to ${DATABASE_VERSION}`);
-    await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
-  };
+    // if (parsedItems.length > 0) {
+    //   parsedItems.forEach((item) => {
+    //     crudDataPoints.saveDataPoint(db, item);
+    //   });
+    //   // Clear the storage after saving
+    //   await Storage.removeItem('new_datapoints');
+    // }
+  }, [
+    serverURLState,
+    syncValue,
+    gpsThresholdValue,
+    gpsAccuracyLevelValue,
+    geoLocationTimeoutValue,
+    appVersionValue,
+    error,
+    success,
+  ]);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -235,14 +206,16 @@ const App = () => {
     requestAccessLocation();
   }, [requestAccessLocation]);
 
+  useEffect(() => {
+    handleInitConfig();
+  }, [handleInitConfig]);
+
   return (
     <SafeAreaProvider>
       <Suspense fallback={null}>
-        <SQLiteProvider databaseName={DATABASE_NAME} onInit={migrateDbIfNeeded}>
-          <Navigation />
-          <NetworkStatusBar />
-          <SyncService />
-        </SQLiteProvider>
+        <Navigation />
+        <NetworkStatusBar />
+        {/* <SyncService /> */}
       </Suspense>
     </SafeAreaProvider>
   );

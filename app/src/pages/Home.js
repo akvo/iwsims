@@ -28,6 +28,7 @@ const Home = ({ navigation, route }) => {
   const [loading, setloading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncDisabled, setSyncDisabled] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
 
   const locationIsGranted = UserState.useState((s) => s.locationIsGranted);
   const gpsAccuracyLevel = BuildParamsState.useState((s) => s.gpsAccuracyLevel);

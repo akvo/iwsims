@@ -24,18 +24,37 @@ const SyncService = () => {
   const db = useSQLiteContext();
 
   const onSync = useCallback(async () => {
-    const pendingToSync = await crudDataPoints.selectSubmissionToSync(db);
-    const syncWifiOnly = (await Storage.getItem('syncWifiOnly')) === '1';
-    if (pendingToSync?.length === 0) {
-      return;
-    }
+    const statement = await db.prepareAsync(
+      `SELECT
+          datapoints.*,
+          forms.formId,
+          forms.json AS json_form
+        FROM datapoints
+        JOIN forms ON datapoints.form = forms.id
+        WHERE datapoints.syncedAt IS NULL
+        ORDER BY datapoints.createdAt ASC`,
+    );
+    try {
+      const result = await statement.executeAsync();
+      const pendingToSync = await result.getAllAsync();
+      const syncWifiOnly = (await Storage.getItem('syncWifiOnly')) === '1';
+      if (pendingToSync?.length === 0) {
+        return;
+      }
 
-    const { type: networkType } = await Network.getNetworkStateAsync();
-    if (syncWifiOnly && networkType !== Network.NetworkStateType.WIFI) {
-      return;
-    }
+      const { type: networkType } = await Network.getNetworkStateAsync();
+      if (syncWifiOnly && networkType !== Network.NetworkStateType.WIFI) {
+        return;
+      }
 
-    await backgroundTask.syncFormSubmission(db);
+      await backgroundTask.syncFormSubmission(db, pendingToSync);
+    } catch (error) {
+      Sentry.captureException(error, {
+        extra: { message: 'Error fetching unsynced datapoints', error },
+      });
+    } finally {
+      await statement.finalizeAsync();
+    }
   }, [db]);
 
   useEffect(() => {
@@ -115,93 +134,106 @@ const SyncService = () => {
   }, [db, userId]);
 
   const onSyncDraftDatapoint = useCallback(async () => {
-    const allDraftSynced = await crudDataPoints.getDraftPendingSync(db);
-    if (allDraftSynced?.length || (allDraftSynced?.length === 0 && isManualSynced)) {
-      try {
-        await crudDataPoints.deleteDraftSynced(db);
-        DatapointSyncState.update((s) => {
-          s.draftInProgress = true;
-        });
-
-        const draftRes = await fetchDraftDatapoints();
-        // Process draft datapoints sequentially without transaction wrapper
-        // Individual operations will handle their own database safety
-        await draftRes.reduce(async (previousPromise, draftData) => {
-          await previousPromise;
-          // Add a small delay to prevent overwhelming the database connection
-          await new Promise((resolve) => {
-            setTimeout(resolve, 1000);
+    const statement = await db.prepareAsync(
+      `SELECT * FROM datapoints WHERE submitted = 0 AND draftId IS NULL AND syncedAt IS NOT NULL`,
+    );
+    try {
+      const result = await statement.executeAsync();
+      const allDraftSynced = await result.getAllAsync();
+      await result.resetAsync();
+      if (allDraftSynced?.length || (allDraftSynced?.length === 0 && isManualSynced)) {
+        try {
+          await crudDataPoints.deleteDraftSynced(db);
+          DatapointSyncState.update((s) => {
+            s.draftInProgress = true;
           });
 
-          const {
-            administration: administrationId,
-            datapoint_name: name,
-            geolocation: geo,
-            form: formId,
-            id: draftId,
-            repeats,
-            ...d
-          } = draftData;
-
-          // Check if draft already exists by draftId
-          const existingDraft = await crudDataPoints.getByDraftId(db, { draftId });
-
-          if (existingDraft && existingDraft?.syncedAt) {
-            // If the draft already exists, update it
-            await crudDataPoints.updateDataPoint(db, {
-              ...d,
-              id: existingDraft.id,
-              name,
-              geo,
-              repeats: JSON.stringify(repeats),
-              submitted: 0,
-              syncedAt: new Date().toISOString(),
+          const draftRes = await fetchDraftDatapoints();
+          // Process draft datapoints sequentially without transaction wrapper
+          // Individual operations will handle their own database safety
+          await draftRes.reduce(async (previousPromise, draftData) => {
+            await previousPromise;
+            // Add a small delay to prevent overwhelming the database connection
+            await new Promise((resolve) => {
+              setTimeout(resolve, 1000);
             });
-          } else {
-            // Get the form for this draft
-            const form = await crudForms.getByFormId(db, { formId });
-            if (!form) {
-              return; // Skip if form not found
+
+            const {
+              administration: administrationId,
+              datapoint_name: name,
+              geolocation: geo,
+              form: formId,
+              id: draftId,
+              repeats,
+              ...d
+            } = draftData;
+
+            // Check if draft already exists by draftId
+            const existingDraft = await crudDataPoints.getByDraftId(db, { draftId });
+
+            if (existingDraft && existingDraft?.syncedAt) {
+              // If the draft already exists, update it
+              await crudDataPoints.updateDataPoint(db, {
+                ...d,
+                id: existingDraft.id,
+                name,
+                geo,
+                repeats: JSON.stringify(repeats),
+                submitted: 0,
+                syncedAt: new Date().toISOString(),
+              });
+            } else {
+              // Get the form for this draft
+              const form = await crudForms.getByFormId(db, { formId });
+              if (!form) {
+                return; // Skip if form not found
+              }
+
+              // Create new draft datapoint without specifying id to avoid conflicts
+              const draftDatapoint = {
+                ...d,
+                administrationId,
+                name,
+                geo,
+                draftId,
+                repeats: JSON.stringify(repeats),
+                form: form.id,
+                submitted: 0,
+                user: userId,
+                createdAt: new Date().toISOString(),
+                syncedAt: new Date().toISOString(),
+              };
+              await crudDataPoints.saveDataPoint(db, draftDatapoint);
             }
+          }, Promise.resolve());
 
-            // Create new draft datapoint without specifying id to avoid conflicts
-            const draftDatapoint = {
-              ...d,
-              administrationId,
-              name,
-              geo,
-              draftId,
-              repeats: JSON.stringify(repeats),
-              form: form.id,
-              submitted: 0,
-              user: userId,
-              createdAt: new Date().toISOString(),
-              syncedAt: new Date().toISOString(),
+          // Delete all records with draftId = NULL and syncedAt NOT NULL to prevent duplication
+          await crudDataPoints.deleteDraftIdIsNull(db);
+
+          DatapointSyncState.update((s) => {
+            s.draftInProgress = false;
+          });
+
+          UIState.update((s) => {
+            s.refreshPage = true;
+          });
+        } catch (error) {
+          UIState.update((s) => {
+            s.statusBar = {
+              type: SYNC_STATUS.failed,
+              bgColor: '#ec003f',
+              icon: 'alert',
+              error: String(error),
             };
-            await crudDataPoints.saveDataPoint(db, draftDatapoint);
-          }
-        }, Promise.resolve());
-
-        // Delete all records with draftId = NULL and syncedAt NOT NULL to prevent duplication
-        await crudDataPoints.deleteDraftIdIsNull(db);
-
-        DatapointSyncState.update((s) => {
-          s.draftInProgress = false;
-        });
-
-        UIState.update((s) => {
-          s.refreshPage = true;
-        });
-      } catch (error) {
-        UIState.update((s) => {
-          s.statusBar = {
-            type: SYNC_STATUS.failed,
-            bgColor: '#ec003f',
-            icon: 'alert',
-            error: String(error),
-          };
-        });
+          });
+        }
       }
+    } catch (error) {
+      Sentry.captureException(error, {
+        extra: { message: 'Error fetching draft datapoints', error },
+      });
+    } finally {
+      await statement.finalizeAsync();
     }
   }, [db, userId, isManualSynced]);
 

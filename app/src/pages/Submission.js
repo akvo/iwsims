@@ -11,33 +11,49 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import LucideIcon from '@react-native-vector-icons/lucide';
 import * as SQLite from 'expo-sqlite';
 import moment from 'moment';
+import * as Sentry from '@sentry/react-native';
+
 import { FormState, UIState, UserState } from '../store';
 import { i18n } from '../lib';
 import { BaseLayout, FAButton } from '../components';
 import { getCurrentTimestamp } from '../form/lib';
-import { crudDataPoints } from '../database/crud';
 
 const Submission = ({ navigation, route }) => {
-  const [search, setSearch] = useState('');
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(1);
-  const [totalSavedData, setTotalSavedData] = useState(0);
+  const [search, setSearch] = useState('');
 
   const previousForm = FormState.useState((s) => s.previousForm);
   const activeForm = FormState.useState((s) => s.form);
   const activeLang = UIState.useState((s) => s.lang);
-  const { id: activeUserId } = UserState.useState((s) => s);
+  // const { id: activeUserId } = UserState.useState((s) => s);
   const trans = i18n.text(activeLang);
-  const db = SQLite.useSQLiteContext();
-  const refreshPage = UIState.useState((s) => s.refreshPage);
+  // const db = SQLite.useSQLiteContext();
 
   const datapoints = useMemo(
     () =>
-      data.filter(
-        (d) => (search && d?.name?.toLowerCase().includes(search.toLowerCase())) || !search,
-      ),
-    [data, search],
+      data
+        .map((res) => {
+          const createdAt = moment(res.createdAt).format('DD/MM/YYYY hh:mm A');
+          const syncedAt = res.syncedAt ? moment(res.syncedAt).format('DD/MM/YYYY hh:mm A') : '-';
+          return {
+            ...res,
+            createdAt,
+            syncedAt,
+            isSynced: !!res.syncedAt,
+          };
+        })
+        .filter((res) => {
+          if (route?.params?.uuid) {
+            return res.uuid === route.params.uuid;
+          }
+          return true;
+        })
+        .filter(
+          (d) => (search && d?.name?.toLowerCase().includes(search.toLowerCase())) || !search,
+        ),
+    [data, search, route?.params?.uuid],
   );
 
   const goToNewForm = () => {
@@ -82,12 +98,11 @@ const Submission = ({ navigation, route }) => {
   };
 
   const toggleIsSubmitted = () => {
-    setIsSubmitted((prev) => (prev === 1 ? 0 : 1));
-    setSearch('');
-    setLoading(true);
-    UIState.update((s) => {
-      s.refreshPage = true;
-    });
+    setTimeout(() => {
+      setLoading(true);
+      setSearch('');
+      setIsSubmitted((prev) => (prev === 1 ? 0 : 1));
+    }, 500);
   };
 
   const onClickItem = (selectedData) => {
@@ -111,63 +126,42 @@ const Submission = ({ navigation, route }) => {
     }
   };
 
-  const fetchData = useCallback(async () => {
-    if (!activeForm.id) {
-      return;
-    }
-    const draftCount = await crudDataPoints.totalSavedData(
-      db,
-      activeForm.id,
-      route?.params?.uuid || null,
-    );
-    setTotalSavedData(draftCount);
-    /**
-     * Fetch data points from the database based on the active form ID and user ID.
-     * The data points are filtered by the submitted status (1 for submitted).
-     * The results are then formatted to include
-     * createdAt and syncedAt dates in a readable format.
-     * The syncedAt date is set to '-' if it is null.
-     * The isSynced property is set to true if syncedAt is not null.
-     * The data points are then set to the state variable 'data'.
-     */
-    let rows = await crudDataPoints.selectDataPointsByFormAndSubmitted(db, {
-      form: activeForm.id,
-      submitted: isSubmitted,
-      user: activeUserId,
-      uuid: route?.params?.uuid || null,
-    });
-    rows = rows.map((res) => {
-      const createdAt = moment(res.createdAt).format('DD/MM/YYYY hh:mm A');
-      const syncedAt = res.syncedAt ? moment(res.syncedAt).format('DD/MM/YYYY hh:mm A') : '-';
-      return {
-        ...res,
-        createdAt,
-        syncedAt,
-        isSynced: !!res.syncedAt,
-      };
-    });
-    setData(rows);
-    if (rows.length === 0) {
-      setLoading(false);
-      return;
-    }
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, [activeForm.id, activeUserId, db, isSubmitted, route?.params?.uuid]);
+  // const fetchData = useCallback(async () => {
+  //   const formStatement = await db.prepareAsync(
+  //     'SELECT * FROM datapoints WHERE form = $form AND user = $user AND submitted = $submitted',
+  //   );
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  //   try {
+  //     const result = await formStatement.executeAsync({
+  //       $form: activeForm.id,
+  //       $user: activeUserId,
+  //       $submitted: isSubmitted,
+  //     });
+  //     const allRows = await result.getAllAsync();
+  //     setData(allRows);
+  //     // Reset the SQLite query cursor to the beginning for the next `getAllAsync()` call.
+  //     await result.resetAsync();
+  //   } catch (error) {
+  //     Sentry.captureException(error, {
+  //       extra: {
+  //         page: 'Submission',
+  //         activeForm,
+  //         activeUserId,
+  //         isSubmitted,
+  //       },
+  //     });
+  //     // Optionally, you can show an error message to the user or log it to an error tracking service.
+  //   } finally {
+  //     await formStatement.finalizeAsync();
+  //     setTimeout(() => {
+  //       setLoading(false);
+  //     }, 500);
+  //   }
+  // }, [db, activeForm, activeUserId, isSubmitted]);
 
-  useEffect(() => {
-    if (refreshPage) {
-      fetchData();
-      UIState.update((s) => {
-        s.refreshPage = false;
-      });
-    }
-  }, [refreshPage, activeForm?.id, fetchData]);
+  // useEffect(() => {
+  //   fetchData();
+  // }, [fetchData]);
 
   useEffect(
     () =>
@@ -251,8 +245,9 @@ const Submission = ({ navigation, route }) => {
           testID="draft-submission-button"
           style={{ padding: 8 }}
           activeOpacity={0.6}
+          disabled={loading}
         >
-          <View style={totalSavedData && isSubmitted === 1 ? styles.redDot : styles.redDotHide} />
+          <View style={isSubmitted === 1 ? styles.redDot : styles.redDotHide} />
           {isSubmitted ? (
             <LucideIcon name="file-clock" size={24} color="#677483" />
           ) : (

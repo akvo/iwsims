@@ -110,7 +110,7 @@ const handleOnUploadFiles = async (
   return responses.map((res, i) => ({ ...allFiles[i], ...res.data }));
 };
 
-const syncFormSubmission = async (db, activeJob = {}) => {
+const syncFormSubmission = async (db, data) => {
   const { isConnected } = await Network.getNetworkStateAsync();
   if (!isConnected) {
     return;
@@ -120,8 +120,6 @@ const syncFormSubmission = async (db, activeJob = {}) => {
     const session = await crudUsers.getActiveUser(db);
     // set token
     api.setToken(session.token);
-    // get all datapoints to sync
-    const data = await crudDataPoints.selectSubmissionToSync(db);
     /**
      * Upload all photo of questions first
      */
@@ -162,8 +160,6 @@ const syncFormSubmission = async (db, activeJob = {}) => {
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (uuidv4Regex.test(d?.uuid)) {
           syncData.uuid = d.uuid;
-        } else if (uuidv4Regex.test(activeJob?.info)) {
-          syncData.uuid = activeJob.info;
         }
 
         // sync data point
@@ -184,6 +180,7 @@ const syncFormSubmission = async (db, activeJob = {}) => {
         }
         success += 1;
       } catch (error) {
+        console.error(`Error syncing data point ${d.id}:`, error);
         failed += 1;
         Sentry.captureException(error);
         // Mark datapoint as not submitted

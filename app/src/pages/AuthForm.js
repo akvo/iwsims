@@ -103,6 +103,8 @@ const AuthForm = ({ navigation }) => {
         api.setToken(bearerToken);
         // save authentication code
         Storage.setItem('authenticationCode', passcode);
+        // save user
+        Storage.setItem('activeUser', JSON.stringify(data));
         await cascades.createSqliteDir();
         // update auth state
         AuthState.update((s) => {
