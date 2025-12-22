@@ -12,3 +12,4 @@ notify.team.sh
 .vscode/targets.log
 **/app.env
 **/db.env
+.virtual_documents/
