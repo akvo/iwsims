@@ -1,6 +1,7 @@
+import inspect
+import enum
 from typing import Optional
 from pydantic import BaseModel, Field, create_model
-import inspect
 
 
 def optional(*fields):
@@ -31,3 +32,16 @@ def optional(*fields):
         fields = cls.model_fields.keys()
         return dec(cls)
     return dec
+
+
+class QuestionType(enum.Enum):
+    text = "text"
+    number = "number"
+    option = "option"
+    multiple_option = "multiple_option"
+    photo = "photo"
+    date = "date"
+    geo = "geo"
+    cascade = "cascade"
+    geoshape = "geoshape"
+    signature = "signature"

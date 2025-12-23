@@ -4,8 +4,8 @@ import functools
 import json
 from lxml import etree
 
-keys = os.environ["CIPHER_KEYS"]
-chars = os.environ["CIPHER_CHARS"]
+keys = os.environ["MIS_CIPHER_KEYS"]
+chars = os.environ["MIS_CIPHER_CHARS"]
 an = len(chars)
 
 
