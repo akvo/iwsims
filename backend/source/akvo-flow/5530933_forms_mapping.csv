@@ -1,0 +1,37 @@
+flow_surveyId,flow_question_group,flow_question_label,flow_question_id,mis_id,mis_question_group,mis_question_label,mis_question_id
+5530933,Final Remarks,General Remarks and Recommendations,6550920,1749624452908,Final Remarks,General Remarks and Recommendations,1749624532451
+5530933,Final Remarks,Signature of Officer,8550921,1749624452908,Final Remarks,Signature of Officer,1749631698734
+5530933,Location of Village,Who is the implementing agency/agencies?,1031710926,1749623934933,Basic Information,Who is the implementing agency/agencies?,1749624452993
+5530933,Location of Village,Are you able to capture the locality Plan?,1035730921,,,,
+5530933,Location of Village,Locality Plan,1550935,,,,
+5530933,Location of Village,What is the Salinity in ppt?,389680954,,,,
+5530933,Location of Village,What is the Conductivity ?,393220960,,,,
+5530933,Location of Village,What is the Total Coliform Level?,398340987,1749624452908,Project Info,What is the Total Coliform Level?,1749631093126
+5530933,Location of Village,Are you able to take the water sample,398350953,,,,
+5530933,Location of Village,What is the pH,402300957,,,,
+5530933,Location of Village,What is the Faecal Coliform Level?,405990956,,,,
+5530933,Location of Village,Level of Contamination using CBT bags?,410050993,1749624452908,Project Info,Level of Contamination using CBT bags?,1749630906302
+5530933,Location of Village,What is the Turbidity in NTU?,413881004,1749624452908;1749632545233,Project Info;Water Quality Testing,What is the Turbidity in NTU?,1749631183056;1749633220745
+5530933,Location of Village,Water test conducted?,4420940,1749624452908,Project Info,Water test conducted?,1749630785253
+5530933,Location of Village,WSMP Submitted?,4460920,,,,
+5530933,Location of Village,GPS Location,480936,1749623934933,Basic Information,GPS Location,1749624452992
+5530933,Location of Village,Construction Start Date?,5550920,1749624452908,Project Info,Construction Start Date?,1749624452910
+5530933,Location of Village,Level of contamination of H2S Results?,6510931,,,,
+5530933,Location of Village,Village Name,8510923,1749623934933,Basic Information,Village Name,1749624452991
+5530933,Location of Village,Proposed Completion Date?,8540921,1749624452908,Project Info,Proposed Completion Date?,1749630516825
+5530933,Location of Village,Project Background,9510938,1749623934933,Basic Information,Project Background,174962445299
+5530933,Location of Village,Which Division-Province-Tikina,9530926,1749623934933,Basic Information,Which Division-Province-Tikina?,1749624452990
+5530933,Project Photos,Take Photo,2490943,1749624452908,Project Photos,Take Photo,1749624521442
+5530933,Project Photos,Comment on Photo taken,6620936,1749624452908,Project Photos,Comment on Photo Taken,1749631662652
+5530933,Project Scope,What percentage of project is complete?,1009150932,,,,
+5530933,Project Scope,Media Placing,2490941,,,,
+5530933,Project Scope,Concrete Base Construction,4440926,1749624452908,Concrete Base Construction,Concrete Base Construction,1849633456789
+5530933,Project Scope,Fencing Installation,4440927,,,,
+5530933,Project Scope,Pipework Installation,4450934,,,,
+5530933,Project Scope,Netting Installation,5530934,,,,
+5530933,Project Scope,Balance Tank Installation,5530935,,,,
+5530933,Project Scope,Washout Installation,640928,,,,
+5530933,Project Scope,Storage Tank Installation,7450928,,,,
+5530933,Project Scope,Sign Board Installation,9490937,,,,
+5530933,Project Scope,Lock Installation,9520924,,,,
+5530933,Project Scope,Tank Installation,9540935,,,,
