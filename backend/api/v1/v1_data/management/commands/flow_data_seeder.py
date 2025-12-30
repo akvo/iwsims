@@ -139,8 +139,11 @@ class Command(BaseCommand):
                 for dp in datapoints:
                     dp.delete(hard=True)
                 deleted_count = len(datapoints)
-                # Remove the seeded CSV file after revert
-                os.remove(seeded_csv_path)
+                # Set empty the seeded data CSV
+                seeded_df = seeded_df.iloc[0:0]
+                seeded_df.to_csv(
+                    seeded_csv_path, index=False, encoding="utf-8"
+                )
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"Successfully reverted {deleted_count} records "
