@@ -680,7 +680,11 @@ class Command(BaseCommand):
                             isinstance(answer_value, list)
                         ):
                             answer_text = "|".join(
-                                [a["name"] for a in answer_value if a]
+                                [
+                                    a.get("name") or a.get("text") or ""
+                                    for a in answer_value
+                                    if a and ("name" in a or "text" in a)
+                                ]
                             )
                             invalid_values.append(
                                 {
