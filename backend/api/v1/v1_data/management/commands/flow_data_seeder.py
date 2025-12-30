@@ -137,8 +137,10 @@ class Command(BaseCommand):
                     pk__in=mis_data_ids
                 ).all()
                 for dp in datapoints:
-                    dp.hard_delete()
+                    dp.delete(hard=True)
                 deleted_count = len(datapoints)
+                # Remove the seeded CSV file after revert
+                os.remove(seeded_csv_path)
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"Successfully reverted {deleted_count} records "
@@ -342,7 +344,6 @@ class Command(BaseCommand):
             with transaction.atomic():
                 for r in new_records:
                     d = FormData.objects.create(
-                        created=r["created_at"],
                         name=r["name"],
                         geo=r["geo"],
                         submitter=r["submitter"],
@@ -351,6 +352,10 @@ class Command(BaseCommand):
                         form_id=r["form_id"],
                         created_by=user,
                     )
+                    # Update created
+                    d.created = r["created_at"]
+                    d.updated = d.created
+                    d.save()
                     answers = r["answers"]
                     d.data_answer.bulk_create(
                         [
