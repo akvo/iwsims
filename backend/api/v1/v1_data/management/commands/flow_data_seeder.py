@@ -877,6 +877,17 @@ class Command(BaseCommand):
                                 answer_value,
                             )
                     else:
+                        if (
+                            isinstance(answer_value, dict) and
+                            "text" in answer_value
+                        ):
+                            answer_value = answer_value["text"]
+                        if (
+                            isinstance(answer_value, list) and
+                            len(answer_value) == 1 and
+                            "text" in answer_value[0]
+                        ):
+                            answer_value = answer_value[0]["text"]
                         answer_records.append(
                             self._create_answer_record(
                                 question_id=q.pk, name=answer_value
