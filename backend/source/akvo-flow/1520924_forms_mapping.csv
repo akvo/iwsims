@@ -1,28 +1,28 @@
-flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id
-1520924,Contact Details,Name of the village headman/TNK/village nurse?,411311001,1749632545233,Contact Details,Name of the village headman/TNK/village nurse?,1749632793266
-1520924,Contact Details,Phone contact of the Village Headman/TNK or village nurse?,425670981,1749632545233,Contact Details,Phone contact of the Village Headman/TNK or village nurse?,1749632819551
-1520924,EPS Photos,Take Photo,1570928,1749624452908,Project Photos,Take Photo,1749624521442
-1520924,EPS Photos,Comment on Photo taken,1700923,1749624452908,Project Photos,Comment on Photo Taken,1749631662652
-1520924,Location of the Village,Which Division-Province-Tikina are you in?,1530921,,,,
-1520924,Location of the Village,Geolocation,2590929,,,,
-1520924,Location of the Village,Date of Inspection,265140920,1749632545233,Contact Details,Date of Inspection,1749632545235
-1520924,Location of the Village,Do you have Water Committee,403570958,,,,
-1520924,Location of the Village,Is the Water Committee active?,425660973,,,,
-1520924,Location of the Village,Village Name,5510924,1749623934933,Basic Information,Village Name,1749624452991
-1520924,Location of the Village,Weather Condition,6520923,1749632545233,Water Quality Testing,Weather Condition,1749632196724
-1520924,Location of the Village,Name of the Tikina,6530922,,,,
-1520924,Location of the Village,Project Implementation date,9490925,1749623934933,Basic Information,Project Implementation date,1749632480584
-1520924,Location of the Village,Type of Water Source,9540923,,,,
-1520924,Water Quality Testing,Why the water sample could not be taken?,1029540992,1749632545233,Water Quality Testing,Why the water sample could not be taken?,1749632887312
-1520924,Water Quality Testing,Are you able to collect the water sample?,1040270974,1749632545233,Water Quality Testing,Are you able to collect the water sample?,1749632647507
-1520924,Water Quality Testing,Take Photo of Sampling Point,1820930,1749632545233,Water Quality Testing,Take Photo of Sampling Point,1749633073911
-1520924,Water Quality Testing,What is the E.Coli Count using CBT Bags?,297860920,1749632545233,Water Quality Testing,What is the E. coli Count using CBT Bags?,1749633325456
-1520924,Water Quality Testing,The current status of this system?,360140967,1749632545233,General Remarks,The current status of this system?,1749633373968
-1520924,Water Quality Testing,Signature of Officer,480942,1749624452908;1749632545233,Final Remarks;General Remarks,Signature of Officer,1749631698734;1749633421496
-1520924,Water Quality Testing,What is the Turbidity in NTU?,6520925,1749632545233,Water Quality Testing,What is the Turbidity in NTU?,1749633220745
-1520924,Water Quality Testing,What is the Faecal Coliform count in 1cfu/100ml?,6530923,1749632545233,Water Quality Testing,"Weather Condition;Are you able to collect the water sample?;Why the water sample could not be taken?;Why the water sample could not be taken? (If other, please specify);Method of Water Testing Used?;Take Photo of Sampling Point;Description of Sampling Point;Which parameters were you able to test?;Number of E. coli for the Lab Test;What is the Turbidity in NTU?;What is the Total Coliform count in 1cfu/100ml?;What is the Fecal Coliform count in 1cfu/100ml?;What is the E. coli Count using CBT Bags?;Risk Level for CBT Test;Take photo of the CBT Bags;Temperature °C - 2550B (APHA Method Code);pH - 4500-H+B (APHA Method Code);Conductivity µS/cm - 2510B (APHA Method Code);Salinity PPT 2520B 0.2 (APHA Method Code)",1749632196724;1749632647507;1749632887312;1749632991459;1749633001462;1749633073911;1749633110662;1749631050010;1749633220746;1749633220745;1749633259392;1749633295165;1749633325456;1749633325457;1749633325462;1797307852531;1797307852532;1797307852533;1797307852534
-1520924,Water Quality Testing,Level of Contamination for H2S kit?,6720921,1749632545233,Water Quality Testing,"Weather Condition;Are you able to collect the water sample?;Why the water sample could not be taken?;Why the water sample could not be taken? (If other, please specify);Method of Water Testing Used?;Take Photo of Sampling Point;Description of Sampling Point;Which parameters were you able to test?;Number of E. coli for the Lab Test;What is the Turbidity in NTU?;What is the Total Coliform count in 1cfu/100ml?;What is the Fecal Coliform count in 1cfu/100ml?;What is the E. coli Count using CBT Bags?;Risk Level for CBT Test;Take photo of the CBT Bags;Temperature °C - 2550B (APHA Method Code);pH - 4500-H+B (APHA Method Code);Conductivity µS/cm - 2510B (APHA Method Code);Salinity PPT 2520B 0.2 (APHA Method Code)",1749632196724;1749632647507;1749632887312;1749632991459;1749633001462;1749633073911;1749633110662;1749631050010;1749633220746;1749633220745;1749633259392;1749633295165;1749633325456;1749633325457;1749633325462;1797307852531;1797307852532;1797307852533;1797307852534
-1520924,Water Quality Testing,Method of Water Testing Used?,680920,1749632545233,Water Quality Testing,Method of Water Testing Used?,1749633001462
-1520924,Water Quality Testing,Description of Sampling Point,700922,1749632545233,Water Quality Testing,Description of Sampling Point,1749633110662
-1520924,Water Quality Testing,General Remarks,7450925,1749632545233,General Remarks,General Remarks,1749633350893
-1520924,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,9530924,1749632545233,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,1749633259392
+flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method
+1520924,Contact Details,Name of the village headman/TNK/village nurse?,411311001,1749632545233,Contact Details,Name of the village headman/TNK/village nurse?,1749632793266,100.0,high,text_similarity
+1520924,Contact Details,Phone contact of the Village Headman/TNK or village nurse?,425670981,1749632545233,Contact Details,Phone contact of the Village Headman/TNK or village nurse?,1749632819551,100.0,high,text_similarity
+1520924,EPS Photos,Take Photo,1570928,1749624452908,Project Info,Take photo of the sampling point,1749630785257,100.0,high,text_similarity
+1520924,EPS Photos,Comment on Photo taken,1700923,1749624452908,Project Photos,Comment on Photo Taken,1749631662652,100.0,high,text_similarity
+1520924,Location of the Village,Which Division-Province-Tikina are you in?,1530921,1749623934933,Basic Information,Which Division-Province-Tikina?,1749624452990,98.36,high,text_similarity
+1520924,Location of the Village,Geolocation,2590929,1749623934933,Basic Information,GPS Location,1749624452992,84.21,low,text_similarity
+1520924,Location of the Village,Date of Inspection,265140920,1749632545233,Contact Details,Date of Inspection,1749632545235,100.0,high,text_similarity
+1520924,Location of the Village,Do you have Water Committee,403570958,1749623934933,Basic Information,Do you have Water Committee and Is it active?,1749624452105,100.0,high,text_similarity
+1520924,Location of the Village,Is the Water Committee active?,425660973,,,,,73.33,none,none
+1520924,Location of the Village,Village Name,5510924,1749623934933,Basic Information,Village Name,1749624452991,100.0,high,text_similarity
+1520924,Location of the Village,Weather Condition,6520923,1749624452908,Project Info,Weather Conditions,1749630701234,100.0,high,text_similarity
+1520924,Location of the Village,Name of the Tikina,6530922,1749623934933,Basic Information,Name of the Village Head/WC/Village's Nurse,1749624452995,81.25,low,text_similarity
+1520924,Location of the Village,Project Implementation date,9490925,1749623934933,Basic Information,Project Implementation date,1749632480584,100.0,high,text_similarity
+1520924,Location of the Village,Type of Water Source,9540923,,,,,63.16,none,none
+1520924,Water Quality Testing,Why the water sample could not be taken?,1029540992,1749632545233,Water Quality Testing,Why the water sample could not be taken?,1749632887312,100.0,high,text_similarity
+1520924,Water Quality Testing,Are you able to collect the water sample?,1040270974,1749632545233,Water Quality Testing,Are you able to collect the water sample?,1749632647507,100.0,high,text_similarity
+1520924,Water Quality Testing,Take Photo of Sampling Point,1820930,1749624452908,Project Photos,Take Photo,1749624521442,100.0,high,text_similarity
+1520924,Water Quality Testing,What is the E.Coli Count using CBT Bags?,297860920,1749632545233,Water Quality Testing,What is the E. coli Count using CBT Bags?,1749633325456,97.5,high,text_similarity
+1520924,Water Quality Testing,The current status of this system?,360140967,1749632545233,General Remarks,The current status of this system?,1749633373968,100.0,high,text_similarity
+1520924,Water Quality Testing,Signature of Officer,480942,1749624452908,Final Remarks,Signature of Officer,1749631698734,100.0,high,text_similarity
+1520924,Water Quality Testing,What is the Turbidity in NTU?,6520925,1749624452908,Project Info,What is the Turbidity in NTU?,1749631183056,100.0,high,text_similarity
+1520924,Water Quality Testing,What is the Faecal Coliform count in 1cfu/100ml?,6530923,1749632545233,Water Quality Testing,What is the Fecal Coliform count in 1cfu/100ml?,1749633295165,97.87,high,text_similarity
+1520924,Water Quality Testing,Level of Contamination for H2S kit?,6720921,1749624452908,Project Info,Level of Contamination using CBT bags?,1749630906302,81.97,low,text_similarity
+1520924,Water Quality Testing,Method of Water Testing Used?,680920,1749632545233,Water Quality Testing,Method of Water Testing Used?,1749633001462,100.0,high,text_similarity
+1520924,Water Quality Testing,Description of Sampling Point,700922,1749632545233,Water Quality Testing,Description of Sampling Point,1749633110662,100.0,high,text_similarity
+1520924,Water Quality Testing,General Remarks,7450925,1749624452908,Final Remarks,General Remarks and Recommendations,1749624532451,100.0,high,text_similarity
+1520924,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,9530924,1749632545233,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,1749633259392,100.0,high,text_similarity
