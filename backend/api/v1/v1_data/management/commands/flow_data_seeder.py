@@ -14,6 +14,7 @@ from api.v1.v1_forms.models import (
 )
 from api.v1.v1_data.models import FormData
 from api.v1.v1_users.models import SystemUser
+from api.v1.v1_profile.models import Administration
 
 
 # Constants for maintainability
@@ -620,6 +621,13 @@ class Command(BaseCommand):
                     "Administration fields will be empty."
                 )
             )
+        adm_db_mappings = Administration.objects\
+            .filter(parent__isnull=False).values('id', 'name')
+        # convert to dict for easy lookup
+        adm_db_mappings = {
+            str(adm['name']): str(adm['id'])
+            for adm in adm_db_mappings
+        }
 
         results = []
         caddisfly_data = []
@@ -675,17 +683,29 @@ class Command(BaseCommand):
                         administration_value = adm_mappings.get(
                             datapoint_id, None
                         )
+                        adm_last = None
+                        adm_list = []
                         if (
-                            not administration_value and
-                            isinstance(answer_value, list)
+                            isinstance(answer_value, list) and
+                            len(answer_value) > 0
                         ):
-                            answer_text = "|".join(
-                                [
-                                    a.get("name") or a.get("text") or ""
-                                    for a in answer_value
-                                    if a and ("name" in a or "text" in a)
-                                ]
+                            adm_list = [
+                                a.get("name") or a.get("text") or ""
+                                for a in answer_value
+                                if a and ("name" in a or "text" in a)
+                            ]
+                            adm_last = adm_list[-1]
+
+                        # Try to get administration_value
+                        # from last item if not found
+                        if not administration_value and adm_last:
+                            administration_value = adm_db_mappings.get(
+                                adm_last, None
                             )
+
+                        # If still not found, insert invalid value
+                        if not administration_value:
+                            answer_text = "|".join(adm_list)
                             invalid_values.append(
                                 {
                                     "mis_form_id": q.form.pk,
