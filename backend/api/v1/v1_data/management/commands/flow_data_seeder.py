@@ -13,6 +13,7 @@ from api.v1.v1_forms.models import (
     QuestionTypes,
 )
 from api.v1.v1_data.models import FormData
+from api.v1.v1_users.models import SystemUser
 
 
 # Constants for maintainability
@@ -70,10 +71,33 @@ class Command(BaseCommand):
             help="Revert seeded data",
         )
 
+        parser.add_argument(
+            "--email",
+            type=str,
+            required=False,
+            help="Email of the user running the command to set as created_by",
+        )
+
     def handle(self, *args, **options):
         flow_form_id = options.get("form")
         limit = options.get("limit")
         revert = options.get("revert", False)
+        email = options.get("email", None)
+
+        if not email and revert is False:
+            self.stdout.write(
+                self.style.ERROR(
+                    "Email argument is required when not reverting"
+                )
+            )
+            return
+
+        user = SystemUser.objects.filter(email=email).first()
+        if not user and not revert:
+            self.stdout.write(
+                self.style.ERROR(f"User with email {email} not found.")
+            )
+            return
 
         # Input validation
         if flow_form_id <= 0:
@@ -106,10 +130,14 @@ class Command(BaseCommand):
                     dtype={"mis_data_id": int, "flow_data_id": str},
                 )
                 mis_data_ids = seeded_df["mis_data_id"].tolist()
+                mis_data_ids = [int(i) for i in mis_data_ids if pd.notna(i)]
                 # Delete FormData records with these IDs
-                deleted_count, _ = FormData.objects.filter(
+                datapoints = FormData.objects.filter(
                     pk__in=mis_data_ids
-                ).delete()
+                ).all()
+                for dp in datapoints:
+                    dp.hard_delete()
+                deleted_count = len(datapoints)
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"Successfully reverted {deleted_count} records "
@@ -207,8 +235,91 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"Extracted {len(records)} value records")
         )
 
-        # Step 4: insert to database with transaction management
-        self.stdout.write("\nStep 4: Inserting records into database...")
+        # Step 4: Check seeded data against existing data to avoid duplicates
+        self.stdout.write(
+            "\nStep 4: Checking for existing records to avoid duplicates..."
+        )
+        # Load records datapoint_ids
+        datapoint_ids = [str(r["datapoint_id"]) for r in records]
+
+        new_records = records
+        # Load existing seeded csv to mapped mis_data_ids
+        seeded_csv_path = os.path.join(
+            FLOW_SOURCE_DIR, "seeded", f"{flow_form_id}_seeded_data.csv"
+        )
+        try:
+            seeded_df = pd.read_csv(
+                seeded_csv_path,
+                encoding="utf-8",
+                dtype={"flow_data_id": str},
+            )
+            seed_datapoint_ids = seeded_df["flow_data_id"].tolist()
+            diff_datapoint_ids = set(datapoint_ids) - set(seed_datapoint_ids)
+            new_records = list(filter(
+                lambda r: str(r["datapoint_id"]) in diff_datapoint_ids,
+                records
+            ))
+            # filtered seeded_df with datapoint_ids in current records
+            seeded_df = seeded_df[
+                seeded_df["flow_data_id"].isin(datapoint_ids)
+            ]
+            # show mis_data_ids that already exist
+            mis_data_ids = seeded_df["mis_data_id"].apply(int).tolist()
+            mis_data = FormData.objects.filter(
+                pk__in=mis_data_ids
+            ).all()
+            # Update data's answer
+            for d in mis_data:
+                flow_data_id = seeded_df[
+                    seeded_df["mis_data_id"] == d.pk
+                ]["flow_data_id"].values[0]
+                record = next(
+                    (
+                        r
+                        for r in records
+                        if str(r["datapoint_id"]) == flow_data_id
+                    ),
+                    None,
+                )
+                if record:
+                    # Clear existing answers
+                    d.data_answer.all().delete()
+                    # Bulk create new answers
+                    d.data_answer.bulk_create(
+                        [
+                            d.data_answer.model(
+                                data=d,
+                                question_id=a["question_id"],
+                                value=a["value"],
+                                options=a["options"],
+                                name=a["name"],
+                                created_by=user,
+                            )
+                            for a in record["answers"]
+                        ]
+                    )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Found {len(seed_datapoint_ids)} existing seeded records."
+                )
+            )
+
+        except FileNotFoundError:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Seeded data file not found: {seeded_csv_path}. "
+                    "Assuming no existing records."
+                )
+            )
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f"Error loading seeded data file: {e}")
+            )
+            return
+        if not new_records:
+            return
+        # Step 5: Insert new records into database
+        self.stdout.write("\nStep 5: Inserting new records into database...")
         try:
             """
             Bulk insert records into FormData with the following fields:
@@ -228,31 +339,34 @@ class Command(BaseCommand):
             seeded = []
 
             with transaction.atomic():
-                for r in records:
+                for r in new_records:
                     d = FormData.objects.create(
                         created=r["created_at"],
                         name=r["name"],
                         geo=r["geo"],
                         submitter=r["submitter"],
                         uuid=r["uuid"],
-                        administration=r["administration"],
+                        administration_id=int(r["administration"]),
                         form_id=r["form_id"],
+                        created_by=user,
                     )
                     answers = r["answers"]
                     d.data_answer.bulk_create(
                         [
                             d.data_answer.model(
+                                data=d,
                                 question_id=a["question_id"],
                                 value=a["value"],
                                 options=a["options"],
                                 name=a["name"],
-                                created_by=1,
+                                created_by=user,
                             )
                             for a in answers
                         ]
                     )
                     seeded.append(
                         {
+                            "mis_form_id": r["form_id"],
                             "mis_data_id": d.pk,
                             "flow_data_id": r["datapoint_id"],
                         }
@@ -533,150 +647,161 @@ class Command(BaseCommand):
             submitter = row.get(SUBMITTER_COL, "")
             uuid = row.get(IDENTIFIER_COL, uuid4())
 
-            # Extract values for each mapped Flow Question ID
-            for flow_qid in flow_questions_ids:
-                raw_value = row[flow_qid]
+            # Build a list of (Question, flow_qid) pairs
+            # for which this row has a value
+            mis_questions = []
+            for flow_qid in list(
+                filter(lambda x: pd.notna(row[x]), flow_questions_ids)
+            ):
+                for q in questions_by_flow_id.get(flow_qid, []):
+                    mis_questions.append((q, flow_qid))
 
-                # Skip empty/NaN values
-                if pd.isna(raw_value) or raw_value == "":
-                    continue
-
-                # Get pre-fetched questions for this Flow Question ID
-                mis_questions = questions_by_flow_id.get(flow_qid, [])
-
-                # Group mis questions by form.pk
-                mis_questions_by_form = {}
-                for q in mis_questions:
-                    mis_questions_by_form.setdefault(q.form.pk, []).append(q)
-
-                for form_id, mis_questions in mis_questions_by_form.items():
-                    # Prepare answer records for this form
-                    answer_records = []
-                    geo_value = None
-                    administration_value = None
-                    # Process value for each MIS Question ID
-                    for q in mis_questions:
-                        answer_value = self._normalize_value(raw_value)
-                        if q.type == QuestionTypes.administration:
-                            administration_value = adm_mappings.get(
-                                str(datapoint_id), None
+            mis_questions_by_form = {}
+            for q, flow_qid in mis_questions:
+                mis_questions_by_form \
+                    .setdefault(q.form.pk, []) \
+                    .append((q, flow_qid))
+            for form_id, questions in mis_questions_by_form.items():
+                # Prepare answer records for this form
+                answer_records = []
+                geo_value = None
+                administration_value = None
+                # Process value for each MIS Question ID
+                for q, flow_qid in questions:
+                    # raw value coming from the Flow data column
+                    raw_value = row.get(flow_qid, None)
+                    answer_value = self._normalize_value(raw_value)
+                    if q.type == QuestionTypes.administration:
+                        administration_value = adm_mappings.get(
+                            datapoint_id, None
+                        )
+                        if (
+                            not administration_value and
+                            isinstance(answer_value, list)
+                        ):
+                            answer_text = "|".join(
+                                [a["name"] for a in answer_value if a]
                             )
+                            invalid_values.append(
+                                {
+                                    "mis_form_id": q.form.pk,
+                                    "mis_question_id": q.pk,
+                                    "mis_question_type": (
+                                        QuestionTypes.FieldStr[q.type]
+                                    ),
+                                    "flow_data_id": datapoint_id,
+                                    "flow_question_id": flow_qid,
+                                    "value": answer_text,
+                                }
+                            )
+                        else:
                             answer_records.append(
                                 self._create_answer_record(
                                     question_id=q.pk,
                                     value=administration_value,
                                 )
                             )
-                        elif q.type in [
-                            QuestionTypes.option,
-                            QuestionTypes.multiple_option,
-                        ]:
-                            if not isinstance(answer_value, list):
-                                self._add_invalid_value(
-                                    invalid_values,
-                                    q,
-                                    datapoint_id,
-                                    flow_qid,
-                                    answer_value,
-                                )
-                                continue
-                            answer_options = [
-                                a.get(TEXT_KEY) if TEXT_KEY in a else None
-                                for a in answer_value
+                    elif q.type in [
+                        QuestionTypes.option,
+                        QuestionTypes.multiple_option,
+                    ]:
+                        if not isinstance(answer_value, list):
+                            self._add_invalid_value(
+                                invalid_values,
+                                q,
+                                datapoint_id,
+                                flow_qid,
+                                answer_value,
+                            )
+                            continue
+                        answer_options = [
+                            a.get(TEXT_KEY) if TEXT_KEY in a else None
+                            for a in answer_value
+                        ]
+                        if not answer_options:
+                            continue
+                        option_values = q.options.filter(
+                            label__in=answer_options
+                        ).values_list("value", flat=True)
+                        if len(option_values) == 0:
+                            continue
+                        option_values = list(option_values)
+                        answer_records.append(
+                            self._create_answer_record(
+                                question_id=q.pk, options=option_values
+                            )
+                        )
+                    elif q.type == QuestionTypes.geo:
+                        geo_value = answer_value
+                        if (
+                            isinstance(answer_value, dict) and
+                            "lat" in answer_value and
+                            "long" in answer_value
+                        ):
+                            geo_value = [
+                                answer_value["lat"],
+                                answer_value["long"]
                             ]
-                            if not answer_options:
+                        answer_records.append(
+                            self._create_answer_record(
+                                question_id=q.pk, options=geo_value
+                            )
+                        )
+                    elif q.type == QuestionTypes.number:
+                        if isinstance(answer_value, list):
+                            continue
+                        if (
+                            isinstance(answer_value, dict)
+                            and answer_value.get(TYPE_KEY)
+                            == CADDISFLY_TYPE
+                        ):
+                            # Get last value from 'result' as value
+                            # Safe access to prevent IndexError
+                            result_list = answer_value.get(
+                                CADDISFLY_RESULT, []
+                            )
+                            if not result_list:
                                 continue
-                            option_values = q.options.filter(
-                                label__in=answer_options
-                            ).values_list("value", flat=True)
-                            if len(option_values) == 0:
-                                continue
+                            num_value = (
+                                result_list[-1].get(VALUE_KEY)
+                                if result_list
+                                else None
+                            )
                             answer_records.append(
                                 self._create_answer_record(
-                                    question_id=q.pk, options=option_values
+                                    question_id=q.pk, value=num_value
                                 )
                             )
-                        elif q.type == QuestionTypes.geo:
-                            geo_value = answer_value
-                            answer_records.append(
-                                self._create_answer_record(
-                                    question_id=q.pk, options=answer_value
-                                )
-                            )
-                        elif q.type == QuestionTypes.number:
-                            if isinstance(answer_value, list):
-                                continue
-                            if (
-                                isinstance(answer_value, dict)
-                                and answer_value.get(TYPE_KEY)
-                                == CADDISFLY_TYPE
+                            # Extract 'result' as new fields for CSV
+                            for res in answer_value.get(
+                                CADDISFLY_RESULT, []
                             ):
-                                # Get last value from 'result' as value
-                                # Safe access to prevent IndexError
-                                result_list = answer_value.get(
-                                    CADDISFLY_RESULT, []
+                                key_name = (
+                                    f"{res[NAME_KEY]} ({res[UNIT_KEY]})"
                                 )
-                                if not result_list:
-                                    continue
-                                num_value = (
-                                    result_list[-1].get(VALUE_KEY)
-                                    if result_list
-                                    else None
+                                answer_value[key_name] = res[VALUE_KEY]
+                            del answer_value[CADDISFLY_RESULT]
+
+                            # Add metadata columns at beginning
+                            answer_value = {
+                                "mis_form_id": q.form.pk,
+                                "mis_question_id": q.pk,
+                                "flow_data_id": datapoint_id,
+                                **answer_value,
+                            }
+
+                            caddisfly_data.append(answer_value)
+                        else:
+                            try:
+                                num_value = float(
+                                    re.sub(r"[\s]", "", str(answer_value))
                                 )
                                 answer_records.append(
                                     self._create_answer_record(
                                         question_id=q.pk, value=num_value
                                     )
                                 )
-                                # Extract 'result' as new fields for CSV
-                                for res in answer_value.get(
-                                    CADDISFLY_RESULT, []
-                                ):
-                                    key_name = (
-                                        f"{res[NAME_KEY]} ({res[UNIT_KEY]})"
-                                    )
-                                    answer_value[key_name] = res[VALUE_KEY]
-                                del answer_value[CADDISFLY_RESULT]
-
-                                # Add metadata columns at beginning
-                                answer_value = {
-                                    "mis_form_id": q.form.pk,
-                                    "mis_question_id": q.pk,
-                                    "flow_data_id": datapoint_id,
-                                    **answer_value,
-                                }
-
-                                caddisfly_data.append(answer_value)
-                            else:
-                                try:
-                                    num_value = float(
-                                        re.sub(r"[\s]", "", str(answer_value))
-                                    )
-                                    answer_records.append(
-                                        self._create_answer_record(
-                                            question_id=q.pk, value=num_value
-                                        )
-                                    )
-                                except ValueError:
-                                    self._add_invalid_value(
-                                        invalid_values,
-                                        q,
-                                        datapoint_id,
-                                        flow_qid,
-                                        answer_value,
-                                    )
-                        elif q.type == QuestionTypes.photo:
-                            if (
-                                isinstance(answer_value, dict)
-                                and FILENAME_KEY in answer_value
-                            ):
-                                answer_records.append(
-                                    self._create_answer_record(
-                                        question_id=q.pk,
-                                        name=answer_value[FILENAME_KEY],
-                                    )
-                                )
-                            else:
+                            except ValueError:
                                 self._add_invalid_value(
                                     invalid_values,
                                     q,
@@ -684,46 +809,65 @@ class Command(BaseCommand):
                                     flow_qid,
                                     answer_value,
                                 )
-                        elif q.type == QuestionTypes.signature:
-                            if (
-                                isinstance(answer_value, dict)
-                                and IMAGE_KEY in answer_value
-                            ):
-                                answer_records.append(
-                                    self._create_answer_record(
-                                        question_id=q.pk,
-                                        name=answer_value[IMAGE_KEY],
-                                    )
-                                )
-                            else:
-                                self._add_invalid_value(
-                                    invalid_values,
-                                    q,
-                                    datapoint_id,
-                                    flow_qid,
-                                    answer_value,
-                                )
-                        else:
+                    elif q.type == QuestionTypes.photo:
+                        if (
+                            isinstance(answer_value, dict)
+                            and FILENAME_KEY in answer_value
+                        ):
                             answer_records.append(
                                 self._create_answer_record(
-                                    question_id=q.pk, name=answer_value
+                                    question_id=q.pk,
+                                    name=answer_value[FILENAME_KEY],
                                 )
                             )
-
-                    if answer_records and administration_value:
-                        results.append(
-                            {
-                                "created_at": row.get(CREATED_AT_COL, None),
-                                "datapoint_id": datapoint_id,
-                                "name": datapoint_name,
-                                "submitter": submitter,
-                                "uuid": uuid,
-                                "geo": geo_value,
-                                "form_id": form_id,
-                                "administration": administration_value,
-                                "answers": answer_records,
-                            }
+                        else:
+                            self._add_invalid_value(
+                                invalid_values,
+                                q,
+                                datapoint_id,
+                                flow_qid,
+                                answer_value,
+                            )
+                    elif q.type == QuestionTypes.signature:
+                        if (
+                            isinstance(answer_value, dict)
+                            and IMAGE_KEY in answer_value
+                        ):
+                            answer_records.append(
+                                self._create_answer_record(
+                                    question_id=q.pk,
+                                    name=answer_value[IMAGE_KEY],
+                                )
+                            )
+                        else:
+                            self._add_invalid_value(
+                                invalid_values,
+                                q,
+                                datapoint_id,
+                                flow_qid,
+                                answer_value,
+                            )
+                    else:
+                        answer_records.append(
+                            self._create_answer_record(
+                                question_id=q.pk, name=answer_value
+                            )
                         )
+
+                if answer_records and administration_value:
+                    results.append(
+                        {
+                            "created_at": row.get(CREATED_AT_COL, None),
+                            "datapoint_id": datapoint_id,
+                            "name": datapoint_name,
+                            "submitter": submitter,
+                            "uuid": uuid,
+                            "geo": geo_value,
+                            "form_id": form_id,
+                            "administration": administration_value,
+                            "answers": answer_records,
+                        }
+                    )
 
         return results, caddisfly_data, invalid_values
 
