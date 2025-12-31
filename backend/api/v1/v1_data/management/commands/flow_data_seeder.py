@@ -210,10 +210,29 @@ class Command(BaseCommand):
             )
         )
 
+        # Load existing seeded csv to mapped mis_data_ids
+        seeded_csv_path = os.path.join(
+            FLOW_SOURCE_DIR, "seeded", f"{flow_form_id}_seeded_data.csv"
+        )
+        seeded_df = pd.DataFrame()
+        if os.path.exists(seeded_csv_path):
+            try:
+                seeded_df = pd.read_csv(
+                    seeded_csv_path,
+                    encoding="utf-8",
+                    dtype={"flow_data_id": str},
+                )
+            except Exception as e:
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"Error loading existing seeded data file: {e}"
+                    )
+                )
+
         # Step 4: Extract and map values
         self.stdout.write("\nStep 4: Extracting and mapping values...")
         records, caddisfly_data, invalid_values = self._extract_and_map_values(
-            data_df, seed_questions, questions_by_flow_id
+            data_df, seed_questions, questions_by_flow_id, seeded_df
         )
 
         # Optional: Generate Caddisfly CSV for debugging
@@ -241,91 +260,74 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"Extracted {len(records)} value records")
         )
 
-        # Step 4: Check seeded data against existing data to avoid duplicates
+        # Step 5: Check seeded data against existing data to avoid duplicates
         self.stdout.write(
-            "\nStep 4: Checking for existing records to avoid duplicates..."
+            "\nStep 5: Checking for existing records to avoid duplicates..."
         )
         # Load records datapoint_ids
         datapoint_ids = [str(r["datapoint_id"]) for r in records]
 
         new_records = records
-        # Load existing seeded csv to mapped mis_data_ids
-        seeded_csv_path = os.path.join(
-            FLOW_SOURCE_DIR, "seeded", f"{flow_form_id}_seeded_data.csv"
-        )
-        try:
-            seeded_df = pd.read_csv(
-                seeded_csv_path,
-                encoding="utf-8",
-                dtype={"flow_data_id": str},
-            )
-            seed_datapoint_ids = seeded_df["flow_data_id"].tolist()
-            diff_datapoint_ids = set(datapoint_ids) - set(seed_datapoint_ids)
-            new_records = list(filter(
-                lambda r: str(r["datapoint_id"]) in diff_datapoint_ids,
-                records
-            ))
-            # filtered seeded_df with datapoint_ids in current records
-            seeded_df = seeded_df[
-                seeded_df["flow_data_id"].isin(datapoint_ids)
-            ]
-            # show mis_data_ids that already exist
-            mis_data_ids = seeded_df["mis_data_id"].apply(int).tolist()
-            mis_data = FormData.objects.filter(
-                pk__in=mis_data_ids
-            ).all()
-            # Update data's answer
-            for d in mis_data:
-                flow_data_id = seeded_df[
-                    seeded_df["mis_data_id"] == d.pk
-                ]["flow_data_id"].values[0]
-                record = next(
-                    (
-                        r
-                        for r in records
-                        if str(r["datapoint_id"]) == flow_data_id
-                    ),
-                    None,
-                )
-                if record:
-                    # Clear existing answers
-                    d.data_answer.all().delete()
-                    # Bulk create new answers
-                    d.data_answer.bulk_create(
-                        [
-                            d.data_answer.model(
-                                data=d,
-                                question_id=a["question_id"],
-                                value=a["value"],
-                                options=a["options"],
-                                name=a["name"],
-                                created_by=user,
-                            )
-                            for a in record["answers"]
-                        ]
-                    )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Found {len(seed_datapoint_ids)} existing seeded records."
-                )
-            )
 
-        except FileNotFoundError:
-            self.stdout.write(
-                self.style.WARNING(
-                    f"Seeded data file not found: {seeded_csv_path}. "
-                    "Assuming no existing records."
+        seed_datapoint_ids = seeded_df["flow_data_id"].tolist()
+        diff_datapoint_ids = set(datapoint_ids) - set(seed_datapoint_ids)
+        new_records = list(filter(
+            lambda r: str(r["datapoint_id"]) in diff_datapoint_ids,
+            records
+        ))
+        # filtered seeded_df with datapoint_ids in current records
+        seeded_df = seeded_df[
+            seeded_df["flow_data_id"].isin(datapoint_ids)
+        ]
+        # show mis_data_ids that already exist
+        mis_data_ids = seeded_df["mis_data_id"].apply(int).tolist()
+        mis_data = FormData.objects.filter(
+            pk__in=mis_data_ids
+        ).all()
+        # Update data's answer
+        for d in mis_data:
+            flow_data_id = seeded_df[
+                seeded_df["mis_data_id"] == d.pk
+            ]["flow_data_id"].values[0]
+            record = next(
+                (
+                    r
+                    for r in records
+                    if str(r["datapoint_id"]) == flow_data_id
+                ),
+                None,
+            )
+            if record:
+                if d.form.pk != record["form_id"] and record["parent_id"]:
+                    new_records.append(record)
+                    continue
+                if len(record["answers"]) == 0:
+                    continue
+                # Clear existing answers
+                d.data_answer.all().delete()
+                # Bulk create new answers
+                d.data_answer.bulk_create(
+                    [
+                        d.data_answer.model(
+                            data=d,
+                            question_id=a["question_id"],
+                            value=a["value"],
+                            options=a["options"],
+                            name=a["name"],
+                            created_by=user,
+                        )
+                        for a in record["answers"]
+                    ]
                 )
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Found {len(seed_datapoint_ids)} existing seeded records."
             )
-        except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(f"Error loading seeded data file: {e}")
-            )
-            return
+        )
         if not new_records:
             return
-        # Step 5: Insert new records into database
-        self.stdout.write("\nStep 5: Inserting new records into database...")
+        # Step 6: Insert new records into database
+        self.stdout.write("\nStep 6: Inserting new records into database...")
         try:
             """
             Bulk insert records into FormData with the following fields:
@@ -342,7 +344,7 @@ class Command(BaseCommand):
             Uses transaction.atomic() for data integrity and rollback on
             failure.
             """
-            seeded = []
+            seeded = seeded_df.to_dict(orient="records")
 
             with transaction.atomic():
                 for r in new_records:
@@ -353,6 +355,7 @@ class Command(BaseCommand):
                         uuid=r["uuid"],
                         administration_id=int(r["administration"]),
                         form_id=r["form_id"],
+                        parent_id=r["parent_id"],
                         created_by=user,
                     )
                     # Update created
@@ -606,6 +609,7 @@ class Command(BaseCommand):
         data_df: pd.DataFrame,
         seed_questions: Dict[str, List[str]],
         questions_by_flow_id: Dict[str, List[Questions]],
+        seeded_df: pd.DataFrame,
     ) -> Tuple[List[Dict], List[Dict], List[Dict]]:
         """
         Extract values from data DataFrame using Flow Question IDs as keys
@@ -897,20 +901,62 @@ class Command(BaseCommand):
                             )
                         )
 
-                if answer_records and administration_value:
-                    results.append(
-                        {
-                            "created_at": row.get(CREATED_AT_COL, None),
-                            "datapoint_id": datapoint_id,
-                            "name": datapoint_name,
-                            "submitter": submitter,
-                            "uuid": uuid,
-                            "geo": geo_value,
-                            "form_id": form_id,
-                            "administration": administration_value,
-                            "answers": answer_records,
-                        }
-                    )
+                if answer_records:
+                    if administration_value:
+                        results.append(
+                            {
+                                "created_at": row.get(CREATED_AT_COL, None),
+                                "datapoint_id": datapoint_id,
+                                "name": datapoint_name,
+                                "submitter": submitter,
+                                "uuid": uuid,
+                                "geo": geo_value,
+                                "form_id": form_id,
+                                "administration": administration_value,
+                                "parent_id": None,
+                                "answers": answer_records,
+                            }
+                        )
+                    else:
+                        # flow_data_id by datapoint_id in seeded_df
+                        seeded_row = seeded_df[
+                            seeded_df["flow_data_id"] == str(datapoint_id)
+                        ]
+                        if not seeded_row.empty:
+                            mis_data_id = seeded_row[
+                                "mis_data_id"
+                            ].values[0]
+                            parent_data = FormData.objects.filter(
+                                pk=int(mis_data_id)
+                            ).first()
+                            if parent_data:
+                                administration_value = (
+                                    parent_data.administration.id
+                                )
+                                geo_value = parent_data.geo
+                                results.append(
+                                    {
+                                        "created_at": row.get(
+                                            CREATED_AT_COL, None
+                                        ),
+                                        "datapoint_id": datapoint_id,
+                                        "name": datapoint_name,
+                                        "submitter": submitter,
+                                        "uuid": uuid,
+                                        "geo": geo_value,
+                                        "form_id": form_id,
+                                        "administration": administration_value,
+                                        "parent_id": parent_data.id,
+                                        "answers": answer_records,
+                                    }
+                                )
+                            else:
+                                self.stdout.write(
+                                    self.style.WARNING(
+                                        f"Parent data not found for "
+                                        f"datapoint_id: {datapoint_id}"
+                                    )
+                                )
 
         return results, caddisfly_data, invalid_values
 
