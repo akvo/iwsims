@@ -11,7 +11,8 @@ This guide provides comprehensive documentation for migrating data from Akvo Flo
 - [Step 1: Download Akvo Flow Forms and Data](#step-1-download-akvo-flow-forms-and-data)
 - [Step 2: Map Administration Data](#step-2-map-administration-data)
 - [Step 3: Map Akvo Flow Questions](#step-3-map-akvo-flow-questions)
-- [Step 4: Seed Akvo Flow Data](#step-4-seed-akvo-flow-data)
+- [Step 4: Generate Parent and Child Data Files](#step-4-generate-parent-and-child-data-files)
+- [Step 5: Seed Akvo Flow Data](#step-5-seed-akvo-flow-data)
 - [Output Files Reference](#output-files-reference)
 - [Troubleshooting](#troubleshooting)
 
@@ -422,11 +423,154 @@ Ensure that mapping files exist for all forms you intend to seed.
 
 ---
 
-## Step 4: Seed Akvo Flow Data
+## Step 4: Generate Parent and Child Data Files
 
 ### Purpose
 
-This final step imports the mapped Akvo Flow data into the Akvo MIS database using Django's management command. It processes the prepared data, validates it, and stores it in the appropriate database tables.
+This step processes the downloaded Flow data and question mappings to generate final parent and child data CSV files. These files are structured for import into Akvo MIS and include proper transformations for different question types (geo, administration, caddisfly, etc.).
+
+### Procedure
+
+1. Open `af_data_registration_monitoring.ipynb` in JupyterLab
+2. Update the `flow_form_id` variable with the survey ID you want to process:
+   ```python
+   flow_form_id = '2490944'  # Update with your target survey ID
+   ```
+3. Run all cells in the notebook sequentially
+
+```bash
+# In JupyterLab, navigate to af_data_registration_monitoring.ipynb
+# Click "Run All" or execute each cell individually
+```
+
+### Output Files
+
+After successful execution, CSV files are generated in the output directory:
+
+```bash
+ls -1 backend/source/akvo-flow/output
+```
+
+### File Naming Convention
+
+Two types of files are generated for each form:
+
+```
+{flow_form_id}_parent_data.csv
+{flow_form_id}_child_data.csv
+```
+
+**Example:**
+- `2490944_parent_data.csv` - Main form submissions
+- `2490944_child_data.csv` - Repeating group submissions
+
+### File Contents
+
+#### Parent Data File
+
+Contains the main form submissions with:
+- **Form metadata** - Form ID, identifier, creation date, datapoint ID
+- **Name** - Generated from meta questions or display name
+- **Administration** - Mapped administrative location
+- **Geo coordinates** - Location data in `lat|lon` format
+- **Question responses** - All mapped question answers
+
+#### Child Data File
+
+Contains repeating group submissions with:
+- **Form metadata** - Form ID, identifier, creation date, datapoint ID
+- **Name** - Generated from meta questions
+- **Question responses** - All mapped question answers from repeating groups
+
+### Data Transformations
+
+The notebook applies automatic transformations for different question types:
+
+| Question Type | Transformation | Example |
+|---------------|----------------|----------|
+| **Administration** | Converts to pipe-separated hierarchy | `Region\|District\|Village` |
+| **Geo** | Formats as latitude and longitude | `-1.234567\|36.789012` |
+| **Photo/Signature** | Converts to base64 data URI or filename | `data:image/png;base64,...` |
+| **Multiple Choice** | Converts to pipe-separated option values | `option1\|option2\|other` |
+| **Number** | Removes whitespace and converts to float | `123.45` |
+| **Caddisfly** | Extracts test results as separate fields | See Caddisfly section below |
+
+### Caddisfly Data Handling
+
+For water quality tests using Caddisfly:
+
+1. Test results are extracted into separate columns
+2. Each parameter (e.g., pH, Turbidity) gets its own column
+3. Column names include units: `pH -`, `Turbidity NTU`
+4. The last result value is stored in the parent/child data
+5. Full test data is saved to `backend/source/akvo-flow/caddisfly/{flow_form_id}_caddisfly_data.csv`
+
+### Data Quality Filters
+
+The notebook applies the following filters:
+
+**Parent Data:**
+- Removes duplicate records based on name
+- Filters out records with missing administration or geo data
+- Only includes records with complete location information
+
+**Child Data:**
+- Filters based on datapoint_id present in parent data
+- Removes empty rows (where all values are null or empty)
+- Ensures referential integrity with parent records
+
+### Console Output
+
+The notebook displays processing statistics:
+
+```
+total parent records: 150
+parent data saved
+total child records after filtering: 75
+child data saved
+caddisfly data saved
+```
+
+### Verification
+
+```bash
+# Check parent data file
+wc -l backend/source/akvo-flow/output/{flow_form_id}_parent_data.csv
+
+# Check child data file
+wc -l backend/source/akvo-flow/output/{flow_form_id}_child_data.csv
+
+# View first few rows of parent data
+head -5 backend/source/akvo-flow/output/{flow_form_id}_parent_data.csv
+```
+
+Ensure:
+- Parent data file contains records with complete administration and geo fields
+- Child data records reference valid parent datapoint_ids
+- No duplicate parent records exist
+- All question types are properly transformed
+
+### Common Issues
+
+**Issue:** "No parent records generated"
+- **Cause:** All records missing administration or geo data
+- **Solution:** Check source data quality and administration mappings
+
+**Issue:** "Child records not filtered"
+- **Cause:** Datapoint IDs don't match between parent and child
+- **Solution:** Verify data consistency in source Flow data
+
+**Issue:** "Caddisfly data not parsed"
+- **Cause:** Caddisfly question not properly identified
+- **Solution:** Check question mapping includes caddisfly question type
+
+---
+
+## Step 5: Seed Akvo Flow Data
+
+### Purpose
+
+This final step imports the generated parent and child data files into the Akvo MIS database using Django's management command. It processes the prepared data, validates it, and stores it in the appropriate database tables.
 
 ### Prerequisites
 
