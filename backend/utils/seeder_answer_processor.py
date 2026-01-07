@@ -72,9 +72,12 @@ class AnswerProcessor:
         """
         if row_value is None:
             return None, None, None
-        if row_value not in opt_list:
+        option_values = str(row_value).split("|")
+        # find intersection with opt_list to validate options
+        option_values = [opt for opt in option_values if opt in opt_list]
+        if not option_values:
             return None, None, None
-        return None, None, str(row_value).split("|")
+        return None, None, option_values
 
     @staticmethod
     def process_number(
