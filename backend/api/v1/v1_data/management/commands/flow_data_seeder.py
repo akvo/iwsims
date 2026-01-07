@@ -32,7 +32,13 @@ from django.core.management import BaseCommand
 
 from api.v1.v1_visualization.functions import refresh_materialized_data
 
-from utils.seeder_config import CsvColumns, FilePaths
+from utils.seeder_config import (
+    CsvColumns,
+    FilePaths,
+    ValidationError,
+    ConfigurationError,
+    validate_and_prepare_config,
+)
 from utils.seeder_data_loader import (
     load_and_prepare_data,
     load_questions,
@@ -52,7 +58,6 @@ from utils.seeder_file_operations import (
     save_seeded_records,
     revert_seeded_data,
 )
-from utils.seeder_config import validate_and_prepare_config
 
 logger = logging.getLogger(__name__)
 
@@ -299,6 +304,12 @@ class Command(BaseCommand):
             # Refresh materialized view after seeding
             refresh_materialized_data()
 
+        except ValidationError as e:
+            # Validation errors should be logged but not re-raised
+            self._log_error(str(e))
+        except ConfigurationError as e:
+            # Configuration errors should be logged but not re-raised
+            self._log_error(str(e))
         except Exception as e:
             self._log_error(f"Unexpected error: {e}")
             logger.exception("Unexpected error during seeding")
