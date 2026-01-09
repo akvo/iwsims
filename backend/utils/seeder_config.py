@@ -96,6 +96,7 @@ NON_QUESTION_COLUMNS = [
     CsvColumns.IDENTIFIER,
     CsvColumns.CREATED_AT,
     CsvColumns.DATAPOINT_ID,
+    CsvColumns.SUBMITTER,
     CsvColumns.NAME,
     CsvColumns.ADMINISTRATION,
     CsvColumns.GEO,

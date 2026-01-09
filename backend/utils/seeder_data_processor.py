@@ -194,6 +194,7 @@ def create_form_data(
                 data.administration_id = administration_id
                 data.geo = geo_value
                 data.created_by = user
+                data.submitter = row.get(CsvColumns.SUBMITTER, None)
                 if parent:
                     data.parent = parent
                 data.save()
@@ -212,6 +213,7 @@ def create_form_data(
             geo=geo_value,
             created_by=user,
             parent=parent,
+            submitter=row.get(CsvColumns.SUBMITTER, None),
         )
         # Set created timestamp from source data
         data.created = row[CsvColumns.CREATED_AT]
