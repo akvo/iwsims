@@ -175,8 +175,11 @@ class Command(BaseCommand):
             # Process child data
             if child_df is not None and not child_df.empty:
                 child_questions = load_questions(child_df)
+                # Group child data by 'parent' column
+                # which contains parent's datapoint_id
+                # This allows multiple children to reference the same parent
                 child_data_groups = child_df.groupby(
-                    CsvColumns.DATAPOINT_ID
+                    CsvColumns.PARENT
                 )
 
                 for _, parent_row in parent_df.iterrows():

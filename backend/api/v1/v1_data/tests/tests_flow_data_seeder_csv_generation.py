@@ -228,6 +228,10 @@ class CsvColumnsTestCase(TestCase):
         """Test GEO constant."""
         self.assertEqual(CsvColumns.GEO, "geo")
 
+    def test_parent_constant(self):
+        """Test PARENT constant."""
+        self.assertEqual(CsvColumns.PARENT, "parent")
+
 
 @override_settings(USE_TZ=False, TEST_ENV=True)
 class NonQuestionColumnsTestCase(TestCase):
@@ -244,6 +248,7 @@ class NonQuestionColumnsTestCase(TestCase):
             CsvColumns.NAME,
             CsvColumns.ADMINISTRATION,
             CsvColumns.GEO,
+            CsvColumns.PARENT,
         ]
 
         for col in expected_columns:
@@ -251,5 +256,5 @@ class NonQuestionColumnsTestCase(TestCase):
 
     def test_non_question_columns_count(self):
         """Test the count of non-question columns."""
-        # Should contain 7 columns
-        self.assertEqual(len(NON_QUESTION_COLUMNS), 8)
+        # Should contain 9 columns
+        self.assertEqual(len(NON_QUESTION_COLUMNS), 9)

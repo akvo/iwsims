@@ -75,6 +75,7 @@ class CsvColumns:
     FORM_ID = "form_id"
     ADMINISTRATION = "administration"
     GEO = "geo"
+    PARENT = "parent"
 
 
 class QuestionTypeGroups:
@@ -100,6 +101,7 @@ NON_QUESTION_COLUMNS = [
     CsvColumns.NAME,
     CsvColumns.ADMINISTRATION,
     CsvColumns.GEO,
+    CsvColumns.PARENT,
 ]
 
 

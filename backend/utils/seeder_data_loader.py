@@ -135,7 +135,7 @@ def load_questions(df: Optional[pd.DataFrame]) -> Dict[int, Questions]:
         return {}
 
     question_ids = [
-        int(col)
+        int(float(col))
         for col in df.columns
         if col not in NON_QUESTION_COLUMNS
     ]
