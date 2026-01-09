@@ -304,6 +304,25 @@ const ManageDataMap = () => {
     const q = mapQuestions
       ?.flatMap((m) => m?.options)
       ?.find((q) => q?.value === value);
+    if (!q) {
+      // Reset if question not found
+      setLegendOptions([]);
+      setLegendTitle(null);
+      setActiveQuestion(null);
+      setIsNumeric(false);
+      setSelectedLegendOption(null);
+      setSelectedGradationIndex(null);
+      // set hidden false for all markers
+      const resetDataset = dataset.map((d) => ({
+        ...d,
+        hidden: false,
+        color: null,
+        value: null,
+        values: null,
+      }));
+      setDataset(resetDataset);
+      return;
+    }
     setLegendTitle(q?.label);
     setActiveQuestion(value);
     setIsNumeric(q?.type === QUESTION_TYPES.number);
