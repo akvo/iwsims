@@ -4,11 +4,8 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 5530933,Location of Village,Who is the implementing agency/agencies?,1031710926,,,,,58.82,none,none
 5530933,Location of Village,Are you able to capture the locality Plan?,1035730921,,,,,73.47,none,none
 5530933,Location of Village,Locality Plan,1550935,,,,,60.87,none,none
-5530933,Location of Village,What is the Salinity in ppt?,389680954,,,,,76.36,none,none
-5530933,Location of Village,What is the Conductivity ?,393220960,,,,,75.0,none,none
 5530933,Location of Village,What is the Total Coliform Level?,398340987,1749624452908,Project Info,What is the Total Coliform Level?,1749631093126,100.0,high,text_similarity
 5530933,Location of Village,Are you able to take the water sample,398350953,1749624452908,Project Info,Are you able to take a sample?,1749630785254,82.35,low,text_similarity
-5530933,Location of Village,What is the pH,402300957,1749624452908,URF Tank Implementation,What is the thickness of the tank for the URF?,1849633950001,92.86,medium,text_similarity
 5530933,Location of Village,What is the Faecal Coliform Level?,405990956,1749624452908,Project Info,What is the Fecal Coliform Level?,1749631148928,96.97,high,text_similarity
 5530933,Location of Village,Level of Contamination using CBT bags?,410050993,1749624452908,Project Info,Level of Contamination using CBT bags?,1749630906302,100.0,high,text_similarity
 5530933,Location of Village,What is the Turbidity in NTU?,413881004,1749624452908,Project Info,What is the Turbidity in NTU?,1749631183056,100.0,high,text_similarity
@@ -21,7 +18,6 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 5530933,Location of Village,Proposed Completion Date?,8540921,1749624452908,Project Info,Proposed Completion Date?,1749630516825,100.0,high,text_similarity
 5530933,Location of Village,Project Background,9510938,,,,,76.19,none,none
 5530933,Location of Village,Which Division-Province-Tikina,9530926,,,,,51.85,none,none
-5530933,Project Photos,Take Photo,2490943,1749624452908,Project Info,Take photo of the sampling point,1749630785257,100.0,high,text_similarity
 5530933,Project Photos,Comment on Photo taken,6620936,1749624452908,Project Photos,Comment on Photo Taken,1749631662652,100.0,high,text_similarity
 5530933,Project Scope,What percentage of project is complete?,1009150932,1749624452908,Final Remarks,Percentage of Project Completion,1849635800001,90.62,medium,text_similarity
 5530933,Project Scope,Media Placing,2490941,,,,,61.54,none,none
@@ -35,3 +31,7 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 5530933,Project Scope,Sign Board Installation,9490937,,,,,60.87,none,none
 5530933,Project Scope,Lock Installation,9520924,,,,,58.82,none,none
 5530933,Project Scope,Tank Installation,9540935,,,,,70.59,none,none
+5530933,Location of Village,What is the Salinity in ppt?,389680954,1749624452908.0,Project Info,Salinity PPT 2520B 0.2 (APHA Method Code),1754995200104.0,100.0,high,manual
+5530933,Location of Village,What is the Conductivity ?,393220960,1749624452908.0,Project Info,Conductivity \u00b5S/cm - 2510B (APHA Method Code),1754995200103.0,100.0,high,manual
+5530933,Location of Village,What is the pH,402300957,1749624452908.0,Project Info,pH - 4500-H+B (APHA Method Code),1754995200102.0,100.0,high,manual
+5530933,Project Photos,Take Photo,2490943,1749624452908.0,Project Photos,Take Photo,1749624521442.0,100.0,high,manual

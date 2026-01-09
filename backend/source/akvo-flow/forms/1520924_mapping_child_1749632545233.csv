@@ -1,8 +1,6 @@
 flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method
 1520924,Contact Details,Name of the village headman/TNK/village nurse?,411311001,1749632545233,Contact Details,Name of the village headman/TNK/village nurse?,1749632793266,100.0,high,text_similarity
 1520924,Contact Details,Phone contact of the Village Headman/TNK or village nurse?,425670981,1749632545233,Contact Details,Phone contact of the Village Headman/TNK or village nurse?,1749632819551,100.0,high,text_similarity
-1520924,EPS Photos,Take Photo,1570928,1749632545233,Water Quality Testing,Take Photo of Sampling Point,1749633073911,100.0,high,text_similarity
-1520924,EPS Photos,Comment on Photo taken,1700923,,,,,58.54,none,none
 1520924,Location of the Village,Which Division-Province-Tikina are you in?,1530921,,,,,51.61,none,none
 1520924,Location of the Village,Geolocation,2590929,,,,,70.59,none,none
 1520924,Location of the Village,Date of Inspection,265140920,1749632545233,Contact Details,Date of Inspection,1749632545235,100.0,high,text_similarity
@@ -26,3 +24,5 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 1520924,Water Quality Testing,Description of Sampling Point,700922,1749632545233,Water Quality Testing,Description of Sampling Point,1749633110662,100.0,high,text_similarity
 1520924,Water Quality Testing,General Remarks,7450925,1749632545233,General Remarks,General Remarks,1749633350893,100.0,high,text_similarity
 1520924,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,9530924,1749632545233,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,1749633259392,100.0,high,text_similarity
+1520924,EPS Photos,Take Photo,1570928,1749632545233.0,Photo of the EPS,Take photo of the EPS,1749730785260.0,100.0,high,manual
+1520924,EPS Photos,Comment on Photo taken,1700923,1749632545234.0,Photo of the EPS,Description of the photo,1749730785261.0,100.0,high,manual
