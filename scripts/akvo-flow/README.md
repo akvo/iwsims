@@ -385,7 +385,7 @@ This step maps Akvo Flow questions to the corresponding form structure in Akvo M
 After successful execution, CSV files are generated in the following directory:
 
 ```bash
-ls -1 backend/source/akvo-flow
+ls -1 backend/source/akvo-flow/forms
 ```
 
 ### File Naming Convention
@@ -393,30 +393,91 @@ ls -1 backend/source/akvo-flow
 Each form mapping file is named using the following pattern:
 
 ```
-{akvo_flow_surveyId}_{akvo_flow_surveyName}.csv
+{flow_form_id}_mapping_{parent|child}_{mis_form_id}.csv
 ```
 
-**Example:**
-- `12345_Water_Quality_Survey.csv`
-- `67890_Sanitation_Assessment.csv`
+**Examples:**
+- `8520967_mapping_parent_1749634736797.csv` - Parent form mappings
+- `8520967_mapping_child_1749640508297.csv` - Child form mappings
+- `8520967_mapping_child_1749652214711.csv` - Child form mappings
 
 ### File Contents
 
-Each CSV file contains:
+Each CSV file contains the following columns:
 
-- **Question mappings** - Mapping between Akvo Flow question IDs and MIS question IDs
-- **Option mappings** - Translation of multiple-choice options
-- **Dependency rules** - Logic for conditional questions
-- **Data type conversions** - Ensuring compatibility between systems
+| Column | Description |
+|--------|-------------|
+| `flow_form_id` | Akvo Flow form/survey ID |
+| `flow_question_group` | Question group name in Flow |
+| `flow_question_label` | Question text from Flow |
+| `flow_question_id` | Question ID in Flow |
+| `mis_form_id` | MIS form ID (mapped question) |
+| `mis_question_group` | Question group name in MIS |
+| `mis_question_label` | Question text in MIS |
+| `mis_question_id` | Question ID in MIS |
+| `match_score` | Similarity score (0-100) |
+| `match_confidence` | Confidence level: `high`, `medium`, `low`, `none` |
+| `match_method` | Matching method: `text_similarity`, `manual`, `none` |
+
+### Matching Methods
+
+The notebook uses three matching methods:
+
+| Method | Description | When Used |
+|--------|-------------|-----------|
+| `text_similarity` | Auto-matched via fuzzy text matching (score >= 80%) | Questions with high text similarity |
+| `none` | No match found (score < 80%) | Questions without suitable matches |
+| `manual` | User manually assigned | Preserved when notebook is re-run |
+
+### Manual Matching Workflow
+
+When the auto-matching produces incorrect or incomplete results, you can manually edit the CSV files:
+
+1. **Run the notebook** - Generate initial mappings
+2. **Review the output** - Check `match_method` and `match_confidence` columns
+3. **Edit CSV files** - Open in spreadsheet software (Excel, LibreOffice)
+4. **Update incorrect matches** - Change `mis_question_id` and other MIS columns
+5. **Set `match_method = 'manual'`** - Mark your manual edits
+6. **Re-run the notebook** - Manual matches will be preserved!
+
+**Example Manual Edit:**
+
+```csv
+flow_form_id,flow_question_label,flow_question_id,mis_question_id,mis_question_label,match_method,match_score
+8520967,"What is the pH level?",123456,999999,"pH Level",text_similarity,85.00
+8520967,"Water Temperature",123457,888888,"Temperature",none,45.23  <-- Poor match
+```
+
+**After Manual Edit:**
+
+```csv
+flow_form_id,flow_question_label,flow_question_id,mis_question_id,mis_question_label,match_method,match_score
+8520967,"What is the pH level?",123456,999999,"pH Level",text_similarity,85.00
+8520967,"Water Temperature",123457,777777,"Water Temp Quality",manual,100.00  <-- Manual override
+```
+
+**Next Run:**
+- Row 1: Auto-matched (unchanged)
+- Row 2: Manual match **preserved** (not overwritten)
 
 ### Verification
 
 ```bash
 # List all generated mapping files
-ls -1 backend/source/akvo-flow/*.csv
+ls -1 backend/source/akvo-flow/forms/*.csv
 
 # View a specific mapping file
-cat backend/source/akvo-flow/{surveyId}_{surveyName}.csv
+head -10 backend/source/akvo-flow/forms/8520967_mapping_parent_1749634736797.csv
+
+# Check match methods in file
+cut -d',' -f11 backend/source/akvo-flow/forms/8520967_mapping_parent_1749634736797.csv | sort | uniq -c
+```
+
+**Expected Output:**
+```
+    150 text_similarity
+     20 manual
+     30 none
 ```
 
 Ensure that mapping files exist for all forms you intend to seed.
