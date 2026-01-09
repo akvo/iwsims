@@ -57,8 +57,13 @@ def load_and_prepare_data(
     if config.limit:
         if parent_df is not None:
             parent_df = parent_df.head(config.limit)
-        if child_df is not None:
-            child_df = child_df.head(config.limit)
+        if child_df is not None and parent_df is not None:
+            # Only include child rows for the limited parent datapoints
+            # to avoid skipping child data for parents beyond the first N rows
+            parent_datapoints = parent_df[CsvColumns.DATAPOINT_ID].unique()
+            child_df = child_df[child_df[CsvColumns.DATAPOINT_ID].isin(
+                parent_datapoints
+            )]
 
     return parent_df, child_df
 
