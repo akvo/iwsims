@@ -240,6 +240,7 @@ class NonQuestionColumnsTestCase(TestCase):
             CsvColumns.IDENTIFIER,
             CsvColumns.CREATED_AT,
             CsvColumns.DATAPOINT_ID,
+            CsvColumns.SUBMITTER,
             CsvColumns.NAME,
             CsvColumns.ADMINISTRATION,
             CsvColumns.GEO,
@@ -251,4 +252,4 @@ class NonQuestionColumnsTestCase(TestCase):
     def test_non_question_columns_count(self):
         """Test the count of non-question columns."""
         # Should contain 7 columns
-        self.assertEqual(len(NON_QUESTION_COLUMNS), 7)
+        self.assertEqual(len(NON_QUESTION_COLUMNS), 8)

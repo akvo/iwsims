@@ -21,7 +21,6 @@ from api.v1.v1_profile.models import Administration, Levels
 
 from utils.seeder_config import (
     CsvColumns,
-    NON_QUESTION_COLUMNS,
     SeederConfig,
 )
 from utils.seeder_data_loader import load_questions, load_data_file
@@ -227,28 +226,3 @@ class CsvColumnsTestCase(TestCase):
     def test_geo_constant(self):
         """Test GEO constant."""
         self.assertEqual(CsvColumns.GEO, "geo")
-
-
-@override_settings(USE_TZ=False, TEST_ENV=True)
-class NonQuestionColumnsTestCase(TestCase):
-    """Test suite for NON_QUESTION_COLUMNS list."""
-
-    def test_non_question_columns_contains_all_columns(self):
-        """Test that NON_QUESTION_COLUMNS contains all expected columns."""
-        expected_columns = [
-            CsvColumns.FORM_ID,
-            CsvColumns.IDENTIFIER,
-            CsvColumns.CREATED_AT,
-            CsvColumns.DATAPOINT_ID,
-            CsvColumns.NAME,
-            CsvColumns.ADMINISTRATION,
-            CsvColumns.GEO,
-        ]
-
-        for col in expected_columns:
-            self.assertIn(col, NON_QUESTION_COLUMNS)
-
-    def test_non_question_columns_count(self):
-        """Test the count of non-question columns."""
-        # Should contain 7 columns
-        self.assertEqual(len(NON_QUESTION_COLUMNS), 7)
