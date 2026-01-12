@@ -10,15 +10,10 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 17260923,Constraints and Recommendations,Any final recommendation?,19180933,1748905550055,Constraints and Recommendations,Any final recommendation?,1748918485299,100.0,high,text_similarity
 17260923,Constraints and Recommendations,What are your final recommendations?,19200932,1748905550055,Constraints and Recommendations,What are your final recommendations?,1748918550536,100.0,high,text_similarity
 17260923,Drying Beds,Comment on the drying beds,14500935,1748905550055,Drying Beds,Comment on the drying beds,1748907173282,100.0,high,text_similarity
-17260923,Drying Beds,Take photo of drying beds,15520929,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
-17260923,Effluent Pumping,Take photo of the effluent pump station?,29480925,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Effluent Pumping,Are there any effluent pump station?,30120923,1748905550055,Effluent Pumping,Are there any effluent pump station?,1748907188132,100.0,high,text_similarity
-17260923,Effluent Pumping,Are you able to take photo of effluent pump station?,30120924,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Effluent Pumping,Comment on the effluent pump station?,30150921,1748905550055,Effluent Pumping,Comment on the effluent pump station?,1748917496536,100.0,high,text_similarity
 17260923,Facultative Ponds,Comment on the operation of the facultative pond,27750920,1748905550055,Facultative Ponds,Comment on the operation of the facultative pond,1748907016509,100.0,high,text_similarity
-17260923,Facultative Ponds,Take photo of Facultative Pond,30120920,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Flow Indicators,Describe the inflow at the inlet?,11430929,1748905550055,Flow Indicators,Describe the inflow at the inlet?,1748911325583,100.0,high,text_similarity
-17260923,Flow Indicators,Take photo of the inlet,12490921,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Flow Indicators,What is the inflow rate in cubic meters per day?,13480930,1748905550055,Flow Indicators,What is the inflow rate in cubic meters per day?,1748911325349,100.0,high,text_similarity
 17260923,Flow Indicators,Is there a inflow meter?,17280930,1748905550055,Flow Indicators,Is there a inflow meter?,1748906535935,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,Do you have urgent maintenance programs?,10530930,1748905550055,Plant Conditions,Do you have urgent maintenance programs?,1748910860630,100.0,high,text_similarity
@@ -26,10 +21,7 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 17260923,General Information on Plant Conditions,Condition of fence for security purpose,11430927,1748905550055,Plant Conditions,Condition of fence for security purpose,1748910613027,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,Working tools?,12460931,1748905550055,Plant Conditions,Working tools?,1748910770584,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,Please provide details of these programs?,12460934,1748905550055,Plant Conditions,Please provide details of these programs?,1748910928304,100.0,high,text_similarity
-17260923,General Information on Plant Conditions,Take photo,12470927,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
-17260923,General Information on Plant Conditions,Take photo,13470925,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,Transport availability,13470926,1748905550055,Plant Conditions,Transport availability,1748910727099,100.0,high,text_similarity
-17260923,General Information on Plant Conditions,Take photo,14460928,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,Security lights,15490927,1748905550055,Plant Conditions,Security lights,1748910637040,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,Building Conditions,15510925,1748905550055,Plant Conditions,Building Conditions,1748910573525,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,Do you have any upgrading programs?,17270934,1748905550055,Plant Conditions,Do you have any upgrading programs?,1748911109721,100.0,high,text_similarity
@@ -37,43 +29,21 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 17260923,General Information on Plant Conditions,Please provide details of these programs?,17280928,1748905550055,Plant Conditions,Please provide details of these programs?,1748910928304,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,Please provide details of these programs?,17290928,1748905550055,Plant Conditions,Please provide details of these programs?,1748910928304,100.0,high,text_similarity
 17260923,General Information on Plant Conditions,OHS equipment available?,19180929,1748905550055,Plant Conditions,OHS equipment available?,1748910823255,100.0,high,text_similarity
-17260923,Influent Pumping,Are you able to take photo of the Influent Pump Station?,16570945,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Influent Pumping,Comment on the influent pumping system,18150922,1748905550055,Influent Pumping,Comment on the influent pumping system,1748914793745,100.0,high,text_similarity
-17260923,Influent Pumping,Take photo of the influent pumping station,19240926,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Influent Pumping,Are there any influent pump station?,21890959,1748905550055,Influent Pumping,Are there any influent pump station?,1748906592858,100.0,high,text_similarity
 17260923,Maturation Pond,Comment on the operation of the Maturation Pond,27740971,1748905550055,Maturation Pond,Comment on the operation of the Maturation Pond,1748916372852,100.0,high,text_similarity
-17260923,Maturation Pond,Take Photo of the Maturation pond,27740972,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
-17260923,Plant Effluent,Take photo of effluent sampling point,18140931,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Plant Effluent,Comment on the plant effluent,19250925,1748905550055,Plant Effluent,Comment on the plant effluent,1748907201859,100.0,high,text_similarity
 17260923,Plant Effluent,Method of Testing for plant effluent,23260920,1748905550055,Plant Effluent,Method of Testing for plant effluent,1748917751258,100.0,high,text_similarity
-17260923,Plant Effluent,What is the BOD in mg/L?,26220920,,,,,75.0,none,none
-17260923,Plant Effluent,What is the Nitrate level in mg/L?,283670995,,,,,68.85,none,none
 17260923,Plant Effluent,What is the Total Phosphorus in mg/L?,283680996,,,,,72.41,none,none
 17260923,Plant Effluent,Are you able to take the sample?,28590921,1748905550055,Plant Effluent,Are you able to take the sample?,1748917751257,100.0,high,text_similarity
 17260923,Plant Effluent,What is the TSS in mg/L?,291250987,,,,,75.0,none,none
-17260923,Plant Effluent,What is the Ammonia level in mg/L?,291250988,,,,,62.3,none,none
-17260923,Plant Effluent,What is the Total Alkalinity in mg/L?,291260997,,,,,72.41,none,none
-17260923,Plant Effluent,What is the COD in mg/L?,297600977,,,,,75.0,none,none
-17260923,Plant Effluent,What is the Salinity in ppt?,303340967,,,,,69.09,none,none
-17260923,Plant Effluent,What is the pH?,309320993,1748905550055,Flow Indicators,What is the inflow rate in cubic meters per day?,1748911325349,88.89,medium,text_similarity
-17260923,Plant Effluent,What is the Nitrite Level in mg/L?,311400997,,,,,65.57,none,none
-17260923,Plant Effluent,What is the Total Nitrogen level in mg/L?,311410997,,,,,58.82,none,none
-17260923,Plant Effluent,What is the Conductivity in µS/cm,313530924,,,,,69.39,none,none
-17260923,Plant Effluent,What is the Chloride level in mg/L?,315190996,,,,,64.52,none,none
 17260923,Preliminary Treatment,Comment on operation of the screening system,12480921,1748905550055,Preliminary Treatment,Comment on operation of the screening system,1748906571911,100.0,high,text_similarity
-17260923,Preliminary Treatment,Take photo of the screens,16230922,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Preliminary Treatment,Comment on the operation of the grit removal system,19240920,1748905550055,Preliminary Treatment,Comment on the operation of the grit removal system,1748914436150,100.0,high,text_similarity
-17260923,Preliminary Treatment,Take photo of the grit removal system,19240924,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Primary Clarifiers,Comment on the operation of the primary clarifiers,15520924,1748905550055,Primary Clarifiers,Comment on the operation of the primary clarifiers,1748906604803,100.0,high,text_similarity
-17260923,Primary Clarifiers,Take photo of primary clarifier,19220924,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Secondary Clarifiers,Comment on the operation of the secondary clarifiers,11470927,1748905550055,Secondary Clarifiers,Comment on the operation of the secondary clarifiers,1748907057799,100.0,high,text_similarity
-17260923,Secondary Clarifiers,Take photo of the secondary clarifier,18140928,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Sludge Aerobic Digestion,Comment on operation of the sludge aerobic digestion,11480928,1748905550055,Sludge Aerobic Digestion,Comment on operation of the sludge aerobic digestion,1748907110680,100.0,high,text_similarity
-17260923,Sludge Aerobic Digestion,Take photo of Sludge Aerobic Digestion,12490925,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Sludge Handling,Comment on the sludge handling system,14490926,1748905550055,Sludge Handling,Comment on the sludge handling system,1748907110308,100.0,high,text_similarity
-17260923,Sludge Handling,Take photo of sludge handling system,18140932,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Stabilization Lagoons,Comment on the operation of the stabilization lagoons,14490923,1748905550055,Stabilization Lagoons,Comment on the operation of the stabilization lagoons,1748906806971,100.0,high,text_similarity
-17260923,Stabilization Lagoons,Take photo of the stabilization lagoon,16230925,1748905550055,Plant Conditions,Take photo,1748910544723,100.0,high,text_similarity
 17260923,Staff and General Information,What are the constraints or recommendations fro professional developments?,11430925,,,,,72.0,none,none
 17260923,Staff and General Information,Number of staffs at the plant?,16210923,1748905550055,Staff and General Information,Number of staffs at the plant?,1748910159332,100.0,high,text_similarity
 17260923,Staff and General Information,Contact number of plant supervisor,16210924,1748905550055,Staff and General Information,Contact number of plant supervisor,1748910113989,100.0,high,text_similarity
@@ -99,6 +69,36 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 17260923,Wastewater Treatment Plant Registration,What are types of pump stations?,19180924,1748905550055,Plant General Information,What are types of pump stations?,1748904158071,100.0,high,text_similarity
 17260923,Wastewater Treatment Plant Registration,Which Year was the plant commissioned?,19190925,,,,,63.41,none,none
 17260923,Wastewater Treatment Plant Registration,What is the Design Capacity of the Plant cubic metres per day?,19200924,,,,,72.94,none,none
-17260923,Wastewater Treatment Plant Registration,Name of the Plant,19200925,1748905550055,Staff and General Information,Name of Plant Supervisor,1748906474270,86.67,medium,text_similarity
 17260923,Wastewater Treatment Plant Registration,How many Effluent Pump Stations?,22740923,1748905550055,Plant General Information,How many Effluent Pump Stations?,1748904732921,100.0,high,text_similarity
 17260923,Wastewater Treatment Plant Registration,How many influent pump station,24910952,1748905550055,Plant General Information,How many influent pump station,1748904692704,100.0,high,text_similarity
+17260923,Drying Beds,Take photo of drying beds,15520929,1748905550055.0,Drying Beds,Take photo of drying beds,1748917423214.0,100.0,high,manual
+17260923,Effluent Pumping,Take photo of the effluent pump station?,29480925,1748905550055.0,Effluent Pumping,Take photo of the effluent pump station,1748917597057.0,100.0,high,manual
+17260923,Effluent Pumping,Are you able to take photo of effluent pump station?,30120924,1748905550055.0,Effluent Pumping,Are you able to take photo of effluent pump station?,1748917546718.0,100.0,high,manual
+17260923,Facultative Ponds,Take photo of Facultative Pond,30120920,1748905550055.0,Facultative Ponds,Take photo of Facultative Pond,1748916324372.0,100.0,high,manual
+17260923,Flow Indicators,Take photo of the inlet,12490921,1748905550055.0,Flow Indicators,Take photo of the inlet,1748911562813.0,100.0,high,manual
+17260923,General Information on Plant Conditions,Take photo,12470927,1748905550055.0,,,,0.0,none,manual
+17260923,General Information on Plant Conditions,Take photo,13470925,1748905550055.0,,,,0.0,none,manual
+17260923,General Information on Plant Conditions,Take photo,14460928,1748905550055.0,,,,0.0,none,manual
+17260923,Influent Pumping,Are you able to take photo of the Influent Pump Station?,16570945,1748905550055.0,,,,100.0,high,manual
+17260923,Influent Pumping,Take photo of the influent pumping station,19240926,1748905550055.0,Influent Pumping,Take photo of the influent pumping station,1748914980064.0,100.0,high,manual
+17260923,Maturation Pond,Take Photo of the Maturation pond,27740972,1748905550055.0,Maturation Pond,Take photo of the Maturation Pond,1748916377930.0,100.0,high,manual
+17260923,Plant Effluent,Take photo of effluent sampling point,18140931,1748905550055.0,Effluent Pumping,Take photo of effluent sampling point,1748917775963.0,100.0,high,manual
+17260923,Plant Effluent,What is the BOD in mg/L?,26220920,1748905550055.0,Plant Effluent,BOD mg/L - 5210B (APHA Method Code),1754995400901.0,75.0,none,manual
+17260923,Plant Effluent,What is the Nitrate level in mg/L?,283670995,1748905550055.0,Plant Effluent,Nitrate mg/L - 4500-NO-3- I (APHA Method Code),1754995400503.0,68.85,none,manual
+17260923,Plant Effluent,What is the Ammonia level in mg/L?,291250988,1748905550055.0,Plant Effluent,Ammonia mg/L - 4500-NH3 H (APHA Method Code),1754995400501.0,62.3,none,manual
+17260923,Plant Effluent,What is the Total Alkalinity in mg/L?,291260997,1748905550055.0,Plant Effluent,Total Alkalinity mg/L - 2320B (APHA Method Code),1754995400703.0,72.41,none,manual
+17260923,Plant Effluent,What is the COD in mg/L?,297600977,1748905550055.0,Plant Effluent,Chemical Oxygen Demand mg/L - 5220B (APHA Method Code),1754995400701.0,75.0,none,manual
+17260923,Plant Effluent,What is the Salinity in ppt?,303340967,1748905550055.0,Plant Effluent,Salinity PPT 2520B 0.2 (APHA Method Code),1754995400104.0,69.09,none,manual
+17260923,Plant Effluent,What is the pH?,309320993,1748905550055.0,Plant Effluent,pH - 4500-H+B (APHA Method Code),1754995400102.0,88.89,medium,manual
+17260923,Plant Effluent,What is the Nitrite Level in mg/L?,311400997,1748905550055.0,Plant Effluent,Nitrite mg/L - 4500-NO-3- I (APHA Method Code),1754995400504.0,65.57,none,manual
+17260923,Plant Effluent,What is the Total Nitrogen level in mg/L?,311410997,1748905550055.0,Plant Effluent,Total Kjeldhal Nitrogen mg/L - 4500-NorgB (APHA Method Code),1754995400502.0,58.82,none,manual
+17260923,Plant Effluent,What is the Conductivity in µS/cm,313530924,1748905550055.0,Plant Effluent,Conductivity \u00b5S/cm - 2510B (APHA Method Code),1754995400103.0,69.39,none,manual
+17260923,Plant Effluent,What is the Chloride level in mg/L?,315190996,1748905550055.0,Plant Effluent,Chloride mg/L - 4500-Cl-C (APHA Method Code),1754995400704.0,64.52,none,manual
+17260923,Preliminary Treatment,Take photo of the screens,16230922,1748905550055.0,Preliminary Treatment,Take photo of the screens,1748914126410.0,100.0,high,manual
+17260923,Preliminary Treatment,Take photo of the grit removal system,19240924,1748905550055.0,Preliminary Treatment,Take photo of  the grit removal system,1748914701750.0,100.0,high,manual
+17260923,Primary Clarifiers,Take photo of primary clarifier,19220924,1748905550055.0,Primary Clarifiers,Take photo of primary clarifier,1748915357111.0,100.0,high,manual
+17260923,Secondary Clarifiers,Take photo of the secondary clarifier,18140928,1748905550055.0,Secondary Clarifiers,Take photo of the secondary clarifier,1748916617834.0,100.0,high,manual
+17260923,Sludge Aerobic Digestion,Take photo of Sludge Aerobic Digestion,12490925,1748905550055.0,Sludge Aerobic Digestion,Take photo of Sludge Aerobic Digestion,1748917136204.0,100.0,high,manual
+17260923,Sludge Handling,Take photo of sludge handling system,18140932,1748905550055.0,Sludge Handling,Take photo of sludge handling system,1748917296607.0,100.0,high,manual
+17260923,Stabilization Lagoons,Take photo of the stabilization lagoon,16230925,1748905550055.0,Stabilization Lagoons,Take photo of the stabilization lagoon,1748915991888.0,100.0,high,manual
+17260923,Wastewater Treatment Plant Registration,Name of the Plant,19200925,,,,,0.0,none,manual

@@ -159,3 +159,45 @@ docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 ```
 
 Network config: [nginx](https://github.com/akvo/akvo-mis/blob/main/frontend/nginx/conf.d/default.conf)
+
+
+## Data Seeder
+
+### Akvo Flow
+
+The Akvo Flow Data Seeder enables you to migrate data from Akvo Flow to Akvo MIS. The process involves downloading forms and data, mapping administration and question data, and seeding the final data via Docker.
+
+**Quick Start Steps:**
+
+1. **Navigate to the scripts directory:**
+   ```bash
+   cd scripts/akvo-flow
+   ```
+
+2. **Configure environment:** Copy [`env.example`](scripts/akvo-flow/env.example) to [`.env`](scripts/akvo-flow/.env) and populate with your Akvo Flow credentials
+
+3. **Configure survey IDs:** Update `flow_ids` in [`af_downloader.ipynb`](scripts/akvo-flow/af_downloader.ipynb) and [`af_forms_mapping.ipynb`](scripts/akvo-flow/af_forms_mapping.ipynb) with your target surveys
+
+4. **Start JupyterLab:**
+   ```bash
+   jupyterlab .
+   ```
+
+5. **Download forms and data:** Run all cells in `af_downloader.ipynb`
+
+6. **Map administration data:** Run all cells in `af_administration_mapping.ipynb`
+
+7. **Map form questions:** Run all cells in `af_forms_mapping.ipynb`
+
+8. **Generate parent and child data files:** Run all cells in `af_data_registration_monitoring.ipynb` to produce the final data files in the output folder
+
+9. **Seed the data:** Run the Django management command:
+    ```bash
+    python manage.py flow_data_seeder --form=<akvo_flow_survey_id> --email=<youremail@domain.com>
+    ```
+
+   **Optional parameters:**
+   - `--limit=<number>` - Limit the number of records to process
+   - `--revert=True` - Revert previously seeded data
+
+For comprehensive documentation covering environment setup, detailed command explanations, output expectations, and troubleshooting, see the [Akvo Flow Data Seeder Guide](./scripts/akvo-flow/README.md).

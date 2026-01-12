@@ -1,0 +1,343 @@
+"""
+Seeder Data Processing Module
+
+This module provides data processing functionality for Flow Complete Seeder.
+"""
+
+import logging
+from typing import Dict, Optional, Any, List, Tuple
+
+import pandas as pd
+
+from api.v1.v1_data.models import FormData
+from api.v1.v1_forms.models import QuestionTypes
+
+from .seeder_config import (
+    CsvColumns,
+    SeederConfig,
+)
+from .seeder_answer_processor import AnswerProcessor
+
+logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Data Processing - UNIFIED GENERIC METHODS
+# =============================================================================
+
+
+def process_data_rows(
+    df: pd.DataFrame,
+    config: SeederConfig,
+    questions: Dict[int, Any],
+    administration_id: int,
+    parent: Optional[FormData] = None,
+    is_parent: bool = True,
+    existing_records: Optional[Dict[int, int]] = None,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Generic method to process data rows (parent or child).
+
+    This unified method eliminates code duplication by handling both parent
+    and child record processing with parameterization.
+
+    Args:
+        df: DataFrame containing rows to process
+        config: SeederConfig instance
+        questions: Dictionary mapping question ID to Question object
+        administration_id: Administration ID for all rows
+        parent: Parent FormData (for child records only)
+        is_parent: Whether processing parent records
+        existing_records: Dict mapping flow_data_id to mis_data_id
+
+    Returns:
+        List of dictionaries containing flow_data_id and mis_data_id
+    """
+    answer_processor = AnswerProcessor()
+    seeded_records = []
+    invalid_answers = []
+
+    for _, row in df.iterrows():
+        try:
+            # Prepare and create answers
+            answers, row_invalid_answers = prepare_answer_data(
+                row=row,
+                questions=questions,
+                administration_id=administration_id,
+                answer_processor=answer_processor,
+            )
+            invalid_answers.extend(row_invalid_answers)
+
+            if len(answers) == 0:
+                continue
+
+            # Create FormData
+            form_data = create_form_data(
+                row=row,
+                user=config.user,
+                administration_id=administration_id,
+                parent=parent,
+                existing_records=existing_records,
+            )
+
+            if not form_data:
+                continue
+
+            bulk_create_answers(form_data, answers, config.user)
+
+            seeded_records.append(
+                {
+                    "flow_data_id": row[CsvColumns.DATAPOINT_ID],
+                    "mis_data_id": form_data.pk,
+                }
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Error processing {'parent' if is_parent else 'child'} "
+                f"row {row[CsvColumns.DATAPOINT_ID]}: {e}"
+            )
+            logger.exception(
+                f"Error processing {'parent' if is_parent else 'child'} "
+                f"row {row[CsvColumns.DATAPOINT_ID]}"
+            )
+            continue
+
+    return seeded_records, invalid_answers
+
+
+def process_child_data_for_parent(
+    parent_row: pd.Series,
+    config: SeederConfig,
+    parent_form_data: FormData,
+    child_data_groups: pd.core.groupby.DataFrameGroupBy,
+    child_questions: Dict[int, Any],
+    existing_records: Optional[Dict[int, int]] = None,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Process all child rows for a given parent using generic method.
+
+    Args:
+        parent_row: Parent row containing datapoint_id
+        config: SeederConfig instance
+        parent_form_data: Parent FormData instance
+        child_data_groups: Grouped child dataframe
+        child_questions: Questions for child data
+        existing_records: Dict mapping flow_data_id to mis_data_id
+
+    Returns:
+        List of seeded child records
+    """
+    parent_datapoint_id = parent_row[CsvColumns.DATAPOINT_ID]
+
+    try:
+        child_rows = child_data_groups.get_group(parent_datapoint_id)
+    except KeyError:
+        # No child rows for this parent
+        return [], []
+
+    # Use generic process_data_rows method
+    return process_data_rows(
+        df=child_rows,
+        config=config,
+        questions=child_questions,
+        administration_id=parent_form_data.administration_id,
+        parent=parent_form_data,
+        is_parent=False,
+        existing_records=existing_records,
+    )
+
+
+# =============================================================================
+# Form Data Creation - GENERIC METHOD
+# =============================================================================
+
+
+def create_form_data(
+    row: pd.Series,
+    user,
+    administration_id: int,
+    parent: Optional[FormData] = None,
+    existing_records: Optional[Dict[int, int]] = None,
+) -> Optional[FormData]:
+    """Generic method to create FormData instance (parent or child).
+
+    Args:
+        row: Pandas Series containing row data
+        user: User creating the record
+        administration_id: Administration ID
+        parent: Parent FormData (for child records only)
+
+    Returns:
+        Created or updated FormData instance or None if failed
+    """
+    try:
+        geo_value = None
+        if CsvColumns.GEO in row and pd.notna(row[CsvColumns.GEO]):
+            geo_value = [
+                float(g) for g in
+                str(row[CsvColumns.GEO]).split("|")
+            ]
+        if parent and not geo_value:
+            geo_value = parent.geo
+
+        flow_data_id = int(row[CsvColumns.DATAPOINT_ID])
+
+        # Sanitize name by replacing pipe characters
+        dp_name = row[CsvColumns.NAME].replace("|", " - ")
+
+        # Check if record already exists
+        if existing_records and flow_data_id in existing_records:
+            mis_data_id = existing_records[flow_data_id]
+            data = FormData.objects.filter(pk=mis_data_id).first()
+            if data:
+                # Update existing record
+                data.name = dp_name
+                data.administration_id = administration_id
+                data.geo = geo_value
+                data.created_by = user
+                data.submitter = row.get(CsvColumns.SUBMITTER, None)
+                if parent:
+                    data.parent = parent
+                data.save()
+                logger.info(
+                    f"Updated existing FormData {mis_data_id} "
+                    f"for flow_data_id {flow_data_id}"
+                )
+                return data
+
+        # Create new record
+        data = FormData.objects.create(
+            form_id=row[CsvColumns.FORM_ID],
+            uuid=row[CsvColumns.IDENTIFIER],
+            name=dp_name,
+            administration_id=administration_id,
+            geo=geo_value,
+            created_by=user,
+            parent=parent,
+            submitter=row.get(CsvColumns.SUBMITTER, None),
+        )
+        # Set created timestamp from source data
+        data.created = row[CsvColumns.CREATED_AT]
+        data.save()
+        logger.info(
+            f"Created new FormData {data.pk} "
+            f"for flow_data_id {flow_data_id}"
+        )
+        return data
+    except Exception as e:
+        logger.error(
+            f"Error creating/updating FormData for row "
+            f"{row[CsvColumns.DATAPOINT_ID]}: {e}"
+        )
+        return None
+
+
+# =============================================================================
+# Answer Processing - GENERIC METHODS
+# =============================================================================
+
+
+def prepare_answer_data(
+    row: pd.Series,
+    questions: Dict[int, Any],
+    administration_id: Optional[int],
+    answer_processor: AnswerProcessor,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Generic method to prepare answer data from a data row.
+
+    This method works for both parent and child data without modification.
+
+    Args:
+        row: Pandas Series containing row data
+        questions: Dictionary mapping question ID to Question object
+        administration_id: Administration ID for admin-type questions
+        answer_processor: AnswerProcessor instance
+
+    Returns:
+        List of dictionaries containing answer data
+    """
+    answer_records = []
+    invalid_answers = []
+
+    for question_id, question in questions.items():
+        column_name = str(question_id)
+
+        # Skip if value is NaN
+        if pd.isna(row.get(column_name)):
+            continue
+
+        row_value = row[column_name]
+
+        # Process answer based on question type
+        opt_list = []
+        if question.type in [
+            QuestionTypes.option,
+            QuestionTypes.multiple_option,
+        ]:
+            opt_list = question.options.values_list("value", flat=True)
+            opt_list = list(opt_list)
+
+        name, value, options = answer_processor.process(
+            question_type=question.type,
+            row_value=row_value,
+            administration_id=administration_id,
+            opt_list=opt_list,
+        )
+
+        if name is None and value is None and options is None:
+            invalid_answers.append({
+                "mis_form_id": question.form_id,
+                "mis_question_id": question.pk,
+                "mis_question_type": QuestionTypes.FieldStr[question.type],
+                "flow_data_id": row[CsvColumns.DATAPOINT_ID],
+                "value": row_value,
+            })
+            # Skip invalid answer
+            continue
+
+        answer_records.append(
+            {
+                "question_id": question.pk,
+                "name": name,
+                "value": value,
+                "options": options,
+            }
+        )
+
+    return answer_records, invalid_answers
+
+
+def bulk_create_answers(
+    data: FormData,
+    answer_records: List[Dict[str, Any]],
+    user,
+):
+    """Generic method to bulk create answer records.
+
+    Works for both parent and child FormData instances.
+
+    Args:
+        data: FormData instance (parent or child)
+        answer_records: List of answer data dictionaries
+        user: User creating the answers
+    """
+    if not answer_records:
+        return
+
+    # Clear existing answers (if any)
+    data.data_answer.all().delete()
+
+    # Bulk create new answers
+    AnswerModel = data.data_answer.model
+    data.data_answer.bulk_create(
+        [
+            AnswerModel(
+                data=data,
+                question_id=a["question_id"],
+                value=a["value"],
+                options=a["options"],
+                name=a["name"],
+                created_by=user,
+            )
+            for a in answer_records
+        ]
+    )

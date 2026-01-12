@@ -11,7 +11,6 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 27040920,General Information on Pump Station,Lights,22260921,1749611905372,General Information on Pump Station,Lights,1749613872416,100.0,high,text_similarity
 27040920,General Information on Pump Station,Sluice valve,23240925,1749611905372,General Information on Pump Station,Sluice valve,1749612827907,100.0,high,text_similarity
 27040920,General Information on Pump Station,Hour Run Meter,23270921,1749611905372,General Information on Pump Station,Hour Run Meter,1749613144170,100.0,high,text_similarity
-27040920,General Information on Pump Station,Building Conditions,24210922,1749611905372,General Information on Pump Station,Ground Conditions,1749612149744,82.76,low,text_similarity
 27040920,General Information on Pump Station,Ground Conditions,24230921,1749611905372,General Information on Pump Station,Ground Conditions,1749612149744,100.0,high,text_similarity
 27040920,General Information on Pump Station,Pump Status,24260925,1749611905372,General Information on Pump Station,Pump Status,1749613769968,100.0,high,text_similarity
 27040920,General Information on Pump Station,Water Supply,24280923,1749611905372,General Information on Pump Station,Water Supply,1749613907567,100.0,high,text_similarity
@@ -26,8 +25,9 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 27040920,General Information on Pump Station,Guardrails for Pump Sation,28100925,1749611905372,General Information on Pump Station,Guardrails for Pump Station,1749613433763,96.15,high,text_similarity
 27040920,General Information on Pump Station,Amp Meter,28110928,1749611905372,General Information on Pump Station,Amp Meter,1749613187910,100.0,high,text_similarity
 27040920,Pump Station Registration,Which Division are you in?,20330920,,,,,53.33,none,none
-27040920,Pump Station Registration,Name of Pump Station,22190920,1749611905372,General Information on Pump Station,Pump Station Lid,1749613029710,85.71,medium,text_similarity
 27040920,Pump Station Registration,Which District are you in?,22220936,,,,,51.16,none,none
-27040920,Pump Station Registration,Take photo of Pump Station,23190921,1749611905372,Photos of Inspection,Take Photo,1749614077932,100.0,high,text_similarity
 27040920,Pump Station Registration,Inspection Date,27060922,1749611905372,General Information on Pump Station,Inspection Date,1749611905374,100.0,high,text_similarity
 27040920,Pump Station Registration,GPS Location,27120920,,,,,66.67,none,none
+27040920,General Information on Pump Station,Building Conditions,24210922,,,,,0.0,none,manual
+27040920,Pump Station Registration,Name of Pump Station,22190920,,,,,0.0,none,manual
+27040920,Pump Station Registration,Take photo of Pump Station,23190921,,,,,0.0,none,manual

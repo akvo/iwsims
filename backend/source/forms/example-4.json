@@ -68,6 +68,18 @@
             "query_params": "?allowed_file_types=pdf&allowed_file_types=doc&allowed_file_types=docx&allowed_file_types=odt"
           },
           "required": true
+        },
+        {
+          "id": 446,
+          "name": "subdistrict",
+          "label": "Which Subdistrict are you in?",
+          "order": 5,
+          "type": "administration",
+          "required": true,
+          "meta": true,
+          "api": {
+            "max_level": 3
+          }
         }
       ]
     },
