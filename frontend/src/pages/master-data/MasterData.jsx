@@ -149,6 +149,7 @@ const MasterData = () => {
               })
             }
             onSearchChange={(value) => fetchData(currentPage, parent, value)}
+            onAdministrationChange={() => setCurrentPage(1)}
             maxLevel={levels?.length - 1}
             search={search}
           />

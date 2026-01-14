@@ -5,9 +5,9 @@ import AdministrationDropdown from "./AdministrationDropdown";
 import { store, uiText } from "../../lib";
 import { Link } from "react-router-dom";
 import {
-  DownloadOutlined,
+  // DownloadOutlined,
   PlusOutlined,
-  UploadOutlined,
+  // UploadOutlined,
 } from "@ant-design/icons";
 import { Fragment } from "react";
 
@@ -17,11 +17,12 @@ const AdministrationFilters = ({
   loading,
   onChange = () => {},
   onSearchChange = () => {},
+  onAdministrationChange = () => {},
   addLink = "/control-center/master-data/administration/add",
   maxLevel = null,
   search = null,
 }) => {
-  const authUser = store.useState((s) => s.user);
+  // const authUser = store.useState((s) => s.user);
   const language = store.useState((s) => s.language);
   const { active: activeLang } = language;
   const text = useMemo(() => {
@@ -43,10 +44,10 @@ const AdministrationFilters = ({
             />
           </Space>
         </Col>
-        {["Super Admin"].includes(authUser?.role?.value) && (
-          <Col>
-            <Space>
-              <Link to="/control-center/master-data/administration/upload">
+
+        <Col>
+          <Space>
+            {/* <Link to="/control-center/master-data/administration/upload">
                 <Button icon={<UploadOutlined />} shape="round">
                   {text.bulkUploadButton}
                 </Button>
@@ -55,15 +56,15 @@ const AdministrationFilters = ({
                 <Button icon={<DownloadOutlined />} shape="round">
                   {text.download}
                 </Button>
-              </Link>
-              <Link to={addLink}>
-                <Button type="primary" icon={<PlusOutlined />} shape="round">
-                  {text.addNewButton}
-                </Button>
-              </Link>
-            </Space>
-          </Col>
-        )}
+              </Link> */}
+            <Link to={addLink}>
+              {/* TODO: Temporarily show the Add button for data entry. */}
+              <Button type="primary" icon={<PlusOutlined />} shape="round">
+                {text.addNewButton}
+              </Button>
+            </Link>
+          </Space>
+        </Col>
       </Row>
       <Row>
         <Col>
@@ -72,6 +73,7 @@ const AdministrationFilters = ({
               loading={loading}
               maxLevel={maxLevel}
               persist={search ? false : true}
+              onChange={onAdministrationChange}
             />
             <RemoveFiltersButton
               extra={(s) => {
