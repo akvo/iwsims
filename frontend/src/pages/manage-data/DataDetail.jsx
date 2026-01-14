@@ -223,20 +223,13 @@ const DataDetail = ({
           />
         )}
         {dataset
-          .filter(
-            (r) =>
-              r?.question?.filter(
-                (q) => typeof q?.value !== "undefined" && q?.value !== null
-              )?.length
-          )
+          .filter((r) => r?.question?.length)
           .map((r, rI) => (
             <div className="pending-data-wrapper" key={rI}>
               <h3>{r.label}</h3>
               <Table
                 pagination={false}
-                dataSource={r.question?.filter(
-                  (q) => typeof q?.value !== "undefined" && q?.value !== null
-                )}
+                dataSource={r.question}
                 rowClassName={(record) => {
                   const rowEdited =
                     (record.newValue || record.newValue === 0) &&
