@@ -83,35 +83,36 @@ const Forms = () => {
       .filter((group) => group?.repeatable)
       .flatMap((group) => group.question);
 
-    // Validate required fields
-    const questionIds = Object.keys(values).map((id) => parseInt(id, 10));
-    const requiredQuestions = nonRepeatableQuestions.filter(
-      (q) => questionIds.includes(q?.id) && q.required
-    );
+    // Validate required fields TODO: Identify why this validation was exist
+    // Required validation has been done by Webform component
+    // const questionIds = Object.keys(values).map((id) => parseInt(id, 10));
+    // const requiredQuestions = nonRepeatableQuestions.filter(
+    //   (q) => questionIds.includes(q?.id) && q.required
+    // );
 
-    const hasEmptyRequired = requiredQuestions.some((q) => {
-      const questionValue = values[q.id];
-      const isEmptyValue =
-        questionValue === null ||
-        typeof questionValue === "undefined" ||
-        (typeof questionValue === "string" && questionValue.trim() === "");
+    // const hasEmptyRequired = requiredQuestions.some((q) => {
+    //   const questionValue = values[q.id];
+    //   const isEmptyValue =
+    //     questionValue === null ||
+    //     typeof questionValue === "undefined" ||
+    //     (typeof questionValue === "string" && questionValue.trim() === "");
 
-      if (isEmptyValue) {
-        webformRef.current.setFields([
-          {
-            name: q.id,
-            errors: [text.requiredError.replace("{{field}}", q.label)],
-          },
-        ]);
-        return true;
-      }
-      return false;
-    });
+    //   if (isEmptyValue) {
+    //     webformRef.current.setFields([
+    //       {
+    //         name: q.id,
+    //         errors: [text.requiredError.replace("{{field}}", q.label)],
+    //       },
+    //     ]);
+    //     return true;
+    //   }
+    //   return false;
+    // });
 
-    if (hasEmptyRequired) {
-      setSubmit(false);
-      return;
-    }
+    // if (hasEmptyRequired) {
+    //   setSubmit(false);
+    //   return;
+    // }
 
     setSubmit(true);
 
@@ -225,7 +226,14 @@ const Forms = () => {
 
     const payload = {
       data: dataPayload,
-      answer: allAnswers.map((x) => pick(x, ["question", "value", "index"])),
+      answer: allAnswers
+        .filter((a) => {
+          // answer should have value defined
+          return (
+            Object.keys(a).includes("value") && typeof a.value !== "undefined"
+          );
+        })
+        .map((x) => pick(x, ["question", "value", "index"])),
     };
 
     if (uuid) {
