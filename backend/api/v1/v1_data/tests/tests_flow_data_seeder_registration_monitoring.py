@@ -102,7 +102,7 @@ class BaseFlowDataSeederTest(TestCase):
 
         # Create temporary source directory structure
         self.temp_source_dir = tempfile.mkdtemp()
-        self.output_dir = os.path.join(self.temp_source_dir, "output")
+        self.output_dir = os.path.join(self.temp_source_dir, "data")
         os.makedirs(self.output_dir, exist_ok=True)
 
         # Copy and update fixture files
@@ -152,6 +152,7 @@ class BaseFlowDataSeederTest(TestCase):
 
     def run_seeder_command(self, limit=None):
         """Helper method to run the seeder command with mocked source dir."""
+        from unittest.mock import patch
         # Capture temp_source_dir for use in the closure
         temp_dir = self.temp_source_dir
 
@@ -163,13 +164,24 @@ class BaseFlowDataSeederTest(TestCase):
         SeederConfig.__post_init__ = custom_post_init
 
         try:
-            out = StringIO()
-            args = [
-                "flow_data_seeder", "-f", "123", "--email", "test@example.com"
-            ]
-            if limit:
-                args.extend(["--limit", str(limit)])
-            call_command(*args, stdout=out, stderr=StringIO())
+            with patch(
+                'api.v1.v1_data.management.commands'
+                '.flow_data_seeder.get_form_by_flow_id'
+            ) as mock_get_form, \
+                 patch(
+                'api.v1.v1_data.management.commands'
+                '.flow_data_seeder.refresh_materialized_data'
+            ):
+                mock_get_form.return_value = self.parent_form
+                out = StringIO()
+                args = [
+                    "flow_data_seeder",
+                    "-f", "123",
+                    "--email", "test@example.com"
+                ]
+                if limit:
+                    args.extend(["--limit", str(limit)])
+                call_command(*args, stdout=out, stderr=StringIO())
         finally:
             SeederConfig.__post_init__ = original_post_init
 
@@ -414,6 +426,7 @@ class RevertParentChildRelationshipsTestCase(BaseFlowDataSeederTest):
 
     def test_revert_removes_both_parent_and_child_records(self):
         """Test that revert removes both parent and child FormData records."""
+        from unittest.mock import patch
         # First, seed the data
         self.run_seeder_command()
 
@@ -435,14 +448,23 @@ class RevertParentChildRelationshipsTestCase(BaseFlowDataSeederTest):
         SeederConfig.__post_init__ = custom_post_init
 
         try:
-            out = StringIO()
-            call_command(
-                "flow_data_seeder",
-                "-f", "123",
-                "--revert",
-                stdout=out,
-                stderr=StringIO()
-            )
+            with patch(
+                'api.v1.v1_data.management.commands'
+                '.flow_data_seeder.get_form_by_flow_id'
+            ) as mock_get_form, \
+                 patch(
+                'api.v1.v1_data.management.commands'
+                '.flow_data_seeder.refresh_materialized_data'
+            ):
+                mock_get_form.return_value = self.parent_form
+                out = StringIO()
+                call_command(
+                    "flow_data_seeder",
+                    "-f", "123",
+                    "--revert",
+                    stdout=out,
+                    stderr=StringIO()
+                )
         finally:
             SeederConfig.__post_init__ = original_post_init
 

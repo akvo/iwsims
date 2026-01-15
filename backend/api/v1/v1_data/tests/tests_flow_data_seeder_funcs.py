@@ -291,7 +291,7 @@ class FilePathsTestCase(TestCase):
 
     def test_output_dir(self):
         """Test OUTPUT_DIR constant."""
-        self.assertEqual(FilePaths.OUTPUT_DIR, "output")
+        self.assertEqual(FilePaths.OUTPUT_DIR, "data")
 
     def test_seeded_dir(self):
         """Test SEEDED_DIR constant."""
@@ -299,7 +299,7 @@ class FilePathsTestCase(TestCase):
 
     def test_source_dir(self):
         """Test SOURCE_DIR constant."""
-        self.assertEqual(FilePaths.SOURCE_DIR, "source/akvo-flow")
+        self.assertEqual(FilePaths.SOURCE_DIR, "storage/akvo-flow")
 
     def test_administration_mapping(self):
         """Test ADMINISTRATION_MAPPING constant."""
