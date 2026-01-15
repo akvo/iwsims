@@ -2,3 +2,13 @@
 *.csv
 *.xlsx
 */**
+!akvo-flow/
+akvo-flow/*
+!akvo-flow/data/
+!akvo-flow/data/.gitignore
+!akvo-flow/raw/
+!akvo-flow/raw/.gitignore
+!akvo-flow/caddisfly/
+!akvo-flow/caddisfly/.gitignore
+!akvo-flow/invalid_values/
+!akvo-flow/invalid_values/.gitignore
