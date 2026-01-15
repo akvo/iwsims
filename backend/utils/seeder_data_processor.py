@@ -10,11 +10,12 @@ from typing import Dict, Optional, Any, List, Tuple
 import pandas as pd
 
 from api.v1.v1_data.models import FormData
-from api.v1.v1_forms.models import QuestionTypes
+from api.v1.v1_forms.models import QuestionTypes, Forms
 
 from .seeder_config import (
     CsvColumns,
     SeederConfig,
+    FLOW_PREFIX,
 )
 from .seeder_answer_processor import AnswerProcessor
 
@@ -33,7 +34,7 @@ def process_data_rows(
     administration_id: int,
     parent: Optional[FormData] = None,
     is_parent: bool = True,
-    existing_records: Optional[Dict[int, int]] = None,
+    existing_records: Optional[Dict[int, int]] = [],
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Generic method to process data rows (parent or child).
 
@@ -70,13 +71,23 @@ def process_data_rows(
             if len(answers) == 0:
                 continue
 
-            # Create FormData
+            # Create child FormData
+            existing_record = next(filter(
+                lambda er: (
+                    str(row[CsvColumns.DATAPOINT_ID]) in er.name and
+                    (
+                        er.parent_id == parent.pk
+                        if parent else er.parent_id is None
+                    )
+                ),
+                existing_records
+            ), None)
             form_data = create_form_data(
                 row=row,
                 user=config.user,
                 administration_id=administration_id,
                 parent=parent,
-                existing_records=existing_records,
+                existing_record=existing_record,
             )
 
             if not form_data:
@@ -111,7 +122,7 @@ def process_child_data_for_parent(
     parent_form_data: FormData,
     child_data_groups: pd.core.groupby.DataFrameGroupBy,
     child_questions: Dict[int, Any],
-    existing_records: Optional[Dict[int, int]] = None,
+    existing_records: Optional[List[FormData]] = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Process all child rows for a given parent using generic method.
 
@@ -121,7 +132,7 @@ def process_child_data_for_parent(
         parent_form_data: Parent FormData instance
         child_data_groups: Grouped child dataframe
         child_questions: Questions for child data
-        existing_records: Dict mapping flow_data_id to mis_data_id
+        existing_records: Optional[List[FormData]] = None
 
     Returns:
         List of seeded child records
@@ -156,7 +167,7 @@ def create_form_data(
     user,
     administration_id: int,
     parent: Optional[FormData] = None,
-    existing_records: Optional[Dict[int, int]] = None,
+    existing_record: Optional[FormData] = None,
 ) -> Optional[FormData]:
     """Generic method to create FormData instance (parent or child).
 
@@ -183,29 +194,32 @@ def create_form_data(
 
         # Sanitize name by replacing pipe characters
         dp_name = row[CsvColumns.NAME].replace("|", " - ")
+        # Add FLOW-{flow_data_id} prefix to name
+        dp_name = f"{FLOW_PREFIX}{flow_data_id} - {dp_name}"
 
         # Check if record already exists
-        if existing_records and flow_data_id in existing_records:
-            mis_data_id = existing_records[flow_data_id]
-            data = FormData.objects.filter(pk=mis_data_id).first()
-            if data:
-                # Update existing record
-                data.name = dp_name
-                data.administration_id = administration_id
-                data.geo = geo_value
-                data.created_by = user
-                data.submitter = row.get(CsvColumns.SUBMITTER, None)
-                if parent:
-                    data.parent = parent
-                data.save()
-                logger.info(
-                    f"Updated existing FormData {mis_data_id} "
-                    f"for flow_data_id {flow_data_id}"
-                )
-                return data
+        if existing_record:
+            # Update existing record
+            existing_record.name = dp_name
+            existing_record.administration_id = administration_id
+            existing_record.geo = geo_value
+            existing_record.created_by = user
+            existing_record.submitter = row.get(CsvColumns.SUBMITTER, None)
+            if parent:
+                existing_record.parent = parent
+            existing_record.save()
+            logger.info(
+                f"Updated existing FormData {existing_record.pk} "
+                f"for flow_data_id {flow_data_id}"
+            )
+            return existing_record
 
         # Create new record
+        new_data_id = None
+        if not parent and flow_data_id:
+            new_data_id = flow_data_id
         data = FormData.objects.create(
+            id=new_data_id,
             form_id=row[CsvColumns.FORM_ID],
             uuid=row[CsvColumns.IDENTIFIER],
             name=dp_name,
@@ -230,6 +244,27 @@ def create_form_data(
         )
         return None
 
+
+# =============================================================================
+# Form Data Deletion (Reverting) - GENERIC METHODS
+# =============================================================================
+
+def revert_form_data(
+    form: Forms
+) -> int:
+    """Generic method to revert all FormData for a given form.
+
+    Args:
+        form: Forms instance
+    """
+    form_data = form.form_form_data.filter(
+        name__startswith=FLOW_PREFIX,
+    )
+    total_data = form_data.count()
+    for data in form_data.all():
+        data.children.all().delete(hard=True)
+        data.delete(hard=True)
+    return total_data + sum([d.children.count() for d in form_data.all()])
 
 # =============================================================================
 # Answer Processing - GENERIC METHODS
