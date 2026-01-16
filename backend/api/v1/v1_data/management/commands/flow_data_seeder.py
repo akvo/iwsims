@@ -60,6 +60,7 @@ from utils.seeder_data_processor import (
     revert_form_data,
 )
 from utils.seeder_answer_processor import AnswerProcessor
+from utils.seeder_photo_downloader import PhotoPreDownloader
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +149,15 @@ class Command(BaseCommand):
                 f"Starting Flow Data Seeding\n"
                 f"Form ID: {config.flow_form_id}\n"
             )
+
+            # Load photo download log if exists
+            downloader = PhotoPreDownloader(form_id=config.flow_form_id)
+            photo_log = downloader.load_success_log()
+            if photo_log:
+                AnswerProcessor.set_photo_url_map(photo_log)
+                self._log_info(
+                    f"Loaded {len(photo_log)} pre-downloaded photo(s)"
+                )
 
             if registration_only:
                 self._log_info(
