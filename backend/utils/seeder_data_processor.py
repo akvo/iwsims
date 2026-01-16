@@ -236,6 +236,9 @@ def create_form_data(
             f"Created new FormData {data.pk} "
             f"for flow_data_id {flow_data_id}"
         )
+        # Save to datapoint json file if parent is None (Registration)
+        if data.parent is None:
+            data.save_to_file
         return data
     except Exception as e:
         logger.error(
