@@ -1,0 +1,46 @@
+flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
+5530933,Final Remarks,General Remarks and Recommendations,6550920,1749624452908,Final Remarks,General Remarks and Recommendations,1749624532451,100.0,high,text_similarity,
+5530933,Final Remarks,Signature of Officer,8550921,1749624452908,Final Remarks,Signature of Officer,1749631698734,100.0,high,text_similarity,
+5530933,Location of Village,Who is the implementing agency/agencies?,1031710926,,,,,58.82,none,none,
+5530933,Location of Village,Are you able to capture the locality Plan?,1035730921,,,,,73.47,none,none,
+5530933,Location of Village,Locality Plan,1550935,,,,,60.87,none,none,
+5530933,Location of Village,Are you able to take the water sample,398350953,1749624452908,Project Info,Are you able to take a sample?,1749630785254,82.35,low,text_similarity,
+5530933,Location of Village,Water test conducted?,4420940,1749624452908,Project Info,Water test conducted?,1749630785253,100.0,high,text_similarity,
+5530933,Location of Village,WSMP Submitted?,4460920,,,,,52.17,none,none,
+5530933,Location of Village,GPS Location,480936,,,,,63.16,none,none,
+5530933,Location of Village,Level of contamination of H2S Results?,6510931,,,,,79.37,none,none,
+5530933,Location of Village,Village Name,8510923,,,,,50.0,none,none,
+5530933,Location of Village,Project Background,9510938,,,,,76.19,none,none,
+5530933,Location of Village,Which Division-Province-Tikina,9530926,,,,,51.85,none,none,
+5530933,Project Photos,Take Photo,2490943,1749624452908,Project Info,Take photo of the sampling point,1749630785257,100.0,high,text_similarity,
+5530933,Project Photos,Comment on Photo taken,6620936,1749624452908,Project Photos,Comment on Photo Taken,1749631662652,100.0,high,text_similarity,
+5530933,Project Scope,Media Placing,2490941,,,,,61.54,none,none,
+5530933,Project Scope,Concrete Base Construction,4440926,1749624452908,Concrete Base Construction,Concrete Base Construction,1849633456789,100.0,high,text_similarity,
+5530933,Project Scope,Fencing Installation,4440927,,,,,65.0,none,none,
+5530933,Project Scope,Pipework Installation,4450934,,,,,61.9,none,none,
+5530933,Project Scope,Netting Installation,5530934,,,,,75.0,none,none,
+5530933,Project Scope,Balance Tank Installation,5530935,,,,,65.31,none,none,
+5530933,Project Scope,Washout Installation,640928,,,,,55.56,none,none,
+5530933,Project Scope,Storage Tank Installation,7450928,,,,,65.31,none,none,
+5530933,Project Scope,Sign Board Installation,9490937,,,,,60.87,none,none,
+5530933,Project Scope,Lock Installation,9520924,,,,,58.82,none,none,
+5530933,Project Scope,Tank Installation,9540935,,,,,70.59,none,none,
+5530933,Location of Village,Construction Start Date?,5550920,1749624452908.0,Project Info,"Project Info |
+Construction Start Date?",1749624452910.0,0.0,none,manual,1002.0
+5530933,Location of Village,Proposed Completion Date?,8540921,1749624452908.0,Project Info,"Project Info |
+Proposed Completion Date?",1749630516825.0,0.0,none,manual,1004.0
+5530933,Location of Village,Level of Contamination using CBT bags?,410050993,1749624452908.0,Project Info,"Project Info | 
+Level of Contamination using CBT bags?",1749630906302.0,0.0,none,manual,1010.0
+5530933,Location of Village,What is the Total Coliform Level?,398340987,1749624452908.0,Project Info,"Project Info |
+What is the Total Coliform Level?",1749631093126.0,0.0,none,manual,1014.0
+5530933,Location of Village,What is the Faecal Coliform Level?,405990956,1749624452908.0,Project Info,"Project Info |
+What is the Fecal Coliform Level?",1749631148928.0,0.0,none,manual,1015.0
+5530933,Location of Village,What is the Turbidity in NTU?,413881004,1749624452908.0,Project Info,"Project Info |
+What is the Turbidity in NTU?",1749631183056.0,0.0,none,manual,1016.0
+5530933,Location of Village,What is the pH,402300957,1749624452908.0,Project Info,"Project Info |
+pH - 4500-H+B (APHA Method Code)",1754995200102.0,0.0,none,manual,1018.0
+5530933,Location of Village,What is the Conductivity ?,393220960,1749624452908.0,Project Info,"Project Info |
+Conductivity \u00b5S/cm - 2510B (APHA Method Code)",1754995200103.0,0.0,none,manual,1019.0
+5530933,Location of Village,What is the Salinity in ppt?,389680954,1749624452908.0,Project Info,Salinity PPT 2520B 0.2 (APHA Method Code),1754995200104.0,0.0,none,manual,1020.0
+5530933,Project Scope,What percentage of project is complete?,1009150932,1749624452908.0,Project Info,"Project Info |
+Percentage of Project Completion",1849635800001.0,0.0,none,manual,1202.0

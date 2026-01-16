@@ -1,0 +1,177 @@
+flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
+8520967,Backup Power Supply,Issues with the backup generator ?,277540920,1749652214711,Backup Power Supply,Issues with the backup generator ?,1749699931981,100.0,high,text_similarity,
+8520967,Backup Power Supply,Is the backup generator well maintained and functional?,311440969,1749652214711,Backup Power Supply,Is the backup generator well maintained and functional?,1749699885495,100.0,high,text_similarity,
+8520967,Backup Power Supply,Take a picture of the generator ?,311460924,1749652214711,Backup Power Supply,Take a picture of the generator ?,1749700127090,100.0,high,text_similarity,
+8520967,Backup Power Supply,Do you have a backup generator at this Facility,311470920,1749652214711,Backup Power Supply,Do you have a backup generator at this Facility,1749653134928,100.0,high,text_similarity,
+8520967,Chemicals,What is the dosing method used for Lime?,12130921,1749652214711,Chemicals,What is the dosing method used for Lime?,1749696913958,100.0,high,text_similarity,
+8520967,Chemicals,Take photo of the risk/Lime dosing system?,15110920,1749652214711,Chemicals,Take photo of the risk/Lime dosing system?,1749697047271,100.0,high,text_similarity,
+8520967,Chemicals,What are the risks?,1680929,1749652214711,Chemicals,What are the risks associated with Alum dosing?,1749696173219,97.3,high,text_similarity,
+8520967,Chemicals,Is prechlorination carried out in the plant?,18390920,1749652214711,Chemicals,Is prechlorination carried out in the plant?,1749695649473,100.0,high,text_similarity,
+8520967,Chemicals,Are there any risks associated with Soda Ash dosing?,2650924,1749652214711,Chemicals,Are there any risks associated with Soda Ash dosing?,1749696429991,100.0,high,text_similarity,
+8520967,Chemicals,What is the dosage rate for Alum in (gram per cubic metre) on a daily basis?,3680925,1749652214711,Disinfection,What is the dosage of HTH Powder in grams per cubic metre?,1749704716001,81.74,low,text_similarity,
+8520967,Chemicals,What is the dosage rate for Soda Ash in (gram per cubic metres) on a daily basis?,4520926,1749652214711,Disinfection,What is the dosage of DPD Tablets in grams per cubic metres?,1749705351488,80.0,low,text_similarity,
+8520967,Chemicals,Take Photo of the risks/Polymer dosing system,4520928,1749652214711,Chemicals,Take Photo of the risks/Polymer dosing system,1749696736345,100.0,high,text_similarity,
+8520967,Chemicals,What dosing method is used for Polymer?,4540920,1749652214711,Chemicals,What dosing method is used for Polymer?,1749696610120,100.0,high,text_similarity,
+8520967,Chemicals,What dosing method is used for Soda Ash?,5690924,1749652214711,Chemicals,What dosing method is used for Soda Ash?,1749696386016,100.0,high,text_similarity,
+8520967,Chemicals,Are there any risks associated with Alum dosing?,5700922,1749652214711,Chemicals,Are there any risks associated with Alum dosing?,1749696125775,100.0,high,text_similarity,
+8520967,Chemicals,What dosing method is used for Alum?,600921,1749652214711,Chemicals,What dosing method is used for Alum?,1749696061091,100.0,high,text_similarity,
+8520967,Chemicals,What dosing method is used for Prechlorination?,610922,1749652214711,Chemicals,What dosing method is used for Prechlorination?,1749695714514,100.0,high,text_similarity,
+8520967,Chemicals,What are the risks?,6650921,1749652214711,Chemicals,What are the risks associated with Alum dosing?,1749696173219,97.3,high,text_similarity,
+8520967,Chemicals,Are there any risks associated with prechlorination system?,7570925,1749652214711,Chemicals,Are there any risks associated with prechlorination system?,1749695817762,100.0,high,text_similarity,
+8520967,Chemicals,What is the dosage rate for Chlorine in (gram per cubic metre) for Prechlorination?,7580925,1749652214711,Disinfection,What is the dosage of Chlorine in grams per cubic metre?,1749698562530,85.71,medium,text_similarity,
+8520967,Chemicals,What are the risks?,7620921,1749652214711,Chemicals,What are the risks associated with Alum dosing?,1749696173219,97.3,high,text_similarity,
+8520967,Chemicals,What are the risks?,7970920,1749652214711,Chemicals,What are the risks associated with Alum dosing?,1749696173219,97.3,high,text_similarity,
+8520967,Chemicals,Take a Photo of the risks/ Prechlorination system.,8660924,1749652214711,Chemicals,Take a Photo of the risks/ Prechlorination system.,1749695958674,100.0,high,text_similarity,
+8520967,Chemicals,What chemicals are use for water treatment?,8660925,1749652214711,Chemicals,What chemicals are use for water treatment on the day of Inspection ?,1749652997590,98.82,high,text_similarity,
+8520967,Chemicals,Take a Photo of the risk/Alum dosing system,8660927,1749652214711,Chemicals,Take a Photo of the risk/Alum dosing system,1749696282743,100.0,high,text_similarity,
+8520967,Chemicals,Take photo of risk/Soda Ash Dosing System,9650920,1749652214711,Chemicals,Take photo of risk/Soda Ash Dosing System,1749696535862,100.0,high,text_similarity,
+8520967,Chemicals,What are the risks?,9670921,1749652214711,Chemicals,What are the risks associated with Alum dosing?,1749696173219,97.3,high,text_similarity,
+8520967,Constraints and Recommendation,Have you noted any production constraints?,1580931,1749652214711,Constraints and Recommendation,Have you noted any production constraints?,1749700156602,100.0,high,text_similarity,
+8520967,Constraints and Recommendation,Any final recommendation?,3580926,1749652214711,Constraints and Recommendation,Any final recommendation?,1749700286833,100.0,high,text_similarity,
+8520967,Constraints and Recommendation,Signature of DWS Officer,5570927,1749652214711,Constraints and Recommendation,Signature of DWS Officer,1749700409140,100.0,high,text_similarity,
+8520967,Constraints and Recommendation,Please provide details of production constraints,6580930,1749652214711,Constraints and Recommendation,Please provide details of production constraints,1749700254744,100.0,high,text_similarity,
+8520967,Constraints and Recommendation,What are your final recommendation for the plant?(NOT to be shown to the interviewee),9580924,1749652214711,Constraints and Recommendation,What are your final recommendation for the plant?(NOT to be shown to the interviewee),1749700326877,100.0,high,text_similarity,
+8520967,Disinfection,What dosing method is used for Chlorine Gas?,2640928,1749652214711,Disinfection,What dosing method is used for Chlorine Gas?,1749698639788,100.0,high,text_similarity,
+8520967,Disinfection,What is the dosing method for Sodium Hypochlorite?,2640930,1749652214711,Disinfection,What is the dosing method for Sodium Hypochlorite?,1749705072312,100.0,high,text_similarity,
+8520967,Disinfection,What is the usage of Chlorine Gas per day?,2650929,1749652214711,Disinfection,What is the usage of Chlorine Gas per day?,1749698606550,100.0,high,text_similarity,
+8520967,Disinfection,What dosing method is used for HTH Powder?,2660925,1749652214711,Disinfection,What dosing method is used for HTH Powder?,1749704784384,100.0,high,text_similarity,
+8520967,Disinfection,Take Photo of risks/HTH Powder Dosing System,2660929,1749652214711,Disinfection,Take Photo of risks/HTH Powder Dosing System,1749704970477,100.0,high,text_similarity,
+8520967,Disinfection,Are there any risks associated with HTH Powder Dosing System?,2670933,1749652214711,Disinfection,Are there any risks associated with HTH Powder Dosing System?,1749704846694,100.0,high,text_similarity,
+8520967,Disinfection,What are these risks?,4550928,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Disinfection,Take Photo of DPD Tablets Dosing Method,4550930,1749652214711,Disinfection,Take Photo of DPD Tablets Dosing Method,1749705551154,100.0,high,text_similarity,
+8520967,Disinfection,What is the dosage of Chlorine in grams per cubic metre?,4560923,1749652214711,Disinfection,What is the dosage of Chlorine in grams per cubic metre?,1749698562530,100.0,high,text_similarity,
+8520967,Disinfection,Take Photo of the Sodium Hypochlorite Dosing System,4560927,1749652214711,Disinfection,Take Photo of the Sodium Hypochlorite Dosing System,1749705316331,100.0,high,text_similarity,
+8520967,Disinfection,What is the dosage of Sodium Hypochlorite in grams per cubic meter?,620929,1749652214711,Disinfection,What is the dosage of Sodium Hypochlorite in grams per cubic meter?,1749705008034,100.0,high,text_similarity,
+8520967,Disinfection,What is the dosage of DPD Tablets in grams per cubic metres?,620931,1749652214711,Disinfection,What is the dosage of DPD Tablets in grams per cubic metres?,1749705351488,100.0,high,text_similarity,
+8520967,Disinfection,What is the usage of Sodium Hypochlorite per day?,6650930,1749652214711,Disinfection,What is the usage of Sodium Hypochlorite per day?,1749705042224,100.0,high,text_similarity,
+8520967,Disinfection,What are these risks?,6650932,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Disinfection,What are these risks?,6660926,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Disinfection,What is the dosage of HTH Powder in grams per cubic metre?,7600931,1749652214711,Disinfection,What is the dosage of HTH Powder in grams per cubic metre?,1749704716001,100.0,high,text_similarity,
+8520967,Disinfection,Are there any risks associated with the Sodium Hypochlorite Dosing System?,7600935,1749652214711,Disinfection,Are there any risks associated with the Sodium Hypochlorite Dosing System?,1749705116886,100.0,high,text_similarity,
+8520967,Disinfection,What is the usage of DPD Tablets per day?,7620929,1749652214711,Disinfection,What is the usage of DPD Tablets per day?,1749705372919,100.0,high,text_similarity,
+8520967,Disinfection,Are there any risks associated with the DPD Tablets Dosing Method?,8680929,1749652214711,Disinfection,Are there any risks associated with the DPD Tablets Dosing Method?,1749705449153,100.0,high,text_similarity,
+8520967,Disinfection,Are there any risks associated with Chlorine Gas dosing?,9630937,1749652214711,Disinfection,Are there any risks associated with Chlorine Gas dosing?,1749698699399,100.0,high,text_similarity,
+8520967,Disinfection,What is the dosing method used for DPD Tablets?,9630941,1749652214711,Disinfection,What is the dosing method used for DPD Tablets?,1749705410489,100.0,high,text_similarity,
+8520967,Disinfection,What is the usage of HTH Powder per day?,9650933,1749652214711,Disinfection,What is the usage of HTH Powder per day?,1749704756090,100.0,high,text_similarity,
+8520967,Disinfection,What are these risks?,9650935,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Disinfection,What Disinfection Techniques are used at the Plant?,9660928,1749652214711,Disinfection,What Disinfection Techniques are used at the Plant?,1749653091407,100.0,high,text_similarity,
+8520967,Disinfection,Do you have Standard Operating Procedures for Disinfection?,9670928,1749652214711,Disinfection,Do you have Standard Operating Procedures for Disinfection?,1749698531949,100.0,high,text_similarity,
+8520967,Filtration,Are there any Clarifier /Sedimentation Tanks at the Plant?,1660928,1749652214711,Sedimentation,Are there any Clarifier /Sedimentation Tanks at the Plant?,1749697374360,100.0,high,text_similarity,
+8520967,Filtration,Take Photo of risks/Clarifier/Sedimentation tanks,1680935,1749652214711,Sedimentation,Take Photo of risks/Clarifier/Sedimentation tanks,1749697674755,100.0,high,text_similarity,
+8520967,Filtration,Are there any risks associated with the Clarifiers/Sedimentation Tanks?,3690926,1749652214711,Sedimentation,Are there any risks associated with the Clarifiers/Sedimentation Tanks?,1749697503628,100.0,high,text_similarity,
+8520967,Filtration,Types of Filtration System,3690927,1749652214711,Sedimentation,Types of Filtration System,1749697744360,100.0,high,text_similarity,
+8520967,Filtration,What are these risks?,3700927,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Filtration,Take Photo of the risks/Backwash Sludge Removal System,4540926,1749652214711,Sedimentation,Take Photo of the risks/Backwash Sludge Removal System,1749698370411,100.0,high,text_similarity,
+8520967,Filtration,Are there any risks associated with the Floc Tanks?,4550924,1749652214711,Sedimentation,Are there any risks associated with the Floc Tanks?,1749697163079,100.0,high,text_similarity,
+8520967,Filtration,Are there any Floc Tanks used in the Plant?,4570923,1749652214711,Sedimentation,Are there any Floc Tanks used in the Plant?,1749653030359,100.0,high,text_similarity,
+8520967,Filtration,Types of Backwash Sludge Removal System,5670930,1749652214711,Sedimentation,Types of Backwash Sludge Removal System,1749698076842,100.0,high,text_similarity,
+8520967,Filtration,What are these risks?,5710925,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Filtration,What are these risks?,620923,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Filtration,Types of Clarifiers/Sedimentation Tanks at the Plant,6650926,1749652214711,Sedimentation,Types of Clarifiers/Sedimentation Tanks at the Plant,1749697434141,100.0,high,text_similarity,
+8520967,Filtration,Take photo of the risks/Filtration System,7580932,1749652214711,Sedimentation,Take photo of the risks/Filtration System,1749698002498,100.0,high,text_similarity,
+8520967,Filtration,How many Clarifiers/Sedimentation Tanks are there?,7590922,1749652214711,Sedimentation,How many Clarifiers/Sedimentation Tanks are there?,1749697404925,100.0,high,text_similarity,
+8520967,Filtration,Are there any risks associated with the Backwash Sludge Removal System?,7600928,1749652214711,Sedimentation,Are there any risks associated with the Backwash Sludge Removal System?,1749698193588,100.0,high,text_similarity,
+8520967,Filtration,Are there any Filtration System at the Plant?,7610924,1749652214711,Sedimentation,Are there any Filtration System at the Plant?,1749697716330,100.0,high,text_similarity,
+8520967,Filtration,Are there any risks associated with the Filtration System?,7620924,1749652214711,Sedimentation,Are there any risks associated with the Filtration System?,1749697815486,100.0,high,text_similarity,
+8520967,Filtration,How many Floc Tanks are there at the Plant?,8670926,1749652214711,Sedimentation,How many Floc Tanks are there at the Plant?,1749697133234,100.0,high,text_similarity,
+8520967,Filtration,Are there any Backwash Sludge Removal System at the Plant?,8670928,1749652214711,Sedimentation,Are there any Backwash Sludge Removal System at the Plant?,1749698044673,100.0,high,text_similarity,
+8520967,Filtration,What is the other type of system you have?,8910935,,,,,68.09,none,none,
+8520967,Filtration,Take Photo of the risk/Floc Tanks,9630932,1749652214711,Sedimentation,Take Photo of the risk/Floc Tanks,1749697339260,100.0,high,text_similarity,
+8520967,Filtration,What are these risks?,9640926,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Plant Mag Flow Meters,What are type of Flow Meters?,1660936,1749652214711,Plant Mag Flow Meters,What are type of Flow Meters?,1749699101674,100.0,high,text_similarity,
+8520967,Plant Mag Flow Meters,Take Photo of the risks/High Lift Pumps,2650935,1749652214711,Plant Mag Flow Meters,Take Photo of the risks/High Lift Pumps,1749699553789,100.0,high,text_similarity,
+8520967,Plant Mag Flow Meters,What are these risks?,3700935,1749652214711,Sedimentation,What are these risks?,1749697221338,100.0,high,text_similarity,
+8520967,Plant Mag Flow Meters,Are there any High Lift Pumps at the Plant?,4550931,1749652214711,Plant Mag Flow Meters,Are there any High Lift Pumps at the Plant?,1749699346821,100.0,high,text_similarity,
+8520967,Plant Mag Flow Meters,Are there any risks associated with the High Lift Pumps?,4550933,1749652214711,Plant Mag Flow Meters,Are there any risks associated with the High Lift Pumps?,1749699414777,100.0,high,text_similarity,
+8520967,Plant Mag Flow Meters,Are there Plant Mag Flow Meters in place?,5670938,1749652214711,Plant Mag Flow Meters,Are there Plant Mag Flow Meters in place?,1749653112804,100.0,high,text_similarity,
+8520967,Plant Mag Flow Meters,Are there any risks associated with the flow meters?,7590933,1749652214711,Plant Mag Flow Meters,Are there any risks associated with the flow meters?,1749699154310,100.0,high,text_similarity,
+8520967,Plant Mag Flow Meters,Number of High Lift Pumps?,9640932,1749652214711,Plant Mag Flow Meters,Number of High Lift Pumps?,1749699372393,100.0,high,text_similarity,
+8520967,Raw Water Source,What is the raw water source?,3680920,1749652214711,Raw Water Source,What is the raw water source?,1749652966061,100.0,high,text_similarity,
+8520967,Raw Water Source,How is the raw water transported to the plant?,3680923,1749652214711,Raw Water Source,How is the raw water transported to the plant?,1749693821961,100.0,high,text_similarity,
+8520967,Raw Water Source,Are there any risks associated with the raw water gravity system?,5680921,1749652214711,Raw Water Source,Are there any risks associated with the raw water gravity system?,1749694260130,100.0,high,text_similarity,
+8520967,Reservoirs,Are you able to take photo of the Distribution Reservoir?,12810920,1749652214711,Reservoirs,Are you able to take photo of the Distribution Reservoir?,1749699744340,100.0,high,text_similarity,
+8520967,Reservoirs,Are you able to take photo of the storage reservoir?,17530927,1749652214711,Reservoirs,Are you able to take photo of the storage reservoir?,1749699628687,100.0,high,text_similarity,
+8520967,Reservoirs,Number of Distribution Reservoirs for the Plant?,7610935,1749652214711,Reservoirs,Number of Distribution Reservoirs for the Plant?,1749699698612,100.0,high,text_similarity,
+8520967,Reservoirs,Number of Storage Reservoir at the Plant?,9660930,1749652214711,Reservoirs,Number of Storage Reservoir at the Plant?,1749699059425,100.0,high,text_similarity,
+8520967,Staff and General Information,Do you have a OHS policy for the Plant?,20400920,1749652214711,Staff and General Information,Do you have a OHS policy for the Plant?,1749692619340,100.0,high,text_similarity,
+8520967,Staff and General Information,Do plant staff comply to the requirements of the OHS Policy ?,23230922,1749652214711,Staff and General Information,Do plant staff comply to the requirements of the OHS Policy?,1749692692815,99.16,high,text_similarity,
+8520967,Staff and General Information,Do your staff use OHS equipment at the work place?,25140924,1749652214711,Staff and General Information,Do your staff use OHS equipment at the work place?,1749692658734,100.0,high,text_similarity,
+8520967,Staff and General Information,What are the constraints or recommendations for professional developments?,510927,,,,,76.47,none,none,
+8520967,Staff and General Information,What professional development opportunities do they have?,5530957,,,,,65.0,none,none,
+8520967,Water Quality,What is the Residual Chlorine in mg/L?,21540929,1749652214711,Water Quality,What is the Residual Chlorine in mg/L?,1749693184574,100.0,high,text_similarity,
+8520967,Water Quality,Method of Water Testing used?,21550928,1749652214711,Water Quality,Method of Water Testing used?,1749692895121,100.0,high,text_similarity,
+8520967,Water Quality,What is the Alkalinity in mg/L?,23540929,,,,,72.73,none,none,
+8520967,Water Quality,Description of Sampling Point,24530926,1749652214711,Water Quality,Description of Sampling Point,1749693014351,100.0,high,text_similarity,
+8520967,Water Quality,Take Photo of Sampling Point,24540926,1749652214711,Water Quality,Take Photo of Sampling Point,1749692985287,100.0,high,text_similarity,
+8520967,Water Quality,What is the Turbidity in NTU?,24540927,1749652214711,Water Quality,What is the Turbidity in NTU?,1749693079936,100.0,high,text_similarity,
+8520967,Water Quality,What is the Feacal Coliform in cfu/100ml?,25570920,1749652214711,Water Quality,What is the Feacal Coliform in cfu/100ml?,1749693362270,100.0,high,text_similarity,
+8520967,Water Quality,Are you able to take water sample?,26740920,1749652214711,Water Quality,Are you able to take water sample?,1749692856000,100.0,high,text_similarity,
+8520967,Water Quality,What is the Total Coliform in cfu/100ml?,27470920,1749652214711,Water Quality,What is the Total Coliform in cfu/100ml?,1749693340552,100.0,high,text_similarity,
+8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749652214711,Water Quality,What is the number of E.Coli (using CBT bag test)?,1749693051134,100.0,high,text_similarity,
+8520967,Water Quality,Which water quality checks are carried out at the plant?,3620927,1749652214711,Water Quality,Which water quality checks are carried out at the plant?,1749692758275,100.0,high,text_similarity,
+8520967,Water Treatment Plant Registration,Do you have the relevant Standard Operating Procedures(SOPs) for the treatment plant?,11020944,1749652214711,General Information,Do you have the relevant Standard Operating Procedures(SOPs) for the treatment plant?,1749652517417,100.0,high,text_similarity,
+8520967,Water Treatment Plant Registration,Name of Contact Person,12790920,1749652214711,General Information,Name of Contact Person,1749652214713,100.0,high,text_similarity,
+8520967,Water Treatment Plant Registration,Take Geolocation of Water Treatment Plant,14090921,,,,,76.32,none,none,
+8520967,Water Treatment Plant Registration,What is the average daily production of the plant in megalitres?,1580927,1749652214711,General Information,What is the average daily production of the plant in megalitres?,1749652417794,100.0,high,text_similarity,
+8520967,Water Treatment Plant Registration,When was the plant constructed?,16210920,,,,,61.22,none,none,
+8520967,Water Treatment Plant Registration,Who are members of this committee?,1680921,,,,,61.11,none,none,
+8520967,Water Treatment Plant Registration,Date of inspection?,17260920,1749652214711,Chemicals,What chemicals are use for water treatment on the day of Inspection ?,1749652997590,89.47,medium,text_similarity,
+8520967,Water Treatment Plant Registration,Contact number for contact person,17520924,1749652214711,General Information,Contact number for contact person,1749652384103,100.0,high,text_similarity,
+8520967,Water Treatment Plant Registration,Which Division are you in ?,4450950,,,,,60.87,none,none,
+8520967,Water Treatment Plant Registration,Name of the Plant(Eastern),500923,,,,,69.23,none,none,
+8520967,Water Treatment Plant Registration,Do you have Drinking Water Safety Plan (DWSP) for the Treatment Plant?,5690920,1749652214711,General Information,Do you have Drinking Water Safety Plan (DWSP) for the Treatment Plant?,1749635348201,100.0,high,text_similarity,
+8520967,Water Treatment Plant Registration,Do you have a DWSP Steering Committee?,5690922,,,,,64.71,none,none,
+8520967,Water Treatment Plant Registration,Name of the Plant(Central),6570923,,,,,65.38,none,none,
+8520967,Water Treatment Plant Registration,Name of the Plant(Northern),7490931,,,,,66.67,none,none,
+8520967,Water Treatment Plant Registration,Which SOPs do you have?,7850967,1749652214711,General Information,Which SOPs do you have?,1749652562185,100.0,high,text_similarity,
+8520967,Water Treatment Plant Registration,What is the Designed Capacity of Plant in megalitres?,8510939,,,,,65.35,none,none,
+8520967,Water Treatment Plant Registration,Name of Plant (Western),9580922,,,,,65.0,none,none,
+8520967,Chemicals,Are there any risk associated with Lime dosing?,11160920,1749652214711.0,Chemicals,"Chemicals |
+Are there any issues / risk associated with Lime dosing?",1749696956618.0,94.74,medium,manual,5037.0
+8520967,Chemicals,What is the dosage rate of Lime in grams per cubic meter?,12130920,1749652214711.0,Chemicals,"Chemicals |
+What is the dosage rate for Lima (bags/kg per day) on a daily basis?",1749696884554.0,88.5,medium,manual,5035.0
+8520967,Chemicals,What is the dosage rate for Polymer in gram per cubic metres?,4550920,1749652214711.0,Chemicals,"Chemicals |
+What is the dosage rate for Polymer (bags/kg per day) on a daily basis?",1749696582472.0,84.03,low,manual,5029.0
+8520967,Chemicals,Are there any risks associated with Polymer dosing?,6650920,1749652214711.0,Chemicals,"Chemicals |
+Are there any issues / risks associated with Polymer dosing?",1749696644615.0,92.93,medium,manual,5031.0
+8520967,Disinfection,Take Photo of risks/Chlorine Gas Dosing System,7610927,,,,,85.06,medium,manual,
+8520967,Plant Mag Flow Meters,What are this risks?,1680943,1749652214711.0,Plant Mag Flow Meters,"Plant Mag Flow Meters |
+What are these risks associated with the flow meters?",1749699189052.0,92.68,medium,manual,8004.0
+8520967,Plant Mag Flow Meters,Take Photo of the risks,7610938,1749652214711.0,Plant Mag Flow Meters,"Plant Mag Flow Meters |
+Take Photo of the risks associated with the flow meters",1749699295063.0,82.14,low,manual,8006.0
+8520967,Raw Water Source,Are you able to take photo of risk?,13770920,,,,,84.34,low,manual,
+8520967,Raw Water Source,Are you able to take photo of the risks?,15730920,,,,,90.91,medium,manual,
+8520967,Raw Water Source,Are there any risk associated with the source?,1660920,,,,,86.6,medium,manual,
+8520967,Raw Water Source,Are you able to take photo of risks?,19530921,,,,,85.71,medium,manual,
+8520967,Raw Water Source,Take Photo of risks,2620922,,,,,73.08,none,manual,
+8520967,Raw Water Source,How many pumps are operational and on standby?,2630921,1749652214711.0,Raw Water Source,"Raw Water Source |
+How many Pumps/Rising Main are operational and on standby?",1754995400012.0,90.0,medium,manual,4020.0
+8520967,Raw Water Source,Take photo of the risks,2630922,,,,,82.14,low,manual,
+8520967,Raw Water Source,Please provide details of the risks,2640921,,,,,80.46,low,manual,
+8520967,Raw Water Source,Take Photo of source,4530920,,,,,73.17,none,manual,
+8520967,Raw Water Source,Please provide details of the risk,5670920,,,,,79.07,none,manual,
+8520967,Raw Water Source,Take photo of the risks,6620926,1749652214711.0,Raw Water Source,,,82.14,low,manual,
+8520967,Raw Water Source,Record line from Raw Water Source to the Treatment Plant,6620927,,,,,62.75,none,manual,
+8520967,Raw Water Source,How many raw water pumps are there?,6640921,1749652214711.0,Raw Water Source,"Raw Water Source | 
+How many Pumps/Rising Main are there?",1754995400011.0,80.52,low,manual,4019.0
+8520967,Raw Water Source,Please provide details of the risks,7550922,1749652214711.0,Raw Water Source,"Raw Water Source |
+Please provide details of other risks associated with Pumps/Rising Main",1754995400021.0,80.46,low,manual,4023.0
+8520967,Raw Water Source,Are there any risks associated with the pumps?,7560922,1749652214711.0,Raw Water Source,"Raw Water Source |
+Are there any risks associated with the Pumps/Rising Main?",1754995400013.0,90.2,medium,manual,4021.0
+8520967,Raw Water Source,Are you able to physically visit the raw water source?,7570924,,,,,73.04,none,manual,
+8520967,Raw Water Source,Take Geolocation of the raw water source,8650921,1749652214711.0,Raw Water Source,"Raw Water Source |
+Take Geolocation of the surface water source",1749694731204.0,92.86,medium,manual,4003.0
+8520967,Raw Water Source,Are you able to visit the raw water source?,9790920,1749652214711.0,Raw Water Source,"Raw Water Source |
+Are you able to visit the surface water source in this visit?",1749693489743.0,80.77,low,manual,4002.0
+8520967,Reservoirs,Take Photo,10700924,1749652214711.0,Reservoirs,"Reservoirs |
+Take photo of the Distribution Reservoir",1749699773294.0,64.52,none,manual,9006.0
+8520967,Reservoirs,Take photo,19520923,1749652214711.0,Reservoirs,"Reservoirs |
+Take Photo of the storage reservoir",1749699656363.0,64.52,none,manual,9003.0
+8520967,Staff and General Information,Number of staffs at the plant?,1580930,1749652214711.0,Staff and General Information,"Staff and General Information |
+Number of staff currently hired at the plant?",1749652940735.0,78.87,none,manual,2001.0
+8520967,Water Quality,What is the Temperature in Degrees Celcius?,23560933,1749652214711.0,Water Quality,"Water Quality |
+Temperature \u00b0C - 2550B (APHA Method Code)",1754995300101.0,58.33,none,manual,3013.0
+8520967,Water Quality,What is the Salinity in PPT?,24540928,1749652214711.0,Water Quality,"Water Quality |
+Salinity PPT 2520B 0.2 (APHA Method Code)",1754995300104.0,77.19,none,manual,3016.0
+8520967,Water Quality,What is the pH?,28320926,1749652214711.0,Water Quality,"Water Quality |
+pH - 4500-H+B (APHA Method Code)",1754995300102.0,61.11,none,manual,3014.0
