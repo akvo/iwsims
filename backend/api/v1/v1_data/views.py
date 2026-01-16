@@ -105,6 +105,13 @@ class FormDataAddListView(APIView):
                 type=OpenApiTypes.STR,
                 location=OpenApiParameter.QUERY,
             ),
+            OpenApiParameter(
+                name="search",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Case-insensitive search on FormData name",
+            ),
         ],
         summary="To get list of form data",
     )
@@ -123,6 +130,7 @@ class FormDataAddListView(APIView):
         paginator = PageNumberPagination()
 
         parent = serializer.validated_data.get("parent")
+        search = serializer.validated_data.get("search")
         if parent:
             # Only get the children data
             queryset = form.form_form_data.filter(
@@ -130,6 +138,8 @@ class FormDataAddListView(APIView):
                 is_pending=False,
                 is_draft=False,
             )
+            if search:
+                queryset = queryset.filter(name__icontains=search)
             queryset = queryset.order_by("-created")
             instance = paginator.paginate_queryset(queryset, request)
             total = queryset.count()
@@ -178,9 +188,10 @@ class FormDataAddListView(APIView):
             user_path = adm.path if adm.path else f"{adm.pk}."
             filter_data["administration__path__startswith"] = user_path
 
-        queryset = form.form_form_data.filter(**filter_data).order_by(
-            "-created"
-        )
+        queryset = form.form_form_data.filter(**filter_data)
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+        queryset = queryset.order_by("-created")
 
         instance = paginator.paginate_queryset(queryset, request)
         total = queryset.count()
