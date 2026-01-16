@@ -58,13 +58,21 @@ class FlowDataSeederCommandTestCase(TestCase):
         'api.v1.v1_data.management.commands'
         '.flow_data_seeder.get_form_by_flow_id'
     )
+    @patch(
+        'api.v1.v1_data.management.commands'
+        '.flow_data_seeder.validate_and_prepare_config'
+    )
     def test_argument_parser_with_valid_form_id_and_email(
-        self, mock_get_form, mock_load_data
+        self, mock_validate, mock_get_form, mock_load_data
     ):
         """Test argument parsing with valid form ID and email."""
+        from utils.seeder_config import SeederConfig
         mock_form = Forms.objects.create(name="Mock Form")
         mock_get_form.return_value = mock_form
         mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+        mock_validate.return_value = SeederConfig(
+            flow_form_id=123, user=self.test_user
+        )
 
         out = StringIO()
         call_command(
@@ -87,13 +95,19 @@ class FlowDataSeederCommandTestCase(TestCase):
         'api.v1.v1_data.management.commands'
         '.flow_data_seeder.get_form_by_flow_id'
     )
+    @patch(
+        'api.v1.v1_data.management.commands'
+        '.flow_data_seeder.validate_and_prepare_config'
+    )
     def test_argument_parser_with_revert_flag(
-        self, mock_get_form, mock_revert
+        self, mock_validate, mock_get_form, mock_revert
     ):
         """Test argument parsing with --revert flag."""
+        from utils.seeder_config import SeederConfig
         mock_form = Forms.objects.create(name="Mock Form")
         mock_get_form.return_value = mock_form
         mock_revert.return_value = 0
+        mock_validate.return_value = SeederConfig(flow_form_id=123)
 
         out = StringIO()
         call_command(
@@ -117,13 +131,21 @@ class FlowDataSeederCommandTestCase(TestCase):
         'api.v1.v1_data.management.commands'
         '.flow_data_seeder.get_form_by_flow_id'
     )
+    @patch(
+        'api.v1.v1_data.management.commands'
+        '.flow_data_seeder.validate_and_prepare_config'
+    )
     def test_argument_parser_with_limit_flag(
-        self, mock_get_form, mock_load_data
+        self, mock_validate, mock_get_form, mock_load_data
     ):
         """Test argument parsing with --limit flag."""
+        from utils.seeder_config import SeederConfig
         mock_form = Forms.objects.create(name="Mock Form")
         mock_get_form.return_value = mock_form
         mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+        mock_validate.return_value = SeederConfig(
+            flow_form_id=123, limit=10, user=self.test_user
+        )
 
         out = StringIO()
         call_command(
@@ -219,13 +241,21 @@ class EmailArgumentValidationTestCase(TestCase):
         'api.v1.v1_data.management.commands'
         '.flow_data_seeder.get_form_by_flow_id'
     )
+    @patch(
+        'api.v1.v1_data.management.commands'
+        '.flow_data_seeder.validate_and_prepare_config'
+    )
     def test_email_argument_with_valid_existing_user(
-        self, mock_get_form, mock_load_data
+        self, mock_validate, mock_get_form, mock_load_data
     ):
         """Test command with valid email of existing user."""
+        from utils.seeder_config import SeederConfig
         mock_form = Forms.objects.create(name="Mock Form")
         mock_get_form.return_value = mock_form
         mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+        mock_validate.return_value = SeederConfig(
+            flow_form_id=123, user=self.test_user
+        )
 
         out = StringIO()
         call_command(
@@ -396,11 +426,19 @@ class RevertFunctionalityTestCase(TestCase):
         'api.v1.v1_data.management.commands'
         '.flow_data_seeder.get_form_by_flow_id'
     )
-    def test_revert_calls_revert_function(self, mock_get_form, mock_revert):
+    @patch(
+        'api.v1.v1_data.management.commands'
+        '.flow_data_seeder.validate_and_prepare_config'
+    )
+    def test_revert_calls_revert_function(
+        self, mock_validate, mock_get_form, mock_revert
+    ):
         """Test that revert calls the revert_form_data function."""
+        from utils.seeder_config import SeederConfig
         mock_form = self.form
         mock_get_form.return_value = mock_form
         mock_revert.return_value = 0
+        mock_validate.return_value = SeederConfig(flow_form_id=123)
 
         out = StringIO()
         call_command(
