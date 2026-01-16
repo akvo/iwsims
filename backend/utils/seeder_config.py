@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Optional
 
 from django.conf import settings
 from api.v1.v1_forms.models import Forms
+from mis.settings import STORAGE_PATH
 
 if TYPE_CHECKING:
     from api.v1.v1_users.models import SystemUser
@@ -126,8 +127,9 @@ class SeederConfig:
 
     def __post_init__(self):
         if self.source_dir is None:
+            default_source_dir = os.path.join(STORAGE_PATH, "akvo-flow")
             self.source_dir = getattr(
-                settings, "FLOW_SOURCE_DIR", "storage/akvo-flow"
+                settings, "FLOW_SOURCE_DIR", default_source_dir
             )
 
 
