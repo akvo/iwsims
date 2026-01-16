@@ -10,6 +10,7 @@ import {
   Badge,
   Tooltip,
   Radio,
+  Input,
 } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdministrationDropdown from "./AdministrationDropdown";
@@ -25,6 +26,7 @@ import {
   // UploadOutlined,
   FileWordOutlined,
   DownOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { Can } from "../can/index.js";
 
@@ -33,6 +35,8 @@ const DataFilters = ({
   showAdm = true,
   resetFilter = true,
   selectedRowKeys = [],
+  search = "",
+  onSearchChange = () => {},
 }) => {
   const {
     user: authUser,
@@ -359,6 +363,14 @@ const DataFilters = ({
       <Row>
         <Col>
           <Space>
+            <Input
+              prefix={<SearchOutlined />}
+              placeholder={text.searchPlaceholder}
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              allowClear
+              style={{ width: 200 }}
+            />
             {showAdm && (
               <AdministrationDropdown loading={loading || loadingForm} />
             )}

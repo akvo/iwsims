@@ -13,6 +13,7 @@ import { CompassOutlined, TableOutlined } from "@ant-design/icons";
 const ManageData = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [activeTab, setActiveTab] = useState("data-list");
+  const [search, setSearch] = useState("");
 
   const { language } = store.useState((s) => s);
   const { active: activeLang } = language;
@@ -52,7 +53,11 @@ const ManageData = () => {
 
       <div className="table-section">
         <div className="table-wrapper">
-          <DataFilters selectedRowKeys={selectedRowKeys} />
+          <DataFilters
+            selectedRowKeys={selectedRowKeys}
+            search={search}
+            onSearchChange={setSearch}
+          />
           <Divider style={{ marginBottom: 8 }} />
           <div
             style={{ padding: 0, minHeight: "40vh" }}
@@ -79,6 +84,7 @@ const ManageData = () => {
                     formIdFromUrl,
                     selectedRowKeys,
                     setSelectedRowKeys,
+                    search,
                   }}
                 />
               </TabPane>

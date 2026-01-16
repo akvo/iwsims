@@ -23,6 +23,7 @@ import {
   Tag,
   Tooltip,
   Spin,
+  Input,
 } from "antd";
 import {
   LeftCircleOutlined,
@@ -31,6 +32,7 @@ import {
   ArrowLeftOutlined,
   FormOutlined,
   LoadingOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import { api, store, uiText } from "../../lib";
@@ -83,6 +85,7 @@ const MonitoringDetail = () => {
   const [selectedOverviewQuestion, setSelectedOverviewQuestion] =
     useState(null);
   const [selectedOverviewDate, setSelectedOverviewDate] = useState(null);
+  const [search, setSearch] = useState("");
   const ability = useContext(AbilityContext);
 
   const editable = ability.can("edit", "data") || authUser?.is_superuser;
@@ -238,7 +241,10 @@ const MonitoringDetail = () => {
 
         setLoading(true);
         const parentUUID = selectedFormData?.uuid;
-        const url = `/form-data/${selectedForm}/?page=${currentPage}&parent=${parentUUID}`;
+        let url = `/form-data/${selectedForm}/?page=${currentPage}&parent=${parentUUID}`;
+        if (search) {
+          url += `&search=${encodeURIComponent(search)}`;
+        }
         const { data: apiData } = await api.get(url);
         const { data: dataList, total } = apiData || {};
         setDataset(dataList);
@@ -249,11 +255,16 @@ const MonitoringDetail = () => {
       setUpdateRecord(false);
       setLoading(false);
     }
-  }, [currentPage, updateRecord, selectedForm, selectedFormData?.uuid]);
+  }, [currentPage, updateRecord, selectedForm, selectedFormData?.uuid, search]);
 
   useEffect(() => {
     fetchMonitoringData();
   }, [fetchMonitoringData]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setUpdateRecord(true);
+  }, [search]);
 
   return (
     <div id="manageData">
@@ -331,13 +342,23 @@ const MonitoringDetail = () => {
               <TabPane tab={text.manageDataTab2} key="monitoring-data">
                 <Row style={{ marginBottom: "16px" }}>
                   <Col flex={1}>
-                    <Select
-                      value={selectedForm}
-                      onChange={onChangeMonitoringForm}
-                      fieldNames={{ label: "name", value: "id" }}
-                      options={childrenForms}
-                      placeholder={text.selectFormPlaceholder}
-                    />
+                    <Space>
+                      <Input
+                        prefix={<SearchOutlined />}
+                        placeholder={text.searchPlaceholder}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        allowClear
+                        style={{ width: 200 }}
+                      />
+                      <Select
+                        value={selectedForm}
+                        onChange={onChangeMonitoringForm}
+                        fieldNames={{ label: "name", value: "id" }}
+                        options={childrenForms}
+                        placeholder={text.selectFormPlaceholder}
+                      />
+                    </Space>
                   </Col>
                 </Row>
                 <ConfigProvider
