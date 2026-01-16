@@ -155,6 +155,12 @@ const DataDetail = ({
   const handleSave = () => {
     const data = [];
     const formId = flatten(dataset.map((qg) => qg.question))[0].form;
+
+    // Create a set of repeatable group IDs for quick lookup
+    const repeatableGroupIds = new Set(
+      questionGroups?.filter((qg) => qg.repeatable).map((qg) => qg.id) || []
+    );
+
     dataset.map((rd) => {
       rd.question.map((rq) => {
         if (rq.newValue || rq.newValue === 0) {
@@ -163,10 +169,36 @@ const DataDetail = ({
             value =
               parseFloat(value) % 1 !== 0 ? parseFloat(value) : parseInt(value);
           }
-          data.push({
-            question: rq.id,
-            value: value,
-          });
+
+          // Handle repeatable question IDs with suffix (e.g., "1749631662652-1")
+          const questionId = rq.id;
+          const isStringId = typeof questionId === "string";
+          const hasSuffix = isStringId && questionId.includes("-");
+
+          if (hasSuffix) {
+            // Parse the ID to extract base question ID and index
+            const lastDashIndex = questionId.lastIndexOf("-");
+            const baseId = parseInt(questionId.substring(0, lastDashIndex), 10);
+            const index = parseInt(questionId.substring(lastDashIndex + 1), 10);
+            data.push({
+              question: baseId,
+              index: index,
+              value: value,
+            });
+          } else if (repeatableGroupIds.has(rq.question_group)) {
+            // Question is in a repeatable group but has no suffix (index 0)
+            data.push({
+              question: isStringId ? parseInt(questionId, 10) : questionId,
+              index: 0,
+              value: value,
+            });
+          } else {
+            // Non-repeatable question
+            data.push({
+              question: questionId,
+              value: value,
+            });
+          }
         }
       });
     });

@@ -147,7 +147,7 @@ const EditableCell = ({
       <Select
         mode="multiple"
         style={{ width: "100%" }}
-        value={value?.length ? value : null}
+        value={value?.filter(Boolean)}
         onChange={(e) => {
           setValue(e);
         }}
