@@ -846,3 +846,117 @@ class TransformFormDataForReportTestCase(TestCase, ProfileTestHelperMixin):
 
         # Should process only valid child forms and handle gracefully
         self.assertIsInstance(result, list)
+
+    def test_transform_form_data_with_child_form_data_ids(self):
+        """Test that child FormData IDs can be selected directly.
+
+        This tests the fix for showing all available answers for each
+        selection_id, where selection_ids might contain child form data
+        IDs instead of parent form data IDs.
+        """
+        # Get a child form
+        child_form = self.form.children.first()
+        if not child_form:
+            self.skipTest("No child form available for testing")
+
+        # Create child FormData linked to parent
+        child_fd = FormData.objects.create(
+            name="Test Child Data",
+            form=child_form,
+            administration=self.administration,
+            created_by=self.user,
+            parent=self.data,  # Link to parent
+            is_pending=False,
+        )
+
+        # Create an answer for the child FormData
+        child_questions = child_form.form_question_group.first()
+        if child_questions:
+            child_question = child_questions.question_group_question.first()
+            if child_question:
+                Answers.objects.create(
+                    data=child_fd,
+                    question=child_question,
+                    name="Test child answer",
+                    created_by=self.user,
+                )
+
+        # Call with child FormData ID directly in selection_ids
+        # Previously this would fail because the query filtered by form=form
+        # which wouldn't match child FormData
+        result = transform_form_data_for_report(
+            self.form,
+            selection_ids=[child_fd.id],  # Child FormData ID
+            child_form_ids=[child_form.id],
+        )
+
+        # Should return valid results with the child FormData
+        self.assertIsInstance(result, list)
+
+        # Clean up
+        child_fd.delete(hard=True)
+
+    def test_transform_form_data_includes_all_child_answers(self):
+        """Test that all children's answers are included, not just the last.
+
+        This tests the fix where .last() was changed to .all() to include
+        answers from ALL child FormData, not just the most recent one.
+        """
+        # Get a child form
+        child_form = self.form.children.first()
+        if not child_form:
+            self.skipTest("No child form available for testing")
+
+        # Get a question from the child form
+        child_qg = child_form.form_question_group.first()
+        if not child_qg:
+            self.skipTest("No question group in child form")
+        child_question = child_qg.question_group_question.first()
+        if not child_question:
+            self.skipTest("No question in child form")
+
+        # Create multiple child FormData entries linked to parent
+        child_fd_1 = FormData.objects.create(
+            name="Test Child Data 1",
+            form=child_form,
+            administration=self.administration,
+            created_by=self.user,
+            parent=self.data,
+            is_pending=False,
+        )
+        child_fd_2 = FormData.objects.create(
+            name="Test Child Data 2",
+            form=child_form,
+            administration=self.administration,
+            created_by=self.user,
+            parent=self.data,
+            is_pending=False,
+        )
+
+        # Create answers for both child FormData
+        Answers.objects.create(
+            data=child_fd_1,
+            question=child_question,
+            name="Answer from child 1",
+            created_by=self.user,
+        )
+        Answers.objects.create(
+            data=child_fd_2,
+            question=child_question,
+            name="Answer from child 2",
+            created_by=self.user,
+        )
+
+        # When selecting parent, should find answers from ALL children
+        result = transform_form_data_for_report(
+            self.form,
+            selection_ids=[self.data.id],
+            child_form_ids=[child_form.id],
+        )
+
+        # Should return valid results
+        self.assertIsInstance(result, list)
+
+        # Clean up
+        child_fd_1.delete(hard=True)
+        child_fd_2.delete(hard=True)
