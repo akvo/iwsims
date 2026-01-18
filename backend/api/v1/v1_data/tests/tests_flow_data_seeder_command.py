@@ -1,3 +1,6 @@
+import os
+import tempfile
+import shutil
 import pandas as pd
 from unittest.mock import patch
 from django.core.management import call_command
@@ -52,6 +55,10 @@ class FlowDataSeederCommandTestCase(TestCase):
 
     @patch(
         'api.v1.v1_data.management.commands'
+        '.flow_data_seeder.refresh_materialized_data'
+    )
+    @patch(
+        'api.v1.v1_data.management.commands'
         '.flow_data_seeder.load_and_prepare_data'
     )
     @patch(
@@ -63,29 +70,38 @@ class FlowDataSeederCommandTestCase(TestCase):
         '.flow_data_seeder.validate_and_prepare_config'
     )
     def test_argument_parser_with_valid_form_id_and_email(
-        self, mock_validate, mock_get_form, mock_load_data
+        self, mock_validate, mock_get_form, mock_load_data, mock_refresh
     ):
         """Test argument parsing with valid form ID and email."""
         from utils.seeder_config import SeederConfig
-        mock_form = Forms.objects.create(name="Mock Form")
-        mock_get_form.return_value = mock_form
-        mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
-        mock_validate.return_value = SeederConfig(
-            flow_form_id=123, user=self.test_user
-        )
 
-        out = StringIO()
-        call_command(
-            "flow_data_seeder",
-            "-f", "123",
-            "--email", "test@example.com",
-            stdout=out,
-            stderr=StringIO()
-        )
+        # Create temp directory with required structure
+        temp_dir = tempfile.mkdtemp()
+        output_dir = os.path.join(temp_dir, "data")
+        os.makedirs(output_dir, exist_ok=True)
 
-        output = out.getvalue()
-        self.assertIn("Starting Flow Data Seeding", output)
-        self.assertIn("Form ID: 123", output)
+        try:
+            mock_form = Forms.objects.create(name="Mock Form")
+            mock_get_form.return_value = mock_form
+            mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+            mock_validate.return_value = SeederConfig(
+                flow_form_id=123, user=self.test_user, source_dir=temp_dir
+            )
+
+            out = StringIO()
+            call_command(
+                "flow_data_seeder",
+                "-f", "123",
+                "--email", "test@example.com",
+                stdout=out,
+                stderr=StringIO()
+            )
+
+            output = out.getvalue()
+            self.assertIn("Starting Flow Data Seeding", output)
+            self.assertIn("Form ID: 123", output)
+        finally:
+            shutil.rmtree(temp_dir)
 
     @patch(
         'api.v1.v1_data.management.commands'
@@ -125,6 +141,10 @@ class FlowDataSeederCommandTestCase(TestCase):
 
     @patch(
         'api.v1.v1_data.management.commands'
+        '.flow_data_seeder.refresh_materialized_data'
+    )
+    @patch(
+        'api.v1.v1_data.management.commands'
         '.flow_data_seeder.load_and_prepare_data'
     )
     @patch(
@@ -136,29 +156,39 @@ class FlowDataSeederCommandTestCase(TestCase):
         '.flow_data_seeder.validate_and_prepare_config'
     )
     def test_argument_parser_with_limit_flag(
-        self, mock_validate, mock_get_form, mock_load_data
+        self, mock_validate, mock_get_form, mock_load_data, mock_refresh
     ):
         """Test argument parsing with --limit flag."""
         from utils.seeder_config import SeederConfig
-        mock_form = Forms.objects.create(name="Mock Form")
-        mock_get_form.return_value = mock_form
-        mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
-        mock_validate.return_value = SeederConfig(
-            flow_form_id=123, limit=10, user=self.test_user
-        )
 
-        out = StringIO()
-        call_command(
-            "flow_data_seeder",
-            "-f", "123",
-            "--email", "test@example.com",
-            "--limit", "10",
-            stdout=out,
-            stderr=StringIO()
-        )
+        # Create temp directory with required structure
+        temp_dir = tempfile.mkdtemp()
+        output_dir = os.path.join(temp_dir, "data")
+        os.makedirs(output_dir, exist_ok=True)
 
-        output = out.getvalue()
-        self.assertIn("Starting Flow Data Seeding", output)
+        try:
+            mock_form = Forms.objects.create(name="Mock Form")
+            mock_get_form.return_value = mock_form
+            mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+            mock_validate.return_value = SeederConfig(
+                flow_form_id=123, limit=10, user=self.test_user,
+                source_dir=temp_dir
+            )
+
+            out = StringIO()
+            call_command(
+                "flow_data_seeder",
+                "-f", "123",
+                "--email", "test@example.com",
+                "--limit", "10",
+                stdout=out,
+                stderr=StringIO()
+            )
+
+            output = out.getvalue()
+            self.assertIn("Starting Flow Data Seeding", output)
+        finally:
+            shutil.rmtree(temp_dir)
 
     def test_input_validation_invalid_form_id_zero(self):
         """Test input validation rejects zero form ID."""
@@ -235,6 +265,10 @@ class EmailArgumentValidationTestCase(TestCase):
 
     @patch(
         'api.v1.v1_data.management.commands'
+        '.flow_data_seeder.refresh_materialized_data'
+    )
+    @patch(
+        'api.v1.v1_data.management.commands'
         '.flow_data_seeder.load_and_prepare_data'
     )
     @patch(
@@ -246,29 +280,38 @@ class EmailArgumentValidationTestCase(TestCase):
         '.flow_data_seeder.validate_and_prepare_config'
     )
     def test_email_argument_with_valid_existing_user(
-        self, mock_validate, mock_get_form, mock_load_data
+        self, mock_validate, mock_get_form, mock_load_data, mock_refresh
     ):
         """Test command with valid email of existing user."""
         from utils.seeder_config import SeederConfig
-        mock_form = Forms.objects.create(name="Mock Form")
-        mock_get_form.return_value = mock_form
-        mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
-        mock_validate.return_value = SeederConfig(
-            flow_form_id=123, user=self.test_user
-        )
 
-        out = StringIO()
-        call_command(
-            "flow_data_seeder",
-            "-f", "123",
-            "--email", "test@example.com",
-            stdout=out,
-            stderr=StringIO()
-        )
+        # Create temp directory with required structure
+        temp_dir = tempfile.mkdtemp()
+        output_dir = os.path.join(temp_dir, "data")
+        os.makedirs(output_dir, exist_ok=True)
 
-        output = out.getvalue()
-        self.assertIn("Starting Flow Data Seeding", output)
-        self.assertNotIn("not found", output)
+        try:
+            mock_form = Forms.objects.create(name="Mock Form")
+            mock_get_form.return_value = mock_form
+            mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+            mock_validate.return_value = SeederConfig(
+                flow_form_id=123, user=self.test_user, source_dir=temp_dir
+            )
+
+            out = StringIO()
+            call_command(
+                "flow_data_seeder",
+                "-f", "123",
+                "--email", "test@example.com",
+                stdout=out,
+                stderr=StringIO()
+            )
+
+            output = out.getvalue()
+            self.assertIn("Starting Flow Data Seeding", output)
+            self.assertNotIn("not found", output)
+        finally:
+            shutil.rmtree(temp_dir)
 
     def test_email_argument_with_nonexistent_user(self):
         """Test command with email of non-existent user."""
