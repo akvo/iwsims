@@ -72,16 +72,16 @@ def process_data_rows(
                 continue
 
             # Create child FormData
-            existing_record = next(filter(
-                lambda er: (
-                    str(row[CsvColumns.DATAPOINT_ID]) in er.name and
-                    (
-                        er.parent_id == parent.pk
-                        if parent else er.parent_id is None
-                    )
-                ),
-                existing_records
-            ), None)
+            datapoint_id = str(row[CsvColumns.DATAPOINT_ID])
+            parent_pk = parent.pk if parent else None
+
+            # Find matching existing record
+            matching = [
+                er for er in existing_records
+                if datapoint_id in er.name and er.parent_id == parent_pk
+            ]
+
+            existing_record = matching[0] if matching else None
             form_data = create_form_data(
                 row=row,
                 user=config.user,
@@ -99,6 +99,7 @@ def process_data_rows(
                 {
                     "flow_data_id": row[CsvColumns.DATAPOINT_ID],
                     "mis_data_id": form_data.pk,
+                    "is_new": existing_record is None,
                 }
             )
 

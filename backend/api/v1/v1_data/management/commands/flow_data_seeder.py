@@ -157,6 +157,11 @@ class Command(BaseCommand):
             # Load and prepare data
             parent_df, child_df = load_and_prepare_data(config)
 
+            # Add success column (default 'No')
+            parent_df['success'] = 'No'
+            if child_df is not None and not child_df.empty:
+                child_df['success'] = 'No'
+
             # load administration mappings
             adm_mappings = load_administration_mappings(config)
             adm_db_mappings = load_administration_db_mappings()
@@ -172,30 +177,42 @@ class Command(BaseCommand):
             ]
 
             # Process data
-
             total_existing_parent = len(seeded_parents)
             total_existing_child = len(seeded_children)
             total_new_parent = 0
             total_new_child = 0
             invalid_answers = []
 
-            # Prepare child data processing (if not registration-only mode)
-            child_data_groups = None
+            # Build parent-children mapping from child CSV for logging
+            parent_children_map = {}  # parent_datapoint_id -> [child_ids]
+
+            if (
+                not registration_only and
+                child_df is not None and
+                not child_df.empty
+            ):
+                for _, child_row in child_df.iterrows():
+                    parent_dp_id = child_row[CsvColumns.PARENT]
+                    child_dp_id = child_row[CsvColumns.DATAPOINT_ID]
+                    if parent_dp_id not in parent_children_map:
+                        parent_children_map[parent_dp_id] = []
+                    parent_children_map[parent_dp_id].append(child_dp_id)
+
+            # Prepare questions
             child_questions = None
+            child_data_groups = None
             if (
                 not registration_only and
                 child_df is not None and
                 not child_df.empty
             ):
                 child_questions = load_questions(child_df)
-                # Group child data by 'parent' column
-                # which contains parent's datapoint_id
-                # This allows multiple children to reference the same parent
                 child_data_groups = child_df.groupby(CsvColumns.PARENT)
 
-            # Process parent data
             parent_questions = load_questions(parent_df)
-            for _, parent_row in parent_df.iterrows():
+
+            # Process parent data
+            for idx, parent_row in parent_df.iterrows():
                 try:
                     # Get administration ID for parent
                     admin_id = get_administration_id(
@@ -257,6 +274,9 @@ class Command(BaseCommand):
                     if not parent_exists:
                         total_new_parent += 1
 
+                    # Mark parent as success
+                    parent_df.at[idx, 'success'] = 'Yes'
+
                     # Process child rows (only if not registration-only mode)
                     if child_data_groups is not None:
                         c_results, c_invalid = process_child_data_for_parent(
@@ -267,9 +287,19 @@ class Command(BaseCommand):
                             child_questions=child_questions,
                             existing_records=seeded_children,
                         )
-                        total_new_child += len(c_results)
-                        # Accumulate invalid answers
+                        # Count only new records, not updates
+                        total_new_child += sum(
+                            1 for r in c_results if r.get('is_new', True)
+                        )
                         invalid_answers.extend(c_invalid)
+
+                        # Mark successful children in child_df
+                        for result in c_results:
+                            child_mask = (
+                                child_df[CsvColumns.DATAPOINT_ID] ==
+                                result['flow_data_id']
+                            )
+                            child_df.loc[child_mask, 'success'] = 'Yes'
 
                 except Exception as e:
                     self._log_error(
@@ -318,6 +348,45 @@ class Command(BaseCommand):
             self._log_info(
                 f"Total invalid answers encountered: {len(invalid_answers)}"
             )
+
+            # Write back CSVs with success column
+            parent_csv_path = os.path.join(
+                config.source_dir,
+                FilePaths.OUTPUT_DIR,
+                f"{config.flow_form_id}_parent_data.csv",
+            )
+            parent_df.to_csv(parent_csv_path, index=False, encoding="utf-8")
+            self._log_info(f"Updated parent CSV: {parent_csv_path}")
+
+            if (
+                not registration_only and
+                child_df is not None and
+                not child_df.empty
+            ):
+                child_csv_path = os.path.join(
+                    config.source_dir,
+                    FilePaths.OUTPUT_DIR,
+                    f"{config.flow_form_id}_child_data.csv",
+                )
+                child_df.to_csv(child_csv_path, index=False, encoding="utf-8")
+                self._log_info(f"Updated child CSV: {child_csv_path}")
+
+            # Log success summary
+            parent_success = (parent_df['success'] == 'Yes').sum()
+            parent_total = len(parent_df)
+            self._log_info(
+                f"Parent success: {parent_success}/{parent_total}"
+            )
+            if (
+                not registration_only and
+                child_df is not None and
+                not child_df.empty
+            ):
+                child_success = (child_df['success'] == 'Yes').sum()
+                child_total = len(child_df)
+                self._log_info(
+                    f"Child success: {child_success}/{child_total}"
+                )
 
             # Refresh materialized view after seeding
             refresh_materialized_data()

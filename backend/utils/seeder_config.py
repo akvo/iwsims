@@ -104,6 +104,7 @@ NON_QUESTION_COLUMNS = [
     CsvColumns.ADMINISTRATION,
     CsvColumns.GEO,
     CsvColumns.PARENT,
+    "success",  # Added by seeder to track insertion status
 ]
 
 FLOW_PREFIX = "FLOW-"
