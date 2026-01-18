@@ -191,7 +191,17 @@ The Akvo Flow Data Seeder enables you to migrate data from Akvo Flow to Akvo MIS
 
 8. **Generate parent and child data files:** Run all cells in `af_data_registration_monitoring.ipynb` to produce the final data files in the output folder
 
-9. **Seed the data:** Run the Django management command:
+9. **Pre-download photos (optional but recommended):** If your forms contain photo questions, pre-download them before seeding:
+    ```bash
+    python manage.py predownload_photos --form=<akvo_flow_survey_id>
+    ```
+
+   **Optional parameters:**
+   - `--workers=<number>` - Number of concurrent download workers (default: 5)
+
+   This creates a success log at `storage/akvo-flow/photo_downloads_<form_id>.csv` and a failed log for manual review. Re-running skips already downloaded photos.
+
+10. **Seed the data:** Run the Django management command:
     ```bash
     python manage.py flow_data_seeder --form=<akvo_flow_survey_id> --email=<youremail@domain.com>
     ```
