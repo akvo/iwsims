@@ -199,7 +199,7 @@ The Akvo Flow Data Seeder enables you to migrate data from Akvo Flow to Akvo MIS
    **Optional parameters:**
    - `--workers=<number>` - Number of concurrent download workers (default: 5)
 
-   This creates a success log at `storage/akvo-flow/photo_downloads_<form_id>.csv` and a failed log for manual review. Re-running skips already downloaded photos.
+   This creates a success log at `storage/akvo-flow/<form_id>_photo_downloads.csv` and a failed log at `storage/akvo-flow/<form_id>_photo_downloads_failed.csv` for manual review. Re-running skips already downloaded photos.
 
 10. **Seed the data:** Run the Django management command:
     ```bash
