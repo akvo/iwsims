@@ -419,15 +419,21 @@ class Command(BaseCommand):
             # Refresh materialized view after seeding
             refresh_materialized_data()
 
+            # Clear photo URL map to prevent memory leak between runs
+            AnswerProcessor.clear_photo_url_map()
+
         except ValidationError as e:
             # Validation errors should be logged but not re-raised
             self._log_error(str(e))
+            AnswerProcessor.clear_photo_url_map()
         except ConfigurationError as e:
             # Configuration errors should be logged but not re-raised
             self._log_error(str(e))
+            AnswerProcessor.clear_photo_url_map()
         except Exception as e:
             self._log_error(f"Unexpected error: {e}")
             logger.exception("Unexpected error during seeding")
+            AnswerProcessor.clear_photo_url_map()
             raise
 
     # =========================================================================

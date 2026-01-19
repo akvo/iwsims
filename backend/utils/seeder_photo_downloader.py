@@ -43,7 +43,7 @@ class PhotoPreDownloader:
             Full path to the success log CSV file
         """
         return os.path.join(
-            self.log_dir, f"photo_downloads_{self.form_id}.csv"
+            self.log_dir, f"{self.form_id}_photo_downloads.csv"
         )
 
     def get_failed_log_path(self) -> str:
@@ -103,14 +103,16 @@ class PhotoPreDownloader:
         """
         with self._lock:
             log_path = self.get_success_log_path()
-            file_exists = os.path.exists(log_path)
 
             # Ensure directory exists
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
             with open(log_path, 'a', newline='') as f:
+                # Check file position to determine if header is needed
+                # (avoids race condition with file_exists check)
+                is_new_file = f.tell() == 0
                 writer = csv.writer(f)
-                if not file_exists:
+                if is_new_file:
                     writer.writerow(['url', 'local_path', 'downloaded_at'])
                 writer.writerow([
                     url,
@@ -127,14 +129,16 @@ class PhotoPreDownloader:
         """
         with self._lock:
             log_path = self.get_failed_log_path()
-            file_exists = os.path.exists(log_path)
 
             # Ensure directory exists
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
             with open(log_path, 'a', newline='') as f:
+                # Check file position to determine if header is needed
+                # (avoids race condition with file_exists check)
+                is_new_file = f.tell() == 0
                 writer = csv.writer(f)
-                if not file_exists:
+                if is_new_file:
                     writer.writerow([
                         'datapoint_id', 'mis_form_id', 'mis_question_id',
                         'url', 'error', 'failed_at'

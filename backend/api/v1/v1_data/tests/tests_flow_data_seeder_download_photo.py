@@ -284,6 +284,14 @@ class DownloadPhotoProcessorProcessTestCase(TestCase):
 class AnswerProcessorPhotoTestCase(TestCase):
     """Test suite for AnswerProcessor.process_photo method."""
 
+    def setUp(self):
+        """Clear shared photo URL map before each test."""
+        AnswerProcessor.clear_photo_url_map()
+
+    def tearDown(self):
+        """Clear shared photo URL map after each test."""
+        AnswerProcessor.clear_photo_url_map()
+
     def test_process_photo_none_value(self):
         """Test processing None value."""
         name, value, options = AnswerProcessor.process_photo(None)
@@ -356,6 +364,40 @@ class AnswerProcessorPhotoTestCase(TestCase):
 
         self.assertEqual(name, './storage/images/downloaded.jpg')
         mock_process.assert_called_once_with('https://example.com/photo.jpg')
+
+    @patch.object(DownloadPhotoProcessor, 'process')
+    def test_process_photo_uses_predownload_cache(self, mock_process):
+        """Test that process_photo uses cached path without downloading."""
+        # Set up pre-download cache
+        cached_url = 'https://example.com/cached_photo.jpg'
+        cached_path = '/images/seeder_12345_67.jpg'
+        AnswerProcessor.set_photo_url_map({cached_url: cached_path})
+
+        # Process the URL that's in the cache
+        name, value, options = AnswerProcessor.process_photo(cached_url)
+
+        # Should return cached path without calling DownloadPhotoProcessor
+        self.assertEqual(name, cached_path)
+        self.assertIsNone(value)
+        self.assertIsNone(options)
+        mock_process.assert_not_called()
+
+    @patch.object(DownloadPhotoProcessor, 'process')
+    def test_process_photo_downloads_when_not_in_cache(self, mock_process):
+        """Test that process_photo downloads when URL is not in cache."""
+        # Set up pre-download cache with a different URL
+        AnswerProcessor.set_photo_url_map({
+            'https://example.com/other.jpg': '/images/other.jpg'
+        })
+        mock_process.return_value = './storage/images/downloaded.jpg'
+
+        # Process a URL that's NOT in the cache
+        url = 'https://example.com/new_photo.jpg'
+        name, value, options = AnswerProcessor.process_photo(url)
+
+        # Should call DownloadPhotoProcessor since URL not in cache
+        self.assertEqual(name, './storage/images/downloaded.jpg')
+        mock_process.assert_called_once_with(url)
 
     def test_process_with_photo_question_type(self):
         """Test process method routes photo type correctly."""
