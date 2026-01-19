@@ -295,6 +295,10 @@ def transform_form_data_for_report(
     Transform form data from database into the format expected by the
     report generator, supporting repeatable question groups by cloning
     the group for each repeat instance and mapping answers by index.
+
+    When selection_ids is provided, FormData is queried by ID only
+    (without form filter) to support selection of child form data directly.
+    This ensures all available answers for each selection_id are included.
     """
     try:
         forms = [form]
@@ -303,12 +307,27 @@ def transform_form_data_for_report(
             child_forms = [f for f in child_forms if f.id in child_form_ids]
         forms.extend(child_forms)
 
-        main_form_data_queryset = FormData.objects.filter(
-            form=form, is_pending=False
-        )
+        # When selection_ids is provided, query by ID only (no form filter)
+        # This allows child form data IDs to be included directly
         if selection_ids and len(selection_ids):
-            main_form_data_queryset = main_form_data_queryset.filter(
-                id__in=selection_ids
+            main_form_data_queryset = FormData.objects.filter(
+                id__in=selection_ids, is_pending=False
+            )
+            # Also include forms from the selected FormData to ensure
+            # all relevant question groups are processed
+            selected_form_ids = set(
+                main_form_data_queryset.values_list("form_id", flat=True)
+            )
+            for form_id in selected_form_ids:
+                if form_id != form.id and form_id not in [f.id for f in forms]:
+                    try:
+                        additional_form = Forms.objects.get(pk=form_id)
+                        forms.append(additional_form)
+                    except Forms.DoesNotExist:
+                        pass
+        else:
+            main_form_data_queryset = FormData.objects.filter(
+                form=form, is_pending=False
             )
         main_form_data = main_form_data_queryset.order_by("id").all()
         form_data_instances = list(main_form_data)
@@ -334,7 +353,7 @@ def transform_form_data_for_report(
                 max_repeats = 0
                 # Map: parent_form_data_id -> max index for this group
                 parent_max_index = {}
-                for idx, main_fd in enumerate(form_data_instances):
+                for main_fd in form_data_instances:
                     # Get all answers for this group and parent
                     answers = []
                     for q in questions:
@@ -343,10 +362,9 @@ def transform_form_data_for_report(
                         )
                         # Also check child FormData for this group
                         for child_form in child_forms:
-                            child_fd = main_fd.children.filter(
+                            for child_fd in main_fd.children.filter(
                                 form=child_form, is_pending=False
-                            ).last()
-                            if child_fd:
+                            ).all():
                                 answers.extend(
                                     q.question_answer.filter(
                                         data=child_fd
@@ -381,11 +399,11 @@ def transform_form_data_for_report(
                                 data=main_fd, index=repeat_idx
                             ).first()
                             if not answer:
+                                # Search ALL children, not just the last one
                                 for child_form in child_forms:
-                                    child_fd = main_fd.children.filter(
+                                    for child_fd in main_fd.children.filter(
                                         form=child_form, is_pending=False
-                                    ).last()
-                                    if child_fd:
+                                    ).all():
                                         answer = (
                                             question.question_answer.filter(
                                                 data=child_fd, index=repeat_idx
@@ -393,6 +411,8 @@ def transform_form_data_for_report(
                                         )
                                         if answer:
                                             break
+                                    if answer:
+                                        break
                             if answer:
                                 # Format answer as before
                                 if question.type == QuestionTypes.geo:
@@ -484,24 +504,29 @@ def transform_form_data_for_report(
                     for main_fd in main_form_data:
                         all_form_data_ids.append(main_fd.id)
                         for child_form in child_forms:
-                            child_fd = main_fd.children.filter(
+                            # Include ALL children, not just the last one
+                            for child_fd in main_fd.children.filter(
                                 form=child_form, is_pending=False
-                            ).last()
-                            if child_fd:
+                            ).all():
                                 all_form_data_ids.append(child_fd.id)
                     answers = question.question_answer.filter(
                         data__id__in=all_form_data_ids
                     ).select_related("data")
-                    parent_id_to_index = {
+                    # Build mapping from FormData ID to index
+                    # Include both the FormData IDs and their parent IDs
+                    # to support both direct child selection and parent lookup
+                    fd_id_to_index = {
                         fd.id: idx
                         for idx, fd in enumerate(form_data_instances)
                     }
                     for answer in answers:
-                        if answer.data.parent:
-                            parent_id = answer.data.parent.id
-                        else:
-                            parent_id = answer.data.id
-                        form_data_index = parent_id_to_index.get(parent_id)
+                        # First try direct lookup by answer's FormData ID
+                        form_data_index = fd_id_to_index.get(answer.data.id)
+                        # If not found and answer has parent, try parent lookup
+                        if form_data_index is None and answer.data.parent:
+                            form_data_index = fd_id_to_index.get(
+                                answer.data.parent.id
+                            )
                         if form_data_index is None:
                             continue
                         if question.type == QuestionTypes.geo:
