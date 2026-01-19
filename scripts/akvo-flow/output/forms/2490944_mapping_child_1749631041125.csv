@@ -1,6 +1,7 @@
 flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
 2490944,Location of Village,Who is the project Implementing agency/agencies?,1038600921,,,,,68.49,none,none,
-2490944,Location of Village,Inspection Date,20050922,1749631041125,Inspection Info,Inspection Date,1749631041127,100.0,high,text_similarity,
+2490944,Location of Village,Inspection Date,20050922,1749631041125,Inspection Info,"Inspection Info |
+Inspection Date",1749631041127,100.0,high,text_similarity,1001
 2490944,Location of Village,Are you able to take the sample?,2500944,,,,,71.88,none,none,
 2490944,Location of Village,Proposed Completion Date?,2500963,,,,,78.57,none,none,
 2490944,Location of Village,H2S contamination Level?,405990957,,,,,66.67,none,none,
@@ -15,7 +16,8 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 2490944,Location of Village,WSMP Submitted?,9550937,,,,,50.0,none,none,
 2490944,Project Scope,What percentage of project is complete?,1034581042,,,,,59.09,none,none,
 2490944,Project Scope,Construction of New Reservoir,1540937,,,,,57.14,none,none,
-2490944,Project Scope,Type of Water Source?,1550939,1749631041125,Inspection Info,Type of Water Project?,1749631041130,81.08,low,text_similarity,
+2490944,Project Scope,Type of Water Source?,1550939,1749631041125,Inspection Info,"Inspection Info |
+Type of Water Project?",1749631041130,81.08,low,text_similarity,1004
 2490944,Project Scope,Installation of Desalination Plant?,2500950,,,,,66.67,none,none,
 2490944,Project Scope,Installation of Rainwater Harvesting System?,3550937,,,,,65.52,none,none,
 2490944,Project Scope,Installation of Pump system?,5490949,,,,,57.14,none,none,
@@ -27,21 +29,23 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 2490944,Project Scope,Sizes of  pipes?,9540949,,,,,53.85,none,none,
 2490944,Project Scope,Construction of borehole?,9550938,,,,,57.14,none,none,
 2490944,Project Scope,Installation of Washouts,9550939,,,,,57.14,none,none,
-2490944,Projects Photos,Take Photos,4440931,1749631041125,Water Quality Testing,pH,1749631041148,100.0,high,text_similarity,
+2490944,Projects Photos,Take Photos,4440931,1749631041125,Water Quality Testing,"Water Quality Testing |
+pH",1749631041148,100.0,high,text_similarity,2015
 2490944,Projects Photos,Signature of Implementing Agency Representative,5500942,,,,,73.68,none,none,
-2490944,Projects Photos,Signature of DWS Officer,9510946,1749631041125,General Remarks and Recommendations,Signature of DWS Officer,1749631041162,100.0,high,text_similarity,
+2490944,Projects Photos,Signature of DWS Officer,9510946,1749631041125,General Remarks and Recommendations,"General Remarks and Recommendations |
+Signature of DWS Officer",1749631041162,100.0,high,text_similarity,4008
 2490944,Projects Photos,Final Comments and Recommendations,9530935,,,,,73.08,none,none,
-2490944,Location of Village,What is the Faecl Coliform Count?,349560987,1749631041125.0,Water Quality Testing,"Water Quality Testing |
-Fecal Coliform in 1cfu/ 100ml",1749631041146.0,68.49,none,manual,2013.0
-2490944,Location of Village,What is the pH level?,379720947,1749631041125.0,Water Quality Testing,"Water Quality Testing |
-PH",1749631041148.0,74.51,none,manual,2015.0
-2490944,Location of Village,E.coli Level using CBT?,383580938,1749631041125.0,Water Quality Testing,"Water Quality Testing |
-What is the E- Coli count from CBT Bags?",1749631041141.0,52.83,none,manual,2008.0
-2490944,Location of Village,What is the salinity in ppt?,389680956,1749631041125.0,Water Quality Testing,"Water Quality Testing |
-Salinity PPT",1749631041150.0,62.07,none,manual,2017.0
-2490944,Location of Village,What is the Total Coliform count,389690950,1749631041125.0,Water Quality Testing,"Water Quality Testing |
-Total Coliform in 1cfu/ 100ml",1749631041145.0,63.89,none,manual,2012.0
-2490944,Location of Village,What is the Conductivity?,393260954,1749631041125.0,Water Quality Testing,"Water Quality Testing |
-Conductivity in µS/ cm",1749631041149.0,60.47,none,manual,2016.0
-2490944,Location of Village,What is the Turbidity in NTU?,402300959,1749631041125.0,Water Quality Testing,"Water Quality Testing |
-Turbidity in NTU",1749631041144.0,71.11,none,manual,2011.0
+2490944,Location of Village,What is the Faecl Coliform Count?,349560987,1749631041125,Water Quality Testing,"Water Quality Testing |
+Fecal Coliform in 1cfu/ 100ml",1749631041146,68.49,none,manual,2013
+2490944,Location of Village,What is the pH level?,379720947,1749631041125,Water Quality Testing,"Water Quality Testing |
+PH",1749631041148,74.51,none,manual,2015
+2490944,Location of Village,E.coli Level using CBT?,383580938,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the E- Coli count from CBT Bags?",1749631041141,52.83,none,manual,2008
+2490944,Location of Village,What is the salinity in ppt?,389680956,1749631041125,Water Quality Testing,"Water Quality Testing |
+Salinity PPT",1749631041150,62.07,none,manual,2017
+2490944,Location of Village,What is the Total Coliform count,389690950,1749631041125,Water Quality Testing,"Water Quality Testing |
+Total Coliform in 1cfu/ 100ml",1749631041145,63.89,none,manual,2012
+2490944,Location of Village,What is the Conductivity?,393260954,1749631041125,Water Quality Testing,"Water Quality Testing |
+Conductivity in µS/ cm",1749631041149,60.47,none,manual,2016
+2490944,Location of Village,What is the Turbidity in NTU?,402300959,1749631041125,Water Quality Testing,"Water Quality Testing |
+Turbidity in NTU",1749631041144,71.11,none,manual,2011

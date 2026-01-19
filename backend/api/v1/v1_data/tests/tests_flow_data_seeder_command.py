@@ -83,7 +83,7 @@ class FlowDataSeederCommandTestCase(TestCase):
         try:
             mock_form = Forms.objects.create(name="Mock Form")
             mock_get_form.return_value = mock_form
-            mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+            mock_load_data.return_value = (pd.DataFrame(), {})
             mock_validate.return_value = SeederConfig(
                 flow_form_id=123, user=self.test_user, source_dir=temp_dir
             )
@@ -169,7 +169,7 @@ class FlowDataSeederCommandTestCase(TestCase):
         try:
             mock_form = Forms.objects.create(name="Mock Form")
             mock_get_form.return_value = mock_form
-            mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+            mock_load_data.return_value = (pd.DataFrame(), {})
             mock_validate.return_value = SeederConfig(
                 flow_form_id=123, limit=10, user=self.test_user,
                 source_dir=temp_dir
@@ -293,7 +293,7 @@ class EmailArgumentValidationTestCase(TestCase):
         try:
             mock_form = Forms.objects.create(name="Mock Form")
             mock_get_form.return_value = mock_form
-            mock_load_data.return_value = (pd.DataFrame(), pd.DataFrame())
+            mock_load_data.return_value = (pd.DataFrame(), {})
             mock_validate.return_value = SeederConfig(
                 flow_form_id=123, user=self.test_user, source_dir=temp_dir
             )
