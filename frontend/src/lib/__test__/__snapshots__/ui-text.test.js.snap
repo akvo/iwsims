@@ -842,6 +842,7 @@ Object {
     "sendNewRequest": "Notify Approver",
     "settings": "System Settings",
     "settingsDescriptionPanel": "This page allows Super Admin to maintain system critical master lists.",
+    "showAllQuestionsSwitch": "Show all questions",
     "showEmpty": "Show empty values",
     "showPendingUsers": "Show Pending Users",
     "signOut": "Sign Out",

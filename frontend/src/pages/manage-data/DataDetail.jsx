@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { Table, Button, Space, Spin, Alert } from "antd";
+import { Table, Button, Space, Spin, Alert, Row, Col, Switch } from "antd";
 import { LoadingOutlined, HistoryOutlined } from "@ant-design/icons";
 import { EditableCell } from "../../components";
 import {
@@ -35,6 +35,7 @@ const DataDetail = ({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resetButton, setresetButton] = useState({});
+  const [isAllQuestions, setIsAllQuestions] = useState(false);
   const pendingData = record?.pending_data?.created_by || false;
   const { notify } = useNotification();
   const {
@@ -60,33 +61,67 @@ const DataDetail = ({
     setresetButton({ ...resetButton, [key]: true });
     let prev = JSON.parse(JSON.stringify(dataset));
     let hasEdits = false;
-    prev = prev.map((qg) =>
-      qg.id === parentId
-        ? {
-            ...qg,
-            question: qg.question.map((qi) => {
-              if (qi.id === key) {
-                if (isEqual(qi.value, value)) {
-                  if (qi.newValue) {
-                    delete qi.newValue;
-                  }
-                } else {
-                  qi.newValue = value;
-                }
-                const edited = !isEqual(qi.value, value);
-                if (edited && !hasEdits) {
-                  hasEdits = true;
-                }
-                return qi;
+    let questionFound = false;
+
+    prev = prev.map((qg) => {
+      if (qg.id === parentId) {
+        const updatedQuestions = qg.question.map((qi) => {
+          if (qi.id === key) {
+            questionFound = true;
+            if (isEqual(qi.value, value)) {
+              if (qi.newValue) {
+                delete qi.newValue;
               }
-              return qi;
-            }),
+            } else {
+              qi.newValue = value;
+            }
+            const edited = !isEqual(qi.value, value);
+            if (edited && !hasEdits) {
+              hasEdits = true;
+            }
+            return qi;
           }
-        : qg
-    );
+          return qi;
+        });
+        return { ...qg, question: updatedQuestions };
+      }
+      return qg;
+    });
+
+    // If question not found in dataset, add it from filteredDataset
+    if (!questionFound && isAllQuestions) {
+      const sourceGroup = filteredDataset.find((qg) => qg.id === parentId);
+      const sourceQuestion = sourceGroup?.question?.find((q) => q.id === key);
+
+      if (sourceQuestion) {
+        // Check if the question group exists in dataset
+        const existingGroupIndex = prev.findIndex((qg) => qg.id === parentId);
+
+        if (existingGroupIndex >= 0) {
+          // Add question to existing group
+          prev[existingGroupIndex].question.push({
+            ...sourceQuestion,
+            newValue: value,
+          });
+        } else {
+          // Add new question group with the question
+          prev.push({
+            ...sourceGroup,
+            question: [
+              {
+                ...sourceQuestion,
+                newValue: value,
+              },
+            ],
+          });
+        }
+        hasEdits = true;
+      }
+    }
+
     const hasNewValue = prev
-      .find((p) => p.id === parentId)
-      ?.question?.some((q) => typeof q.newValue !== "undefined");
+      ?.flatMap((p) => p?.question)
+      ?.some((q) => typeof q?.newValue !== "undefined");
     setEditedRecord({ ...editedRecord, [record.id]: hasNewValue });
     setDataset(prev);
   };
@@ -120,6 +155,12 @@ const DataDetail = ({
   const handleSave = () => {
     const data = [];
     const formId = flatten(dataset.map((qg) => qg.question))[0].form;
+
+    // Create a set of repeatable group IDs for quick lookup
+    const repeatableGroupIds = new Set(
+      questionGroups?.filter((qg) => qg.repeatable).map((qg) => qg.id) || []
+    );
+
     dataset.map((rd) => {
       rd.question.map((rq) => {
         if (rq.newValue || rq.newValue === 0) {
@@ -128,10 +169,36 @@ const DataDetail = ({
             value =
               parseFloat(value) % 1 !== 0 ? parseFloat(value) : parseInt(value);
           }
-          data.push({
-            question: rq.id,
-            value: value,
-          });
+
+          // Handle repeatable question IDs with suffix (e.g., "1749631662652-1")
+          const questionId = rq.id;
+          const isStringId = typeof questionId === "string";
+          const hasSuffix = isStringId && questionId.includes("-");
+
+          if (hasSuffix) {
+            // Parse the ID to extract base question ID and index
+            const lastDashIndex = questionId.lastIndexOf("-");
+            const baseId = parseInt(questionId.substring(0, lastDashIndex), 10);
+            const index = parseInt(questionId.substring(lastDashIndex + 1), 10);
+            data.push({
+              question: baseId,
+              index: index,
+              value: value,
+            });
+          } else if (repeatableGroupIds.has(rq.question_group)) {
+            // Question is in a repeatable group but has no suffix (index 0)
+            data.push({
+              question: isStringId ? parseInt(questionId, 10) : questionId,
+              index: 0,
+              value: value,
+            });
+          } else {
+            // Non-repeatable question
+            data.push({
+              question: questionId,
+              value: value,
+            });
+          }
         }
       });
     });
@@ -208,6 +275,117 @@ const DataDetail = ({
       : false;
   }, [dataset]);
 
+  const filteredDataset = useMemo(() => {
+    if (!isAllQuestions) {
+      // Show only questions with answers (current dataset from API)
+      return dataset;
+    }
+
+    // Show all questions from form definition, merging with existing answers
+    if (!questionGroups?.length || !dataset.length) {
+      return dataset;
+    }
+
+    // Create a map of existing answers for quick lookup
+    // Key format: questionId or questionId-index for repeatable
+    const answerMap = {};
+    dataset.forEach((qg) => {
+      qg.question.forEach((q) => {
+        answerMap[q.id] = q;
+      });
+    });
+
+    // Build complete dataset from questionGroups with merged answers
+    const result = [];
+
+    questionGroups.forEach((qg) => {
+      if (qg.repeatable) {
+        // For repeatable groups, find existing instances from dataset
+        // Pattern: group label ends with " #N" where N is instance number
+        const repeatInstances = dataset.filter(
+          (d) =>
+            d.id === qg.id ||
+            (d.label && d.label.startsWith(qg.label || qg.name))
+        );
+
+        if (repeatInstances.length === 0) {
+          // No instances exist, show one empty instance with all questions
+          result.push({
+            ...qg,
+            label: `${qg.label || qg.name} #1`,
+            question: qg.question
+              .filter((q) => !q.hidden)
+              .map((q) => ({
+                ...q,
+                question_group: qg.id,
+                value: null,
+                history: false,
+              })),
+          });
+        } else {
+          // Process each repeat instance
+          repeatInstances.forEach((instance, idx) => {
+            const instanceQuestions = qg.question
+              .filter((q) => !q.hidden)
+              .map((q) => {
+                // Build the question ID as it appears in dataset
+                const questionId = idx > 0 ? `${q.id}-${idx}` : q.id;
+                const existingAnswer = answerMap[questionId];
+
+                if (existingAnswer) {
+                  return {
+                    ...existingAnswer,
+                    question_group: existingAnswer.question_group || qg.id,
+                  };
+                }
+                // Return question without answer
+                return {
+                  ...q,
+                  id: questionId,
+                  question_group: qg.id,
+                  value: null,
+                  history: false,
+                };
+              });
+
+            result.push({
+              ...instance,
+              question: instanceQuestions,
+            });
+          });
+        }
+      } else {
+        // Non-repeatable group: show all questions with merged answers
+        const groupQuestions = qg.question
+          .filter((q) => !q.hidden)
+          .map((q) => {
+            const existingAnswer = answerMap[q.id];
+            if (existingAnswer) {
+              return {
+                ...existingAnswer,
+                question_group: existingAnswer.question_group || qg.id,
+              };
+            }
+            // Return question without answer
+            return {
+              ...q,
+              question_group: qg.id,
+              value: null,
+              history: false,
+            };
+          });
+
+        result.push({
+          ...qg,
+          label: qg.label || qg.name,
+          question: groupQuestions,
+        });
+      }
+    });
+
+    return result;
+  }, [dataset, questionGroups, isAllQuestions]);
+
   return loading ? (
     <Space style={{ paddingTop: 18, color: "#9e9e9e" }} size="middle">
       <Spin indicator={<LoadingOutlined style={{ color: "#1b91ff" }} spin />} />
@@ -222,7 +400,7 @@ const DataDetail = ({
             type="warning"
           />
         )}
-        {dataset
+        {filteredDataset
           .filter((r) => r?.question?.length)
           .map((r, rI) => (
             <div className="pending-data-wrapper" key={rI}>
@@ -287,30 +465,43 @@ const DataDetail = ({
             </div>
           ))}
       </div>
-      {!isPublic && isEditor && (
-        <div className="button-save">
-          <Space>
-            <Button
-              type="primary"
-              onClick={handleSave}
-              disabled={!edited || saving}
-              loading={saving}
-              shape="round"
-            >
-              {text.saveEditButton}
-            </Button>
-            {ability.can("delete", "data") && (
-              <Button
-                type="danger"
-                onClick={() => setDeleteData(record)}
-                shape="round"
-              >
-                {text.deleteText}
-              </Button>
+      <div className="button-save">
+        <Row type="flex" justify="space-between" align="middle" gutter={16}>
+          <Col>
+            <Space>
+              <Switch
+                checked={isAllQuestions}
+                onChange={(checked) => setIsAllQuestions(checked)}
+              />
+              <span>{text.showAllQuestionsSwitch}</span>
+            </Space>
+          </Col>
+          <Col>
+            {!isPublic && isEditor && (
+              <Space>
+                <Button
+                  type="primary"
+                  onClick={handleSave}
+                  disabled={!edited || saving}
+                  loading={saving}
+                  shape="round"
+                >
+                  {text.saveEditButton}
+                </Button>
+                {ability.can("delete", "data") && (
+                  <Button
+                    type="danger"
+                    onClick={() => setDeleteData(record)}
+                    shape="round"
+                  >
+                    {text.deleteText}
+                  </Button>
+                )}
+              </Space>
             )}
-          </Space>
-        </div>
-      )}
+          </Col>
+        </Row>
+      </div>
     </>
   );
 };
