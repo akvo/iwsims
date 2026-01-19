@@ -22,11 +22,11 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 1520924,Water Quality Testing,Description of Sampling Point,700922,1749632545233,Water Quality Testing,Description of Sampling Point,1749633110662,100.0,high,text_similarity,
 1520924,Water Quality Testing,General Remarks,7450925,1749632545233,General Remarks,General Remarks,1749633350893,100.0,high,text_similarity,
 1520924,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,9530924,1749632545233,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,1749633259392,100.0,high,text_similarity,
-1520924,Location of the Village,Date of Inspection,265140920,1749632545233.0,Contact Details,"Contact Details |
-Date of Inspection",1749632545235.0,0.0,none,manual,1001.0
-1520924,Location of the Village,Weather Condition,6520923,1749632545233.0,Water Quality Testing,"Water Quality Testing |
-Weather Condition",1749632196724.0,0.0,none,manual,2001.0
-1520924,EPS Photos,Take Photo,1570928,1749632545233.0,Photo of the EPS,"Photo of the EPS |
-Take photo of the EPS",1749730785260.0,0.0,none,manual,3001.0
-1520924,EPS Photos,Comment on Photo taken,1700923,1749632545233.0,Photo of the EPS,"Photo of the EPS |
-Description of the photo",1749730785261.0,0.0,none,manual,3002.0
+1520924,Location of the Village,Date of Inspection,265140920,1749632545233,Contact Details,"Contact Details |
+Date of Inspection",1749632545235,0.0,none,manual,1001
+1520924,Location of the Village,Weather Condition,6520923,1749632545233,Water Quality Testing,"Water Quality Testing |
+Weather Condition",1749632196724,0.0,none,manual,2001
+1520924,EPS Photos,Take Photo,1570928,1749632545233,Photo of the EPS,"Photo of the EPS |
+Take photo of the EPS",1749730785260,0.0,none,manual,3001
+1520924,EPS Photos,Comment on Photo taken,1700923,1749632545233,Photo of the EPS,"Photo of the EPS |
+Description of the photo",1749730785261,0.0,none,manual,3002

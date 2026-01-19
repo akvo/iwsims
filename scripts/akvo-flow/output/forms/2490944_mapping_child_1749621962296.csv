@@ -35,9 +35,9 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 2490944,Projects Photos,Signature of Implementing Agency Representative,5500942,1749621962296,Final Comments,Signature of Implementing Agency Representative,1749623674045,100.0,high,text_similarity,
 2490944,Projects Photos,Signature of DWS Officer,9510946,1749621962296,Final Comments,Signature of DWS Officer,1749623691256,100.0,high,text_similarity,
 2490944,Projects Photos,Final Comments and Recommendations,9530935,1749621962296,Final Comments,Final Comments and Recommendations,1749623648243,100.0,high,text_similarity,
-2490944,Location of Village,What is the pH level?,379720947,1749621962296.0,Project Info,"Project Info |
-PH - 4500-H+B (APHA Method Code)",1723459200024.0,66.67,none,manual,1016.0
-2490944,Location of Village,What is the salinity in ppt?,389680956,1749621962296.0,Project Info,"Project Info |
-Salinity PPT 2520B 0.2 (APHA Method Code)",1723459200026.0,77.19,none,manual,1018.0
-2490944,Location of Village,What is the Conductivity?,393260954,1749621962296.0,Project Info,"Project Info |
-Conductivity \u00b5S/cm - 2510B (APHA Method Code)",1723459200025.0,66.67,none,manual,1017.0
+2490944,Location of Village,What is the pH level?,379720947,1749621962296,Project Info,"Project Info |
+PH - 4500-H+B (APHA Method Code)",1723459200024,66.67,none,manual,1016
+2490944,Location of Village,What is the salinity in ppt?,389680956,1749621962296,Project Info,"Project Info |
+Salinity PPT 2520B 0.2 (APHA Method Code)",1723459200026,77.19,none,manual,1018
+2490944,Location of Village,What is the Conductivity?,393260954,1749621962296,Project Info,"Project Info |
+Conductivity \u00b5S/cm - 2510B (APHA Method Code)",1723459200025,66.67,none,manual,1017

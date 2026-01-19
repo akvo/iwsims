@@ -126,52 +126,52 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 8520967,Water Treatment Plant Registration,Which SOPs do you have?,7850967,1749652214711,General Information,Which SOPs do you have?,1749652562185,100.0,high,text_similarity,
 8520967,Water Treatment Plant Registration,What is the Designed Capacity of Plant in megalitres?,8510939,,,,,65.35,none,none,
 8520967,Water Treatment Plant Registration,Name of Plant (Western),9580922,,,,,65.0,none,none,
-8520967,Chemicals,Are there any risk associated with Lime dosing?,11160920,1749652214711.0,Chemicals,"Chemicals |
-Are there any issues / risk associated with Lime dosing?",1749696956618.0,94.74,medium,manual,5037.0
-8520967,Chemicals,What is the dosage rate of Lime in grams per cubic meter?,12130920,1749652214711.0,Chemicals,"Chemicals |
-What is the dosage rate for Lima (bags/kg per day) on a daily basis?",1749696884554.0,88.5,medium,manual,5035.0
-8520967,Chemicals,What is the dosage rate for Polymer in gram per cubic metres?,4550920,1749652214711.0,Chemicals,"Chemicals |
-What is the dosage rate for Polymer (bags/kg per day) on a daily basis?",1749696582472.0,84.03,low,manual,5029.0
-8520967,Chemicals,Are there any risks associated with Polymer dosing?,6650920,1749652214711.0,Chemicals,"Chemicals |
-Are there any issues / risks associated with Polymer dosing?",1749696644615.0,92.93,medium,manual,5031.0
+8520967,Chemicals,Are there any risk associated with Lime dosing?,11160920,1749652214711,Chemicals,"Chemicals |
+Are there any issues / risk associated with Lime dosing?",1749696956618,94.74,medium,manual,5037
+8520967,Chemicals,What is the dosage rate of Lime in grams per cubic meter?,12130920,1749652214711,Chemicals,"Chemicals |
+What is the dosage rate for Lima (bags/kg per day) on a daily basis?",1749696884554,88.5,medium,manual,5035
+8520967,Chemicals,What is the dosage rate for Polymer in gram per cubic metres?,4550920,1749652214711,Chemicals,"Chemicals |
+What is the dosage rate for Polymer (bags/kg per day) on a daily basis?",1749696582472,84.03,low,manual,5029
+8520967,Chemicals,Are there any risks associated with Polymer dosing?,6650920,1749652214711,Chemicals,"Chemicals |
+Are there any issues / risks associated with Polymer dosing?",1749696644615,92.93,medium,manual,5031
 8520967,Disinfection,Take Photo of risks/Chlorine Gas Dosing System,7610927,,,,,85.06,medium,manual,
-8520967,Plant Mag Flow Meters,What are this risks?,1680943,1749652214711.0,Plant Mag Flow Meters,"Plant Mag Flow Meters |
-What are these risks associated with the flow meters?",1749699189052.0,92.68,medium,manual,8004.0
-8520967,Plant Mag Flow Meters,Take Photo of the risks,7610938,1749652214711.0,Plant Mag Flow Meters,"Plant Mag Flow Meters |
-Take Photo of the risks associated with the flow meters",1749699295063.0,82.14,low,manual,8006.0
+8520967,Plant Mag Flow Meters,What are this risks?,1680943,1749652214711,Plant Mag Flow Meters,"Plant Mag Flow Meters |
+What are these risks associated with the flow meters?",1749699189052,92.68,medium,manual,8004
+8520967,Plant Mag Flow Meters,Take Photo of the risks,7610938,1749652214711,Plant Mag Flow Meters,"Plant Mag Flow Meters |
+Take Photo of the risks associated with the flow meters",1749699295063,82.14,low,manual,8006
 8520967,Raw Water Source,Are you able to take photo of risk?,13770920,,,,,84.34,low,manual,
 8520967,Raw Water Source,Are you able to take photo of the risks?,15730920,,,,,90.91,medium,manual,
 8520967,Raw Water Source,Are there any risk associated with the source?,1660920,,,,,86.6,medium,manual,
 8520967,Raw Water Source,Are you able to take photo of risks?,19530921,,,,,85.71,medium,manual,
 8520967,Raw Water Source,Take Photo of risks,2620922,,,,,73.08,none,manual,
-8520967,Raw Water Source,How many pumps are operational and on standby?,2630921,1749652214711.0,Raw Water Source,"Raw Water Source |
-How many Pumps/Rising Main are operational and on standby?",1754995400012.0,90.0,medium,manual,4020.0
+8520967,Raw Water Source,How many pumps are operational and on standby?,2630921,1749652214711,Raw Water Source,"Raw Water Source |
+How many Pumps/Rising Main are operational and on standby?",1754995400012,90.0,medium,manual,4020
 8520967,Raw Water Source,Take photo of the risks,2630922,,,,,82.14,low,manual,
 8520967,Raw Water Source,Please provide details of the risks,2640921,,,,,80.46,low,manual,
 8520967,Raw Water Source,Take Photo of source,4530920,,,,,73.17,none,manual,
 8520967,Raw Water Source,Please provide details of the risk,5670920,,,,,79.07,none,manual,
-8520967,Raw Water Source,Take photo of the risks,6620926,1749652214711.0,Raw Water Source,,,82.14,low,manual,
+8520967,Raw Water Source,Take photo of the risks,6620926,1749652214711,Raw Water Source,,,82.14,low,manual,
 8520967,Raw Water Source,Record line from Raw Water Source to the Treatment Plant,6620927,,,,,62.75,none,manual,
-8520967,Raw Water Source,How many raw water pumps are there?,6640921,1749652214711.0,Raw Water Source,"Raw Water Source | 
-How many Pumps/Rising Main are there?",1754995400011.0,80.52,low,manual,4019.0
-8520967,Raw Water Source,Please provide details of the risks,7550922,1749652214711.0,Raw Water Source,"Raw Water Source |
-Please provide details of other risks associated with Pumps/Rising Main",1754995400021.0,80.46,low,manual,4023.0
-8520967,Raw Water Source,Are there any risks associated with the pumps?,7560922,1749652214711.0,Raw Water Source,"Raw Water Source |
-Are there any risks associated with the Pumps/Rising Main?",1754995400013.0,90.2,medium,manual,4021.0
+8520967,Raw Water Source,How many raw water pumps are there?,6640921,1749652214711,Raw Water Source,"Raw Water Source | 
+How many Pumps/Rising Main are there?",1754995400011,80.52,low,manual,4019
+8520967,Raw Water Source,Please provide details of the risks,7550922,1749652214711,Raw Water Source,"Raw Water Source |
+Please provide details of other risks associated with Pumps/Rising Main",1754995400021,80.46,low,manual,4023
+8520967,Raw Water Source,Are there any risks associated with the pumps?,7560922,1749652214711,Raw Water Source,"Raw Water Source |
+Are there any risks associated with the Pumps/Rising Main?",1754995400013,90.2,medium,manual,4021
 8520967,Raw Water Source,Are you able to physically visit the raw water source?,7570924,,,,,73.04,none,manual,
-8520967,Raw Water Source,Take Geolocation of the raw water source,8650921,1749652214711.0,Raw Water Source,"Raw Water Source |
-Take Geolocation of the surface water source",1749694731204.0,92.86,medium,manual,4003.0
-8520967,Raw Water Source,Are you able to visit the raw water source?,9790920,1749652214711.0,Raw Water Source,"Raw Water Source |
-Are you able to visit the surface water source in this visit?",1749693489743.0,80.77,low,manual,4002.0
-8520967,Reservoirs,Take Photo,10700924,1749652214711.0,Reservoirs,"Reservoirs |
-Take photo of the Distribution Reservoir",1749699773294.0,64.52,none,manual,9006.0
-8520967,Reservoirs,Take photo,19520923,1749652214711.0,Reservoirs,"Reservoirs |
-Take Photo of the storage reservoir",1749699656363.0,64.52,none,manual,9003.0
-8520967,Staff and General Information,Number of staffs at the plant?,1580930,1749652214711.0,Staff and General Information,"Staff and General Information |
-Number of staff currently hired at the plant?",1749652940735.0,78.87,none,manual,2001.0
-8520967,Water Quality,What is the Temperature in Degrees Celcius?,23560933,1749652214711.0,Water Quality,"Water Quality |
-Temperature \u00b0C - 2550B (APHA Method Code)",1754995300101.0,58.33,none,manual,3013.0
-8520967,Water Quality,What is the Salinity in PPT?,24540928,1749652214711.0,Water Quality,"Water Quality |
-Salinity PPT 2520B 0.2 (APHA Method Code)",1754995300104.0,77.19,none,manual,3016.0
-8520967,Water Quality,What is the pH?,28320926,1749652214711.0,Water Quality,"Water Quality |
-pH - 4500-H+B (APHA Method Code)",1754995300102.0,61.11,none,manual,3014.0
+8520967,Raw Water Source,Take Geolocation of the raw water source,8650921,1749652214711,Raw Water Source,"Raw Water Source |
+Take Geolocation of the surface water source",1749694731204,92.86,medium,manual,4003
+8520967,Raw Water Source,Are you able to visit the raw water source?,9790920,1749652214711,Raw Water Source,"Raw Water Source |
+Are you able to visit the surface water source in this visit?",1749693489743,80.77,low,manual,4002
+8520967,Reservoirs,Take Photo,10700924,1749652214711,Reservoirs,"Reservoirs |
+Take photo of the Distribution Reservoir",1749699773294,64.52,none,manual,9006
+8520967,Reservoirs,Take photo,19520923,1749652214711,Reservoirs,"Reservoirs |
+Take Photo of the storage reservoir",1749699656363,64.52,none,manual,9003
+8520967,Staff and General Information,Number of staffs at the plant?,1580930,1749652214711,Staff and General Information,"Staff and General Information |
+Number of staff currently hired at the plant?",1749652940735,78.87,none,manual,2001
+8520967,Water Quality,What is the Temperature in Degrees Celcius?,23560933,1749652214711,Water Quality,"Water Quality |
+Temperature \u00b0C - 2550B (APHA Method Code)",1754995300101,58.33,none,manual,3013
+8520967,Water Quality,What is the Salinity in PPT?,24540928,1749652214711,Water Quality,"Water Quality |
+Salinity PPT 2520B 0.2 (APHA Method Code)",1754995300104,77.19,none,manual,3016
+8520967,Water Quality,What is the pH?,28320926,1749652214711,Water Quality,"Water Quality |
+pH - 4500-H+B (APHA Method Code)",1754995300102,61.11,none,manual,3014

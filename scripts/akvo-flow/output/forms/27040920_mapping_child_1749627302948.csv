@@ -26,13 +26,13 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 27040920,Pump Station Registration,Which District are you in?,22220936,,,,,50.0,none,none,
 27040920,Pump Station Registration,Take photo of Pump Station,23190921,1749627302948,General Information,Take photo of Pump Station,1749627462936,100.0,high,text_similarity,
 27040920,Pump Station Registration,GPS Location,27120920,,,,,66.67,none,none,
-27040920,Pump Station Registration,Inspection Date,27060922,1749627302948.0,General Information,"General Information |
-Inspection Date",1749627302950.0,0.0,none,manual,1001.0
-27040920,General Information on Pump Station,Number of pumps in operation,27080929,1749627302948.0,General Information,"General Information |
-Number of pumps in operation",1749627499538.0,0.0,none,manual,1003.0
-27040920,General Information on Pump Station,Number of pumps standby,20390925,1749627302948.0,General Information,"General Information |
-Number of pumps standby",1749627528651.0,0.0,none,manual,1004.0
-27040920,General Information on Pump Station,Pump Station Status,28090934,1749627302948.0,General Information,"General Information |
-Pump Station Status",1749627552609.0,0.0,none,manual,1005.0
-27040920,General Information on Pump Station,Pump Status,24260925,1749627302948.0,General Information,"General Information |
-Pump Status",1749627630352.0,0.0,none,manual,1006.0
+27040920,Pump Station Registration,Inspection Date,27060922,1749627302948,General Information,"General Information |
+Inspection Date",1749627302950,0.0,none,manual,1001
+27040920,General Information on Pump Station,Number of pumps in operation,27080929,1749627302948,General Information,"General Information |
+Number of pumps in operation",1749627499538,0.0,none,manual,1003
+27040920,General Information on Pump Station,Number of pumps standby,20390925,1749627302948,General Information,"General Information |
+Number of pumps standby",1749627528651,0.0,none,manual,1004
+27040920,General Information on Pump Station,Pump Station Status,28090934,1749627302948,General Information,"General Information |
+Pump Station Status",1749627552609,0.0,none,manual,1005
+27040920,General Information on Pump Station,Pump Status,24260925,1749627302948,General Information,"General Information |
+Pump Status",1749627630352,0.0,none,manual,1006

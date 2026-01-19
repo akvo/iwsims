@@ -24,6 +24,6 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 1520924,Water Quality Testing,Description of Sampling Point,700922,,,,,52.63,none,none,
 1520924,Water Quality Testing,General Remarks,7450925,,,,,50.0,none,none,
 1520924,Water Quality Testing,What is the Total Coliform count in 1cfu/100ml?,9530924,,,,,48.39,none,none,
-1520924,Contact Details,Phone contact of the Village Headman/TNK or village nurse?,425670981,1749623934933.0,Basic Information,Contact of the Village Head/WC/Village's Nurse,1749624452996.0,78.85,none,manual,1005.0
-1520924,Location of the Village,Geolocation,2590929,1749623934933.0,Basic Information,"Basic Information |
-GPS Location",1749624452992.0,78.26,none,manual,1006.0
+1520924,Contact Details,Phone contact of the Village Headman/TNK or village nurse?,425670981,1749623934933,Basic Information,Contact of the Village Head/WC/Village's Nurse,1749624452996,78.85,none,manual,1005
+1520924,Location of the Village,Geolocation,2590929,1749623934933,Basic Information,"Basic Information |
+GPS Location",1749624452992,78.26,none,manual,1006
