@@ -325,6 +325,7 @@ def transform_form_data_for_report(
                         forms.append(additional_form)
                     except Forms.DoesNotExist:
                         pass
+                        # If a referenced form no longer exists, skip it
         else:
             main_form_data_queryset = FormData.objects.filter(
                 form=form, is_pending=False
