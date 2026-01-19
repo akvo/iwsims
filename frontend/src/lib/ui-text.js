@@ -967,6 +967,7 @@ const uiText = {
     export2ExcelSuccess: "Data exported to Excel successfully",
     export2ExcelError: "Unable to export data to Excel",
     downloadAppText,
+    showAllQuestionsSwitch: "Show all questions",
   },
 
   de: {},
