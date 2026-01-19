@@ -91,15 +91,17 @@ class Command(BaseCommand):
                 f"Workers: {workers}\n"
             )
 
-            # 1. Load CSV data (parent + child)
-            parent_df, child_df = load_and_prepare_data(config)
+            # 1. Load CSV data (parent + child dict)
+            parent_df, child_data_dict = load_and_prepare_data(config)
 
             if parent_df is None or parent_df.empty:
                 self._log_warning("No parent data found. Nothing to download.")
                 return
 
             # 2. Get photo questions from the DataFrame columns
-            photo_questions = self._get_photo_questions(parent_df, child_df)
+            photo_questions = self._get_photo_questions(
+                parent_df, child_data_dict
+            )
 
             if not photo_questions:
                 self._log_info("No photo questions found in the form.")
@@ -119,12 +121,14 @@ class Command(BaseCommand):
             )
             all_entries.extend(parent_entries)
 
-            # Extract from child data if exists
-            if child_df is not None and not child_df.empty:
-                child_entries = extractor(
-                    df=child_df, photo_questions=photo_questions
-                )
-                all_entries.extend(child_entries)
+            # Extract from child data if exists (now a dict of DataFrames)
+            if child_data_dict:
+                for form_id, child_df in child_data_dict.items():
+                    if child_df is not None and not child_df.empty:
+                        child_entries = extractor(
+                            df=child_df, photo_questions=photo_questions
+                        )
+                        all_entries.extend(child_entries)
 
             if not all_entries:
                 self._log_info("No photo URLs found in the data.")
@@ -184,28 +188,39 @@ class Command(BaseCommand):
             logger.exception("Unexpected error during photo download")
             raise
 
-    def _get_photo_questions(self, parent_df, child_df):
+    def _get_photo_questions(self, parent_df, child_data_dict):
         """Get photo questions from DataFrame columns.
 
         Args:
             parent_df: Parent DataFrame
-            child_df: Child DataFrame (optional)
+            child_data_dict: Dict mapping form_id to child DataFrame
 
         Returns:
             List of Question objects with type=photo
         """
-        # Collect all question IDs from both DataFrames
+        # Collect all question IDs from parent and all child DataFrames
         question_ids = set()
 
-        for df in [parent_df, child_df]:
-            if df is None or df.empty:
-                continue
-            for col in df.columns:
+        # Process parent DataFrame
+        if parent_df is not None and not parent_df.empty:
+            for col in parent_df.columns:
                 if col not in NON_QUESTION_COLUMNS:
                     try:
                         question_ids.add(int(float(col)))
                     except (ValueError, TypeError):
                         continue
+
+        # Process child DataFrames (dict)
+        if child_data_dict:
+            for form_id, child_df in child_data_dict.items():
+                if child_df is None or child_df.empty:
+                    continue
+                for col in child_df.columns:
+                    if col not in NON_QUESTION_COLUMNS:
+                        try:
+                            question_ids.add(int(float(col)))
+                        except (ValueError, TypeError):
+                            continue
 
         if not question_ids:
             return []
