@@ -267,8 +267,11 @@ class FormDataAddListView(APIView):
         # Direct update
         # move current answer to answer_history
         for answer in answers:
+            index = answer.get("index", 0)
             form_answer = Answers.objects.filter(
-                data=data, question=answer.get("question")
+                data=data,
+                index=index,
+                question=answer.get("question")
             ).first()
             if form_answer:
                 AnswerHistory.objects.create(
