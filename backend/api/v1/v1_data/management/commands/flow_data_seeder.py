@@ -207,7 +207,10 @@ class Command(BaseCommand):
                 not child_df.empty
             ):
                 child_questions = load_questions(child_df)
-                child_data_groups = child_df.groupby(CsvColumns.PARENT)
+                # Group children by identifier (uuid) to match with parent
+                # This is more reliable than the 'parent' column which may have
+                # incorrect values in the source data
+                child_data_groups = child_df.groupby(CsvColumns.IDENTIFIER)
 
             parent_questions = load_questions(parent_df)
 
