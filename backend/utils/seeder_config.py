@@ -61,9 +61,10 @@ class FilePaths:
     """File path constants."""
 
     OUTPUT_DIR = "data"
-    SEEDED_DIR = "seeded"
     SOURCE_DIR = "storage/akvo-flow"
     ADMINISTRATION_MAPPING = "administration_mapping.csv"
+    # Pattern for child data files: {flow_id}_child_data_{form_id}.csv
+    CHILD_FILE_PATTERN = "{flow_id}_child_data_*.csv"
 
 
 class CsvColumns:

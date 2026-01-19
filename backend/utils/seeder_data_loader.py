@@ -4,9 +4,11 @@ Seeder Data Loader Module
 This module provides data loading functionality for Flow Complete Seeder.
 """
 
+import glob
 import logging
 import os
-from typing import Dict, Optional, Tuple
+import re
+from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
 
@@ -32,40 +34,110 @@ logger = logging.getLogger(__name__)
 
 def load_and_prepare_data(
     config: SeederConfig,
-) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]:
+) -> Tuple[Optional[pd.DataFrame], Dict[int, pd.DataFrame]]:
     """Load and prepare data files.
+
+    Supports both single child file (backwards compatible) and
+    multiple child files (one per child form).
 
     Args:
         config: SeederConfig instance
 
     Returns:
-        Tuple of (parent_df, child_df) DataFrames
+        Tuple of (parent_df, child_data_dict) where child_data_dict maps
+        form_id to DataFrame
     """
     parent_df = load_data_file(
         config.flow_form_id,
         is_parent=True,
         config=config,
     )
-    child_df = load_data_file(
-        config.flow_form_id,
-        is_parent=False,
-        config=config,
-    )
+
+    # Load child data (multiple files supported)
+    child_data_dict = load_child_data_files(config.flow_form_id, config)
 
     # Apply limit if specified
-    if config.limit:
-        if parent_df is not None:
-            parent_df = parent_df.head(config.limit)
-        if child_df is not None and parent_df is not None:
-            # Only include child rows for the limited parent identifiers (uuid)
-            # We use identifier because children share the same identifier
-            # as their parent registration in Akvo Flow
-            parent_identifiers = parent_df[CsvColumns.IDENTIFIER].unique()
-            child_df = child_df[child_df[CsvColumns.IDENTIFIER].isin(
-                parent_identifiers
-            )]
+    if config.limit and parent_df is not None:
+        parent_df = parent_df.head(config.limit)
 
-    return parent_df, child_df
+        # Filter child data to match limited parents
+        parent_identifiers = parent_df[CsvColumns.IDENTIFIER].unique()
+        for form_id, child_df in child_data_dict.items():
+            child_data_dict[form_id] = child_df[
+                child_df[CsvColumns.IDENTIFIER].isin(parent_identifiers)
+            ]
+
+    return parent_df, child_data_dict
+
+
+def load_child_data_files(
+    flow_id: int,
+    config: SeederConfig,
+) -> Dict[int, pd.DataFrame]:
+    """Load all child data CSV files for a given flow ID.
+
+    Looks for files matching pattern: {flow_id}_child_data_{form_id}.csv
+    Falls back to single file: {flow_id}_child_data.csv for backwards
+    compatibility.
+
+    Args:
+        flow_id: The Akvo Flow form ID
+        config: SeederConfig instance
+
+    Returns:
+        Dictionary mapping child form_id to DataFrame
+    """
+    child_data = {}
+    data_dir = os.path.join(config.source_dir, FilePaths.OUTPUT_DIR)
+
+    # Try pattern-based loading first (new format)
+    pattern = os.path.join(data_dir, f"{flow_id}_child_data_*.csv")
+    child_files = glob.glob(pattern)
+
+    if child_files:
+        for child_file in child_files:
+            filename = os.path.basename(child_file)
+            # Extract form_id from filename: {flow_id}_child_data_{form_id}.csv
+            match = re.match(rf"{flow_id}_child_data_(\d+)\.csv", filename)
+            if match:
+                child_form_id = int(match.group(1))
+                try:
+                    df = pd.read_csv(
+                        child_file,
+                        encoding=config.encoding,
+                        low_memory=False,
+                    )
+                    child_data[child_form_id] = df
+                    logger.info(
+                        f"Loaded {len(df)} rows from {filename} "
+                        f"(form_id: {child_form_id})"
+                    )
+                except Exception as e:
+                    logger.error(f"Error loading {filename}: {e}")
+    else:
+        # Fallback: try single child file (backwards compatibility)
+        single_file = os.path.join(data_dir, f"{flow_id}_child_data.csv")
+        if os.path.exists(single_file):
+            try:
+                df = pd.read_csv(
+                    single_file,
+                    encoding=config.encoding,
+                    low_memory=False,
+                )
+                # Use form_id from first row if available, otherwise use 0
+                if CsvColumns.FORM_ID in df.columns and not df.empty:
+                    form_id = int(df[CsvColumns.FORM_ID].iloc[0])
+                else:
+                    form_id = 0
+                child_data[form_id] = df
+                logger.info(
+                    f"Loaded {len(df)} rows from single child file "
+                    f"(backwards compat)"
+                )
+            except Exception as e:
+                logger.error(f"Error loading single child file: {e}")
+
+    return child_data
 
 
 def load_data_file(
@@ -146,6 +218,26 @@ def load_questions(df: Optional[pd.DataFrame]) -> Dict[int, Questions]:
     questions = Questions.objects.filter(pk__in=question_ids).all()
 
     return {q.pk: q for q in questions}
+
+
+def load_questions_for_child_forms(
+    child_data_dict: Dict[int, pd.DataFrame],
+) -> Dict[int, Dict[int, Any]]:
+    """Load questions for each child form.
+
+    Args:
+        child_data_dict: Dictionary mapping form_id to DataFrame
+
+    Returns:
+        Dictionary mapping form_id to questions dict
+    """
+    questions_by_form = {}
+
+    for form_id, child_df in child_data_dict.items():
+        if child_df is not None and not child_df.empty:
+            questions_by_form[form_id] = load_questions(child_df)
+
+    return questions_by_form
 
 
 # =============================================================================

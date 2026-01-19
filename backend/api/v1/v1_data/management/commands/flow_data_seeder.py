@@ -48,6 +48,7 @@ from utils.seeder_config import (
 from utils.seeder_data_loader import (
     load_and_prepare_data,
     load_questions,
+    load_questions_for_child_forms,
     load_administration_mappings,
     load_administration_db_mappings,
     get_administration_id,
@@ -154,13 +155,18 @@ class Command(BaseCommand):
                     "Mode: Registration only (monitoring data will be skipped)"
                 )
 
-            # Load and prepare data
-            parent_df, child_df = load_and_prepare_data(config)
+            # Load and prepare data (now returns dict of child DataFrames)
+            parent_df, child_data_dict = load_and_prepare_data(config)
 
             # Add success column (default 'No')
+            parent_df = parent_df.copy()
             parent_df['success'] = 'No'
-            if child_df is not None and not child_df.empty:
-                child_df['success'] = 'No'
+            for form_id in list(child_data_dict.keys()):
+                df = child_data_dict[form_id]
+                if df is not None and not df.empty:
+                    df = df.copy()
+                    df['success'] = 'No'
+                    child_data_dict[form_id] = df
 
             # load administration mappings
             adm_mappings = load_administration_mappings(config)
@@ -183,34 +189,36 @@ class Command(BaseCommand):
             total_new_child = 0
             invalid_answers = []
 
-            # Build parent-children mapping from child CSV for logging
+            # Build parent-children mapping from child CSVs for logging
             parent_children_map = {}  # parent_datapoint_id -> [child_ids]
 
-            if (
-                not registration_only and
-                child_df is not None and
-                not child_df.empty
-            ):
-                for _, child_row in child_df.iterrows():
-                    parent_dp_id = child_row[CsvColumns.PARENT]
-                    child_dp_id = child_row[CsvColumns.DATAPOINT_ID]
-                    if parent_dp_id not in parent_children_map:
-                        parent_children_map[parent_dp_id] = []
-                    parent_children_map[parent_dp_id].append(child_dp_id)
+            if not registration_only and len(child_data_dict) > 0:
+                for form_id, child_df in child_data_dict.items():
+                    if child_df is not None and not child_df.empty:
+                        for _, child_row in child_df.iterrows():
+                            parent_dp_id = child_row[CsvColumns.PARENT]
+                            child_dp_id = child_row[CsvColumns.DATAPOINT_ID]
+                            if parent_dp_id not in parent_children_map:
+                                parent_children_map[parent_dp_id] = []
+                            parent_children_map[parent_dp_id].append(
+                                child_dp_id
+                            )
 
-            # Prepare questions
-            child_questions = None
-            child_data_groups = None
-            if (
-                not registration_only and
-                child_df is not None and
-                not child_df.empty
-            ):
-                child_questions = load_questions(child_df)
-                # Group children by identifier (uuid) to match with parent
-                # This is more reliable than the 'parent' column which may have
-                # incorrect values in the source data
-                child_data_groups = child_df.groupby(CsvColumns.IDENTIFIER)
+            # Prepare questions for all child forms
+            child_questions_dict = {}
+            child_data_groups_dict = {}
+
+            if not registration_only and len(child_data_dict) > 0:
+                child_questions_dict = load_questions_for_child_forms(
+                    child_data_dict
+                )
+
+                # Group children by identifier for each form
+                for form_id, child_df in child_data_dict.items():
+                    if child_df is not None and not child_df.empty:
+                        child_data_groups_dict[form_id] = child_df.groupby(
+                            CsvColumns.IDENTIFIER
+                        )
 
             parent_questions = load_questions(parent_df)
 
@@ -281,13 +289,13 @@ class Command(BaseCommand):
                     parent_df.at[idx, 'success'] = 'Yes'
 
                     # Process child rows (only if not registration-only mode)
-                    if child_data_groups is not None:
+                    if child_data_groups_dict:
                         c_results, c_invalid = process_child_data_for_parent(
                             parent_row=parent_row,
                             config=config,
                             parent_form_data=parent_form_data,
-                            child_data_groups=child_data_groups,
-                            child_questions=child_questions,
+                            child_data_groups_dict=child_data_groups_dict,
+                            child_questions_dict=child_questions_dict,
                             existing_records=seeded_children,
                         )
                         # Count only new records, not updates
@@ -296,13 +304,18 @@ class Command(BaseCommand):
                         )
                         invalid_answers.extend(c_invalid)
 
-                        # Mark successful children in child_df
+                        # Mark successful children in respective DataFrames
                         for result in c_results:
-                            child_mask = (
-                                child_df[CsvColumns.DATAPOINT_ID] ==
-                                result['flow_data_id']
-                            )
-                            child_df.loc[child_mask, 'success'] = 'Yes'
+                            child_form_id = result.get('form_id')
+                            if child_form_id in child_data_dict:
+                                child_mask = (
+                                    child_data_dict[child_form_id][
+                                        CsvColumns.DATAPOINT_ID
+                                    ] == result['flow_data_id']
+                                )
+                                child_data_dict[child_form_id].loc[
+                                    child_mask, 'success'
+                                ] = 'Yes'
 
                 except Exception as e:
                     self._log_error(
@@ -361,18 +374,19 @@ class Command(BaseCommand):
             parent_df.to_csv(parent_csv_path, index=False, encoding="utf-8")
             self._log_info(f"Updated parent CSV: {parent_csv_path}")
 
-            if (
-                not registration_only and
-                child_df is not None and
-                not child_df.empty
-            ):
-                child_csv_path = os.path.join(
-                    config.source_dir,
-                    FilePaths.OUTPUT_DIR,
-                    f"{config.flow_form_id}_child_data.csv",
-                )
-                child_df.to_csv(child_csv_path, index=False, encoding="utf-8")
-                self._log_info(f"Updated child CSV: {child_csv_path}")
+            # Write child CSVs (one per form)
+            if not registration_only and len(child_data_dict) > 0:
+                for form_id, child_df in child_data_dict.items():
+                    if child_df is not None and not child_df.empty:
+                        child_csv_path = os.path.join(
+                            config.source_dir,
+                            FilePaths.OUTPUT_DIR,
+                            f"{config.flow_form_id}_child_data_{form_id}.csv",
+                        )
+                        child_df.to_csv(
+                            child_csv_path, index=False, encoding="utf-8"
+                        )
+                        self._log_info(f"Updated child CSV: {child_csv_path}")
 
             # Log success summary
             parent_success = (parent_df['success'] == 'Yes').sum()
@@ -380,16 +394,17 @@ class Command(BaseCommand):
             self._log_info(
                 f"Parent success: {parent_success}/{parent_total}"
             )
-            if (
-                not registration_only and
-                child_df is not None and
-                not child_df.empty
-            ):
-                child_success = (child_df['success'] == 'Yes').sum()
-                child_total = len(child_df)
-                self._log_info(
-                    f"Child success: {child_success}/{child_total}"
-                )
+
+            # Log success summary for each child form
+            if not registration_only and len(child_data_dict) > 0:
+                for form_id, child_df in child_data_dict.items():
+                    if child_df is not None and not child_df.empty:
+                        child_success = (child_df['success'] == 'Yes').sum()
+                        child_total = len(child_df)
+                        self._log_info(
+                            f"Child form {form_id} success: "
+                            f"{child_success}/{child_total}"
+                        )
 
             # Refresh materialized view after seeding
             refresh_materialized_data()

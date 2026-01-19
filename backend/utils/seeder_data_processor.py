@@ -77,7 +77,7 @@ def process_data_rows(
 
             # Find matching existing record
             matching = [
-                er for er in existing_records
+                er for er in (existing_records or [])
                 if datapoint_id in er.name and er.parent_id == parent_pk
             ]
 
@@ -121,44 +121,67 @@ def process_child_data_for_parent(
     parent_row: pd.Series,
     config: SeederConfig,
     parent_form_data: FormData,
-    child_data_groups: pd.core.groupby.DataFrameGroupBy,
-    child_questions: Dict[int, Any],
+    child_data_groups_dict: Dict[int, pd.core.groupby.DataFrameGroupBy],
+    child_questions_dict: Dict[int, Dict[int, Any]],
     existing_records: Optional[List[FormData]] = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Process all child rows for a given parent using generic method.
+    """Process all child rows for a given parent across multiple child forms.
+
+    Supports multiple child forms where each child form has its own grouped
+    DataFrame and questions.
 
     Args:
         parent_row: Parent row containing identifier (uuid)
         config: SeederConfig instance
         parent_form_data: Parent FormData instance
-        child_data_groups: Grouped child dataframe (grouped by identifier)
-        child_questions: Questions for child data
-        existing_records: Optional[List[FormData]] = None
+        child_data_groups_dict: Dict mapping form_id to grouped child dataframe
+        child_questions_dict: Dict mapping form_id to questions
+        existing_records: Optional list of existing child records
 
     Returns:
-        List of seeded child records
+        Tuple of (results_list, invalid_answers_list)
     """
     # Use identifier (uuid) to match children to parent
     # In Akvo Flow, monitoring submissions share the same identifier as
     # their parent registration
     parent_identifier = parent_row[CsvColumns.IDENTIFIER]
+    all_results = []
+    all_invalid = []
 
-    try:
-        child_rows = child_data_groups.get_group(parent_identifier)
-    except KeyError:
-        # No child rows for this parent
-        return [], []
+    for form_id, child_data_groups in child_data_groups_dict.items():
+        child_questions = child_questions_dict.get(form_id, {})
 
-    # Use generic process_data_rows method
-    return process_data_rows(
-        df=child_rows,
-        config=config,
-        questions=child_questions,
-        administration_id=parent_form_data.administration_id,
-        parent=parent_form_data,
-        is_parent=False,
-        existing_records=existing_records,
-    )
+        try:
+            child_rows = child_data_groups.get_group(parent_identifier)
+        except KeyError:
+            # No child rows for this parent in this form
+            continue
+
+        # Filter existing records for this form
+        form_existing_records = [
+            r for r in (existing_records or [])
+            if r.form_id == form_id
+        ] if existing_records else None
+
+        # Use generic process_data_rows method
+        results, invalid = process_data_rows(
+            df=child_rows,
+            config=config,
+            questions=child_questions,
+            administration_id=parent_form_data.administration_id,
+            parent=parent_form_data,
+            is_parent=False,
+            existing_records=form_existing_records,
+        )
+
+        # Add form_id to results for tracking
+        for result in results:
+            result['form_id'] = form_id
+
+        all_results.extend(results)
+        all_invalid.extend(invalid)
+
+    return all_results, all_invalid
 
 
 # =============================================================================
