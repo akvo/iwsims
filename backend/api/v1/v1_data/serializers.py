@@ -328,6 +328,7 @@ class ListFormDataRequestSerializer(serializers.Serializer):
         queryset=Administration.objects.none(), required=False
     )
     parent = serializers.CharField(required=False)
+    search = serializers.CharField(required=False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

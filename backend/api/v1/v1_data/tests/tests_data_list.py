@@ -100,3 +100,111 @@ class FormDataListTestCase(TestCase, ProfileTestHelperMixin):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertGreater(data["total"], 0)
+
+    def test_form_data_list_search_by_name(self):
+        """Test that the form data list can be searched by name."""
+        # Create a data entry with a specific name for searching
+        search_data = self.form.form_form_data.create(
+            name="UniqueSearchableName123",
+            administration=self.data.administration,
+            geo=self.data.geo,
+            created_by=self.user,
+            updated_by=self.user,
+            is_pending=False,
+            is_draft=False,
+        )
+        add_fake_answers(search_data)
+        search_data.name = "UniqueSearchable"
+        search_data.save()
+
+        # First verify the data exists without search filter
+        response = self.client.get(
+            f"/api/v1/form-data/{self.form.id}",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        all_ids = [d["id"] for d in data["data"]]
+        self.assertIn(search_data.id, all_ids)
+
+        # Now test search functionality
+        response = self.client.get(
+            f"/api/v1/form-data/{self.form.id}?search=UniqueSearchable",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["total"], 1)
+        self.assertEqual(data["data"][0]["id"], search_data.id)
+
+    def test_form_data_list_search_case_insensitive(self):
+        """Test that the search is case-insensitive."""
+        search_data = self.form.form_form_data.create(
+            name="CaseSensitiveTest",
+            administration=self.data.administration,
+            geo=self.data.geo,
+            created_by=self.user,
+            updated_by=self.user,
+            is_pending=False,
+            is_draft=False,
+        )
+        add_fake_answers(search_data)
+        search_data.name = "CaseSensitiveTest"
+        search_data.save()
+
+        # Search with lowercase
+        response = self.client.get(
+            f"/api/v1/form-data/{self.form.id}?search=casesensitivetest",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["total"], 1)
+        self.assertEqual(data["data"][0]["id"], search_data.id)
+
+        # Search with uppercase
+        response = self.client.get(
+            f"/api/v1/form-data/{self.form.id}?search=CASESENSITIVETEST",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["total"], 1)
+        self.assertEqual(data["data"][0]["id"], search_data.id)
+
+    def test_form_data_list_search_no_results(self):
+        """Test that search returns empty results when no match."""
+        response = self.client.get(
+            f"/api/v1/form-data/{self.form.id}?search=NonExistentName12345",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["total"], 0)
+        self.assertEqual(data["data"], [])
+
+    def test_form_data_list_search_combined_with_administration(self):
+        """Test that search can be combined with administration filter."""
+        search_data = self.form.form_form_data.create(
+            name="CombinedFilterTest",
+            administration=self.data.administration,
+            geo=self.data.geo,
+            created_by=self.user,
+            updated_by=self.user,
+            is_pending=False,
+            is_draft=False,
+        )
+        add_fake_answers(search_data)
+        search_data.name = "CombinedFilter"
+        search_data.save()
+        adm = self.data.administration
+
+        response = self.client.get(
+            f"/api/v1/form-data/{self.form.id}"
+            f"?search=CombinedFilter&administration={adm.id}",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["total"], 1)
+        self.assertEqual(data["data"][0]["id"], search_data.id)

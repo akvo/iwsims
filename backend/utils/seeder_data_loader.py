@@ -9,7 +9,6 @@ import os
 from typing import Dict, Optional, Tuple
 
 import pandas as pd
-from django.db import transaction
 
 from api.v1.v1_forms.models import Questions
 from api.v1.v1_profile.models import Administration
@@ -58,11 +57,12 @@ def load_and_prepare_data(
         if parent_df is not None:
             parent_df = parent_df.head(config.limit)
         if child_df is not None and parent_df is not None:
-            # Only include child rows for the limited parent datapoints
-            # to avoid skipping child data for parents beyond the first N rows
-            parent_datapoints = parent_df[CsvColumns.DATAPOINT_ID].unique()
-            child_df = child_df[child_df[CsvColumns.DATAPOINT_ID].isin(
-                parent_datapoints
+            # Only include child rows for the limited parent identifiers (uuid)
+            # We use identifier because children share the same identifier
+            # as their parent registration in Akvo Flow
+            parent_identifiers = parent_df[CsvColumns.IDENTIFIER].unique()
+            child_df = child_df[child_df[CsvColumns.IDENTIFIER].isin(
+                parent_identifiers
             )]
 
     return parent_df, child_df
@@ -264,129 +264,3 @@ def get_administration_id(
         return int(administration_id)
 
     return None
-
-
-# =============================================================================
-# Revert Operations
-# =============================================================================
-
-
-def revert_seeded_file(
-    flow_form_id: int,
-    is_parent: bool,
-    source_dir: str,
-) -> bool:
-    """Revert seeded data from a specific file.
-
-    Args:
-        flow_form_id: Form ID
-        is_parent: Whether reverting parent or child data
-        source_dir: Source directory path
-
-    Returns:
-        True if data was reverted, False otherwise
-    """
-    csv_file = (
-        f"{flow_form_id}_child_data.csv"
-        if not is_parent
-        else f"{flow_form_id}_parent_data.csv"
-    )
-    seeded_csv_path = os.path.join(
-        source_dir,
-        FilePaths.SEEDED_DIR,
-        csv_file,
-    )
-
-    try:
-        seeded_df = pd.read_csv(seeded_csv_path, encoding="utf-8")
-    except FileNotFoundError:
-        logger.warning(f"Seeded file not found: {seeded_csv_path}")
-        return False
-    except pd.errors.EmptyDataError:
-        logger.warning(f"Seeded file is empty: {seeded_csv_path}")
-        return False
-
-    if seeded_df.empty:
-        logger.warning(f"No seeded data to revert in {csv_file}")
-        return False
-
-    # Bulk delete records
-    from api.v1.v1_data.models import FormData
-
-    mis_data_ids = seeded_df["mis_data_id"].tolist()
-    with transaction.atomic():
-        FormData.objects.filter(pk__in=mis_data_ids).delete(hard=True)
-
-    record_type = "child" if not is_parent else "parent"
-    logger.info(
-        f"Successfully reverted {len(mis_data_ids)} "
-        f"{record_type} records from {csv_file}"
-    )
-
-    # Set empty CSV to avoid re-reverting
-    empty_df = pd.DataFrame(columns=seeded_df.columns)
-    empty_df.to_csv(seeded_csv_path, index=False, encoding="utf-8")
-
-    return True
-
-
-def load_seeded_records(
-    flow_form_id: int,
-    is_parent: bool,
-    source_dir: str,
-) -> Dict[int, int]:
-    """Load existing seeded records from CSV file.
-
-    Args:
-        flow_form_id: Flow form ID
-        is_parent: Whether loading parent or child data
-        source_dir: Source directory path
-
-    Returns:
-        Dictionary mapping flow_data_id to mis_data_id
-    """
-    csv_file = (
-        f"{flow_form_id}_parent_data.csv"
-        if is_parent
-        else f"{flow_form_id}_child_data.csv"
-    )
-    seeded_csv_path = os.path.join(
-        source_dir,
-        FilePaths.SEEDED_DIR,
-        csv_file,
-    )
-
-    try:
-        seeded_df = pd.read_csv(seeded_csv_path, encoding="utf-8")
-        if seeded_df.empty:
-            logger.info(
-                f"No existing seeded records in {csv_file}"
-            )
-            return {}
-
-        seeded_records = {
-            int(row["flow_data_id"]): int(row["mis_data_id"])
-            for _, row in seeded_df.iterrows()
-        }
-        logger.info(
-            f"Loaded {len(seeded_records)} existing "
-            f"{'parent' if is_parent else 'child'} records "
-            f"from {csv_file}"
-        )
-        return seeded_records
-    except FileNotFoundError:
-        logger.info(
-            f"Seeded file not found: {seeded_csv_path}"
-        )
-        return {}
-    except pd.errors.EmptyDataError:
-        logger.info(
-            f"Seeded file is empty: {seeded_csv_path}"
-        )
-        return {}
-    except KeyError as e:
-        logger.error(f"CSV structure error: {e}")
-        return {}
-    except Exception as e:
-        logger.error(f"Error loading seeded records: {e}")
-        return {}

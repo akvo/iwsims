@@ -256,5 +256,6 @@ class NonQuestionColumnsTestCase(TestCase):
 
     def test_non_question_columns_count(self):
         """Test the count of non-question columns."""
-        # Should contain 9 columns
-        self.assertEqual(len(NON_QUESTION_COLUMNS), 9)
+        # Should contain 10 columns
+        # (9 original + 'success' for seeder tracking)
+        self.assertEqual(len(NON_QUESTION_COLUMNS), 10)

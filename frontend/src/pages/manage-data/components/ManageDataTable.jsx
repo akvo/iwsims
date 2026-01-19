@@ -10,6 +10,7 @@ const ManageDataTable = ({
   selectedRowKeys,
   setSelectedRowKeys,
   formIdFromUrl = null,
+  search = "",
 }) => {
   const [loading, setLoading] = useState(false);
   const [dataset, setDataset] = useState([]);
@@ -101,6 +102,9 @@ const ManageDataTable = ({
       if (selectedAdministration?.id) {
         url += `&administration=${selectedAdministration.id}`;
       }
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
       if (advancedFilters && advancedFilters.length) {
         url = generateAdvanceFilterURL(advancedFilters, url);
       }
@@ -128,6 +132,7 @@ const ManageDataTable = ({
     advancedFilters,
     updateRecord,
     formIdFromUrl,
+    search,
   ]);
 
   useEffect(() => {
@@ -147,6 +152,11 @@ const ManageDataTable = ({
       unsubscribe();
     };
   }, [setSelectedRowKeys]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setUpdateRecord(true);
+  }, [search]);
 
   return (
     <div>

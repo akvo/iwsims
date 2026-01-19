@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
 from django.conf import settings
+from api.v1.v1_forms.models import Forms
+from mis.settings import STORAGE_PATH
 
 if TYPE_CHECKING:
     from api.v1.v1_users.models import SystemUser
@@ -58,9 +60,9 @@ class ConfigurationError(SeedingError):
 class FilePaths:
     """File path constants."""
 
-    OUTPUT_DIR = "output"
+    OUTPUT_DIR = "data"
     SEEDED_DIR = "seeded"
-    SOURCE_DIR = "source/akvo-flow"
+    SOURCE_DIR = "storage/akvo-flow"
     ADMINISTRATION_MAPPING = "administration_mapping.csv"
 
 
@@ -102,7 +104,10 @@ NON_QUESTION_COLUMNS = [
     CsvColumns.ADMINISTRATION,
     CsvColumns.GEO,
     CsvColumns.PARENT,
+    "success",  # Added by seeder to track insertion status
 ]
+
+FLOW_PREFIX = "FLOW-"
 
 
 # =============================================================================
@@ -123,8 +128,9 @@ class SeederConfig:
 
     def __post_init__(self):
         if self.source_dir is None:
+            default_source_dir = os.path.join(STORAGE_PATH, "akvo-flow")
             self.source_dir = getattr(
-                settings, "FLOW_SOURCE_DIR", "source/akvo-flow"
+                settings, "FLOW_SOURCE_DIR", default_source_dir
             )
 
 
@@ -220,3 +226,23 @@ def get_user(email: str) -> "SystemUser":
     if not user:
         raise ValidationError(f"User with email {email} not found")
     return user
+
+
+def get_form_by_flow_id(flow_form_id: int) -> Forms:
+    flow_ids = {
+        "8520967": 1749634736797,
+        "17260923": 1748903240763,
+        "27040920": 1749611049520,
+        "1520924": 1749623934933,
+        "5530933": 1749623934933,
+        "2490944": 1749621221728,
+    }
+    if str(flow_form_id) not in flow_ids:
+        raise ValidationError(
+            f"Flow form ID {flow_form_id} not mapped to any form"
+        )
+    form_id = flow_ids[str(flow_form_id)]
+    form = Forms.objects.filter(id=form_id).first()
+    if not form:
+        raise ValidationError(f"Form with ID {form_id} not found")
+    return form
