@@ -1,12 +1,19 @@
 flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
 2490944,Location of Village,Who is the project Implementing agency/agencies?,1038600921,,,,,68.42,none,none,
-2490944,Location of Village,Inspection Date,20050922,1749621962296,Project Info,Inspection Date,1749621962298,100.0,high,text_similarity,1001
-2490944,Location of Village,Are you able to take the sample?,2500944,1749621962296,Project Info,Are you able to take the sample?,1749622785185,100.0,high,text_similarity,1004
-2490944,Location of Village,Proposed Completion Date?,2500963,1749621962296,Project Info,Proposed Completion Date?,1749622695675,100.0,high,text_similarity,1002
-2490944,Location of Village,What is the Faecl Coliform Count?,349560987,1749621962296,Project Info,What is the Fecal Coliform Count?,1749623074194,96.97,high,text_similarity,1013
-2490944,Location of Village,E.coli Level using CBT?,383580938,1749621962296,Project Info,E.coli Level using CBT?,1749622982588,100.0,high,text_similarity,1008
-2490944,Location of Village,What is the Total Coliform count,389690950,1749621962296,Project Info,What is the Total Coliform count?,1749623024122,100.0,high,text_similarity,1012
-2490944,Location of Village,What is the Turbidity in NTU?,402300959,1749621962296,Project Info,What is the Turbidity in NTU?,1749623109418,100.0,high,text_similarity,1014
+2490944,Location of Village,Inspection Date,20050922,1749621962296,Project Info,"Project Info |
+Inspection Date",1749621962298,100.0,high,text_similarity,1001
+2490944,Location of Village,Are you able to take the sample?,2500944,1749621962296,Project Info,"Project Info |
+Are you able to take the sample?",1749622785185,100.0,high,text_similarity,1004
+2490944,Location of Village,Proposed Completion Date?,2500963,1749621962296,Project Info,"Project Info |
+Proposed Completion Date?",1749622695675,100.0,high,text_similarity,1002
+2490944,Location of Village,What is the Faecl Coliform Count?,349560987,1749621962296,Project Info,"Project Info |
+What is the Fecal Coliform Count?",1749623074194,96.97,high,text_similarity,1013
+2490944,Location of Village,E.coli Level using CBT?,383580938,1749621962296,Project Info,"Project Info |
+E.coli Level using CBT?",1749622982588,100.0,high,text_similarity,1008
+2490944,Location of Village,What is the Total Coliform count,389690950,1749621962296,Project Info,"Project Info |
+What is the Total Coliform count?",1749623024122,100.0,high,text_similarity,1012
+2490944,Location of Village,What is the Turbidity in NTU?,402300959,1749621962296,Project Info,"Project Info |
+What is the Turbidity in NTU?",1749623109418,100.0,high,text_similarity,1014
 2490944,Location of Village,H2S contamination Level?,405990957,,,,,58.82,none,none,
 2490944,Location of Village,Locality Plan,4420942,,,,,61.54,none,none,
 2490944,Location of Village,Which Division-Province-Tikina,4440929,,,,,53.85,none,none,
@@ -14,27 +21,41 @@ flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_i
 2490944,Location of Village,Construction Start Date?,4440948,,,,,70.83,none,none,
 2490944,Location of Village,Project Background,5490943,,,,,61.11,none,none,
 2490944,Location of Village,Are you able to visit all construction sites?,5706163895140352,,,,,71.43,none,none,
-2490944,Location of Village,Water Quality Test Conducted,7450933,1749621962296,Project Info,Water Quality Test Conducted,1749622849604,100.0,high,text_similarity,1006
-2490944,Location of Village,GPS Location,9510944,1749621962296,Rainwater Harvesting Tanks,GPS Location of the Tank,1723459240011,100.0,high,text_similarity,2001
+2490944,Location of Village,Water Quality Test Conducted,7450933,1749621962296,Project Info,"Project Info |
+Water Quality Test Conducted",1749622849604,100.0,high,text_similarity,1006
+2490944,Location of Village,GPS Location,9510944,1749621962296,Rainwater Harvesting Tanks,"Rainwater Harvesting Tanks |
+GPS Location of the Tank",1723459240011,100.0,high,text_similarity,2001
 2490944,Location of Village,WSMP Submitted?,9550937,,,,,54.55,none,none,
-2490944,Project Scope,What percentage of project is complete?,1034581042,1749621962296,Final Comments,What percentage of project is complete?,1849622785212,100.0,high,text_similarity,26004
+2490944,Project Scope,What percentage of project is complete?,1034581042,1749621962296,Final Comments,"Final Comments |
+What percentage of project is complete?",1849622785212,100.0,high,text_similarity,26004
 2490944,Project Scope,Construction of New Reservoir,1540937,,,,,79.25,none,none,
-2490944,Project Scope,Type of Water Source?,1550939,1749621962296,Project Info,Type of Water Source?,1749621374500,100.0,high,text_similarity,1019
-2490944,Project Scope,Installation of Desalination Plant?,2500950,1749621962296,Desalination Inspection,Overall Implementation of Desalination Plant,1749622163234,90.62,medium,text_similarity,15018
-2490944,Project Scope,Installation of Rainwater Harvesting System?,3550937,1749621962296,Rainwater Harvesting Tanks,Installation of Communal Rainwater Harvesting System,1723459240022,82.67,low,text_similarity,2012
+2490944,Project Scope,Type of Water Source?,1550939,1749621962296,Project Info,"Project Info |
+Type of Water Source?",1749621374500,100.0,high,text_similarity,1019
+2490944,Project Scope,Installation of Desalination Plant?,2500950,1749621962296,Desalination Inspection,"Desalination Inspection |
+Overall Implementation of Desalination Plant",1749622163234,90.62,medium,text_similarity,15018
+2490944,Project Scope,Installation of Rainwater Harvesting System?,3550937,1749621962296,Rainwater Harvesting Tanks,"Rainwater Harvesting Tanks |
+Installation of Communal Rainwater Harvesting System",1723459240022,82.67,low,text_similarity,2012
 2490944,Project Scope,Installation of Pump system?,5490949,,,,,77.55,none,none,
-2490944,Project Scope,Installation of showers,5530944,1749621962296,Rainwater Harvesting Tanks,Installation of Household Rainwater Harvesting System,1723459250020,88.37,medium,text_similarity,2023
+2490944,Project Scope,Installation of showers,5530944,1749621962296,Rainwater Harvesting Tanks,"Rainwater Harvesting Tanks |
+Installation of Household Rainwater Harvesting System",1723459250020,88.37,medium,text_similarity,2023
 2490944,Project Scope,Installation of Air valves,6520939,,,,,76.19,none,none,
-2490944,Project Scope,Installation of Taps,8510930,1749621962296,Rainwater Harvesting Tanks,Installation of Communal Rainwater Harvesting System,1723459240022,88.89,medium,text_similarity,2012
-2490944,Project Scope,Installation of pipes?,9520928,1749621962296,Rainwater Harvesting Tanks,Installation of Communal Rainwater Harvesting System,1723459240022,84.21,low,text_similarity,2012
+2490944,Project Scope,Installation of Taps,8510930,1749621962296,Rainwater Harvesting Tanks,"Rainwater Harvesting Tanks |
+Installation of Communal Rainwater Harvesting System",1723459240022,88.89,medium,text_similarity,2012
+2490944,Project Scope,Installation of pipes?,9520928,1749621962296,Rainwater Harvesting Tanks,"Rainwater Harvesting Tanks |
+Installation of Communal Rainwater Harvesting System",1723459240022,84.21,low,text_similarity,2012
 2490944,Project Scope,Construction of New Water Catchment/Dam?,9540945,,,,,64.52,none,none,
 2490944,Project Scope,Sizes of  pipes?,9540949,,,,,76.92,none,none,
 2490944,Project Scope,Construction of borehole?,9550938,,,,,75.0,none,none,
-2490944,Project Scope,Installation of Washouts,9550939,1749621962296,Rainwater Harvesting Tanks,Installation of Household Rainwater Harvesting System,1723459250020,90.91,medium,text_similarity,2023
-2490944,Projects Photos,Take Photos,4440931,1749621962296,Pumps Inspection,Photo,1749622197890,100.0,high,text_similarity,6005
-2490944,Projects Photos,Signature of Implementing Agency Representative,5500942,1749621962296,Final Comments,Signature of Implementing Agency Representative,1749623674045,100.0,high,text_similarity,26005
-2490944,Projects Photos,Signature of DWS Officer,9510946,1749621962296,Final Comments,Signature of DWS Officer,1749623691256,100.0,high,text_similarity,26007
-2490944,Projects Photos,Final Comments and Recommendations,9530935,1749621962296,Final Comments,Final Comments and Recommendations,1749623648243,100.0,high,text_similarity,26001
+2490944,Project Scope,Installation of Washouts,9550939,1749621962296,Rainwater Harvesting Tanks,"Rainwater Harvesting Tanks |
+Installation of Household Rainwater Harvesting System",1723459250020,90.91,medium,text_similarity,2023
+2490944,Projects Photos,Take Photos,4440931,1749621962296,Pumps Inspection,"Pumps Inspection |
+Photo",1749622197890,100.0,high,text_similarity,6005
+2490944,Projects Photos,Signature of Implementing Agency Representative,5500942,1749621962296,Final Comments,"Final Comments |
+Signature of Implementing Agency Representative",1749623674045,100.0,high,text_similarity,26005
+2490944,Projects Photos,Signature of DWS Officer,9510946,1749621962296,Final Comments,"Final Comments |
+Signature of DWS Officer",1749623691256,100.0,high,text_similarity,26007
+2490944,Projects Photos,Final Comments and Recommendations,9530935,1749621962296,Final Comments,"Final Comments |
+Final Comments and Recommendations",1749623648243,100.0,high,text_similarity,26001
 2490944,Location of Village,What is the pH level?,379720947,1749621962296,Project Info,"Project Info |
 PH - 4500-H+B (APHA Method Code)",1723459200024,66.67,none,manual,1016
 2490944,Location of Village,What is the salinity in ppt?,389680956,1749621962296,Project Info,"Project Info |
