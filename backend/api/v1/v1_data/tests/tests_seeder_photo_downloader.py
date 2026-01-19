@@ -24,7 +24,7 @@ class PhotoPreDownloaderPathsTestCase(TestCase):
         path = downloader.get_success_log_path()
 
         expected = os.path.join(
-            STORAGE_PATH, "akvo-flow", "photo_downloads_123.csv"
+            STORAGE_PATH, "akvo-flow", "123_photo_downloads.csv"
         )
         self.assertEqual(path, expected)
 
@@ -88,7 +88,7 @@ class PhotoPreDownloaderLoadLogTestCase(TestCase):
                 f.write(b'fake_png')
 
             # Create CSV log
-            log_path = os.path.join(tmpdir, 'photo_downloads_123.csv')
+            log_path = os.path.join(tmpdir, '123_photo_downloads.csv')
             with open(log_path, 'w') as f:
                 f.write("url,local_path,downloaded_at\n")
                 f.write(
@@ -142,7 +142,7 @@ class PhotoPreDownloaderLoadLogTestCase(TestCase):
                 f.write(b'fake_jpg')
 
             # CSV has two entries but only one file exists
-            log_path = os.path.join(tmpdir, 'photo_downloads_123.csv')
+            log_path = os.path.join(tmpdir, '123_photo_downloads.csv')
             with open(log_path, 'w') as f:
                 f.write("url,local_path,downloaded_at\n")
                 f.write(
