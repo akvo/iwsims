@@ -128,20 +128,23 @@ def process_child_data_for_parent(
     """Process all child rows for a given parent using generic method.
 
     Args:
-        parent_row: Parent row containing datapoint_id
+        parent_row: Parent row containing identifier (uuid)
         config: SeederConfig instance
         parent_form_data: Parent FormData instance
-        child_data_groups: Grouped child dataframe
+        child_data_groups: Grouped child dataframe (grouped by identifier)
         child_questions: Questions for child data
         existing_records: Optional[List[FormData]] = None
 
     Returns:
         List of seeded child records
     """
-    parent_datapoint_id = parent_row[CsvColumns.DATAPOINT_ID]
+    # Use identifier (uuid) to match children to parent
+    # In Akvo Flow, monitoring submissions share the same identifier as
+    # their parent registration
+    parent_identifier = parent_row[CsvColumns.IDENTIFIER]
 
     try:
-        child_rows = child_data_groups.get_group(parent_datapoint_id)
+        child_rows = child_data_groups.get_group(parent_identifier)
     except KeyError:
         # No child rows for this parent
         return [], []
