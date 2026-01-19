@@ -41,7 +41,7 @@ Create a **separate management command** `predownload_photos` that:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  Step 1: python manage.py predownload_photos --form_id=123      │
+│  Step 1: python manage.py predownload_photos --form=123         │
 │                                                                 │
 │  - Load CSV data                                                │
 │  - Extract photo URLs with context (datapoint_id, question_id)  │
@@ -52,7 +52,7 @@ Create a **separate management command** `predownload_photos` that:
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  Step 2: python manage.py flow_data_seeder --form_id=123        │
+│  Step 2: python manage.py flow_data_seeder --form=123           │
 │                                                                 │
 │  - Load success log into AnswerProcessor.photo_url_map          │
 │  - Process rows using local paths from map                      │
@@ -61,7 +61,7 @@ Create a **separate management command** `predownload_photos` that:
 
 ## Output Files
 
-### Success Log: `storage/akvo-flow/photo_downloads_{form_id}.csv`
+### Success Log: `storage/akvo-flow/{form_id}_photo_downloads.csv`
 ```csv
 url,local_path,downloaded_at
 https://example.com/photo1.jpg,/images/seeder_12345_100.jpg,2026-01-16T10:30:00
@@ -119,7 +119,7 @@ class PhotoPreDownloader:
 
     def get_success_log_path(self) -> str:
         return os.path.join(
-            self.log_dir, f"photo_downloads_{self.form_id}.csv"
+            self.log_dir, f"{self.form_id}_photo_downloads.csv"
         )
 
     def get_failed_log_path(self) -> str:
@@ -262,13 +262,13 @@ class Command(BaseCommand):
         workers = options['workers']
 
         # Reuse SeederConfig (source_dir defaults to storage/akvo-flow)
-        config = SeederConfig(flow_form_id=form_id)
+        config = SeederConfig(flow_form=form_id)
 
         # 1. Load CSV data (parent + child) from config.source_dir
         # 2. Get photo questions for the form
         # 3. Extract URLs with context (datapoint_id, mis_form_id, etc.)
         # 4. Initialize downloader with worker count
-        downloader = PhotoPreDownloader(form_id=form_id, workers=workers)
+        downloader = PhotoPreDownloader(form=form_id, workers=workers)
 
         # 5. Load existing success log (skip already downloaded)
         existing = downloader.load_success_log()
@@ -356,11 +356,11 @@ class PhotoPreDownloaderPathsTestCase(TestCase):
         from mis.settings import STORAGE_PATH
         import os
 
-        downloader = PhotoPreDownloader(form_id=123)
+        downloader = PhotoPreDownloader(form=123)
         path = downloader.get_success_log_path()
 
         expected = os.path.join(
-            STORAGE_PATH, "akvo-flow", "photo_downloads_123.csv"
+            STORAGE_PATH, "akvo-flow", "123_photo_downloads.csv"
         )
         self.assertEqual(path, expected)
 
@@ -370,7 +370,7 @@ class PhotoPreDownloaderPathsTestCase(TestCase):
         from mis.settings import STORAGE_PATH
         import os
 
-        downloader = PhotoPreDownloader(form_id=456)
+        downloader = PhotoPreDownloader(form=456)
         path = downloader.get_failed_log_path()
 
         expected = os.path.join(
@@ -386,7 +386,7 @@ class PhotoPreDownloaderLoadLogTestCase(TestCase):
     def test_load_success_log_returns_empty_dict_when_no_file(self):
         """Should return empty dict when log file doesn't exist."""
         from utils.seeder_photo_downloader import PhotoPreDownloader
-        downloader = PhotoPreDownloader(form_id=99999)
+        downloader = PhotoPreDownloader(form=99999)
 
         result = downloader.load_success_log()
 
@@ -406,7 +406,7 @@ class PhotoPreDownloaderLoadLogTestCase(TestCase):
             temp_path = f.name
 
         try:
-            downloader = PhotoPreDownloader(form_id=123)
+            downloader = PhotoPreDownloader(form=123)
             with patch.object(
                 downloader, 'get_success_log_path', return_value=temp_path
             ):
@@ -491,7 +491,7 @@ class PhotoPreDownloaderDownloadTestCase(TestCase):
         """Should skip URLs already in success log."""
         from utils.seeder_photo_downloader import PhotoPreDownloader
 
-        downloader = PhotoPreDownloader(form_id=123, workers=2)
+        downloader = PhotoPreDownloader(form=123, workers=2)
 
         entries = [
             {'url': 'https://example.com/a.jpg', 'datapoint_id': 1,
@@ -520,7 +520,7 @@ class PhotoPreDownloaderDownloadTestCase(TestCase):
         """Should track failed downloads."""
         from utils.seeder_photo_downloader import PhotoPreDownloader
 
-        downloader = PhotoPreDownloader(form_id=123, workers=2)
+        downloader = PhotoPreDownloader(form=123, workers=2)
 
         entries = [
             {'url': 'https://example.com/broken.jpg', 'datapoint_id': 1,
@@ -545,7 +545,7 @@ class PhotoPreDownloaderDownloadTestCase(TestCase):
             return b'\xff\xd8\xff'  # JPEG magic bytes
 
         mock_download.side_effect = slow_download
-        downloader = PhotoPreDownloader(form_id=123, workers=5)
+        downloader = PhotoPreDownloader(form=123, workers=5)
 
         entries = [
             {'url': f'https://example.com/photo{i}.jpg', 'datapoint_id': i,
@@ -570,7 +570,7 @@ class PhotoPreDownloaderDownloadTestCase(TestCase):
         """Should call progress callback after each download."""
         from utils.seeder_photo_downloader import PhotoPreDownloader
 
-        downloader = PhotoPreDownloader(form_id=123, workers=1)
+        downloader = PhotoPreDownloader(form=123, workers=1)
         progress_calls = []
 
         def track_progress(done, total):
@@ -611,7 +611,7 @@ class PhotoPreDownloaderLogWritingTestCase(TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             log_path = os.path.join(tmpdir, 'success.csv')
-            downloader = PhotoPreDownloader(form_id=123)
+            downloader = PhotoPreDownloader(form=123)
 
             with patch.object(
                 downloader, 'get_success_log_path', return_value=log_path
@@ -635,7 +635,7 @@ class PhotoPreDownloaderLogWritingTestCase(TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             log_path = os.path.join(tmpdir, 'failed.csv')
-            downloader = PhotoPreDownloader(form_id=123)
+            downloader = PhotoPreDownloader(form=123)
 
             entry = {
                 'url': 'https://example.com/broken.jpg',
@@ -682,13 +682,13 @@ class PhotoPreDownloaderLogWritingTestCase(TestCase):
 ### Manual Testing
 ```bash
 # Step 1: Pre-download photos (default 5 concurrent workers)
-./dc.sh exec backend python manage.py predownload_photos --form_id=123
+./dc.sh exec backend python manage.py predownload_photos --form=123
 
 # Or with custom worker count
-./dc.sh exec backend python manage.py predownload_photos --form_id=123 --workers=10
+./dc.sh exec backend python manage.py predownload_photos --form=123 --workers=10
 
 # Check output files
-cat storage/akvo-flow/photo_downloads_123.csv
+cat storage/akvo-flow/123_photo_downloads.csv
 cat storage/akvo-flow/123_predownload_photos_failed.csv
 
 # Step 2: Verify images are accessible via browser
@@ -696,10 +696,10 @@ cat storage/akvo-flow/123_predownload_photos_failed.csv
 # (Get filename from success log)
 
 # Step 3: Run seeder (uses pre-downloaded photos)
-./dc.sh exec backend python manage.py flow_data_seeder --form_id=123
+./dc.sh exec backend python manage.py flow_data_seeder --form=123
 
 # Step 4: Re-run predownload (should skip existing)
-./dc.sh exec backend python manage.py predownload_photos --form_id=123
+./dc.sh exec backend python manage.py predownload_photos --form=123
 
 # Step 5: Verify in database
 ./dc.sh exec backend python manage.py shell
