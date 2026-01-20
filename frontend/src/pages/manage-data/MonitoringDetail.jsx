@@ -164,6 +164,7 @@ const MonitoringDetail = () => {
 
   const handleChange = (e) => {
     setCurrentPage(e.current);
+    setUpdateRecord(true);
   };
 
   const handleDeleteData = () => {
