@@ -68,9 +68,6 @@ def process_data_rows(
             )
             invalid_answers.extend(row_invalid_answers)
 
-            if len(answers) == 0:
-                continue
-
             # Create child FormData
             datapoint_id = str(row[CsvColumns.DATAPOINT_ID])
             parent_pk = parent.pk if parent else None
@@ -93,13 +90,17 @@ def process_data_rows(
             if not form_data:
                 continue
 
-            bulk_create_answers(form_data, answers, config.user)
+            is_incomplete = True
+            if len(answers):
+                bulk_create_answers(form_data, answers, config.user)
+                is_incomplete = False
 
             seeded_records.append(
                 {
                     "flow_data_id": row[CsvColumns.DATAPOINT_ID],
                     "mis_data_id": form_data.pk,
                     "is_new": existing_record is None,
+                    "is_incomplete": is_incomplete,
                 }
             )
 
@@ -131,7 +132,7 @@ def process_child_data_for_parent(
     DataFrame and questions.
 
     Args:
-        parent_row: Parent row containing identifier (uuid)
+        parent_row: Parent row containing datapoint_id
         config: SeederConfig instance
         parent_form_data: Parent FormData instance
         child_data_groups_dict: Dict mapping form_id to grouped child dataframe
@@ -141,10 +142,10 @@ def process_child_data_for_parent(
     Returns:
         Tuple of (results_list, invalid_answers_list)
     """
-    # Use identifier (uuid) to match children to parent
-    # In Akvo Flow, monitoring submissions share the same identifier as
-    # their parent registration
-    parent_identifier = parent_row[CsvColumns.IDENTIFIER]
+    # Use parent's datapoint_id to match children to parent
+    # In Akvo Flow, monitoring submissions reference parent via
+    # the 'parent' column (parent's datapoint_id), not identifier
+    parent_datapoint_id = parent_row[CsvColumns.DATAPOINT_ID]
     all_results = []
     all_invalid = []
 
@@ -152,7 +153,7 @@ def process_child_data_for_parent(
         child_questions = child_questions_dict.get(form_id, {})
 
         try:
-            child_rows = child_data_groups.get_group(parent_identifier)
+            child_rows = child_data_groups.get_group(parent_datapoint_id)
         except KeyError:
             # No child rows for this parent in this form
             continue
@@ -209,6 +210,7 @@ def create_form_data(
     """
     try:
         geo_value = None
+        uuid_value = row[CsvColumns.IDENTIFIER]
         if CsvColumns.GEO in row and pd.notna(row[CsvColumns.GEO]):
             geo_value = [
                 float(g) for g in
@@ -216,6 +218,7 @@ def create_form_data(
             ]
         if parent and not geo_value:
             geo_value = parent.geo
+            uuid_value = parent.uuid
 
         flow_data_id = int(row[CsvColumns.DATAPOINT_ID])
 
@@ -248,7 +251,7 @@ def create_form_data(
         data = FormData.objects.create(
             id=new_data_id,
             form_id=row[CsvColumns.FORM_ID],
-            uuid=row[CsvColumns.IDENTIFIER],
+            uuid=uuid_value,
             name=dp_name,
             administration_id=administration_id,
             geo=geo_value,

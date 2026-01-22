@@ -223,11 +223,13 @@ class Command(BaseCommand):
                     child_data_dict
                 )
 
-                # Group children by identifier for each form
+                # Group children by parent datapoint_id for each form
+                # In Akvo Flow, monitoring submissions reference parent via
+                # the 'parent' column (parent's datapoint_id), not identifier
                 for form_id, child_df in child_data_dict.items():
                     if child_df is not None and not child_df.empty:
                         child_data_groups_dict[form_id] = child_df.groupby(
-                            CsvColumns.IDENTIFIER
+                            CsvColumns.PARENT
                         )
 
             parent_questions = load_questions(parent_df)
@@ -323,9 +325,12 @@ class Command(BaseCommand):
                                         CsvColumns.DATAPOINT_ID
                                     ] == result['flow_data_id']
                                 )
+                                success_value = 'Yes'
+                                if result.get('is_incomplete', False):
+                                    success_value = 'Partial'
                                 child_data_dict[child_form_id].loc[
                                     child_mask, 'success'
-                                ] = 'Yes'
+                                ] = success_value
 
                 except Exception as e:
                     self._log_error(
