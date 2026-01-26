@@ -66,7 +66,6 @@ def process_data_rows(
                 administration_id=administration_id,
                 answer_processor=answer_processor,
             )
-            invalid_answers.extend(row_invalid_answers)
 
             # Create child FormData
             datapoint_id = str(row[CsvColumns.DATAPOINT_ID])
@@ -92,8 +91,15 @@ def process_data_rows(
 
             is_incomplete = True
             if len(answers):
-                bulk_create_answers(form_data, answers, config.user)
+                # Pass row_invalid_answers to
+                # filter out records with existing answers
+                bulk_create_answers(
+                    form_data, answers, config.user, row_invalid_answers
+                )
                 is_incomplete = False
+
+            # Extend invalid_answers after filtering by bulk_create_answers
+            invalid_answers.extend(row_invalid_answers)
 
             seeded_records.append(
                 {
@@ -378,6 +384,7 @@ def bulk_create_answers(
     data: FormData,
     answer_records: List[Dict[str, Any]],
     user,
+    invalid_records: Optional[List[Dict[str, Any]]] = None,
 ):
     """Generic method to bulk create or update answer records.
 
@@ -389,17 +396,27 @@ def bulk_create_answers(
         data: FormData instance (parent or child)
         answer_records: List of answer data dictionaries
         user: User creating the answers
+        invalid_records: Optional list of invalid answers to filter.
+            Records are removed if the question already has an existing answer.
+            Expected format: {"mis_question_id": int, ...}
     """
-    if not answer_records:
-        return
-
-    AnswerModel = data.data_answer.model
-
     # Get existing answers indexed by question_id
     existing_answers = {
         answer.question_id: answer
         for answer in data.data_answer.all()
     }
+
+    # Filter out invalid_records if question already has existing answer
+    if invalid_records is not None:
+        invalid_records[:] = [
+            r for r in invalid_records
+            if r.get("mis_question_id") not in existing_answers
+        ]
+
+    if not answer_records:
+        return
+
+    AnswerModel = data.data_answer.model
 
     answers_to_create = []
     answers_to_update = []

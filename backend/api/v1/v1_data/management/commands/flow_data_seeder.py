@@ -263,8 +263,6 @@ class Command(BaseCommand):
                         answer_processor=self.answer_processor,
                     )
 
-                    invalid_answers.extend(p_invalid)
-
                     if len(p_answers) == 0:
                         continue
 
@@ -289,11 +287,17 @@ class Command(BaseCommand):
                         )
                         continue
 
+                    # Pass p_invalid to
+                    # filter out records with existing answers
                     bulk_create_answers(
                         parent_form_data,
                         p_answers,
                         config.user,
+                        p_invalid,
                     )
+                    # Extend invalid_answers after
+                    # filtering by bulk_create_answers
+                    invalid_answers.extend(p_invalid)
                     if not parent_exists:
                         total_new_parent += 1
 

@@ -486,3 +486,152 @@ class BulkCreateAnswersEdgeCasesTestCase(BaseBulkCreateAnswersTest):
 
         # Count should remain the same
         self.assertEqual(self.form_data.data_answer.count(), initial_count)
+
+
+class BulkCreateAnswersInvalidRecordsTestCase(BaseBulkCreateAnswersTest):
+    """Test suite for invalid_records filtering in bulk_create_answers."""
+
+    def test_filters_invalid_records_with_existing_answers(self):
+        """
+        Test that invalid_records are
+        filtered when question has existing answer."""
+        questions = list(self.questions[:3])
+
+        # Create existing answer for question 1
+        Answers.objects.create(
+            data=self.form_data,
+            question=questions[0],
+            name="Existing Answer",
+            value=None,
+            options=None,
+            created_by=self.user,
+        )
+
+        # Invalid records include questions 1 (has existing) and
+        # 2 (no existing)
+        invalid_records = [
+            {
+                "mis_form_id": self.parent_form.pk,
+                "mis_question_id": questions[0].pk,
+                "mis_question_type": "number",
+                "flow_data_id": 12345,
+                "value": "invalid_value_1",
+            },
+            {
+                "mis_form_id": self.parent_form.pk,
+                "mis_question_id": questions[1].pk,
+                "mis_question_type": "number",
+                "flow_data_id": 12345,
+                "value": "invalid_value_2",
+            },
+        ]
+
+        answer_records = [
+            {
+                "question_id": questions[2].pk,
+                "name": "New Answer",
+                "value": None,
+                "options": None,
+            },
+        ]
+
+        bulk_create_answers(
+            self.form_data, answer_records, self.user, invalid_records
+        )
+
+        # Invalid record for question 1 should be removed (has existing answer)
+        # Invalid record for question 2 should remain (no existing answer)
+        self.assertEqual(len(invalid_records), 1)
+        self.assertEqual(
+            invalid_records[0]["mis_question_id"],
+            questions[1].pk
+        )
+
+    def test_invalid_records_unchanged_when_no_existing_answers(self):
+        """Test that invalid_records unchanged when no existing answers."""
+        questions = list(self.questions[:2])
+
+        invalid_records = [
+            {
+                "mis_form_id": self.parent_form.pk,
+                "mis_question_id": questions[0].pk,
+                "mis_question_type": "number",
+                "flow_data_id": 12345,
+                "value": "invalid_value_1",
+            },
+            {
+                "mis_form_id": self.parent_form.pk,
+                "mis_question_id": questions[1].pk,
+                "mis_question_type": "option",
+                "flow_data_id": 12345,
+                "value": "invalid_value_2",
+            },
+        ]
+
+        answer_records = []
+
+        bulk_create_answers(
+            self.form_data, answer_records, self.user, invalid_records
+        )
+
+        # Both should remain since no existing answers
+        self.assertEqual(len(invalid_records), 2)
+
+    def test_all_invalid_records_filtered_when_all_have_existing(self):
+        """Test all invalid_records removed when all have existing answers."""
+        questions = list(self.questions[:2])
+
+        # Create existing answers for both questions
+        for q in questions:
+            Answers.objects.create(
+                data=self.form_data,
+                question=q,
+                name=f"Existing {q.pk}",
+                value=None,
+                options=None,
+                created_by=self.user,
+            )
+
+        invalid_records = [
+            {
+                "mis_form_id": self.parent_form.pk,
+                "mis_question_id": questions[0].pk,
+                "mis_question_type": "number",
+                "flow_data_id": 12345,
+                "value": "invalid_1",
+            },
+            {
+                "mis_form_id": self.parent_form.pk,
+                "mis_question_id": questions[1].pk,
+                "mis_question_type": "number",
+                "flow_data_id": 12345,
+                "value": "invalid_2",
+            },
+        ]
+
+        answer_records = []
+
+        bulk_create_answers(
+            self.form_data, answer_records, self.user, invalid_records
+        )
+
+        # All should be filtered out
+        self.assertEqual(len(invalid_records), 0)
+
+    def test_invalid_records_none_handled(self):
+        """Test that None invalid_records is handled gracefully."""
+        question = self.questions.first()
+
+        answer_records = [
+            {
+                "question_id": question.pk,
+                "name": "Test",
+                "value": None,
+                "options": None,
+            },
+        ]
+
+        # Should not raise exception
+        bulk_create_answers(
+            self.form_data, answer_records, self.user, None
+        )
