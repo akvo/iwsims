@@ -379,9 +379,11 @@ def bulk_create_answers(
     answer_records: List[Dict[str, Any]],
     user,
 ):
-    """Generic method to bulk create answer records.
+    """Generic method to bulk create or update answer records.
 
     Works for both parent and child FormData instances.
+    Updates existing answers instead of deleting them to preserve
+    manual input answers that are not in the seeder data.
 
     Args:
         data: FormData instance (parent or child)
@@ -391,21 +393,48 @@ def bulk_create_answers(
     if not answer_records:
         return
 
-    # Clear existing answers (if any)
-    data.data_answer.all().delete()
+    AnswerModel = data.data_answer.model
+
+    # Get existing answers indexed by question_id
+    existing_answers = {
+        answer.question_id: answer
+        for answer in data.data_answer.all()
+    }
+
+    answers_to_create = []
+    answers_to_update = []
+
+    for a in answer_records:
+        question_id = a["question_id"]
+
+        if question_id in existing_answers:
+            # Update existing answer
+            existing = existing_answers[question_id]
+            existing.value = a["value"]
+            existing.options = a["options"]
+            existing.name = a["name"]
+            existing.created_by = user
+            answers_to_update.append(existing)
+        else:
+            # Create new answer
+            answers_to_create.append(
+                AnswerModel(
+                    data=data,
+                    question_id=question_id,
+                    value=a["value"],
+                    options=a["options"],
+                    name=a["name"],
+                    created_by=user,
+                )
+            )
+
+    # Bulk update existing answers
+    if answers_to_update:
+        AnswerModel.objects.bulk_update(
+            answers_to_update,
+            fields=["value", "options", "name", "created_by"]
+        )
 
     # Bulk create new answers
-    AnswerModel = data.data_answer.model
-    data.data_answer.bulk_create(
-        [
-            AnswerModel(
-                data=data,
-                question_id=a["question_id"],
-                value=a["value"],
-                options=a["options"],
-                name=a["name"],
-                created_by=user,
-            )
-            for a in answer_records
-        ]
-    )
+    if answers_to_create:
+        data.data_answer.bulk_create(answers_to_create)
