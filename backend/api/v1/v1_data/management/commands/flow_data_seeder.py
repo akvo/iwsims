@@ -267,8 +267,14 @@ class Command(BaseCommand):
                         continue
 
                     parent_exists = next(filter(
-                        lambda er: er.id == int(
-                            parent_row[CsvColumns.DATAPOINT_ID]
+                        lambda er: (
+                            er.id == int(
+                                parent_row[CsvColumns.DATAPOINT_ID]
+                            ) or
+                            FLOW_PREFIX + str(
+                                parent_row[CsvColumns.DATAPOINT_ID]
+                            )
+                            in er.name
                         ),
                         seeded_parents
                     ), None)
