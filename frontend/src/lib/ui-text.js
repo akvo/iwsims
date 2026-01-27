@@ -846,6 +846,7 @@ const uiText = {
     nameCol: "Name",
     channelCol: "Channel",
     userCol: "User",
+    regionCol: "Region",
     mobileAppText: "Mobile App",
     webformText: "Webform",
     manageRoles: "Manage Roles",
@@ -968,6 +969,7 @@ const uiText = {
     export2ExcelError: "Unable to export data to Excel",
     downloadAppText,
     showAllQuestionsSwitch: "Show all questions",
+    totalMonitoring: "Total Monitoring",
   },
 
   de: {},

@@ -172,7 +172,7 @@ const ManageDataTable = ({
         <Table
           columns={[
             {
-              title: "Last Updated",
+              title: text.lastUpdatedCol,
               dataIndex: "updated",
               render: (cell, row) => cell || row.created,
               onCell: (record) => ({
@@ -180,7 +180,7 @@ const ManageDataTable = ({
               }),
             },
             {
-              title: "Name",
+              title: text.nameCol,
               dataIndex: "name",
               key: "name",
               filtered: true,
@@ -191,15 +191,24 @@ const ManageDataTable = ({
               }),
             },
             {
-              title: "User",
+              title: text.userCol,
               dataIndex: "created_by",
               onCell: (record) => ({
                 onClick: () => goToMonitoring(record),
               }),
             },
             {
-              title: "Region",
+              title: text.regionCol,
               dataIndex: "administration",
+              onCell: (record) => ({
+                onClick: () => goToMonitoring(record),
+              }),
+            },
+            {
+              title: text.totalMonitoring,
+              dataIndex: "total_children",
+              width: 120,
+              sorter: (a, b) => a.total_children - b.total_children,
               onCell: (record) => ({
                 onClick: () => goToMonitoring(record),
               }),
