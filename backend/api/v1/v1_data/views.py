@@ -112,6 +112,26 @@ class FormDataAddListView(APIView):
                 location=OpenApiParameter.QUERY,
                 description="Case-insensitive search on FormData name",
             ),
+            OpenApiParameter(
+                name="sort_by",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description=(
+                    "Field to sort by (created, updated, name, total_children)"
+                ),
+                enum=["created", "updated", "name", "total_children"],
+            ),
+            OpenApiParameter(
+                name="sort_type",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description=(
+                    "Sort direction (ascend, descend). Default: descend"
+                ),
+                enum=["ascend", "descend"],
+            ),
         ],
         summary="To get list of form data",
     )
@@ -131,16 +151,23 @@ class FormDataAddListView(APIView):
 
         parent = serializer.validated_data.get("parent")
         search = serializer.validated_data.get("search")
+        sort_by = serializer.validated_data.get("sort_by", "created")
+        sort_type = serializer.validated_data.get("sort_type", "descend")
+        order_by = f"-{sort_by}" if sort_type == "descend" else sort_by
+
         if parent:
             # Only get the children data
             queryset = form.form_form_data.filter(
                 uuid=parent,
                 is_pending=False,
                 is_draft=False,
-            ).annotate(total_children=Count('children'))
+            ).annotate(total_children=Count(
+                'children',
+                filter=Q(children__is_pending=False, children__is_draft=False)
+            ))
             if search:
                 queryset = queryset.filter(name__icontains=search)
-            queryset = queryset.order_by("-created")
+            queryset = queryset.order_by(order_by)
             instance = paginator.paginate_queryset(queryset, request)
             total = queryset.count()
             data = {
@@ -189,11 +216,14 @@ class FormDataAddListView(APIView):
             filter_data["administration__path__startswith"] = user_path
 
         queryset = form.form_form_data.filter(**filter_data).annotate(
-            total_children=Count('children')
+            total_children=Count(
+                'children',
+                filter=Q(children__is_pending=False, children__is_draft=False)
+            )
         )
         if search:
             queryset = queryset.filter(name__icontains=search)
-        queryset = queryset.order_by("-created")
+        queryset = queryset.order_by(order_by)
 
         instance = paginator.paginate_queryset(queryset, request)
         total = queryset.count()
@@ -741,7 +771,10 @@ class DraftFormDataListView(APIView):
         queryset = FormData.objects_draft.filter(
             form=form,
             created_by=request.user
-        ).annotate(total_children=Count('children')).order_by("-created")
+        ).annotate(total_children=Count(
+            'children',
+            filter=Q(children__is_pending=False, children__is_draft=False)
+        )).order_by("-created")
 
         # Apply search filter if provided
         search = serializer.validated_data.get("search", None)

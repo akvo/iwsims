@@ -324,11 +324,28 @@ class FormDataSerializer(serializers.ModelSerializer):
 
 
 class ListFormDataRequestSerializer(serializers.Serializer):
+    SORT_BY_CHOICES = [
+        ("created", "created"),
+        ("updated", "updated"),
+        ("name", "name"),
+        ("total_children", "total_children"),
+    ]
+    SORT_TYPE_CHOICES = [
+        ("ascend", "ascend"),
+        ("descend", "descend"),
+    ]
+
     administration = CustomPrimaryKeyRelatedField(
         queryset=Administration.objects.none(), required=False
     )
     parent = serializers.CharField(required=False)
     search = serializers.CharField(required=False)
+    sort_by = serializers.ChoiceField(
+        choices=SORT_BY_CHOICES, required=False, default="created"
+    )
+    sort_type = serializers.ChoiceField(
+        choices=SORT_TYPE_CHOICES, required=False, default="descend"
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

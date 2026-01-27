@@ -18,6 +18,8 @@ const ManageDataTable = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [updateRecord, setUpdateRecord] = useState(true);
   const [activeFilter, setActiveFilter] = useState(null);
+  const [sortBy, setSortBy] = useState("created");
+  const [sortType, setSortType] = useState(null);
 
   const navigate = useNavigate();
 
@@ -48,9 +50,20 @@ const ManageDataTable = ({
     );
   }, [selectedAdministration, administration, user?.administration?.id]);
 
-  const handleChange = (e) => {
+  const handleChange = (e, _, sorter) => {
+    const newPage = e.current;
+    const newSortBy = sorter?.field || "created";
+    const newSortType = sorter?.order || "descend";
+
+    // Check if sorting changed
+    if (newSortBy !== sortBy || newSortType !== sortType) {
+      setSortBy(newSortBy);
+      setSortType(newSortType);
+      setCurrentPage(1);
+    } else if (newPage !== currentPage) {
+      setCurrentPage(newPage);
+    }
     setUpdateRecord(true);
-    setCurrentPage(e.current);
   };
 
   const onSelectTableRow = ({ id }) => {
@@ -108,6 +121,12 @@ const ManageDataTable = ({
       if (advancedFilters && advancedFilters.length) {
         url = generateAdvanceFilterURL(advancedFilters, url);
       }
+      if (sortBy) {
+        url += `&sort_by=${sortBy}`;
+      }
+      if (sortType) {
+        url += `&sort_type=${sortType}`;
+      }
       api
         .get(url)
         .then((res) => {
@@ -133,6 +152,8 @@ const ManageDataTable = ({
     updateRecord,
     formIdFromUrl,
     search,
+    sortBy,
+    sortType,
   ]);
 
   useEffect(() => {
@@ -208,7 +229,9 @@ const ManageDataTable = ({
               title: text.totalMonitoring,
               dataIndex: "total_children",
               width: 120,
-              sorter: (a, b) => a.total_children - b.total_children,
+              sorter: true,
+              sortDirections: ["descend", "ascend"],
+              sortOrder: sortBy === "total_children" ? sortType : null,
               onCell: (record) => ({
                 onClick: () => goToMonitoring(record),
               }),
