@@ -344,6 +344,7 @@ class ListFormDataSerializer(serializers.ModelSerializer):
     updated = serializers.SerializerMethodField()
     administration = serializers.SerializerMethodField()
     pending_data = serializers.SerializerMethodField()
+    total_children = serializers.SerializerMethodField()
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_created_by(self, instance: FormData):
@@ -386,6 +387,10 @@ class ListFormDataSerializer(serializers.ModelSerializer):
     def get_administration(self, instance: FormData):
         return " - ".join(instance.administration.full_name.split("-")[1:])
 
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_total_children(self, instance: FormData):
+        return getattr(instance, "total_children", 0)
+
     class Meta:
         model = FormData
         fields = [
@@ -401,6 +406,7 @@ class ListFormDataSerializer(serializers.ModelSerializer):
             "updated",
             "pending_data",
             "submitter",
+            "total_children",
         ]
 
 
