@@ -719,8 +719,7 @@
           "options": [
             { "value": "yes", "label": "Yes", "id": 1748910987339, "order": 1 },
             { "value": "no", "label": "No", "id": 1748910987340, "order": 2 }
-          ],
-          "dependency": [{ "id": 1748910860630, "options": ["yes"] }]
+          ]
         },
         {
           "id": 1748911015414,
@@ -744,8 +743,7 @@
           "options": [
             { "value": "yes", "label": "Yes", "id": 1748911121191, "order": 1 },
             { "value": "no", "label": "No", "id": 1748911121192, "order": 2 }
-          ],
-          "dependency": [{ "id": 1748910968346, "options": ["yes"] }]
+          ]
         },
         {
           "id": 1748911146330,
@@ -2891,6 +2889,18 @@
               "label": "Chloride",
               "id": 1748917801456,
               "order": 17
+            },
+            {
+              "value": "oil_and_grease",
+              "label": "Oil and Grease",
+              "id": 1748917801457,
+              "order": 18
+            },
+            {
+              "value": "total_sulphides",
+              "label": "Total Sulphides",
+              "id": 1748917801458,
+              "order": 19
             }
           ],
           "dependency": [
@@ -3148,7 +3158,10 @@
           "required": true,
           "meta": false,
           "rule": { "allowDecimal": true },
-          "dependency": [{ "id": 1748917751258, "options": ["lab_test"] }]
+          "dependency": [
+            { "id": 1748917751258, "options": ["lab_test"] },
+            { "id": 1748917792041, "options": ["oil_and_grease"] }
+          ]
         },
         {
           "id": 1754995400706,
@@ -3159,7 +3172,10 @@
           "required": true,
           "meta": false,
           "rule": { "allowDecimal": true },
-          "dependency": [{ "id": 1748917751258, "options": ["lab_test"] }]
+          "dependency": [
+            { "id": 1748917751258, "options": ["lab_test"] },
+            { "id": 1748917792041, "options": ["total_sulphides"] }
+          ]
         },
         {
           "id": 1754995400901,
