@@ -239,7 +239,6 @@ def create_form_data(
             existing_record.name = dp_name
             existing_record.administration_id = administration_id
             existing_record.geo = geo_value
-            existing_record.created_by = user
             existing_record.submitter = row.get(CsvColumns.SUBMITTER, None)
             if parent:
                 existing_record.parent = parent
