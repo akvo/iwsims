@@ -7,7 +7,7 @@ from math import ceil
 from wsgiref.util import FileWrapper
 from django.utils import timezone
 from django.http import HttpResponse
-from django.db.models import Q
+from django.db.models import Q, Count
 from django_q.tasks import async_task
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -137,7 +137,7 @@ class FormDataAddListView(APIView):
                 uuid=parent,
                 is_pending=False,
                 is_draft=False,
-            )
+            ).annotate(total_children=Count('children'))
             if search:
                 queryset = queryset.filter(name__icontains=search)
             queryset = queryset.order_by("-created")
@@ -188,7 +188,9 @@ class FormDataAddListView(APIView):
             user_path = adm.path if adm.path else f"{adm.pk}."
             filter_data["administration__path__startswith"] = user_path
 
-        queryset = form.form_form_data.filter(**filter_data)
+        queryset = form.form_form_data.filter(**filter_data).annotate(
+            total_children=Count('children')
+        )
         if search:
             queryset = queryset.filter(name__icontains=search)
         queryset = queryset.order_by("-created")
@@ -739,7 +741,7 @@ class DraftFormDataListView(APIView):
         queryset = FormData.objects_draft.filter(
             form=form,
             created_by=request.user
-        ).order_by("-created")
+        ).annotate(total_children=Count('children')).order_by("-created")
 
         # Apply search filter if provided
         search = serializer.validated_data.get("search", None)
