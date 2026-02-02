@@ -2157,15 +2157,13 @@
               "value": "50mm",
               "label": "50mm",
               "id": 1849634812344,
-              "order": 1,
-              "color": "#1b9e77"
+              "order": 1
             },
             {
               "value": "others",
               "label": "Others",
               "id": 1849634812345,
-              "order": 2,
-              "color": "#1b9e77"
+              "order": 2
             }
           ],
           "dependency": [
@@ -2253,7 +2251,7 @@
               "label": "No",
               "id": 1849635012345,
               "order": 2,
-              "color": "#64A73B"
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -2385,8 +2383,7 @@
               "value": "others",
               "label": "Others",
               "id": 1849634812346,
-              "order": 2,
-              "color": "#1f78b4"
+              "order": 2
             }
           ],
           "dependency": [
