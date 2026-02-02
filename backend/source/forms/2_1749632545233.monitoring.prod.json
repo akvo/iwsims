@@ -52,8 +52,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749632842043, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749632842044, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749632842043, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749632842044, "order": 2, "color": "#e41a1c" }
           ]
         }
       ],
@@ -80,19 +80,22 @@
               "value": "rainy",
               "label": "Rainy",
               "id": 1749632202487,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "cloudy",
               "label": "Cloudy",
               "id": 1749632202488,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "fine",
               "label": "Fine",
               "id": 1749632227282,
-              "order": 3
+              "order": 3,
+              "color": "#64A73B"
             }
           ]
         },
@@ -105,8 +108,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749632860507, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749632860508, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749632860507, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749632860508, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -122,31 +125,36 @@
               "value": "no_water_supply_in_the_village",
               "label": "No Water supply in the village",
               "id": 1749632894319,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "no_water_supply_in_eps",
               "label": "No water supply in EPS",
               "id": 1749632894320,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "eps_not_operational",
               "label": "EPS not operational",
               "id": 1749632947215,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             },
             {
               "value": "tanks_leaking",
               "label": "Tanks leaking",
               "id": 1749632965267,
-              "order": 4
+              "order": 4,
+              "color": "#7570b3"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1749633479776,
-              "order": 5
+              "order": 5,
+              "color": "#1f78b4"
             }
           ],
           "dependency": [{ "id": 1749632647507, "options": ["no"] }]
@@ -174,13 +182,15 @@
               "value": "lab_test",
               "label": "Lab Test",
               "id": 1749633012922,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "cbt_test",
               "label": "CBT Test",
               "id": 1749633033006,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [{ "id": 1749632647507, "options": ["yes"] }]
@@ -219,44 +229,51 @@
               "value": "e_coli",
               "label": "E-coli",
               "id": 1749633127960,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "turbidity_ntu",
               "label": "Turbidity in NTU",
               "id": 1749633127963,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "total_coliform",
               "label": "Total Coliform in 1cfu/100ml",
               "id": 1749633145122,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "fecal_coliform",
               "label": "Fecal Coliform in 1cfu/100ml",
               "id": 1749633162046,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "temperature_c",
               "label": "Temperature in \u00b0C",
               "id": 1749633178123,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
-            { "value": "ph", "label": "pH", "id": 1749633193921, "order": 6 },
+            {  "value": "ph", "label": "pH", "id": 1749633193921, "order": 6, "color": "#e6ab02" },
             {
               "value": "conductivity",
               "label": "Conductivity in \u00b5S/cm",
               "id": 1749633209784,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "salinity",
               "label": "Salinity PPT",
               "id": 1749633219784,
-              "order": 8
+              "order": 8,
+              "color": "#666666"
             }
           ],
           "dependency": [{ "id": 1749633001462, "options": ["lab_test"] }]
@@ -333,25 +350,29 @@
               "value": "no_risk",
               "label": "No risk",
               "id": 1749633325458,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "low_risk",
               "label": "Low risk",
               "id": 1749633325459,
-              "order": 2
+              "order": 2,
+              "color": "#1f78b4"
             },
             {
               "value": "moderate_risk",
               "label": "Moderate Risk",
               "id": 1749633325460,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             },
             {
               "value": "high_risk",
               "label": "High Risk",
               "id": 1749633325461,
-              "order": 4
+              "order": 4,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [{ "id": 1749633001462, "options": ["cbt_test"] }]
@@ -465,13 +486,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749633380305,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "issue_with_system",
               "label": "Issue with the system",
               "id": 1749633405919,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ]
         },

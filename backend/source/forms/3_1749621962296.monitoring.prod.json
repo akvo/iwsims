@@ -47,19 +47,22 @@
               "id": 1849622785184,
               "value": "cloudy",
               "label": "Cloudy",
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "id": 1849622785185,
               "value": "rainy",
               "label": "Rainy",
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "id": 1849622785186,
               "value": "fine",
               "label": "Fine",
-              "order": 3
+              "order": 3,
+              "color": "#64A73B"
             }
           ]
         },
@@ -76,13 +79,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622796300,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622796301,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -114,13 +119,15 @@
               "value": "lab_test",
               "label": "Lab Test",
               "id": 1749622856421,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "cbt_test",
               "label": "CBT Test",
               "id": 1749622856422,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -143,49 +150,57 @@
               "value": "turbidity_ntu",
               "label": "Turbidity in NTU",
               "id": 1749621100015,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "temperature_c",
               "label": "Temperature in \u00b0C",
               "id": 1749621060011,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "ph",
               "label": "pH",
               "id": 1749621070012,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "conductivity",
               "label": "Conductivity in \u00b5S/cm",
               "id": 1749621080013,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "salinity",
               "label": "Salinity PPT",
               "id": 1749621090014,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "total_coliform",
               "label": "Total Coliform count",
               "id": 1749621110016,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "fecal_coliform",
               "label": "Fecal Coliform count",
               "id": 1749621120017,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "ecoli",
               "label": "E.coli",
               "id": 1749621130018,
-              "order": 8
+              "order": 8,
+              "color": "#666666"
             }
           ],
           "dependency": [
@@ -226,25 +241,29 @@
               "value": "no_risk",
               "label": "No risk",
               "id": 1849622785202,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "low_risk",
               "label": "Low risk",
               "id": 1849622785203,
-              "order": 2
+              "order": 2,
+              "color": "#1f78b4"
             },
             {
               "value": "moderate_risk",
               "label": "Moderate Risk",
               "id": 1849622785204,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             },
             {
               "value": "high_risk",
               "label": "High Risk",
               "id": 1849622785205,
-              "order": 4
+              "order": 4,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -428,37 +447,43 @@
               "value": "surface_water_river",
               "label": "Surface Water (River)",
               "id": 1749621384996,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "surface_water_creek",
               "label": "Surface Water (Creek)",
               "id": 1749621384997,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "surface_water_stream_spring",
               "label": "Surface Water (Stream Spring)",
               "id": 1749621384998,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "ground_water",
               "label": "Ground Water",
               "id": 1749621384995,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "rainwater",
               "label": "Rainwater",
               "id": 1749621403460,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "sea_water",
               "label": "Sea Water",
               "id": 1749621419610,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             }
           ]
         },
@@ -475,25 +500,29 @@
               "value": "surface_water_project",
               "label": "Surface Water Project",
               "id": 1749621858123,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "borehole",
               "label": "Borehole",
               "id": 1749621868124,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "desalination",
               "label": "Desalination",
               "id": 1749621878125,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "rainwater_harvesting",
               "label": "Rainwater Harvesting",
               "id": 1749621888126,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             }
           ]
         },
@@ -510,43 +539,50 @@
               "value": "dam",
               "label": "Dam",
               "id": 17496227330011,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "raw_water_main",
               "label": "Raw Water Main",
               "id": 17496227330021,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "reservoir",
               "label": "Reservoir",
               "id": 17496227330031,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "distribution_main",
               "label": "Distribution Main",
               "id": 17496227330041,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "reticulation",
               "label": "Reticulation",
               "id": 17496227330051,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "pumps",
               "label": "Pumps",
               "id": 17496227330101,
-              "order": 10
+              "order": 10,
+              "color": "#e6ab02"
             },
             {
               "value": "piping_works",
               "label": "Piping Works",
               "id": 17496227330141,
-              "order": 14
+              "order": 14,
+              "color": "#a6761d"
             }
           ],
           "dependency": [
@@ -569,49 +605,57 @@
               "value": "raw_water_main",
               "label": "Raw Water Main",
               "id": 17496227330022,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "reservoir",
               "label": "Reservoir",
               "id": 17496227330032,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "distribution_main",
               "label": "Distribution Main",
               "id": 17496227330042,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "reticulation",
               "label": "Reticulation",
               "id": 17496227330052,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "borehole",
               "label": "Borehole",
               "id": 17496227330062,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "pumps",
               "label": "Pumps",
               "id": 17496227330102,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "tanks",
               "label": "Tanks",
               "id": 17496227330122,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "piping_works",
               "label": "Piping Works",
               "id": 17496227330142,
-              "order": 8
+              "order": 8,
+              "color": "#666666"
             }
           ],
           "dependency": [
@@ -634,49 +678,57 @@
               "value": "raw_water_main",
               "label": "Raw Water Main",
               "id": 17496227330023,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "reservoir",
               "label": "Reservoir",
               "id": 17496227330033,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "distribution_main",
               "label": "Distribution Main",
               "id": 17496227330043,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "reticulation",
               "label": "Reticulation",
               "id": 17496227330053,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "desalination",
               "label": "Desalination Unit",
               "id": 17496227330083,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "pumps",
               "label": "Pumps",
               "id": 17496227330103,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "tanks",
               "label": "Tanks",
               "id": 17496227330123,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "piping_works",
               "label": "Piping Works",
               "id": 17496227330143,
-              "order": 8
+              "order": 8,
+              "color": "#666666"
             }
           ],
           "dependency": [
@@ -699,25 +751,29 @@
               "value": "rainwater",
               "label": "Rainwater Tanks",
               "id": 17496227330074,
-              "order": 7
+              "order": 7,
+              "color": "#1b9e77"
             },
             {
               "value": "gutters",
               "label": "Gutters",
               "id": 17496227330114,
-              "order": 11
+              "order": 11,
+              "color": "#d95f02"
             },
             {
               "value": "base_construction",
               "label": "Base Construction",
               "id": 17496227330134,
-              "order": 13
+              "order": 13,
+              "color": "#7570b3"
             },
             {
               "value": "piping_works",
               "label": "Piping Works",
               "id": 17496227330144,
-              "order": 14
+              "order": 14,
+              "color": "#e7298a"
             }
           ],
           "dependency": [
@@ -766,13 +822,15 @@
               "value": "communal_tank",
               "label": "Communal Rainwater Harvesting Tank",
               "id": 1723459241013,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "household_tank",
               "label": "Household Rainwater Harvesting Tank",
               "id": 1723459241014,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -852,13 +910,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1723459241017,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1723459241018,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -881,13 +941,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1723459241019,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1723459241020,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -925,13 +987,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1723459241021,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1723459241022,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -954,13 +1018,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1723459241023,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1723459241024,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -998,13 +1064,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1723459241025,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1723459241026,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -1099,13 +1167,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1723459251015,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1723459251016,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -1128,13 +1198,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1723459251017,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1723459251018,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -1172,13 +1244,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1723459251019,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1723459251020,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -1201,13 +1275,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1723459251021,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1723459251022,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -1245,13 +1321,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1723459251023,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1723459251024,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -1355,37 +1433,43 @@
               "value": "collecting_box",
               "label": "Collecting Box",
               "id": 1723459278010,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "inlet_strainer",
               "label": "Inlet Strainer",
               "id": 1723459260011,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "second_outlet",
               "label": "2nd Outlet",
               "id": 1723459270012,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "screening",
               "label": "Screening",
               "id": 1723459250013,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "washout",
               "label": "Washout",
               "id": 1723459250014,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "spillway_overflow",
               "label": "Spillway / Overflow",
               "id": 1723459297015,
-              "order": 6
+              "order": 6,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -1408,13 +1492,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1723459211016,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1723459211017,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -1527,13 +1613,15 @@
               "value": "dry_well_pump",
               "label": "Dry Well Pump",
               "id": 1749622187890,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "wet_well_pump",
               "label": "Wet Well Pump",
               "id": 1749622187891,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -1565,13 +1653,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749622197891,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749622197892,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -1603,13 +1693,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622207891,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622207892,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -1671,25 +1763,29 @@
               "value": "generator",
               "label": "Generator",
               "id": 1749622207893,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "solar_powered",
               "label": "Solar Powered",
               "id": 1749622207894,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "hybrid",
               "label": "Hybrid",
               "id": 1749622207895,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "electricity",
               "label": "Electricity",
               "id": 1749622207896,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             }
           ],
           "dependency": [
@@ -1721,13 +1817,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622207897,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622207898,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -1847,19 +1945,22 @@
               "value": "raw_water_pipeline",
               "label": "Raw Water Pipeline",
               "id": 1723459200016,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "air_valve",
               "label": "Air Valve",
               "id": 1723459280017,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "washout",
               "label": "Washout",
               "id": 1723459290018,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             }
           ],
           "dependency": [
@@ -1891,13 +1992,15 @@
               "value": "pvc",
               "label": "PVC",
               "id": 1723459200021,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "polyethelene",
               "label": "Polyethelene",
               "id": 1723459200022,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -2064,13 +2167,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1723459211021,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1723459211022,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -2405,67 +2510,78 @@
               "value": "reservoir_inlet",
               "label": "Reservoir Inlet",
               "id": 1723459255026,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "reservoir_outlet",
               "label": "Reservoir Outlet",
               "id": 1723459255027,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "reservoir_overflow",
               "label": "Reservoir Overflow",
               "id": 1723459210028,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             },
             {
               "value": "reservoir_inspection_hatch",
               "label": "Reservoir Inspection Hatch",
               "id": 1723459200029,
-              "order": 4
+              "order": 4,
+              "color": "#7570b3"
             },
             {
               "value": "reservoir_breather",
               "label": "Reservoir Breather",
               "id": 1723459210030,
-              "order": 5
+              "order": 5,
+              "color": "#e7298a"
             },
             {
               "value": "inlet_valve_flowmeter_chamber",
               "label": "Inlet Valve / Flowmeter Chamber",
               "id": 1723459200031,
-              "order": 6
+              "order": 6,
+              "color": "#66a61e"
             },
             {
               "value": "outlet_valve_flowmeter_chamber",
               "label": "Outlet Valve / Flowmeter Chamber",
               "id": 1723459200032,
-              "order": 7
+              "order": 7,
+              "color": "#e6ab02"
             },
             {
               "value": "inspection_ladder",
               "label": "Inspection Ladder",
               "id": 1723459255033,
-              "order": 8
+              "order": 8,
+              "color": "#a6761d"
             },
             {
               "value": "fencing",
               "label": "Fencing",
               "id": 1723459220034,
-              "order": 9
+              "order": 9,
+              "color": "#666666"
             },
             {
               "value": "solar_lighting",
               "label": "Solar Lighting",
               "id": 1723459230035,
-              "order": 10
+              "order": 10,
+              "color": "#377eb8"
             },
             {
               "value": "gate_and_lock",
               "label": "Gate and Lock",
               "id": 1723459240036,
-              "order": 11
+              "order": 11,
+              "color": "#4daf4a"
             }
           ],
           "dependency": [
@@ -2497,13 +2613,15 @@
               "value": "pvc",
               "label": "PVC",
               "id": 1849622785219,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "polyethelene",
               "label": "Polyethelene",
               "id": 1849622785220,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -2526,31 +2644,36 @@
               "value": "200mm",
               "label": "200mm",
               "order": 1,
-              "id": 1849622785221
+              "id": 1849622785221,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "order": 2,
-              "id": 1849622785222
+              "id": 1849622785222,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "order": 3,
-              "id": 1849622785223
+              "id": 1849622785223,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "order": 4,
-              "id": 1849622785224
+              "id": 1849622785224,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "order": 5,
-              "id": 1849622785225
+              "id": 1849622785225,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -2573,31 +2696,36 @@
               "value": "200mm",
               "label": "200mm",
               "order": 1,
-              "id": 1849622785241
+              "id": 1849622785241,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "order": 2,
-              "id": 1849622785242
+              "id": 1849622785242,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "order": 3,
-              "id": 1849622785243
+              "id": 1849622785243,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "order": 4,
-              "id": 1849622785244
+              "id": 1849622785244,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "order": 5,
-              "id": 1849622785245
+              "id": 1849622785245,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -2620,13 +2748,15 @@
               "value": "pvc",
               "label": "PVC",
               "id": 1849622785226,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "polyethelene",
               "label": "Polyethelene",
               "id": 1849622785227,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -2649,31 +2779,36 @@
               "value": "200mm",
               "label": "200mm",
               "order": 1,
-              "id": 1849622785228
+              "id": 1849622785228,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "order": 2,
-              "id": 1849622785229
+              "id": 1849622785229,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "order": 3,
-              "id": 1849622785230
+              "id": 1849622785230,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "order": 4,
-              "id": 1849622785231
+              "id": 1849622785231,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "order": 5,
-              "id": 1849622785232
+              "id": 1849622785232,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -2696,31 +2831,36 @@
               "value": "200mm",
               "label": "200mm",
               "order": 1,
-              "id": 1849622785247
+              "id": 1849622785247,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "order": 2,
-              "id": 1849622785248
+              "id": 1849622785248,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "order": 3,
-              "id": 1849622785249
+              "id": 1849622785249,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "order": 4,
-              "id": 1849622785250
+              "id": 1849622785250,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "order": 5,
-              "id": 1849622785251
+              "id": 1849622785251,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -2743,13 +2883,15 @@
               "value": "pvc",
               "label": "PVC",
               "id": 1849622785233,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "polyethelene",
               "label": "Polyethelene",
               "id": 1849622785234,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -2772,31 +2914,36 @@
               "value": "200mm",
               "label": "200mm",
               "order": 1,
-              "id": 1849622785235
+              "id": 1849622785235,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "order": 2,
-              "id": 1849622785236
+              "id": 1849622785236,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "order": 3,
-              "id": 1849622785237
+              "id": 1849622785237,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "order": 4,
-              "id": 1849622785238
+              "id": 1849622785238,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "order": 5,
-              "id": 1849622785239
+              "id": 1849622785239,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -2819,31 +2966,36 @@
               "value": "200mm",
               "label": "200mm",
               "order": 1,
-              "id": 1849622785253
+              "id": 1849622785253,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "order": 2,
-              "id": 1849622785254
+              "id": 1849622785254,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "order": 3,
-              "id": 1849622785255
+              "id": 1849622785255,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "order": 4,
-              "id": 1849622785256
+              "id": 1849622785256,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "order": 5,
-              "id": 1849622785257
+              "id": 1849622785257,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -2866,13 +3018,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1723459211034,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1723459211035,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -3021,19 +3175,22 @@
               "value": "distribution_pipeline",
               "label": "Distribution Pipeline",
               "id": 1723459220044,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "air_valve",
               "label": "Air Valve",
               "id": 1723459220045,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "washout",
               "label": "Washout",
               "id": 1723459200046,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             }
           ],
           "dependency": [
@@ -3065,13 +3222,15 @@
               "value": "pvc",
               "label": "PVC",
               "id": 1723459200052,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "polyethelene",
               "label": "Polyethelene",
               "id": 1723459200053,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -3094,31 +3253,36 @@
               "value": "200mm",
               "label": "200mm",
               "id": 1723459200047,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "id": 1723459200048,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "id": 1723459200049,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "id": 1723459200050,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "id": 1723459200051,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -3141,31 +3305,36 @@
               "value": "200mm",
               "label": "200mm",
               "id": 1723459240133,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "id": 1723459240134,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "id": 1723459240135,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "id": 1723459240136,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "id": 1723459240137,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -3266,13 +3435,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1723459211037,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1723459211038,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -3421,25 +3592,29 @@
               "value": "reticulation_pipeline",
               "label": "Reticulation Pipeline",
               "id": 1723459200054,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "air_valve",
               "label": "Air Valve",
               "id": 1723459200055,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "washout",
               "label": "Washout",
               "id": 1723459200056,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "household_connection",
               "label": "Household Connection",
               "id": 1723459200057,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             }
           ],
           "dependency": [
@@ -3471,13 +3646,15 @@
               "value": "pvc",
               "label": "PVC",
               "id": 1723459200063,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "polyethelene",
               "label": "Polyethelene",
               "id": 1723459200064,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -3500,31 +3677,36 @@
               "value": "200mm",
               "label": "200mm",
               "id": 1723459200058,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "id": 1723459200059,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "id": 1723459200060,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "id": 1723459200061,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "id": 1723459200062,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -3547,31 +3729,36 @@
               "value": "200mm",
               "label": "200mm",
               "id": 1723459267041,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "150mm",
               "label": "150mm",
               "id": 1723459267042,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "100mm",
               "label": "100mm",
               "id": 1723459267043,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "80mm",
               "label": "80mm",
               "id": 1723459267044,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "50mm",
               "label": "50mm",
               "id": 1723459267045,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -3594,13 +3781,15 @@
               "value": "household",
               "label": "Household",
               "id": 1723459200065,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "shared",
               "label": "Shared",
               "id": 1723459200066,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -3721,13 +3910,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1723459211041,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1723459211042,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -3867,13 +4058,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749621977892,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749621977893,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -3896,13 +4089,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749621977890,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "non_operational",
               "label": "Non Operational",
               "id": 1749621977891,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -3944,13 +4139,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749621987892,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749621987893,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -3973,13 +4170,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749621987890,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "non_operational",
               "label": "Non Operational",
               "id": 1749621987891,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -4021,13 +4220,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749621997892,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749621997893,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -4050,13 +4251,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749621997890,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "non_operational",
               "label": "Non Operational",
               "id": 1749621997891,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -4098,13 +4301,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749622007892,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749622007893,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -4127,13 +4332,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749622037890,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "non_operational",
               "label": "Non Operational",
               "id": 1749622037891,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -4175,25 +4382,29 @@
               "value": "generator",
               "label": "Generator",
               "id": 1749622047890,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "solar_powered",
               "label": "Solar Powered",
               "id": 1749622047891,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "hybrid",
               "label": "Hybrid",
               "id": 1749622047892,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "electricity",
               "label": "Electricity",
               "id": 1749622047893,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             }
           ],
           "dependency": [
@@ -4216,13 +4427,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749622057892,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749622057893,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -4245,13 +4458,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749622067890,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "non_operational",
               "label": "Non Operational",
               "id": 1749622067891,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -4293,13 +4508,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749622067892,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749622067893,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -4404,31 +4621,36 @@
               "value": "borehole_casing",
               "label": "Borehole Casing",
               "id": 1749622107890,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "borehole_cover",
               "label": "Borehole Cover",
               "id": 1749622107891,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "electrical_cable_with_duct",
               "label": "Electrical Cable with Duct",
               "id": 1749622107892,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "borehole_housing",
               "label": "Borehole Housing",
               "id": 1749622107893,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "power_board",
               "label": "Power Board",
               "id": 1749622107894,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             }
           ],
           "dependency": [
@@ -4451,25 +4673,29 @@
               "value": "generator",
               "label": "Generator",
               "id": 1749622117891,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "solar_powered",
               "label": "Solar Powered",
               "id": 1749622117892,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "hybrid",
               "label": "Hybrid",
               "id": 1749622117893,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "electricity",
               "label": "Electricity",
               "id": 1749622117894,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             }
           ],
           "dependency": [
@@ -4490,13 +4716,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749632117896,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749632117897,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "required": true,
@@ -4551,13 +4779,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749622117895,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "non_operational",
               "label": "Non Operational",
               "id": 1749622117896,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -4580,13 +4810,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749622117897,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "non_operational",
               "label": "Non Operational",
               "id": 1749622117898,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -4609,13 +4841,15 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749622117899,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "non_operational",
               "label": "Non Operational",
               "id": 1749622117900,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -4638,13 +4872,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749622117901,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749622117902,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -4761,13 +4997,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622227890,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622227891,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "required": true,
@@ -4805,13 +5043,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622227892,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622227893,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "required": true,
@@ -4849,13 +5089,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622227894,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622227895,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "required": true,
@@ -4893,13 +5135,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622227896,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622227897,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "required": true,
@@ -4939,13 +5183,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749622227898,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749622227899,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -5054,37 +5300,43 @@
               "value": "20000L",
               "label": "20000L",
               "id": 1749622267890,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "10000L",
               "label": "10000L",
               "id": 1749622267891,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "5000L",
               "label": "5000L",
               "id": 1749622267892,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "2500L",
               "label": "2500L",
               "id": 1749622267893,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "2000L",
               "label": "2000L",
               "id": 1749622267894,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "1000L",
               "label": "1000L",
               "id": 1749622267895,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             }
           ],
           "dependency": [
@@ -5112,13 +5364,15 @@
               "value": "storage",
               "label": "Storage",
               "id": 1749622267896,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "distribution",
               "label": "Distribution",
               "id": 1749622267897,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -5146,13 +5400,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622267898,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622267899,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -5210,13 +5466,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749622267900,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749622267901,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "dependency": [
@@ -5338,13 +5596,15 @@
               "value": "ongoing",
               "label": "Ongoing",
               "id": 1749622307890,
-              "order": 1
+              "order": 1,
+              "color": "#d95f02"
             },
             {
               "value": "completed",
               "label": "Completed",
               "id": 1749622307891,
-              "order": 2
+              "order": 2,
+              "color": "#64A73B"
             }
           ],
           "required": true,
@@ -5367,13 +5627,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622307892,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622307893,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "required": true,
@@ -5505,13 +5767,15 @@
               "value": "pvc",
               "label": "PVC",
               "id": 1749623347890,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "polyethylene",
               "label": "Polyethylene",
               "id": 1749623347891,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "required": true,
@@ -5633,13 +5897,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749623377890,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749623377891,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -5752,13 +6018,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749623667890,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749623667891,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ]
         },

@@ -59,32 +59,37 @@
               "value": "turbidity",
               "label": "Turbidity",
               "id": 1749640717030,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
-            { "value": "ph", "label": "pH", "id": 1749640717031, "order": 2 },
+            {  "value": "ph", "label": "pH", "id": 1749640717031, "order": 2, "color": "#d95f02" },
             {
               "value": "residual_chlorine",
               "label": "Residual Chlorine",
               "id": 1749640735434,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "temperature",
               "label": "Temperature",
               "id": 1749640748259,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "salinity",
               "label": "Salinity",
               "id": 1749640762096,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "alkalinity",
               "label": "Alkalinity",
               "id": 1749640769263,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             }
           ]
         },
@@ -97,8 +102,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749640793604, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749640793605, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749640793604, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749640793605, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -114,13 +119,15 @@
               "value": "lab_test",
               "label": "Lab Test",
               "id": 1749640826783,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "cbt_bag_test",
               "label": "CBT Bag Test",
               "id": 1749640981827,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [{ "id": 1749640788183, "options": ["yes"] }]
@@ -170,25 +177,29 @@
               "value": "no_risk",
               "label": "No risk",
               "id": 1805756143037,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "low_risk",
               "label": "Low risk",
               "id": 1805756143038,
-              "order": 2
+              "order": 2,
+              "color": "#1f78b4"
             },
             {
               "value": "moderate_risk",
               "label": "Moderate Risk",
               "id": 1805756143039,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             },
             {
               "value": "high_risk",
               "label": "High Risk",
               "id": 1805756143040,
-              "order": 4
+              "order": 4,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [{ "id": 1749640821051, "options": ["cbt_bag_test"] }]
@@ -217,55 +228,64 @@
               "value": "turbidity_ntu",
               "label": "Turbidity in NTU",
               "id": 1749641135122,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "residual_chlorine_mg_l",
               "label": "Residual Chlorine in mg/L",
               "id": 1749641150609,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "temperature_c",
               "label": "Temperature \u00b0C - 2550B (APHA Method Code)",
               "id": 1796405550520,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "ph",
               "label": "pH - 4500-H+B (APHA Method Code)",
               "id": 1796405661521,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "conductivity",
               "label": "Conductivity \u00b5S/cm - 2510B (APHA Method Code)",
               "id": 1796405662522,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "salinity",
               "label": "Salinity PPT 2520B 0.2 (APHA Method Code)",
               "id": 1796405662523,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "total_coliform",
               "label": "Total Coliform in cfu/100ml",
               "id": 1749641401103,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "fecal_coliform",
               "label": "Fecal Coliform in cfu/100ml",
               "id": 1749641436781,
-              "order": 8
+              "order": 8,
+              "color": "#666666"
             },
             {
               "value": "e_coli",
               "label": "E.Coli",
               "id": 1805756143041,
-              "order": 9
+              "order": 9,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [{ "id": 1749640821051, "options": ["lab_test"] }]
@@ -420,25 +440,29 @@
               "value": "chlorine_gas",
               "label": "Chlorine gas",
               "id": 1749641504228,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "hth_powder",
               "label": "HTH Powder",
               "id": 1749641504229,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "sodium_hypochlorite",
               "label": "Sodium Hypochlorite",
               "id": 1749641529457,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "dpd_tablets",
               "label": "DPD Tablets",
               "id": 1749641537660,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             }
           ]
         },
@@ -451,8 +475,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749643284427, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749643284428, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749643284427, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749643284428, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -490,13 +514,15 @@
               "value": "automatic",
               "label": "Automatic",
               "id": 1749650536181,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "manual",
               "label": "Manual",
               "id": 1749650536182,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["chlorine_gas"] }]
@@ -510,8 +536,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749650646217, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749650646218, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749650646217, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749650646218, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["chlorine_gas"] }]
         },
@@ -672,13 +698,15 @@
               "value": "automatic",
               "label": "Automatic",
               "id": 1749650973254,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "manual",
               "label": "Manual",
               "id": 1749650973255,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["hth_powder"] }]
@@ -692,8 +720,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749651063505, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749651063506, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749651063505, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749651063506, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["hth_powder"] }]
         },
@@ -858,13 +886,15 @@
               "value": "automatic",
               "label": "Automatic",
               "id": 1749651394259,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "manual",
               "label": "Manual",
               "id": 1749651394260,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [
@@ -880,8 +910,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749651436440, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749651436441, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749651436440, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749651436441, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": [
             { "id": 1749641480407, "options": ["sodium_hypochlorite"] }
@@ -1044,13 +1074,15 @@
               "value": "automatic",
               "label": "Automatic",
               "id": 1749651674414,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "manual",
               "label": "Manual",
               "id": 1749651674415,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["dpd_tablets"] }]
@@ -1064,8 +1096,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749651728117, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749651728118, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749651728117, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749651728118, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["dpd_tablets"] }]
         },
@@ -1241,8 +1273,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749651906382, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749651906383, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749651906382, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749651906383, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -1264,8 +1296,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1749651978732, "order": 1 },
-            { "value": "no", "label": "No", "id": 1749651978733, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1749651978732, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1749651978733, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -1281,49 +1313,57 @@
               "value": "increase_in_budget",
               "label": "Increase in budget",
               "id": 1749652017307,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "capacity_building",
               "label": "Capacity Building",
               "id": 1749652017308,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "upgrading_works",
               "label": "Upgrading works",
               "id": 1749652036879,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "technical_assistance",
               "label": "Technical Assistance",
               "id": 1749652049149,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "training",
               "label": "Training",
               "id": 1749652057335,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "plant_rehabilitation",
               "label": "Plant Rehabilitation",
               "id": 1749652064357,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "plant_augmentation",
               "label": "Plant Augmentation",
               "id": 1749652073078,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1749652080483,
-              "order": 8
+              "order": 8,
+              "color": "#1f78b4"
             }
           ],
           "dependency": [{ "id": 1749651967194, "options": ["yes"] }]

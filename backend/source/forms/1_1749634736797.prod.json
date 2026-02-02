@@ -37,19 +37,22 @@
               "value": "conventional",
               "label": "Conventional",
               "id": 1749634881749,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "plain_chlorination",
               "label": "Plain Chlorination",
               "id": 1749634881750,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "packaged_plant",
               "label": "Packaged plant",
               "id": 1749635141708,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             }
           ]
         },
