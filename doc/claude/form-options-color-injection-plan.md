@@ -7,13 +7,14 @@ This document outlines the technical approach for modifying the Jupyter notebook
 ## Objectives
 
 1. Iterate through all `.prod.json` files in `backend/source/forms/`
-2. Analyze the semantic meaning of each option's `label` field
-3. Assign appropriate hex color codes based on label semantics
-4. **Ensure every option within a question has a unique color**
-5. **Use map-readable colors (dark, saturated - not light/pastel)**
-6. **Provide fallback colors for unclassified labels**
-7. Preserve existing color assignments where present
-8. Ensure JSON structure remains valid and compatible with `form_seeder.py`
+2. **Only process questions with `type: "option"` or `type: "multiple_option"`**
+3. Analyze the semantic meaning of each option's `label` field
+4. Assign appropriate hex color codes based on label semantics
+5. **Ensure every option within a question has a unique color**
+6. **Use map-readable colors (dark, saturated - not light/pastel)**
+7. **Provide fallback colors for unclassified labels**
+8. Preserve existing color assignments where present
+9. Ensure JSON structure remains valid and compatible with `form_seeder.py`
 
 ## Color Usage Context
 
@@ -98,6 +99,15 @@ Each color checked against white (#FFFFFF) background:
 | Green | #64A73B | 3.1:1 | ✓ Large |
 
 ## Classification Algorithm
+
+### Question Type Filtering
+
+Only questions with these types are processed:
+```python
+OPTION_QUESTION_TYPES = {"option", "multiple_option"}
+```
+
+Other question types (e.g., `number`, `text`, `cascade`) are skipped even if they have an `options` field.
 
 ### Priority Order
 
@@ -456,6 +466,7 @@ This ensures the git diff only shows the added color fields:
 
 | Requirement | Solution |
 |-------------|----------|
+| Question types | Only `option` and `multiple_option` types |
 | Semantic colors | Exact match + pattern classification |
 | Unique per question | Track used colors, assign from palette |
 | Map readable | Dark palette (L: 30-50%, S: 70-100%) |
