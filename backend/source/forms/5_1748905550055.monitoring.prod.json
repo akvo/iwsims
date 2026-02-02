@@ -30,121 +30,141 @@
               "value": "screening",
               "label": "Screening",
               "id": 1748913789495,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "grit_removal",
               "label": "Grit Removal",
               "id": 1748913789496,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "primary_clarifier",
               "label": "Primary Clarifier",
               "id": 1748913846662,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "trickling_filters",
               "label": "Trickling Filters",
               "id": 1748913855065,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "activated_sludge_system",
               "label": "Activated Sludge System",
               "id": 1748913863866,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "stabilization_lagoons",
               "label": "Stabilization Lagoons",
               "id": 1748913871824,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "secondary_clarifiers",
               "label": "Secondary Clarifiers",
               "id": 1748913880388,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "oxidation_ponds",
               "label": "Oxidation Ponds",
               "id": 1748913891437,
-              "order": 8
+              "order": 8,
+              "color": "#666666"
             },
             {
               "value": "pasveer_ditches",
               "label": "Pasveer Ditches",
               "id": 1748913898880,
-              "order": 9
+              "order": 9,
+              "color": "#e41a1c"
             },
             {
               "value": "idea_lagoons",
               "label": "IDEA Lagoons",
               "id": 1748913909037,
-              "order": 10
+              "order": 10,
+              "color": "#377eb8"
             },
             {
               "value": "polishing_ponds",
               "label": "Polishing Ponds",
               "id": 1748913919805,
-              "order": 11
+              "order": 11,
+              "color": "#4daf4a"
             },
             {
               "value": "aerobic_lagoons",
               "label": "Aerobic Lagoons",
               "id": 1748913927173,
-              "order": 12
+              "order": 12,
+              "color": "#984ea3"
             },
             {
               "value": "anaerobic_lagoons",
               "label": "Anaerobic Lagoons",
               "id": 1748913942614,
-              "order": 13
+              "order": 13,
+              "color": "#ff7f00"
             },
             {
               "value": "sludge_aerobic_digestion",
               "label": "Sludge Aerobic Digestion",
               "id": 1748913950813,
-              "order": 14
+              "order": 14,
+              "color": "#a65628"
             },
             {
               "value": "sludge_handling_system",
               "label": "Sludge Handling System",
               "id": 1748913958346,
-              "order": 15
+              "order": 15,
+              "color": "#f781bf"
             },
             {
               "value": "drying_beds",
               "label": "Drying Beds",
               "id": 1748913971143,
-              "order": 16
+              "order": 16,
+              "color": "#999999"
             },
             {
               "value": "sludge_digester",
               "label": "Sludge Digester",
               "id": 1748913979374,
-              "order": 17
+              "order": 17,
+              "color": "#66c2a5"
             },
             {
               "value": "imhoff",
               "label": "IMHOFF",
               "id": 1748914021608,
-              "order": 18
+              "order": 18,
+              "color": "#8da0cb"
             },
             {
               "value": "maturation_ponds",
               "label": "Maturation Ponds",
               "id": 1748914029794,
-              "order": 19
+              "order": 19,
+              "color": "#e78ac3"
             },
             {
               "value": "facultative_ponds",
               "label": "Facultative Ponds",
               "id": 1748914038956,
-              "order": 20
+              "order": 20,
+              "color": "#a6d854"
             }
           ],
           "required_double_entry": false
@@ -170,8 +190,8 @@
           "meta": false,
           "rule": null,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748904066576, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748904066578, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748904066576, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748904066578, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null
         },
@@ -201,37 +221,43 @@
               "value": "raw_sewage_pump_station",
               "label": "Raw Sewage Pump Station",
               "id": 1748904166065,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "re_circulation_pump_station",
               "label": "Re circulation Pump Station",
               "id": 1748904166066,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "sludge_pump_station",
               "label": "Sludge Pump Station",
               "id": 1748904374311,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "supernatant_pump_station",
               "label": "Supernatant Pump Station",
               "id": 1748904382155,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "influent_pump_station",
               "label": "Influent Pump Station",
               "id": 1748904395053,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "effluent_pump_station",
               "label": "Effluent Pump Station",
               "id": 1748904411459,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             }
           ],
           "dependency": [{ "id": 1748904054931, "options": ["yes"] }]
@@ -371,8 +397,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748910199905, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748910199906, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748910199905, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748910199906, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -384,8 +410,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748910229123, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748910229124, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748910229123, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748910229124, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -397,8 +423,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748910286351, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748910286352, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748910286351, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748910286352, "order": 2, "color": "#e41a1c" }
           ]
         }
       ],
@@ -610,7 +636,8 @@
               "value": "no_security_lights",
               "label": "No Security Lights",
               "id": 1748910676403,
-              "order": 5
+              "order": 5,
+              "color": "#1b9e77"
             }
           ],
           "dependency": null
@@ -664,8 +691,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748910784910, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748910784911, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748910784910, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748910784911, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null
         },
@@ -678,8 +705,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748910836260, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748910836261, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748910836260, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748910836261, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null
         },
@@ -692,8 +719,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748910872640, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748910872641, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748910872640, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748910872641, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null
         },
@@ -717,8 +744,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748910987339, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748910987340, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748910987339, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748910987340, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -741,8 +768,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748911121191, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748911121192, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748911121191, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748911121192, "order": 2, "color": "#e41a1c" }
           ]
         },
         {
@@ -777,8 +804,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748911273988, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748911273989, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748911273988, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748911273989, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null,
           "rule": null
@@ -796,43 +823,50 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748911353282,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "surcharging_of_influent_line",
               "label": "Surcharging of influent line",
               "id": 1748911353283,
-              "order": 2
+              "order": 2,
+              "color": "#1b9e77"
             },
             {
               "value": "overflow_wiers",
               "label": "Overflow wiers",
               "id": 1748911378608,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             },
             {
               "value": "hydraulically_overloaded",
               "label": "Hydraulically overloaded",
               "id": 1748911401007,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "flow_through_bypass_channels",
               "label": "Flow through bypass channels",
               "id": 1748911415895,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "flow_from_unknown_source",
               "label": "Flow from unknown source",
               "id": 1748911443978,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748911458613,
-              "order": 7
+              "order": 7,
+              "color": "#1f78b4"
             }
           ],
           "dependency": null,
@@ -895,8 +929,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748914782031, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748914782032, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748914782031, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748914782032, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null
         },
@@ -913,55 +947,64 @@
               "value": "normal_operation",
               "label": "Normal operation",
               "id": 1748914813922,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "inadequate_pumping_during_wet_weather_flows",
               "label": "Inadequate pumping during wet weather flows",
               "id": 1748914813923,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "screens_overloaded",
               "label": "Screens overloaded",
               "id": 1748914831627,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             },
             {
               "value": "poor_ventilation",
               "label": "Poor ventilation",
               "id": 1748914843646,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "pumps_not_operational",
               "label": "Pumps not operational",
               "id": 1748914852318,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "pump_house_in_bad_condition",
               "label": "Pump house in bad condition",
               "id": 1748914863132,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "pump_house_in_good_condition",
               "label": "Pump house in good condition",
               "id": 1748914873210,
-              "order": 7
+              "order": 7,
+              "color": "#66a61e"
             },
             {
               "value": "no_influent_pump_station_in_the_plant",
               "label": "No influent Pump Station in the plant",
               "id": 1748914881430,
-              "order": 8
+              "order": 8,
+              "color": "#e6ab02"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748914890123,
-              "order": 9
+              "order": 9,
+              "color": "#1f78b4"
             }
           ],
           "dependency": [{ "id": 1748906592858, "options": ["yes"] }]
@@ -986,8 +1029,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748914945664, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748914945665, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748914945664, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748914945665, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": [{ "id": 1748906592858, "options": ["yes"] }]
         },
@@ -1029,43 +1072,50 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748913604395,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "excessive_screen_clogging",
               "label": "Excessive screen clogging",
               "id": 1748913604396,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "excessive_buildup_of_debris",
               "label": "Excessive buildup of debris",
               "id": 1748913649146,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             },
             {
               "value": "oil_and_grease_buildup",
               "label": "Oil and grease buildup",
               "id": 1748913657150,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "improper_disposal_of_screenings",
               "label": "Improper disposal of screenings",
               "id": 1748913672557,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "excessive_odors",
               "label": "Excessive odors",
               "id": 1748913681440,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748913690123,
-              "order": 7
+              "order": 7,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -1106,49 +1156,57 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748914447073,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "grit_chamber_clogged",
               "label": "Grit chamber clogged",
               "id": 1748914447074,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "less_than_normal_grit_accumulation",
               "label": "Less than normal grit accumulation",
               "id": 1748914629750,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             },
             {
               "value": "oil_and_grease_buildup",
               "label": "Oil and grease buildup",
               "id": 1748914638455,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "excessive_organic_content_of_grit",
               "label": "Excessive organic content of grit",
               "id": 1748914650572,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "wear_and_tear_of_grit_removal/handling_system",
               "label": "Wear and tear of grit removal/handling system",
               "id": 1748914658850,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "excessive_odor_in_grit_removal_system",
               "label": "Excessive odor in grit removal system",
               "id": 1748914676093,
-              "order": 7
+              "order": 7,
+              "color": "#66a61e"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748914684397,
-              "order": 8
+              "order": 8,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -1203,85 +1261,99 @@
               "value": "excessive_gas_bubbles_or_grease_on_surface",
               "label": "Excessive gas bubbles or grease on surface",
               "id": 1748915229404,
-              "order": 1
+              "order": 1,
+              "color": "#e41a1c"
             },
             {
               "value": "black_and_odorous_wastewater",
               "label": "Black and odorous wastewater",
               "id": 1748915229405,
-              "order": 2
+              "order": 2,
+              "color": "#1b9e77"
             },
             {
               "value": "poor_removal_of_suspended_solids",
               "label": "Poor removal of suspended solids",
               "id": 1748915246307,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             },
             {
               "value": "excessive_buildup_of_solids_in_the_center_well",
               "label": "Excessive buildup of solids in the center well",
               "id": 1748915258935,
-              "order": 4
+              "order": 4,
+              "color": "#7570b3"
             },
             {
               "value": "uneven_discharge_weirs",
               "label": "Uneven discharge weirs",
               "id": 1748915269428,
-              "order": 5
+              "order": 5,
+              "color": "#e7298a"
             },
             {
               "value": "fouling_of_overflow_weirs",
               "label": "Fouling of overflow weirs",
               "id": 1748915277042,
-              "order": 6
+              "order": 6,
+              "color": "#66a61e"
             },
             {
               "value": "evidence_of_short_circuit",
               "label": "Evidence of short circuit",
               "id": 1748915284337,
-              "order": 7
+              "order": 7,
+              "color": "#e6ab02"
             },
             {
               "value": "ineffective_scum_skimmer",
               "label": "Ineffective scum skimmer",
               "id": 1748915292535,
-              "order": 8
+              "order": 8,
+              "color": "#a6761d"
             },
             {
               "value": "excessive_floating_of_sludge_and_scum",
               "label": "Excessive floating of sludge and scum",
               "id": 1748915299091,
-              "order": 9
+              "order": 9,
+              "color": "#666666"
             },
             {
               "value": "excessive_sludge_on_the_bottom_and_inadequate_sludge_removal",
               "label": "Excessive sludge on the bottom and inadequate sludge removal",
               "id": 1748915309863,
-              "order": 10
+              "order": 10,
+              "color": "#377eb8"
             },
             {
               "value": "noisy_sludge_scraper_drive",
               "label": "Noisy Sludge Scraper Drive",
               "id": 1748915317991,
-              "order": 11
+              "order": 11,
+              "color": "#4daf4a"
             },
             {
               "value": "half_bridge_in_operation",
               "label": "Half bridge in operation",
               "id": 1748915326462,
-              "order": 12
+              "order": 12,
+              "color": "#64A73B"
             },
             {
               "value": "normal",
               "label": "Normal",
               "id": 1748915335780,
-              "order": 13
+              "order": 13,
+              "color": "#984ea3"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748915344084,
-              "order": 14
+              "order": 14,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -1338,61 +1410,71 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748915408887,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "aerator_in_operation",
               "label": "Aerator in operation",
               "id": 1748915408888,
-              "order": 2
+              "order": 2,
+              "color": "#1b9e77"
             },
             {
               "value": "shaft,bearing,drive_gear,or_motor_failure",
               "label": "Shaft,bearing,drive gear,or motor failure",
               "id": 1748915426204,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             },
             {
               "value": "dead_spots_in_aeration_tanks",
               "label": "Dead Spots in aeration tanks",
               "id": 1748915435614,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "uneven_distribution_of_the_flow_on_the_surface",
               "label": "Uneven distribution of the flow on the surface",
               "id": 1748915449574,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "uneven_or_discolored_growth",
               "label": "Uneven or discolored growth",
               "id": 1748915459092,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "bad_odor",
               "label": "Bad Odor",
               "id": 1748915466990,
-              "order": 7
+              "order": 7,
+              "color": "#66a61e"
             },
             {
               "value": "clogging_of_trickling_filter's_distribution_arm_orifices",
               "label": "Clogging of trickling filter's distribution arm orifices",
               "id": 1748915477707,
-              "order": 8
+              "order": 8,
+              "color": "#e6ab02"
             },
             {
               "value": "restricted_rotation_of_distribution_arms",
               "label": "Restricted rotation of distribution arms",
               "id": 1748915488509,
-              "order": 9
+              "order": 9,
+              "color": "#a6761d"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748915497013,
-              "order": 10
+              "order": 10,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -1449,61 +1531,71 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748915716201,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "air_compressors_not_working",
               "label": "Air compressors not working",
               "id": 1748915728687,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "excessive_air_leaks_in_compressed_air_piping",
               "label": "Excessive air leaks in compressed air piping",
               "id": 1748915737887,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             },
             {
               "value": "dark_mixed_liquor_in_aeration_tank",
               "label": "Dark mixed liquor in aeration tank",
               "id": 1748915752463,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "dark_foam_or_bad_odor_in_aeration_tank",
               "label": "Dark foam or bad odor in aeration tank",
               "id": 1748915760945,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "thick_billows_of_white,sudsy_foam_in_aeration_tank",
               "label": "Thick billows of white,sudsy foam in aeration tank",
               "id": 1748915768321,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "low_dissolved_oxygen_(do_<1.0mg/l)",
               "label": "Low Dissolved Oxygen (DO <1.0mg/L)",
               "id": 1748915782836,
-              "order": 7
+              "order": 7,
+              "color": "#66a61e"
             },
             {
               "value": "inadequate_amount_of_return_activated_sludge_rates",
               "label": "Inadequate amount of return activated sludge rates",
               "id": 1748915785399,
-              "order": 8
+              "order": 8,
+              "color": "#e6ab02"
             },
             {
               "value": "auto_mode",
               "label": "Auto Mode",
               "id": 1748915798701,
-              "order": 9
+              "order": 9,
+              "color": "#a6761d"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748915807173,
-              "order": 10
+              "order": 10,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -1560,55 +1652,64 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748915876001,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "trees_or_shrubs_growing_on_the_bank",
               "label": "Trees or shrubs growing on the bank",
               "id": 1748915876002,
-              "order": 2
+              "order": 2,
+              "color": "#1b9e77"
             },
             {
               "value": "erosion_of_the_stabilization_pond_bank_or_dike",
               "label": "Erosion of the stabilization pond bank or dike",
               "id": 1748915890452,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             },
             {
               "value": "excessive_weeds_in_the_stabilization_ponds",
               "label": "Excessive weeds in the stabilization ponds",
               "id": 1748915904700,
-              "order": 4
+              "order": 4,
+              "color": "#e41a1c"
             },
             {
               "value": "dead_fish_or_aquatic_organisms",
               "label": "Dead fish or aquatic organisms",
               "id": 1748915911574,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "buildup_of_solids_around_the_influent_pipe",
               "label": "Buildup of solids around the influent pipe",
               "id": 1748915918804,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "excessive_scum_on_the_surface",
               "label": "Excessive scum on the surface",
               "id": 1748915927678,
-              "order": 7
+              "order": 7,
+              "color": "#66a61e"
             },
             {
               "value": "bad_odor",
               "label": "Bad odor",
               "id": 1748915939166,
-              "order": 8
+              "order": 8,
+              "color": "#e6ab02"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748915947550,
-              "order": 9
+              "order": 9,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -1665,55 +1766,64 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748916081095,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "damage_to_dikes_around_laggons",
               "label": "Damage to dikes around laggons",
               "id": 1748916081096,
-              "order": 2
+              "order": 2,
+              "color": "#1b9e77"
             },
             {
               "value": "new_option",
               "label": "New Option",
               "id": 1748916097828,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             },
             {
               "value": "lagoons_overflowing_sludge",
               "label": "Lagoons overflowing sludge",
               "id": 1748916103337,
-              "order": 4
+              "order": 4,
+              "color": "#e41a1c"
             },
             {
               "value": "bad_odor",
               "label": "Bad odor",
               "id": 1748916111145,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "desludging_of_lagoons_ongoing",
               "label": "Desludging of lagoons ongoing",
               "id": 1748916121268,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "industrial_waste_visible",
               "label": "Industrial Waste Visible",
               "id": 1748916140594,
-              "order": 7
+              "order": 7,
+              "color": "#66a61e"
             },
             {
               "value": "supernatant_removal",
               "label": "Supernatant removal",
               "id": 1748916148974,
-              "order": 8
+              "order": 8,
+              "color": "#e6ab02"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748916157342,
-              "order": 9
+              "order": 9,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -1844,79 +1954,92 @@
               "value": "excessive_gas_bubbles_on_surface",
               "label": "Excessive gas bubbles on surface",
               "id": 1748916481907,
-              "order": 1
+              "order": 1,
+              "color": "#e41a1c"
             },
             {
               "value": "fouling_of_overflow_weirs",
               "label": "Fouling of overflow weirs",
               "id": 1748916481908,
-              "order": 2
+              "order": 2,
+              "color": "#1b9e77"
             },
             {
               "value": "uneven_overflow_weirs",
               "label": "Uneven overflow weirs",
               "id": 1748916504527,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             },
             {
               "value": "short_circuit",
               "label": "Short circuit",
               "id": 1748916518992,
-              "order": 4
+              "order": 4,
+              "color": "#7570b3"
             },
             {
               "value": "excessive_buildup_of_solids_in_the_center_well",
               "label": "Excessive buildup of solids in the center well",
               "id": 1748916526789,
-              "order": 5
+              "order": 5,
+              "color": "#e7298a"
             },
             {
               "value": "de-flocculating_in_clarifier",
               "label": "De-flocculating in clarifier",
               "id": 1748916535583,
-              "order": 6
+              "order": 6,
+              "color": "#66a61e"
             },
             {
               "value": "ineffective_scum_raking",
               "label": "Ineffective scum raking",
               "id": 1748916542605,
-              "order": 7
+              "order": 7,
+              "color": "#e6ab02"
             },
             {
               "value": "floating_sludge_on_surface",
               "label": "Floating sludge on surface",
               "id": 1748916550925,
-              "order": 8
+              "order": 8,
+              "color": "#a6761d"
             },
             {
               "value": "excessive_high_sludge_blanket",
               "label": "Excessive high sludge blanket",
               "id": 1748916560931,
-              "order": 9
+              "order": 9,
+              "color": "#666666"
             },
             {
               "value": "recirculation_pump_in_operation",
               "label": "Recirculation pump in operation",
               "id": 1748916569947,
-              "order": 10
+              "order": 10,
+              "color": "#64A73B"
             },
             {
               "value": "clogged_sludge_withdrawal_ports",
               "label": "Clogged sludge withdrawal ports",
               "id": 1748916578053,
-              "order": 11
+              "order": 11,
+              "color": "#377eb8"
             },
             {
               "value": "normal_operation",
               "label": "Normal Operation",
               "id": 1748916585705,
-              "order": 12
+              "order": 12,
+              "color": "#4daf4a"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748916593701,
-              "order": 13
+              "order": 13,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -2336,49 +2459,57 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748917044497,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "excessive_foaming",
               "label": "Excessive foaming",
               "id": 1748917044498,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "bad_odor",
               "label": "Bad odor",
               "id": 1748917060776,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             },
             {
               "value": "insufficient_dissolved_oxygen_in_digester",
               "label": "Insufficient dissolved oxygen in digester",
               "id": 1748917075658,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "digester_overloaded",
               "label": "Digester overloaded",
               "id": 1748917084676,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "mechanical_aerator_failure",
               "label": "Mechanical aerator failure",
               "id": 1748917092145,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "inadequate_supernatant_removal",
               "label": "Inadequate supernatant removal",
               "id": 1748917100884,
-              "order": 7
+              "order": 7,
+              "color": "#66a61e"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748917109372,
-              "order": 8
+              "order": 8,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -2435,55 +2566,64 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748917194182,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "inadequate_sludge_removal_from_clarifiers_or_thickeners",
               "label": "Inadequate sludge removal from clarifiers or thickeners",
               "id": 1748917194183,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "fouling_of_overflow_weirs_on_gravity_thickeners",
               "label": "Fouling of overflow weirs on gravity thickeners",
               "id": 1748917194184,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             },
             {
               "value": "sludge_disposal_inadequate_to_keep_treatment_system_in_balance",
               "label": "Sludge disposal inadequate to keep treatment system in balance",
               "id": 1748917220089,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "bad_odor",
               "label": "Bad odor",
               "id": 1748917233559,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "mechanical_or_gas_mixers_not_operational",
               "label": "Mechanical or gas mixers not operational",
               "id": 1748917243749,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "excessive_suspended_solids_in_supernatant",
               "label": "Excessive suspended solids in supernatant",
               "id": 1748917253445,
-              "order": 7
+              "order": 7,
+              "color": "#66a61e"
             },
             {
               "value": "recirculation_pump_operations",
               "label": "Recirculation pump operations",
               "id": 1748917261454,
-              "order": 8
+              "order": 8,
+              "color": "#e6ab02"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748917270510,
-              "order": 9
+              "order": 9,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -2538,43 +2678,50 @@
               "value": "normal",
               "label": "Normal",
               "id": 1748917348158,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "poor_sludge_distribution_on_drying_beds",
               "label": "Poor sludge distribution on drying beds",
               "id": 1748917348159,
-              "order": 2
+              "order": 2,
+              "color": "#1b9e77"
             },
             {
               "value": "dry_sludge_not_removed_on_time",
               "label": "Dry sludge not removed on time",
               "id": 1748917381889,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             },
             {
               "value": "dry_sludge_stored_around_drying_beds",
               "label": "Dry sludge stored around drying beds",
               "id": 1748917394772,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             },
             {
               "value": "filtrate_from_sludge_drying_beds_returned_to_inlet",
               "label": "Filtrate from sludge drying beds returned to inlet",
               "id": 1748917405795,
-              "order": 5
+              "order": 5,
+              "color": "#7570b3"
             },
             {
               "value": "filtrate_overflowing_to_surrounding_environment",
               "label": "Filtrate  overflowing to surrounding environment",
               "id": 1748917413480,
-              "order": 6
+              "order": 6,
+              "color": "#e7298a"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748917423213,
-              "order": 7
+              "order": 7,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -2622,8 +2769,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748917481483, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748917481484, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748917481483, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748917481484, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null
         },
@@ -2647,8 +2794,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748917556017, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748917556018, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748917556017, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748917556018, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": [{ "id": 1748907188132, "options": ["yes"] }]
         },
@@ -2689,31 +2836,36 @@
               "value": "effluent_clear",
               "label": "Effluent Clear",
               "id": 1748917695721,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "bad_odor",
               "label": "Bad odor",
               "id": 1748917695722,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "low_dissolved_oxygen_content",
               "label": "Low Dissolved Oxygen Content",
               "id": 1748917714757,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "excessive_suspended_solids,turbidity,foam,grease,scum_and_colour",
               "label": "Excessive suspended solids,turbidity,foam,grease,scum and colour",
               "id": 1748917726828,
-              "order": 4
+              "order": 4,
+              "color": "#e41a1c"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748917735243,
-              "order": 5
+              "order": 5,
+              "color": "#1f78b4"
             }
           ],
           "dependency": null,
@@ -2740,8 +2892,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748917759663, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748917759664, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748917759663, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748917759664, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null,
           "rule": null
@@ -2759,13 +2911,15 @@
               "value": "lab_test",
               "label": "Lab Test",
               "id": 1748917712581,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "testing_kits",
               "label": "Testing Kits",
               "id": 1748917712582,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ],
           "dependency": [{ "id": 1748917751257, "options": ["yes"] }],
@@ -2797,110 +2951,128 @@
               "value": "temperature",
               "label": "Temperature",
               "id": 1748917801440,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
-            { "value": "ph", "label": "pH", "id": 1748917801441, "order": 2 },
+            {  "value": "ph", "label": "pH", "id": 1748917801441, "order": 2, "color": "#d95f02" },
             {
               "value": "conductivity",
               "label": "Conductivity",
               "id": 1748917801442,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "salinity",
               "label": "Salinity",
               "id": 1748917801443,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "total_suspended_solids",
               "label": "Total Suspended Solids",
               "id": 1748917801444,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "total_dissolved_solids",
               "label": "Total Dissolved Solids",
               "id": 1748917801445,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "settleable_solids_imhoff",
               "label": "Settleable Solids (Imhoff)",
               "id": 1748917801446,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "ammonia",
               "label": "Ammonia",
               "id": 1748917801447,
-              "order": 8
+              "order": 8,
+              "color": "#666666"
             },
             {
               "value": "total_kjeldhal_nitrogen",
               "label": "Total Kjeldhal Nitrogen",
               "id": 1748917801448,
-              "order": 9
+              "order": 9,
+              "color": "#e41a1c"
             },
             {
               "value": "nitrate",
               "label": "Nitrate",
               "id": 1748917801449,
-              "order": 10
+              "order": 10,
+              "color": "#377eb8"
             },
             {
               "value": "nitrite",
               "label": "Nitrite",
               "id": 1748917801450,
-              "order": 11
+              "order": 11,
+              "color": "#4daf4a"
             },
             {
               "value": "total_phosphate",
               "label": "Total Phosphate",
               "id": 1748917801451,
-              "order": 12
+              "order": 12,
+              "color": "#984ea3"
             },
             {
               "value": "chemical_oxygen_demand",
               "label": "Chemical Oxygen Demand",
               "id": 1748917801452,
-              "order": 13
+              "order": 13,
+              "color": "#ff7f00"
             },
             {
               "value": "dissolved_oxygen",
               "label": "Dissolved Oxygen",
               "id": 1748917801453,
-              "order": 14
+              "order": 14,
+              "color": "#a65628"
             },
             {
               "value": "bod",
               "label": "Bio-Chemical Oxygen Demand",
               "id": 1748917801454,
-              "order": 15
+              "order": 15,
+              "color": "#f781bf"
             },
             {
               "value": "total_alkalinity",
               "label": "Total Alkalinity",
               "id": 1748917801455,
-              "order": 16
+              "order": 16,
+              "color": "#999999"
             },
             {
               "value": "chloride",
               "label": "Chloride",
               "id": 1748917801456,
-              "order": 17
+              "order": 17,
+              "color": "#66c2a5"
             },
             {
               "value": "oil_and_grease",
               "label": "Oil and Grease",
               "id": 1748917801457,
-              "order": 18
+              "order": 18,
+              "color": "#8da0cb"
             },
             {
               "value": "total_sulphides",
               "label": "Total Sulphides",
               "id": 1748917801458,
-              "order": 19
+              "order": 19,
+              "color": "#e78ac3"
             }
           ],
           "dependency": [
@@ -3212,8 +3384,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748918425239, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748918425240, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748918425239, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748918425240, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null,
           "short_label": null
@@ -3239,8 +3411,8 @@
           "required": true,
           "meta": false,
           "options": [
-            { "value": "yes", "label": "Yes", "id": 1748918507612, "order": 1 },
-            { "value": "no", "label": "No", "id": 1748918507613, "order": 2 }
+            {  "value": "yes", "label": "Yes", "id": 1748918507612, "order": 1, "color": "#64A73B" },
+            {  "value": "no", "label": "No", "id": 1748918507613, "order": 2, "color": "#e41a1c" }
           ],
           "dependency": null,
           "short_label": null
@@ -3258,49 +3430,57 @@
               "value": "increase_in_budget",
               "label": "Increase in Budget",
               "id": 1748918558049,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "capacity_building",
               "label": "Capacity Building",
               "id": 1748918558051,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "upgrading_works",
               "label": "Upgrading Works",
               "id": 1748918610059,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "technical_assistance",
               "label": "Technical Assistance",
               "id": 1748918619884,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "training",
               "label": "Training",
               "id": 1748918622626,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "plant_rehabilitation",
               "label": "Plant Rehabilitation",
               "id": 1748918637167,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "plant_augmentation",
               "label": "Plant Augmentation",
               "id": 1748918647636,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748918662083,
-              "order": 8
+              "order": 8,
+              "color": "#1f78b4"
             }
           ],
           "dependency": [{ "id": 1748918485299, "options": ["yes"] }],

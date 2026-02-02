@@ -64,37 +64,43 @@
               "value": "villages",
               "label": "Villages",
               "id": 1749622291233,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "settlements",
               "label": "Settlements",
               "id": 1749623391234,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "households",
               "label": "Households",
               "id": 1749622291235,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "government_stations",
               "label": "Government Stations",
               "id": 1749622291237,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "school",
               "label": "School",
               "id": 1749622304568,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "healthcare_facility",
               "label": "Healthcare Facility",
               "id": 1749622304569,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             }
           ]
         },
@@ -147,49 +153,57 @@
               "value": "water_authority_of_fiji",
               "label": "Water Authority of Fiji",
               "id": 1749622577767,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "mineral_resources_department",
               "label": "Mineral Resources Department",
               "id": 1749622577768,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "rotary_pacific_for_water_foundation",
               "label": "Rotary Pacific for Water Foundation",
               "id": 1749622596495,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "habitat_of_humanity",
               "label": "Habitat of Humanity",
               "id": 1749622605400,
-              "order": 4
+              "order": 4,
+              "color": "#e7298a"
             },
             {
               "value": "rural_and_maritime_development",
               "label": "Rural and Maritime Development",
               "id": 1749622619579,
-              "order": 5
+              "order": 5,
+              "color": "#66a61e"
             },
             {
               "value": "commissioner_office",
               "label": "Commissioner Office",
               "id": 1749622622244,
-              "order": 6
+              "order": 6,
+              "color": "#e6ab02"
             },
             {
               "value": "department_of_water_and_sewerage",
               "label": "Department of Water and Sewerage",
               "id": 1849622785213,
-              "order": 7
+              "order": 7,
+              "color": "#a6761d"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1749622633456,
-              "order": 8
+              "order": 8,
+              "color": "#1f78b4"
             }
           ]
         },
@@ -221,13 +235,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622659285,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622659286,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -244,13 +260,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622681708,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622681709,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -267,13 +285,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622697234,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622697235,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
@@ -326,19 +346,22 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749622721234,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "not_active",
               "label": "Not Active",
               "id": 1749622721235,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622721236,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             }
           ],
           "dependency": [

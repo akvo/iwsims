@@ -38,13 +38,15 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749612134122,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749612134123,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -171,19 +173,22 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749612798215,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "faulty",
               "label": "Faulty",
               "id": 1749612798216,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "maintenance_in_progress",
               "label": "Maintenance in progress",
               "id": 1749612815463,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             }
           ]
         },
@@ -200,19 +205,22 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749612844277,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "maintenance_in_progress",
               "label": "Maintenance in progress",
               "id": 1749612844278,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "faulty",
               "label": "Faulty",
               "id": 1749612865769,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -229,19 +237,22 @@
               "value": "exhaust_fan_in_operation",
               "label": "Exhaust Fan in Operation",
               "id": 1749612888172,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "poor",
               "label": "Poor",
               "id": 1749612888173,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "not_available",
               "label": "Not available",
               "id": 1749612905891,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             }
           ]
         },
@@ -258,25 +269,29 @@
               "value": "broken",
               "label": "Broken",
               "id": 1749612978431,
-              "order": 1
+              "order": 1,
+              "color": "#e41a1c"
             },
             {
               "value": "need_maintenance",
               "label": "Need Maintenance",
               "id": 1749612978432,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "electrical_hazard",
               "label": "Electrical hazard",
               "id": 1749613003862,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             },
             {
               "value": "satisfactory",
               "label": "Satisfactory",
               "id": 1749613011530,
-              "order": 4
+              "order": 4,
+              "color": "#7570b3"
             }
           ]
         },
@@ -293,19 +308,22 @@
               "value": "covered",
               "label": "Covered",
               "id": 1749613036058,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "broken",
               "label": "Broken",
               "id": 1749613036059,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "missing",
               "label": "Missing",
               "id": 1749613055551,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             }
           ]
         },
@@ -322,25 +340,29 @@
               "value": "electrical_hoist",
               "label": "Electrical Hoist",
               "id": 1749613086550,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "mechanical_hoist",
               "label": "Mechanical Hoist",
               "id": 1749613086551,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "portable_hoist",
               "label": "Portable Hoist",
               "id": 1749613108168,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             },
             {
               "value": "not_available",
               "label": "Not available",
               "id": 1749613116190,
-              "order": 4
+              "order": 4,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -357,19 +379,22 @@
               "value": "oprational",
               "label": "Oprational",
               "id": 1749613150597,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "maintenance_in_progress",
               "label": "Maintenance in progress",
               "id": 1749613157598,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "faulty",
               "label": "Faulty",
               "id": 1749613150598,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -386,19 +411,22 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749613193817,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "maintenance_in_progress",
               "label": "Maintenance in progress",
               "id": 1749613193819,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "faulty",
               "label": "Faulty",
               "id": 1749613193818,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -415,19 +443,22 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749613403882,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "maintenance_in_progress",
               "label": "Maintenance in progress",
               "id": 1749613403884,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "faulty",
               "label": "Faulty",
               "id": 1749613403883,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             }
           ]
         },
@@ -444,25 +475,29 @@
               "value": "secured",
               "label": "Secured",
               "id": 1749613440061,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "missing",
               "label": "Missing",
               "id": 1749613440062,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "maintenance_in_progress",
               "label": "Maintenance in progress",
               "id": 1749613466726,
-              "order": 3
+              "order": 3,
+              "color": "#d95f02"
             },
             {
               "value": "needs_upgrade",
               "label": "Needs Upgrade",
               "id": 1749613474866,
-              "order": 4
+              "order": 4,
+              "color": "#1b9e77"
             }
           ]
         },
@@ -497,13 +532,15 @@
               "value": "generator",
               "label": "Generator",
               "id": 1749613543753,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "none",
               "label": "None",
               "id": 1749613543754,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             }
           ]
         },
@@ -520,19 +557,22 @@
               "value": "strong",
               "label": "Strong",
               "id": 1749613634465,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "mild",
               "label": "Mild",
               "id": 1749613634466,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "none",
               "label": "None",
               "id": 1749613649683,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             }
           ]
         },
@@ -549,19 +589,22 @@
               "value": "plenty",
               "label": "Plenty",
               "id": 1749613687453,
-              "order": 1
+              "order": 1,
+              "color": "#1b9e77"
             },
             {
               "value": "some",
               "label": "Some",
               "id": 1749613679337,
-              "order": 2
+              "order": 2,
+              "color": "#d95f02"
             },
             {
               "value": "none",
               "label": "None",
               "id": 1749613679338,
-              "order": 3
+              "order": 3,
+              "color": "#7570b3"
             }
           ]
         },
@@ -578,25 +621,29 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749613719015,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "overflowing",
               "label": "Overflowing",
               "id": 1749613719016,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "blocked",
               "label": "Blocked",
               "id": 1749613738974,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             },
             {
               "value": "not_operational",
               "label": "Not Operational",
               "id": 1749613747550,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             }
           ]
         },
@@ -613,25 +660,29 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749613783695,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "electrical_fault",
               "label": "Electrical fault",
               "id": 1749613783696,
-              "order": 2
+              "order": 2,
+              "color": "#1b9e77"
             },
             {
               "value": "duck_foot_problem",
               "label": "Duck Foot Problem",
               "id": 1749613798091,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             },
             {
               "value": "guide_rail_problem",
               "label": "Guide rail Problem",
               "id": 1749613826908,
-              "order": 4
+              "order": 4,
+              "color": "#d95f02"
             }
           ]
         },
@@ -648,19 +699,22 @@
               "value": "operational",
               "label": "Operational",
               "id": 1749613883663,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "faulty",
               "label": "Faulty",
               "id": 1749613883664,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "not_available",
               "label": "Not available",
               "id": 1749613907566,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             }
           ]
         },
@@ -677,19 +731,22 @@
               "value": "available",
               "label": "Available",
               "id": 1749613920474,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "not_available",
               "label": "Not available",
               "id": 1749613920475,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "intermittent_supply",
               "label": "Intermittent Supply",
               "id": 1749613941200,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             }
           ]
         },
@@ -706,19 +763,22 @@
               "value": "available",
               "label": "Available",
               "id": 1749613971166,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "not_available",
               "label": "Not available",
               "id": 1749613988135,
-              "order": 2
+              "order": 2,
+              "color": "#e41a1c"
             },
             {
               "value": "not_used",
               "label": "Not used",
               "id": 1749614003421,
-              "order": 3
+              "order": 3,
+              "color": "#1b9e77"
             }
           ]
         }
