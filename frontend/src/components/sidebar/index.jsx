@@ -326,8 +326,10 @@ const Sidebar = () => {
           <p>{text.downloadAppsQRText}</p>
           <div style={{ margin: "20px 0" }}>
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?data=${window.location.origin}/app&size=200x200`}
+              src="/images/download-app.png"
               alt={text.menuDownloadApps}
+              width={200}
+              height={200}
             />
           </div>
           <p>{text.downloadAppsLinkText}</p>
