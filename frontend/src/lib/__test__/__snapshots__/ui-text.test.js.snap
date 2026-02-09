@@ -236,6 +236,14 @@ Object {
       Download 
        App
     </React.Fragment>,
+    "downloadAppsLinkText": "or download using the links below:",
+    "downloadAppsQRText": <React.Fragment>
+      Download the 
+      <b>
+         App
+      </b>
+       using the QR codes below
+    </React.Fragment>,
     "downloadHere": "download here",
     "downloadReport": "Download Report",
     "downloadReportError": "Unable to download report",
@@ -632,6 +640,8 @@ Object {
     "menuAttributes": "Attributes",
     "menuControlCenter": "Control Center",
     "menuData": "Data",
+    "menuDocumentation": "Documentation",
+    "menuDownloadApps": "Download App",
     "menuDownloads": "Downloads",
     "menuEntities": "Entities",
     "menuEntityTypes": "Entity Types",
