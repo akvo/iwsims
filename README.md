@@ -95,6 +95,22 @@ Answer each prompt by entering 'y' or 'n' followed by the Enter key.
 
 Default Fake User's password: `Test#123`
 
+Generate QR Code for Mobile App Download:
+
+To generate a QR code image for the mobile app download link, run:
+
+```bash
+./dc.sh exec backend python manage.py generate_qr_code
+```
+
+This generates a QR code PNG image at `storage/images/download-app.png` encoding the default URL (`WEBDOMAIN/app`).
+
+To specify a custom URL:
+
+```bash
+./dc.sh exec backend python manage.py generate_qr_code --url https://example.com/app
+```
+
 #### Log
 
 ```bash
