@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Modal } from "antd";
 import { store, uiText } from "../../lib";
 import api from "../../lib/api";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -9,6 +9,8 @@ import {
   DatabaseOutlined,
   DashboardOutlined,
   DownloadOutlined,
+  BookOutlined,
+  AndroidOutlined,
 } from "@ant-design/icons";
 import { AbilityContext } from "../can";
 
@@ -18,6 +20,7 @@ const Sidebar = () => {
   const [firstLoad, setFirstLoad] = useState(true);
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [openKeys, setOpenKeys] = useState([]);
+  const [openDownloadAppsModal, setOpenDownloadAppsModal] = useState(false);
   const { user: authUser, administration, language } = store.useState((s) => s);
   const navigate = useNavigate();
   const location = useLocation();
@@ -133,115 +136,123 @@ const Sidebar = () => {
       }
     }
   }, [lastPath, selectedKeys, firstLoad, location.pathname, submenuMap]);
-
   return (
     <Sider className="site-layout-background">
-      <Menu
-        mode="inline"
+      <div
         style={{
-          height: "100%",
-          borderRight: 0,
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
         }}
-        onClick={handleMenuClick}
-        selectedKeys={selectedKeys}
-        openKeys={openKeys}
-        onOpenChange={handleOpenChange}
       >
-        {/* Control Center */}
-
-        <Menu.Item
-          key="menu-control-center"
-          icon={<DashboardOutlined />}
-          data-url="/control-center"
+        <Menu
+          mode="inline"
+          style={{
+            borderRight: 0,
+          }}
+          onClick={handleMenuClick}
+          selectedKeys={selectedKeys}
+          openKeys={openKeys}
+          onOpenChange={handleOpenChange}
         >
-          {text.menuControlCenter}
-        </Menu.Item>
+          {/* Control Center */}
 
-        {/* Users SubMenu */}
-        <Menu.SubMenu
-          key="manage-user"
-          icon={<UserOutlined />}
-          title={text.menuUsers}
-        >
-          {/* Wrap each menu item explicitly with a unique key for Can */}
-          {ability.can("manage", "user") && (
-            <Menu.Item key="menu-users" data-url="/control-center/users">
-              {text.menuManagePlatformUsers}
-            </Menu.Item>
-          )}
-          <Menu.Item key="menu-tree" data-url="/control-center/approvers/tree">
-            {text.menuValidationTree}
-          </Menu.Item>
-          {ability.can("read", "mobile") && (
-            <Menu.Item
-              key="menu-mobile-assignment"
-              data-url="/control-center/mobile-assignment"
-            >
-              {text.menuManageMobileUsers}
-            </Menu.Item>
-          )}
-          {ability.can("manage", "roles") && (
-            <Menu.Item key="menu-roles" data-url="/control-center/roles">
-              {text.menuManageRoles}
-            </Menu.Item>
-          )}
-        </Menu.SubMenu>
-
-        {/* Data SubMenu */}
-        <Menu.SubMenu
-          key="manage-data"
-          icon={<TableOutlined />}
-          title={text.menuData}
-        >
-          <Menu.Item key="menu-data" data-url="/control-center/data">
-            {text.menuManageData}
-          </Menu.Item>
-
-          {ability.can("manage", "draft") && (
-            <Menu.Item key="menu-draft" data-url="/control-center/data/draft">
-              {text.menuManageDraft}
-            </Menu.Item>
-          )}
-
-          {ability.can("manage", "submissions") && (
-            <Menu.Item
-              key="menu-submissions"
-              data-url="/control-center/data/submissions"
-            >
-              {text.menuPendingSubmissions}
-            </Menu.Item>
-          )}
-
-          {ability.can("manage", "approvals") && (
-            <Menu.Item
-              key="menu-approvals"
-              data-url="/control-center/approvals"
-            >
-              {text.menuApprovals}
-            </Menu.Item>
-          )}
-        </Menu.SubMenu>
-
-        {/* Master Data SubMenu */}
-        {ability.can("manage", "master-data") && (
-          <Menu.SubMenu
-            key="manage-master-data"
-            icon={<DatabaseOutlined />}
-            title={text.menuMasterData}
+          <Menu.Item
+            key="menu-control-center"
+            icon={<DashboardOutlined />}
+            data-url="/control-center"
           >
+            {text.menuControlCenter}
+          </Menu.Item>
+
+          {/* Users SubMenu */}
+          <Menu.SubMenu
+            key="manage-user"
+            icon={<UserOutlined />}
+            title={text.menuUsers}
+          >
+            {/* Wrap each menu item explicitly with a unique key for Can */}
+            {ability.can("manage", "user") && (
+              <Menu.Item key="menu-users" data-url="/control-center/users">
+                {text.menuManagePlatformUsers}
+              </Menu.Item>
+            )}
             <Menu.Item
-              key="menu-administration"
-              data-url="/control-center/master-data/administration"
+              key="menu-tree"
+              data-url="/control-center/approvers/tree"
             >
-              {text.menuAdministrativeList}
+              {text.menuValidationTree}
             </Menu.Item>
-            <Menu.Item
-              key="menu-attributes"
-              data-url="/control-center/master-data/attributes"
+            {ability.can("read", "mobile") && (
+              <Menu.Item
+                key="menu-mobile-assignment"
+                data-url="/control-center/mobile-assignment"
+              >
+                {text.menuManageMobileUsers}
+              </Menu.Item>
+            )}
+            {ability.can("manage", "roles") && (
+              <Menu.Item key="menu-roles" data-url="/control-center/roles">
+                {text.menuManageRoles}
+              </Menu.Item>
+            )}
+          </Menu.SubMenu>
+
+          {/* Data SubMenu */}
+          <Menu.SubMenu
+            key="manage-data"
+            icon={<TableOutlined />}
+            title={text.menuData}
+          >
+            <Menu.Item key="menu-data" data-url="/control-center/data">
+              {text.menuManageData}
+            </Menu.Item>
+
+            {ability.can("manage", "draft") && (
+              <Menu.Item key="menu-draft" data-url="/control-center/data/draft">
+                {text.menuManageDraft}
+              </Menu.Item>
+            )}
+
+            {ability.can("manage", "submissions") && (
+              <Menu.Item
+                key="menu-submissions"
+                data-url="/control-center/data/submissions"
+              >
+                {text.menuPendingSubmissions}
+              </Menu.Item>
+            )}
+
+            {ability.can("manage", "approvals") && (
+              <Menu.Item
+                key="menu-approvals"
+                data-url="/control-center/approvals"
+              >
+                {text.menuApprovals}
+              </Menu.Item>
+            )}
+          </Menu.SubMenu>
+
+          {/* Master Data SubMenu */}
+          {ability.can("manage", "master-data") && (
+            <Menu.SubMenu
+              key="manage-master-data"
+              icon={<DatabaseOutlined />}
+              title={text.menuMasterData}
             >
-              {text.menuAttributes}
-            </Menu.Item>
-            {/* <Menu.Item
+              <Menu.Item
+                key="menu-administration"
+                data-url="/control-center/master-data/administration"
+              >
+                {text.menuAdministrativeList}
+              </Menu.Item>
+              <Menu.Item
+                key="menu-attributes"
+                data-url="/control-center/master-data/attributes"
+              >
+                {text.menuAttributes}
+              </Menu.Item>
+              {/* <Menu.Item
               key="menu-entities"
               data-url="/control-center/master-data/entities"
             >
@@ -253,26 +264,86 @@ const Sidebar = () => {
             >
               {text.menuEntityTypes}
             </Menu.Item> */}
-            <Menu.Item
-              key="menu-organisations"
-              data-url="/control-center/master-data/organisations"
-            >
-              {text.menuOrganisations}
-            </Menu.Item>
-          </Menu.SubMenu>
-        )}
+              <Menu.Item
+                key="menu-organisations"
+                data-url="/control-center/master-data/organisations"
+              >
+                {text.menuOrganisations}
+              </Menu.Item>
+            </Menu.SubMenu>
+          )}
 
-        {/* Downloads */}
-        {ability.can("read", "downloads") && (
+          {/* Downloads */}
+          {ability.can("read", "downloads") && (
+            <Menu.Item
+              key="menu-downloads"
+              icon={<DownloadOutlined />}
+              data-url="/downloads"
+            >
+              {text.menuDownloads}
+            </Menu.Item>
+          )}
+        </Menu>
+      </div>
+
+      <Menu
+        mode="inline"
+        style={{
+          borderRight: 0,
+          borderTop: "1px solid #f0f0f0",
+          marginTop: "auto",
+        }}
+        selectable={false}
+      >
+        {ability.can("manage", "mobile") && (
           <Menu.Item
-            key="menu-downloads"
-            icon={<DownloadOutlined />}
-            data-url="/downloads"
+            key="menu-download-apps"
+            icon={<AndroidOutlined />}
+            onClick={() => setOpenDownloadAppsModal(true)}
           >
-            {text.menuDownloads}
+            {text.menuDownloadApps}
           </Menu.Item>
         )}
+        <Menu.Item
+          key="menu-documentation"
+          icon={<BookOutlined />}
+          onClick={(e) => {
+            e.domEvent.preventDefault();
+            window.open("/documentation", "_blank", "noopener,noreferrer");
+          }}
+        >
+          {text.menuDocumentation}
+        </Menu.Item>
       </Menu>
+      <Modal
+        title={text.menuDownloadApps}
+        open={openDownloadAppsModal}
+        footer={null}
+        onOk={() => setOpenDownloadAppsModal(false)}
+        onCancel={() => setOpenDownloadAppsModal(false)}
+      >
+        <div style={{ textAlign: "center" }}>
+          <p>{text.downloadAppsQRText}</p>
+          <div style={{ margin: "20px 0" }}>
+            <img
+              src="/images/download-app.png"
+              alt={text.menuDownloadApps}
+              width={200}
+              height={200}
+            />
+          </div>
+          <p>{text.downloadAppsLinkText}</p>
+          <div>
+            <a
+              href={`${window.location.origin}/app`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {`${window.location.origin}/app`}
+            </a>
+          </div>
+        </div>
+      </Modal>
     </Sider>
   );
 };

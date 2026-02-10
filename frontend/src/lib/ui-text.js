@@ -25,7 +25,8 @@ const uiText = {
     menuApprovals: "Approvals",
     menuDownloads: "Downloads",
     menuManageDraft: "Manage Drafts",
-
+    menuDownloadApps: "Download App",
+    menuDocumentation: "Documentation",
     // Login
     loginLoadingTex: (
       <Fragment>
@@ -970,6 +971,13 @@ const uiText = {
     downloadAppText,
     showAllQuestionsSwitch: "Show all questions",
     totalMonitoring: "Total Monitoring",
+    downloadAppsQRText: (
+      <Fragment>
+        Download the <b>{window.appConfig.apkName} App</b> using the QR codes
+        below
+      </Fragment>
+    ),
+    downloadAppsLinkText: "or download using the links below:",
   },
 
   de: {},

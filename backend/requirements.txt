@@ -43,3 +43,7 @@ requests-mock==1.11.0
 sentry-sdk==2.2.0
 # Office doc rendering
 python-docx==1.1.2
+
+# QR code generation
+qrcode==7.4.2
+Pillow==9.5.0

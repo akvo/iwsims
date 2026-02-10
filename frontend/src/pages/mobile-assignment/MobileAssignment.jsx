@@ -4,7 +4,6 @@ import {
   DownCircleOutlined,
   PlusOutlined,
   LeftCircleOutlined,
-  AndroidOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { Breadcrumbs, DescriptionPanel } from "../../components";
@@ -180,17 +179,6 @@ const MobileAssignment = () => {
             <Col>
               <Can I="manage" a="mobile">
                 <Space>
-                  <Button
-                    icon={<AndroidOutlined />}
-                    type="primary"
-                    shape="round"
-                    href="/app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    ghost
-                  >
-                    {text.downloadAppText}
-                  </Button>
                   <Link to="/control-center/mobile-assignment/add">
                     <Button
                       icon={<PlusOutlined />}
