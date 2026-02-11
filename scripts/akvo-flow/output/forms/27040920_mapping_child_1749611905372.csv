@@ -1,62 +1,60 @@
 flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
 27040920,Comments and Recommendations,Comments from DWS Staff,18910928,1749611905372,Comments and Recommendations,"Comments and Recommendations |
-Comments from DWS Staff",1749614058464,100.0,high,text_similarity,3002
+Comments from DWS Staff",1749614058464,100,high,text_similarity,3002
 27040920,Comments and Recommendations,Comments from Supervisor,27080934,1749611905372,Comments and Recommendations,"Comments and Recommendations |
-Comments from Supervisor",1749612019055,100.0,high,text_similarity,3001
+Comments from Supervisor",1749612019055,100,high,text_similarity,3001
 27040920,General Information on Pump Station,Odour,18940921,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Odour",1749613625174,100.0,high,text_similarity,1019
+Odour",1749613625174,100,high,text_similarity,1019
 27040920,General Information on Pump Station,Number of pumps standby,20390925,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Number of pumps standby",1749613513292,100.0,high,text_similarity,1017
+Number of pumps standby",1749613513292,100,high,text_similarity,1017
 27040920,General Information on Pump Station,OHS equipment,20400926,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-OHS equipment",1749613958725,100.0,high,text_similarity,1025
+OHS equipment",1749613958725,100,high,text_similarity,1025
 27040920,General Information on Pump Station,Security gate and Fencing,21280921,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Security gate and Fencing",1749612437237,100.0,high,text_similarity,1005
+Security gate and Fencing",1749612437237,100,high,text_similarity,1005
 27040920,General Information on Pump Station,Pump Station Lid,21290925,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Pump Station Lid",1749613029710,100.0,high,text_similarity,1010
+Pump Station Lid",1749613029710,100,high,text_similarity,1010
 27040920,General Information on Pump Station,Power Backup System,22220932,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Power Backup System",1749613534231,100.0,high,text_similarity,1018
+Power Backup System",1749613534231,100,high,text_similarity,1018
 27040920,General Information on Pump Station,Log Book available and updated?,22250920,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Log Book available and updated?",1749611990753,100.0,high,text_similarity,1002
+Log Book available and updated?",1749611990753,100,high,text_similarity,1002
 27040920,General Information on Pump Station,Lights,22260921,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Lights",1749613872416,100.0,high,text_similarity,1023
+Lights",1749613872416,100,high,text_similarity,1023
 27040920,General Information on Pump Station,Sluice valve,23240925,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Sluice valve",1749612827907,100.0,high,text_similarity,1007
+Sluice valve",1749612827907,100,high,text_similarity,1007
 27040920,General Information on Pump Station,Hour Run Meter,23270921,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Hour Run Meter",1749613144170,100.0,high,text_similarity,1012
-27040920,General Information on Pump Station,Building Conditions,24210922,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Ground Conditions",1749612149744,82.76,low,text_similarity,1003
+Hour Run Meter",1749613144170,100,high,text_similarity,1012
+27040920,General Information on Pump Station,Building Conditions,24210922,,,,,82.76,low,manual,
 27040920,General Information on Pump Station,Ground Conditions,24230921,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Ground Conditions",1749612149744,100.0,high,text_similarity,1003
+Ground Conditions",1749612149744,100,high,text_similarity,1003
 27040920,General Information on Pump Station,Pump Status,24260925,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Pump Status",1749613769968,100.0,high,text_similarity,1022
+Pump Status",1749613769968,100,high,text_similarity,1022
 27040920,General Information on Pump Station,Water Supply,24280923,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Water Supply",1749613907567,100.0,high,text_similarity,1024
+Water Supply",1749613907567,100,high,text_similarity,1024
 27040920,General Information on Pump Station,Non return Valve,25150924,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Non return Valve",1749612781881,100.0,high,text_similarity,1006
+Non return Valve",1749612781881,100,high,text_similarity,1006
 27040920,General Information on Pump Station,Ventilation,26190921,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Ventilation",1749612881122,100.0,high,text_similarity,1008
+Ventilation",1749612881122,100,high,text_similarity,1008
 27040920,General Information on Pump Station,Gantry,26190922,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Gantry",1749613073320,100.0,high,text_similarity,1011
+Gantry",1749613073320,100,high,text_similarity,1011
 27040920,General Information on Pump Station,Electrical Panel,26220925,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Electrical Panel",1749612965593,100.0,high,text_similarity,1009
+Electrical Panel",1749612965593,100,high,text_similarity,1009
 27040920,General Information on Pump Station,Number of pumps in operation,27080929,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Number of pumps in operation",1749613489958,100.0,high,text_similarity,1016
+Number of pumps in operation",1749613489958,100,high,text_similarity,1016
 27040920,General Information on Pump Station,Fats/Grease Balls,27090923,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Fats/Grease Balls",1749613671183,100.0,high,text_similarity,1020
+Fats/Grease Balls",1749613671183,100,high,text_similarity,1020
 27040920,General Information on Pump Station,Volt Meter,27100924,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Volt Meter",1749613395029,100.0,high,text_similarity,1014
+Volt Meter",1749613395029,100,high,text_similarity,1014
 27040920,General Information on Pump Station,Pump Station Status,28090934,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Pump Station Status",1749613710063,100.0,high,text_similarity,1021
+Pump Station Status",1749613710063,100,high,text_similarity,1021
 27040920,General Information on Pump Station,Guardrails for Pump Sation,28100925,1749611905372,General Information on Pump Station,"General Information on Pump Station |
 Guardrails for Pump Station",1749613433763,96.15,high,text_similarity,1015
 27040920,General Information on Pump Station,Amp Meter,28110928,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Amp Meter",1749613187910,100.0,high,text_similarity,1013
+Amp Meter",1749613187910,100,high,text_similarity,1013
 27040920,Pump Station Registration,Which Division are you in?,20330920,,,,,53.33,none,none,
-27040920,Pump Station Registration,Name of Pump Station,22190920,1749611905372,General Information on Pump Station,"General Information on Pump Station |
-Pump Station Lid",1749613029710,85.71,medium,text_similarity,1010
+27040920,Pump Station Registration,Name of Pump Station,22190920,,,,,85.71,medium,manual,
 27040920,Pump Station Registration,Which District are you in?,22220936,,,,,51.16,none,none,
 27040920,Pump Station Registration,Take photo of Pump Station,23190921,1749611905372,Photos of Inspection,"Photos of Inspection |
-Take Photo",1749614077932,100.0,high,text_similarity,2001
+Take Photo",1749614077932,100,high,text_similarity,2001
 27040920,Pump Station Registration,GPS Location,27120920,,,,,66.67,none,none,
 27040920,Pump Station Registration,Inspection Date,27060922,1749611905372,General Information on Pump Station,"General Information on Pump Station | 
-Inspection Date",1749611905374,0.0,none,manual,1001
+Inspection Date",1749611905374,0,none,manual,1001
