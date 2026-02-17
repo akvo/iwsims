@@ -125,6 +125,7 @@ export const downloadDatapointsJson = async (
     if (isExists) {
       await crudDataPoints.updateByUUID(txDb, {
         uuid,
+        form: form?.id,
         json: answers,
         syncedAt: lastUpdated,
         repeats: JSON.stringify(repeats),
