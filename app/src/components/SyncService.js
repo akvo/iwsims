@@ -8,8 +8,8 @@ import crudJobs from '../database/crud/crud-jobs';
 import { crudConfig, crudDataPoints, crudForms } from '../database/crud';
 import {
   downloadDatapointsJson,
-  fetchDatapoints,
-  fetchDraftDatapoints,
+  fetchDatapointsPageByPage,
+  fetchDraftDatapointsPageByPage,
 } from '../lib/sync-datapoints';
 import {
   jobStatus,
@@ -18,6 +18,7 @@ import {
   SYNC_FORM_SUBMISSION_TASK_NAME,
   SYNC_STATUS,
 } from '../lib/constants';
+
 /**
  * This sync only works in the foreground service
  */
@@ -30,70 +31,63 @@ const SyncService = () => {
   const db = useSQLiteContext();
 
   const onSync = useCallback(async () => {
-    const pendingToSync = await crudDataPoints.selectSubmissionToSync(db);
     const activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
-    const settings = await crudConfig.getConfig(db);
-    if (pendingToSync?.length === 0 && activeJob?.id) {
-      /**
-       * If there are no pending items to sync and the job is still active,
-       * delete the job.
-       */
-      await crudJobs.deleteJob(db, activeJob.id);
+    if (!activeJob) {
       return;
     }
 
+    const pendingToSync = await crudDataPoints.selectSubmissionToSync(db, 1);
+
+    // No pending data → clean up the job
+    if (!pendingToSync?.length) {
+      await crudJobs.deleteJob(db, activeJob.id);
+      UIState.update((s) => {
+        s.statusBar = {
+          type: SYNC_STATUS.success,
+          bgColor: '#16a34a',
+          icon: 'checkmark-done',
+        };
+        s.refreshPage = true;
+      });
+      return;
+    }
+
+    // Check network constraints
+    const settings = await crudConfig.getConfig(db);
     const { type: networkType } = await Network.getNetworkStateAsync();
     if (settings?.syncWifiOnly && networkType !== Network.NetworkStateType.WIFI) {
       return;
     }
 
-    if (activeJob?.status === jobStatus.ON_PROGRESS) {
-      if (activeJob.attempt < MAX_ATTEMPT) {
-        /**
-         * Job is still in progress,
-         * but we still have pending items; then increase the attempt value.
-         */
+    // Stale job detection: if ON_PROGRESS, it may be stuck (app crashed)
+    if (activeJob.status === jobStatus.ON_PROGRESS) {
+      if (activeJob.attempt >= MAX_ATTEMPT) {
+        await crudJobs.deleteJob(db, activeJob.id);
+        UIState.update((s) => {
+          s.statusBar = {
+            type: SYNC_STATUS.failed,
+            bgColor: '#ec003f',
+            icon: 'alert',
+          };
+        });
+      } else {
         await crudJobs.updateJob(db, activeJob.id, {
+          status: jobStatus.PENDING,
           attempt: activeJob.attempt + 1,
         });
+        UIState.update((s) => {
+          s.statusBar = {
+            type: SYNC_STATUS.re_sync,
+            bgColor: '#d97706',
+            icon: 'repeat',
+          };
+        });
       }
-
-      if (activeJob.attempt === MAX_ATTEMPT) {
-        /**
-         * If the status is still IN PROGRESS and has reached the maximum attempts,
-         * set it to PENDING when there are still pending sync items,
-         * delete the job when it's finish and there are no pending items.
-         */
-        if (pendingToSync) {
-          UIState.update((s) => {
-            s.statusBar = {
-              type: SYNC_STATUS.re_sync,
-              bgColor: '#d97706',
-              icon: 'repeat',
-            };
-          });
-          await crudJobs.updateJob(db, activeJob.id, {
-            status: jobStatus.PENDING,
-            attempt: 0, // RESET attempt to 0
-          });
-        } else {
-          UIState.update((s) => {
-            s.statusBar = {
-              type: SYNC_STATUS.success,
-              bgColor: '#16a34a',
-              icon: 'checkmark-done',
-            };
-            s.refreshPage = true;
-          });
-          await crudJobs.deleteJob(db, activeJob.id);
-        }
-      }
+      return;
     }
 
-    if (
-      activeJob?.status === jobStatus.PENDING ||
-      (activeJob?.status === jobStatus.FAILED && activeJob?.attempt <= MAX_ATTEMPT)
-    ) {
+    // PENDING → execute sync
+    if (activeJob.status === jobStatus.PENDING && activeJob.attempt < MAX_ATTEMPT) {
       UIState.update((s) => {
         s.statusBar = {
           type: SYNC_STATUS.on_progress,
@@ -113,14 +107,11 @@ const SyncService = () => {
       return;
     }
     const syncTimer = setInterval(() => {
-      // Perform sync operation
       onSync();
     }, syncInSecond);
 
     // eslint-disable-next-line consistent-return
-    return () =>
-      // Clear the interval when the component unmounts
-      clearInterval(syncTimer);
+    return () => clearInterval(syncTimer);
   }, [syncInSecond, isOnline, isManualSynced, onSync]);
 
   const onSyncDataPoint = useCallback(async () => {
@@ -131,74 +122,85 @@ const SyncService = () => {
       s.inProgress = !!activeJob;
     });
 
-    if (activeJob && activeJob.status === jobStatus.PENDING && activeJob.attempt < MAX_ATTEMPT) {
-      await crudJobs.updateJob(db, activeJob.id, {
-        status: jobStatus.ON_PROGRESS,
+    if (!activeJob || activeJob.status !== jobStatus.PENDING) {
+      return;
+    }
+    if (activeJob.attempt >= MAX_ATTEMPT) {
+      await crudJobs.deleteJob(db, activeJob.id);
+      DatapointSyncState.update((s) => {
+        s.inProgress = false;
+        s.progress = 0;
       });
+      return;
+    }
 
-      try {
-        const monitoringRes = await fetchDatapoints();
-        const apiURLs = monitoringRes.map(
-          ({
+    await crudJobs.updateJob(db, activeJob.id, {
+      status: jobStatus.ON_PROGRESS,
+    });
+
+    UIState.update((s) => {
+      s.statusBar = {
+        type: SYNC_STATUS.on_progress,
+        bgColor: '#2563eb',
+        icon: 'sync',
+      };
+    });
+
+    try {
+      const formCache = new Map();
+
+      await fetchDatapointsPageByPage(async (pageData, pageNumber, totalPages) => {
+        await pageData.reduce(async (previousPromise, item, index) => {
+          await previousPromise;
+          const {
             url,
             form_id: formId,
             administration_id: administrationId,
             last_updated: lastUpdated,
-          }) => ({
-            url,
-            formId,
-            administrationId,
-            lastUpdated,
-          }),
-        );
+          } = item;
+          try {
+            await downloadDatapointsJson(
+              db,
+              { url, formId, administrationId, lastUpdated },
+              activeJob.user,
+              formCache,
+            );
+            // Granular progress: page + item within page
+            const pageProgress = ((pageNumber - 1) / totalPages) * 100;
+            const itemProgress = ((index + 1) / pageData.length) * (100 / totalPages);
+            DatapointSyncState.update((s) => {
+              s.progress = pageProgress + itemProgress;
+            });
+          } catch (error) {
+            Sentry.captureMessage(`Error downloading datapoint JSON for URL ${url}`);
+            Sentry.captureException(error);
+          }
+        }, Promise.resolve());
+      });
 
-        // Process all datapoints sequentially without transaction wrapper
-        // Individual datapoint operations will handle their own transactions
-        const processDatapointSequentially = async (urls) => {
-          // Process URLs sequentially using reduce to avoid for...of loop
-          await urls.reduce(async (previousPromise, urlData, index) => {
-            await previousPromise;
-            try {
-              await downloadDatapointsJson(db, urlData, activeJob.user);
-              // Update progress
-              DatapointSyncState.update((s) => {
-                s.progress = ((index + 1) / urls.length) * 100;
-              });
-            } catch (error) {
-              // Continue processing other datapoints even if one fails
-              Sentry.captureMessage(`Error downloading datapoint JSON for URL ${urlData.url}`);
-              Sentry.captureException(error);
-            }
-          }, Promise.resolve());
-        };
-
-        await processDatapointSequentially(apiURLs);
-
-        await crudJobs.deleteJob(db, activeJob.id);
-
-        DatapointSyncState.update((s) => {
-          s.inProgress = false;
-        });
-
-        UIState.update((s) => {
-          s.refreshPage = true;
-        });
-      } catch (error) {
-        DatapointSyncState.update((s) => {
-          s.added = true;
-        });
-        await crudJobs.updateJob(db, activeJob.id, {
-          status: jobStatus.PENDING,
-          attempt: activeJob.attempt + 1,
-          info: String(error),
-        });
-      }
-    }
-
-    if (activeJob && activeJob.status === jobStatus.PENDING && activeJob.attempt === MAX_ATTEMPT) {
       await crudJobs.deleteJob(db, activeJob.id);
+
       DatapointSyncState.update((s) => {
         s.inProgress = false;
+        s.progress = 0;
+      });
+
+      UIState.update((s) => {
+        s.refreshPage = true;
+        s.statusBar = {
+          type: SYNC_STATUS.success,
+          bgColor: '#16a34a',
+          icon: 'checkmark-done',
+        };
+      });
+    } catch (error) {
+      DatapointSyncState.update((s) => {
+        s.added = true;
+      });
+      await crudJobs.updateJob(db, activeJob.id, {
+        status: jobStatus.PENDING,
+        attempt: activeJob.attempt + 1,
+        info: String(error),
       });
     }
   }, [db]);
@@ -212,66 +214,56 @@ const SyncService = () => {
           s.draftInProgress = true;
         });
 
-        const draftRes = await fetchDraftDatapoints();
-        // Process draft datapoints sequentially without transaction wrapper
-        // Individual operations will handle their own database safety
-        await draftRes.reduce(async (previousPromise, draftData) => {
-          await previousPromise;
-          // Add a small delay to prevent overwhelming the database connection
-          await new Promise((resolve) => {
-            setTimeout(resolve, 1000);
-          });
+        await fetchDraftDatapointsPageByPage(async (pageData) => {
+          await pageData.reduce(async (previousPromise, draftData) => {
+            await previousPromise;
 
-          const {
-            administration: administrationId,
-            datapoint_name: name,
-            geolocation: geo,
-            form: formId,
-            id: draftId,
-            repeats,
-            ...d
-          } = draftData;
+            const {
+              administration: administrationId,
+              datapoint_name: name,
+              geolocation: geo,
+              form: formId,
+              id: draftId,
+              repeats,
+              ...d
+            } = draftData;
 
-          // Check if draft already exists by draftId
-          const existingDraft = await crudDataPoints.getByDraftId(db, { draftId });
+            const existingDraft = await crudDataPoints.getByDraftId(db, { draftId });
 
-          if (existingDraft && existingDraft?.syncedAt) {
-            // If the draft already exists, update it
-            await crudDataPoints.updateDataPoint(db, {
-              ...d,
-              id: existingDraft.id,
-              name,
-              geo,
-              repeats: JSON.stringify(repeats),
-              submitted: 0,
-              syncedAt: new Date().toISOString(),
-            });
-          } else {
-            // Get the form for this draft
-            const form = await crudForms.getByFormId(db, { formId });
-            if (!form) {
-              return; // Skip if form not found
+            if (existingDraft && existingDraft?.syncedAt) {
+              await crudDataPoints.updateDataPoint(db, {
+                ...d,
+                id: existingDraft.id,
+                name,
+                geo,
+                repeats: JSON.stringify(repeats),
+                submitted: 0,
+                syncedAt: new Date().toISOString(),
+              });
+            } else {
+              const form = await crudForms.getByFormId(db, { formId });
+              if (!form) {
+                return;
+              }
+
+              const draftDatapoint = {
+                ...d,
+                administrationId,
+                name,
+                geo,
+                draftId,
+                repeats: JSON.stringify(repeats),
+                form: form.id,
+                submitted: 0,
+                user: userId,
+                createdAt: new Date().toISOString(),
+                syncedAt: new Date().toISOString(),
+              };
+              await crudDataPoints.saveDataPoint(db, draftDatapoint);
             }
+          }, Promise.resolve());
+        });
 
-            // Create new draft datapoint without specifying id to avoid conflicts
-            const draftDatapoint = {
-              ...d,
-              administrationId,
-              name,
-              geo,
-              draftId,
-              repeats: JSON.stringify(repeats),
-              form: form.id,
-              submitted: 0,
-              user: userId,
-              createdAt: new Date().toISOString(),
-              syncedAt: new Date().toISOString(),
-            };
-            await crudDataPoints.saveDataPoint(db, draftDatapoint);
-          }
-        }, Promise.resolve());
-
-        // Delete all records with draftId = NULL and syncedAt NOT NULL to prevent duplication
         await crudDataPoints.deleteDraftIdIsNull(db);
 
         DatapointSyncState.update((s) => {
@@ -312,12 +304,11 @@ const SyncService = () => {
 
   useEffect(() => {
     if (isManualSynced) {
-      // If manual sync is triggered, run the sync immediately
       onSync();
     }
   }, [isManualSynced, onSync]);
 
-  return null; // This is a service component, no rendering is needed
+  return null;
 };
 
 export default SyncService;

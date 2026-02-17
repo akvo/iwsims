@@ -72,30 +72,25 @@ const Home = ({ navigation, route }) => {
       const cascadeFiles = responses.flatMap(({ value: res }) => res.data.cascades);
       const downloadFiles = [...new Set(cascadeFiles)];
 
-      downloadFiles.forEach(async (file) => {
+      await downloadFiles.reduce(async (prev, file) => {
+        await prev;
         await cascades.download(api.getConfig().baseURL + file, file, true);
-      });
+      }, Promise.resolve());
 
-      responses.forEach(async ({ value: res }) => {
+      await responses.reduce(async (prev, { value: res }) => {
+        await prev;
         const { data: apiData } = res;
-        const { id: formId, version } = apiData;
+        const { id: formId, version, parent: parentId } = apiData;
         const findNew = newForms.find((n) => n.id === formId);
-        if (findNew) {
-          // insert new form to database
-          await crudForms.addForm(db, {
-            ...findNew,
-            userId,
-            formJSON: apiData,
-          });
-        }
-        await crudForms.updateForm(db, {
+        await crudForms.upsertForm(db, {
+          ...(findNew || {}),
+          id: formId,
+          parentId,
           userId,
-          formId,
           version,
           formJSON: apiData,
-          latest: 1,
         });
-      });
+      }, Promise.resolve());
     } catch (error) {
       Sentry.captureMessage('[Home] Unable sync all forms');
       Sentry.captureException(error);
@@ -110,14 +105,13 @@ const Home = ({ navigation, route }) => {
     const myForms = await crudForms.getMyForms(db);
 
     if (myForms.length > apiData.formsUrl.length) {
-      /**
-       * Delete forms
-       */
-      await myForms
-        .filter((mf) => !apiData.formsUrl.map((n) => n?.id).includes(mf.formId))
-        .forEach(async (mf) => {
-          await crudForms.deleteForm(db, mf.id);
-        });
+      const formsToDelete = myForms.filter(
+        (mf) => !apiData.formsUrl.map((n) => n?.id).includes(mf.formId),
+      );
+      await formsToDelete.reduce(async (prev, mf) => {
+        await prev;
+        await crudForms.deleteForm(db, mf.id);
+      }, Promise.resolve());
     }
 
     const newForms = apiData.formsUrl
