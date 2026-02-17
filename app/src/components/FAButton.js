@@ -31,7 +31,7 @@ const FAButton = ({
   iconPosition = 'left',
   disabled = false,
 }) => (
-  <View style={styles.buttonWrapper}>
+  <View style={[styles.buttonWrapper]}>
     <TouchableOpacity
       onPress={onPress}
       testID={testID}
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     position: 'fixed',
     left: 0,
     right: 0,
-    bottom: 36,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     pointerEvents: 'box-none',

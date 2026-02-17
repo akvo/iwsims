@@ -62,7 +62,7 @@
       "expo-asset"
     ],
     "androidNavigationBar": {
-      "visible": "immersive",
+      "visible": "overscan",
       "barStyle": "dark-content",
       "backgroundColor": "#000000"
     },

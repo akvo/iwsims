@@ -210,6 +210,26 @@ Located in `./app/`
 - Background sync with backend via `expo-background-fetch` and `expo-task-manager`
 - Network state monitoring with `@react-native-community/netinfo`
 
+#### ESLint Rules (Airbnb config)
+The mobile app extends `airbnb` ESLint. Key rules to follow when writing JS in `app/`:
+- **No `for...of` loops** (`no-restricted-syntax`): Use `.reduce()`, `.map()`, `.forEach()`, or `.filter()` instead
+- **No `await` in loops** (`no-await-in-loop`): For sequential async processing, use the reduce pattern:
+  ```javascript
+  // CORRECT: sequential async with reduce
+  await items.reduce(async (prev, item) => {
+    await prev;
+    await doSomething(item);
+  }, Promise.resolve());
+
+  // WRONG: for...of with await
+  for (const item of items) { await doSomething(item); }
+
+  // WRONG: forEach with async (fire-and-forget, doesn't await)
+  items.forEach(async (item) => { await doSomething(item); });
+  ```
+- **Arrow functions for components** (`react/function-component-definition`): Named and unnamed components must use arrow functions or function expressions
+- **No param reassign** except props (`no-param-reassign`): Pullstate `.update((s) => { s.field = value })` is allowed
+
 ## Development Commands
 
 ### Initial Setup

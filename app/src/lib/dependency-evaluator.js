@@ -11,7 +11,7 @@
  */
 export const intersection = (array1, array2) => {
   const set1 = new Set(array1);
-  return array2.filter(item => set1.has(item));
+  return array2.filter((item) => set1.has(item));
 };
 
 /**
