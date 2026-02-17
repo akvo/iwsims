@@ -1,22 +1,32 @@
 import React, { useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { UIState } from '../store';
+import { UIState, DatapointSyncState } from '../store';
 import { i18n } from '../lib';
 import { SYNC_STATUS } from '../lib/constants';
 
 const TIMEOUT_DISMISS = 3000; // 3second
 
 const NetworkStatusBar = () => {
+  const insets = useSafeAreaInsets();
   const isOnline = UIState.useState((s) => s.online);
   const activeLang = UIState.useState((s) => s.lang);
   const statusBar = UIState.useState((s) => s.statusBar);
+  const syncProgress = DatapointSyncState.useState((s) => s.progress);
+  const syncInProgress = DatapointSyncState.useState((s) => s.inProgress);
   const trans = i18n.text(activeLang);
   const statusBg = isOnline ? statusBar?.bgColor || '#ef4444' : '#ef4444';
   const statusIc = isOnline ? statusBar?.icon || 'cloud-offline' : 'cloud-offline';
+
+  const syncingLabel =
+    syncInProgress && syncProgress > 0
+      ? `${trans.syncingText} ${Math.round(syncProgress)}%`
+      : trans.syncingText;
+
   const statusText = {
-    1: trans.syncingText,
+    1: syncingLabel,
     2: trans.reSyncingText,
     3: trans.doneText,
     4: trans.syncErrorText,
@@ -45,6 +55,7 @@ const NetworkStatusBar = () => {
         style={{
           ...styles.container,
           backgroundColor: statusBg,
+          marginBottom: insets.bottom,
         }}
       >
         <Icon name={statusIc} testID="offline-icon" style={styles.icon} />
