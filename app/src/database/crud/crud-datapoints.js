@@ -25,7 +25,7 @@ const dataPointsQuery = () => ({
     const rows = await sql.getFilteredRows(db, 'datapoints', { ...columns }, 'id', 'DESC', true);
     return rows;
   },
-  selectSubmissionToSync: async (db) => {
+  selectSubmissionToSync: async (db, limit = null) => {
     const rows = await sql.executeQuery(
       db,
       `SELECT
@@ -35,7 +35,8 @@ const dataPointsQuery = () => ({
         FROM datapoints
         JOIN forms ON datapoints.form = forms.id
         WHERE datapoints.syncedAt IS NULL
-        ORDER BY datapoints.createdAt ASC`,
+        ORDER BY datapoints.createdAt ASC
+        ${limit ? `LIMIT ${parseInt(limit, 10)}` : ''}`,
     );
     return rows;
   },
