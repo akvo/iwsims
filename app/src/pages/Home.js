@@ -44,6 +44,8 @@ const Home = ({ navigation, route }) => {
   const syncWifiOnly = UserState.useState((s) => s.syncWifiOnly);
   const statusBar = UIState.useState((s) => s.statusBar);
   const refreshPage = UIState.useState((s) => s.refreshPage);
+  const syncingFormId = DatapointSyncState.useState((s) => s.syncingFormId);
+  const formProgress = DatapointSyncState.useState((s) => s.formProgress);
 
   const activeLang = UIState.useState((s) => s.lang);
   const trans = i18n.text(activeLang);
@@ -347,7 +349,13 @@ const Home = ({ navigation, route }) => {
         </TouchableOpacity>
       }
     >
-      <BaseLayout.Content data={filteredData} action={goToSubmission} columns={2} />
+      <BaseLayout.Content
+        data={filteredData}
+        action={goToSubmission}
+        columns={2}
+        syncingFormId={syncingFormId}
+        formProgress={formProgress}
+      />
       <FAButton
         label={syncLoading ? trans.syncingText : trans.syncDataPointBtn}
         onPress={handleOnSync}

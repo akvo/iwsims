@@ -20,13 +20,22 @@ const NetworkStatusBar = () => {
   const statusBg = isOnline ? statusBar?.bgColor || '#ef4444' : '#ef4444';
   const statusIc = isOnline ? statusBar?.icon || 'cloud-offline' : 'cloud-offline';
 
-  const syncingLabel =
-    syncInProgress && syncProgress > 0
+  const getSyncPhaseLabel = () => {
+    const { syncPhase } = statusBar || {};
+    if (syncPhase === 'uploading') return trans.uploadingSubmissionsText;
+    if (syncPhase === 'syncing_drafts') return trans.syncingDraftsText;
+    if (syncPhase === 'downloading') {
+      return syncInProgress && syncProgress > 0
+        ? `${trans.downloadingDatapointsText} ${Math.round(syncProgress)}%`
+        : trans.downloadingDatapointsText;
+    }
+    return syncInProgress && syncProgress > 0
       ? `${trans.syncingText} ${Math.round(syncProgress)}%`
       : trans.syncingText;
+  };
 
   const statusText = {
-    1: syncingLabel,
+    1: getSyncPhaseLabel(),
     2: trans.reSyncingText,
     3: trans.doneText,
     4: trans.syncErrorText,
