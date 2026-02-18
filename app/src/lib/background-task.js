@@ -38,7 +38,6 @@ const syncFormVersion = async (
     const { data } = res;
     let hasNewForms = false;
 
-    // eslint-disable-next-line no-await-in-loop
     await data.formsUrl.reduce(async (prev, form) => {
       await prev;
       const formExist = await crudForms.selectFormByIdAndVersion(db, { ...form });
@@ -126,7 +125,9 @@ const handleOnUploadFiles = async (
     }
   }, []);
 
-  if (!allFiles.length) return [];
+  if (!allFiles.length) {
+    return { uploadedFiles: [], failedDataIDs: new Set() };
+  }
 
   // Prepare lazy upload functions (not executed yet)
   const uploadFns = allFiles.map((f) => () => {
@@ -158,10 +159,16 @@ const handleOnUploadFiles = async (
     return prev.concat(chunkResults);
   }, Promise.resolve([]));
 
-  const responses = results
-    .filter((result) => result.status === 'fulfilled')
-    .map((result) => result.value);
-  return responses.map((res, i) => ({ ...allFiles[i], ...res.data }));
+  const uploadedFiles = [];
+  const failedDataIDs = new Set();
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
+      uploadedFiles.push({ ...allFiles[i], ...result.value.data });
+    } else {
+      failedDataIDs.add(allFiles[i].dataID);
+    }
+  });
+  return { uploadedFiles, failedDataIDs };
 };
 
 // Recursive batch processor: fetches BATCH_SIZE items, processes them,
@@ -173,8 +180,15 @@ const processBatch = async (db, activeJob, session, counts = { success: 0, faile
   }
 
   // Upload files for THIS BATCH only
-  const photos = await handleOnUploadFiles(data, '/images', [QUESTION_TYPES.photo]);
-  const attachments = await handleOnUploadFiles(data, '/attachments', [QUESTION_TYPES.attachment]);
+  const { uploadedFiles: photos, failedDataIDs: failedPhotos } = await handleOnUploadFiles(
+    data,
+    '/images',
+    [QUESTION_TYPES.photo],
+  );
+  const { uploadedFiles: attachments, failedDataIDs: failedAttachments } =
+    await handleOnUploadFiles(data, '/attachments', [QUESTION_TYPES.attachment]);
+
+  const failedUploadIDs = new Set([...failedPhotos, ...failedAttachments]);
 
   // Process each datapoint sequentially
   await data.reduce(async (previousPromise, d) => {
@@ -182,6 +196,15 @@ const processBatch = async (db, activeJob, session, counts = { success: 0, faile
     if (d?.syncedAt) {
       return;
     }
+
+    // Skip datapoints with failed file uploads — saveAsPending keeps them
+    // in the queue so the existing retry paths (timer / manual / background) pick them up
+    if (failedUploadIDs.has(d.id)) {
+      counts.failed += 1;
+      await crudDataPoints.saveAsPending(db, d.id);
+      return;
+    }
+
     try {
       const geoVal = d.geo ? { geo: d.geo.split('|')?.map((x) => parseFloat(x)) } : {};
       const answerValues = JSON.parse(d.json.replace(/''/g, "'"));
@@ -296,7 +319,9 @@ const syncFormSubmission = async (db, activeJob = {}) => {
     }
 
     return Promise.reject(
-      new Error({ errorCode: error?.response?.status, message: error?.message }),
+      new Error(
+        `syncFormSubmission failed (${error?.response?.status || 'unknown'}): ${error?.message}`,
+      ),
     );
   }
 };
