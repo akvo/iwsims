@@ -18,13 +18,22 @@ The mobile app crashes with OOM on Samsung Galaxy A14 (5.96GB RAM) when syncing 
 |---|------|--------|
 | 1 | `app/src/lib/background-task.js` | Fix crash: defensive defaults for `handleOnUploadFiles` return; guard success statusBar |
 | 2 | `app/src/store/datapoint-sync.js` | Add `syncingFormId` and `formProgress` to store |
-| 3 | `app/src/lib/sync-datapoints.js` | Add `fetchAndGroupDatapointsByForm()` with incremental callback |
-| 4 | `app/src/components/SyncService.js` | Per-form processing + sequential sync orchestrator (`runSyncSequence`) |
+| 3 | `app/src/lib/sync-datapoints.js` | Add `fetchAndGroupDatapointsByForm()`; skip-unchanged check in `downloadDatapointsJson` |
+| 4 | `app/src/components/SyncService.js` | Per-form processing + sequential sync orchestrator + persistent queue |
 | 5 | `app/src/components/Card.js` | Add sync progress bar UI |
-| 6 | `app/src/components/BaseLayout/Content.js` | Pass sync state to Card components with type-safe formId comparison |
-| 7 | `app/src/pages/Home.js` | Subscribe to per-form sync state, pass to Content |
+| 6 | `app/src/components/BaseLayout/Content.js` | Subscribe directly to `DatapointSyncState` for sync state; pass to Card with type-safe formId comparison |
+| 7 | `app/src/pages/Home.js` | Guard duplicate job creation; handle stale ON_PROGRESS jobs (no longer passes sync props to Content) |
 | 8 | `app/src/components/NetworkStatusBar.js` | Show phase-specific sync labels |
 | 9 | `app/src/lib/i18n/ui-text.js` | Add i18n keys for sync phases (en + fr) |
+| 10 | `app/src/database/tables.js` | Add `datapoint_sync_queue` table definition |
+| 11 | `app/src/lib/constants.js` | Bump `DATABASE_VERSION` from 3 to 4 |
+| 12 | `app/src/database/migrations/04_create_datapoint_sync_queue.js` | New migration for sync queue table |
+| 13 | `app/src/database/migrations/index.js` | Export `m04` |
+| 14 | `app/App.js` | Add v3→v4 migration step |
+| 15 | `app/src/database/crud/crud-sync-queue.js` | CRUD module for persistent sync queue (`upsertQueue`, `hasEntries`, `hasIncomplete`, etc.) |
+| 16 | `app/src/database/crud/index.js` | Export `crudSyncQueue` |
+| 17 | `app/src/database/crud/crud-datapoints.js` | Add `countSyncedByFormId(db, backendFormId)` for quick local count check |
+| 18 | `app/src/components/LogoutButton.js` | Truncate `datapoint_sync_queue`; reset all `DatapointSyncState` fields; reset `UIState.statusBar` |
 
 ## Step 1: Fix crash in `background-task.js`
 
@@ -276,11 +285,16 @@ const Card = ({ title = null, subTitles = [], syncing = false, syncProgress = 0 
 
 **File**: `app/src/components/BaseLayout/Content.js`
 
-Accept `syncingFormId` and `formProgress` props. Type-safe comparison using `Number()`:
+Subscribe **directly** to `DatapointSyncState` via `useState` (no longer receives props from Home).
+Type-safe comparison using `Number()`:
 
 ```javascript
-const Content = ({ children = null, data = [], columns = 1, action = null,
-                   syncingFormId = null, formProgress = {} }) => {
+import { DatapointSyncState } from '../../store';
+
+const Content = ({ children = null, data = [], columns = 1, action = null }) => {
+  const syncingFormId = DatapointSyncState.useState((s) => s.syncingFormId);
+  const formProgress = DatapointSyncState.useState((s) => s.formProgress);
+
   // ... in the map:
   const cardFormId = d?.formId ? Number(d.formId) : null;
   const isSyncing = syncingFormId != null && cardFormId === Number(syncingFormId);
@@ -296,26 +310,22 @@ backend API is a number. Using `Number()` on both sides ensures correct comparis
 
 Cards remain tappable during sync (users can view existing submissions).
 
-## Step 7: Update `Home.js` to subscribe and pass sync state
+## Step 7: Update `Home.js` — simplified (sync state moved to Content)
 
 **File**: `app/src/pages/Home.js`
 
-Two new Pullstate subscriptions:
+No longer subscribes to `DatapointSyncState.syncingFormId` or `formProgress` — those are now
+consumed directly by `Content.js` via `useState`. Home still uses `DatapointSyncState` for:
+- `.subscribe()` in `useEffect` to track `inProgress`/`draftInProgress` for button loading state
+- `.update()` in `handleOnSync` to set `inProgress`/`added`
 
-```javascript
-const syncingFormId = DatapointSyncState.useState((s) => s.syncingFormId);
-const formProgress = DatapointSyncState.useState((s) => s.formProgress);
-```
-
-Pass to Content:
+No `syncingFormId`/`formProgress` props passed to Content:
 
 ```javascript
 <BaseLayout.Content
   data={filteredData}
   action={goToSubmission}
   columns={2}
-  syncingFormId={syncingFormId}
-  formProgress={formProgress}
 />
 ```
 
@@ -364,27 +374,38 @@ Added three new keys in both English and French:
 
 ### Before (concurrent)
 
-```
-User presses Sync
-  ├─→ isManualSynced=true  ──→ onSync() starts ──→ shows "Done!" ─┐
-  │                                                                 │ confusing
-  └─→ DatapointSyncState.added=true                                 │ double Done
-       ├─→ onSyncDataPoint() starts ──→ shows "Done!" ─────────────┘
-       └─→ onSyncDraftDatapoint() starts (concurrent with above)
+```mermaid
+flowchart TD
+    A[User presses Sync] --> B[isManualSynced = true]
+    A --> C["DatapointSyncState.added = true"]
+    B --> D["onSync() starts"]
+    C --> E["onSyncDataPoint() starts"]
+    C --> F["onSyncDraftDatapoint() starts"]
+    D --> G["Shows 'Done!'"]
+    E --> H["Shows 'Done!'"]
+    G --> I["Confusing: duplicate 'Done!' messages"]
+    H --> I
 
-All three run concurrently, each managing its own statusBar → duplicate "Done!" messages
+    style I fill:#ec003f,color:#fff
 ```
+
+All three run concurrently, each managing its own statusBar → duplicate "Done!" messages.
 
 ### After (sequential)
 
-```
-User presses Sync
-  └─→ DatapointSyncState.added=true
-       └─→ runSyncSequence()
-            ├─ Phase 1: "Uploading submissions..."   → onSync()
-            ├─ Phase 2: "Syncing drafts..."           → onSyncDraftDatapoint()
-            ├─ Phase 3: "Downloading datapoints... X%" → onSyncDataPoint()
-            └─ Final:   "Done!"                        (single, after all phases)
+```mermaid
+flowchart TD
+    A[User presses Sync] --> B["DatapointSyncState.added = true"]
+    B --> C[runSyncSequence]
+    C --> D["Phase 1: Uploading submissions..."]
+    D --> E["onSync()"]
+    E --> F["Phase 2: Syncing drafts..."]
+    F --> G["onSyncDraftDatapoint()"]
+    G --> H["Phase 3: Downloading datapoints... X%"]
+    H --> I["onSyncDataPoint() — per-form"]
+    I --> J["Done! (single, after all phases)"]
+
+    style J fill:#16a34a,color:#fff
 ```
 
 ## Memory Impact
@@ -398,7 +419,7 @@ User presses Sync
 | Concurrent sync processes | 3 simultaneous | 1 at a time (sequential) |
 | StatusBar "Done!" messages | Multiple/confusing | Single, after all phases |
 
-## Verification
+## Verification (Steps 1-9)
 
 1. Run `npx eslint --no-cache` in `app/` to verify ESLint compliance
 2. Test on device with production data (`start.sh` already points to prod server):
@@ -410,3 +431,216 @@ User presses Sync
    - Verify all datapoints are synced correctly after completion
 3. Test background submission sync still works (periodic timer calls `onSync` independently)
 4. Test re-sync: if Phase 3 fails, `DatapointSyncState.added=true` triggers a new full sequence
+
+---
+
+# Step 10: Resumable Datapoint Sync with Per-Form Page Tracking
+
+## Context
+
+`onSyncDataPoint` always starts from scratch — fetching all metadata pages and downloading every datapoint JSON via HTTP. If the user closes the app mid-sync (this is a foreground-only process), all progress is lost. With 500+ datapoints each requiring an HTTP download, restarting from zero is very time-consuming.
+
+Additionally, the backend updates `MobileAssignment.last_synced_at` when the client fetches the **last metadata page** (`backend/api/v1/v1_mobile/views.py:607-609`), not when downloads complete. If the app closes after metadata fetch but before all downloads finish, those undownloaded items won't appear in future metadata fetches — they're lost.
+
+**Solution**: Track sync progress per form in SQLite. Each form records which page (batch of items) was last completed and the total expected count. On resume, skip completed forms and continue partially-done forms from the next page. The skip-unchanged check in `downloadDatapointsJson` handles individual items within a partially-completed page.
+
+## New table: `datapoint_sync_queue`
+
+```sql
+CREATE TABLE IF NOT EXISTS datapoint_sync_queue (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  formId INTEGER NOT NULL,
+  lastPage INTEGER DEFAULT 0,
+  totalPage INTEGER DEFAULT 0,
+  totalData INTEGER DEFAULT 0
+)
+```
+
+One row per form. Fields:
+- `formId` — backend form ID
+- `lastPage` — last fully-processed page (batch) of items for this form
+- `totalPage` — total pages for this form (`ceil(totalData / PAGE_SIZE)`)
+- `totalData` — total datapoints from backend for verification
+
+Example state mid-sync:
+
+| formId | lastPage | totalPage | totalData |
+|--------|----------|-----------|-----------|
+| 100    | 3        | 5         | 95        |
+| 200    | 5        | 5         | 100       |
+| 300    | 0        | 8         | 150       |
+
+Form 200 is fully done (skip). Form 100 resumes from page 4. Form 300 starts from page 1.
+
+## Revised sync flow
+
+```mermaid
+flowchart TD
+    A["onSyncDataPoint()"] --> B{"Queue hasEntries\nAND all complete?"}
+
+    B -->|"Yes (RE-CHECK)"| QC["Compare local counts\nvs queue totalData"]
+    QC -->|"All match"| SKIP["Skip entirely (instant)"]
+    QC -->|"Some mismatch"| C
+
+    B -->|"No entries / has incomplete"| C["fetchAndGroupDatapointsByForm()"]
+    C --> C2["upsertQueue:\n- same totalData → leave as-is\n- different totalData → reset lastPage=0\n- new form → insert lastPage=0"]
+    C2 --> D
+
+    D --> E["Get incomplete forms from queue\n(lastPage < totalPage)"]
+    E --> F["For each form"]
+    F --> FC{"Local synced count\n>= totalData?"}
+    FC -->|Yes| FCS["Mark complete in queue, skip"]
+    FC -->|No| G
+    FCS --> S
+
+    G --> G2["Slice items for current page\n(skip completed pages)"]
+    G2 --> H["For each item on page"]
+
+    H --> I{"Local DB has item with\nsyncedAt >= lastUpdated?"}
+    I -->|Yes| J["Skip HTTP download"]
+    I -->|No| K["Download JSON → save to DB"]
+
+    J --> L["Next item"]
+    K --> L
+    L --> M{More items on page?}
+    M -->|Yes| H
+    M -->|No| N["UPDATE lastPage += 1"]
+
+    N --> O{More pages for this form?}
+    O -->|Yes| G2
+    O -->|No| P["Clear formCache"]
+
+    P --> S{More forms?}
+    S -->|Yes| F
+    S -->|No| U["Done (queue preserved for next re-check)"]
+
+    style U fill:#16a34a,color:#fff
+    style J fill:#2563eb,color:#fff
+    style SKIP fill:#16a34a,color:#fff
+```
+
+## Files modified (Step 10)
+
+| # | File | Change |
+|---|------|--------|
+| 10a | `app/src/database/tables.js` | Add `datapoint_sync_queue` table definition |
+| 10b | `app/src/lib/constants.js` | Bump `DATABASE_VERSION` from 3 to 4 |
+| 10c | `app/src/database/migrations/04_create_datapoint_sync_queue.js` | New migration |
+| 10d | `app/src/database/migrations/index.js` | Export `m04` |
+| 10e | `app/App.js` | Add v3→v4 migration step |
+| 10f | `app/src/database/crud/crud-sync-queue.js` | New CRUD module (`upsertQueue` replaces `populateQueue`/`clearQueue`) |
+| 10g | `app/src/database/crud/index.js` | Export `crudSyncQueue` |
+| 10h | `app/src/lib/sync-datapoints.js` | Skip-unchanged check in `downloadDatapointsJson` |
+| 10i | `app/src/components/SyncService.js` | Refactor `onSyncDataPoint` — unified flow with quick re-check skip |
+| 10j | `app/src/pages/Home.js` | Guard duplicate job creation; handle stale ON_PROGRESS jobs |
+| 10k | `app/src/database/crud/crud-datapoints.js` | Add `countSyncedByFormId(db, backendFormId)` |
+| 10l | `app/src/components/LogoutButton.js` | Truncate `datapoint_sync_queue`; reset `DatapointSyncState` and `UIState.statusBar` |
+
+### 10a: Table definition
+
+**File**: `app/src/database/tables.js` — Add to `tables` array:
+
+```javascript
+{
+  name: 'datapoint_sync_queue',
+  fields: {
+    id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
+    formId: 'INTEGER NOT NULL',
+    lastPage: 'INTEGER DEFAULT 0',
+    totalPage: 'INTEGER DEFAULT 0',
+    totalData: 'INTEGER DEFAULT 0',
+  },
+},
+```
+
+### 10b–10e: Database migration
+
+Same as before — bump `DATABASE_VERSION` to 4, create migration file, export, register in `App.js`.
+
+### 10f: CRUD module
+
+**File**: `app/src/database/crud/crud-sync-queue.js`
+
+| Method | Purpose |
+|--------|---------|
+| `hasIncomplete(db)` | `SELECT COUNT(*) WHERE lastPage < totalPage` — quick check for resume |
+| `hasEntries(db)` | `SELECT COUNT(*) FROM datapoint_sync_queue` — check if queue has any rows at all |
+| `getIncompleteForms(db)` | `SELECT * WHERE lastPage < totalPage` |
+| `getAllProgress(db)` | Get all rows (for building `formProgress` state) |
+| `upsertQueue(db, formEntries)` | Per-form upsert: if exists AND `totalData` changed → reset `lastPage=0`, update `totalPage`/`totalData`; if exists AND `totalData` matches → leave as-is (completed, will be skipped); if new → insert with `lastPage=0` |
+| `updateLastPage(db, formId, lastPage)` | `UPDATE SET lastPage = ? WHERE formId = ?` |
+
+Note: `clearQueue` and `populateQueue` were removed. The `upsertQueue` method replaces `populateQueue` with smarter merge logic that preserves completed entries when data hasn't changed.
+
+### 10g: Export from CRUD index
+
+Same as before.
+
+### 10h: Skip-unchanged optimization
+
+**File**: `app/src/lib/sync-datapoints.js`
+
+Same as before — resolve form from cache first, extract UUID, check `syncedAt >= lastUpdated`, skip HTTP if up-to-date.
+
+### 10i: Refactor `onSyncDataPoint`
+
+**File**: `app/src/components/SyncService.js`
+
+Page size constant: `SYNC_PAGE_SIZE = 20` (items per page within a form).
+
+Simplified from 3 separate paths to a unified flow:
+
+1. **Quick check**: If queue `hasEntries` AND all entries are complete (`!hasIncomplete`), compare local synced counts (`countSyncedByFormId`) against `totalData` for each form. If all match, skip entirely (instant re-check).
+2. **Otherwise**: Fetch metadata via `fetchAndGroupDatapointsByForm()` → `upsertQueue` (handles fresh, resume, and data-changed cases) → download incomplete forms.
+
+**`upsertQueue` behavior**:
+- Forms with same `totalData` stay completed (skipped on download)
+- Forms with different `totalData` get reset to `lastPage=0` (re-downloaded)
+- New forms inserted with `lastPage=0`
+
+**Per-form processing**:
+1. Get this form's items from metadata
+2. Check local synced count — skip if already fully synced
+3. Skip first `lastPage * SYNC_PAGE_SIZE` items (already completed)
+4. Process remaining items in pages of `SYNC_PAGE_SIZE`
+5. After each page: `crudSyncQueue.updateLastPage(db, formId, currentPage)`
+6. Skip-unchanged check in `downloadDatapointsJson` handles items within a partially-completed page
+7. Clear `formCache` after each form
+
+**No `clearQueue` calls**: Queue is preserved after successful sync for the next re-check. Stale job detection also does not call `clearQueue`.
+
+### 10j: Fix job handling
+
+**File**: `app/src/pages/Home.js`
+
+Guard duplicate job creation — check for existing `SYNC_DATAPOINT_JOB_NAME` job before creating a new one (same pattern already used for `SYNC_FORM_SUBMISSION_TASK_NAME`).
+
+**File**: `app/src/components/SyncService.js`
+
+Handle stale ON_PROGRESS jobs in `onSyncDataPoint` — if a job is ON_PROGRESS (app was killed mid-sync), reset it to PENDING with `attempt + 1` so the queue can resume. If `attempt >= MAX_ATTEMPT`, delete the job and reset sync state.
+
+## Resume behavior
+
+| Scenario | What happens |
+|----------|-------------|
+| Fresh sync (empty queue) | Fetch metadata → upsertQueue → process page-by-page → queue preserved |
+| App closed mid-download | Queue persists with `lastPage` per form → next sync resumes from `lastPage + 1` |
+| Partially-completed page | Skip-unchanged check skips already-downloaded items on the page |
+| Form fully done (`lastPage = totalPage`) | Skipped entirely on resume |
+| `totalData` mismatch on resume | `upsertQueue` resets that form's `lastPage=0` (others stay completed) |
+| Second sync, no changes | Queue has completed entries, local counts match → skip entirely (instant) |
+| Second sync, some new data | `upsertQueue` resets changed forms, leaves unchanged forms completed |
+| Stale ON_PROGRESS job | Reset to PENDING → resume queue (no clearQueue) |
+
+## Verification (Step 10)
+
+1. `npx eslint --no-cache` on all modified files
+2. Test on device:
+   - Fresh sync: queue populated, progress indicators work, queue preserved after
+   - Kill app mid-sync: reopen, verify sync resumes from next page (not from page 1)
+   - Second sync (no server changes): queue has completed entries, local counts match → skip entirely (instant)
+   - Second sync (some new data): changed forms re-downloaded, unchanged forms skipped
+   - Verify `totalData` matches between backend and local count
+   - Verify migration works on existing v3 database
+   - Verify stale ON_PROGRESS job is recovered on app reopen
+   - Verify logout truncates `datapoint_sync_queue` and resets all sync state
