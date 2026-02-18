@@ -130,6 +130,25 @@ export const downloadDatapointsJson = async (
   user,
   formCache = null,
 ) => {
+  // Resolve form from cache FIRST (before any network call)
+  let form;
+  let parsedGroups;
+
+  if (formCache?.has(formId)) {
+    ({ dbRecord: form, parsedGroups } = formCache.get(formId));
+  } else {
+    form = await crudForms.getByFormId(db, { formId });
+    parsedGroups = JSON.parse(form?.json || '{}')?.question_group || [];
+    formCache?.set(formId, { dbRecord: form, parsedGroups });
+  }
+
+  // Skip-unchanged: check if local datapoint is already up-to-date
+  const uuid = url.split('/').pop().replace('.json', '');
+  const existing = await crudDataPoints.getByUUID(db, { uuid, form: form?.id });
+  if (existing?.syncedAt && lastUpdated && existing.syncedAt >= lastUpdated) {
+    return;
+  }
+
   // Network call OUTSIDE the transaction
   const response = await api.get(url);
   if (response.status !== 200) {
@@ -137,21 +156,10 @@ export const downloadDatapointsJson = async (
   }
 
   const jsonData = response.data;
-  const { uuid, datapoint_name: name, geolocation: geo, answers, id: dpID } = jsonData || {};
+  const { datapoint_name: name, geolocation: geo, answers, id: dpID } = jsonData || {};
 
   // DB operations INSIDE the transaction
   await sql.withTransaction(db, async (txDb) => {
-    let form;
-    let parsedGroups;
-
-    if (formCache?.has(formId)) {
-      ({ dbRecord: form, parsedGroups } = formCache.get(formId));
-    } else {
-      form = await crudForms.getByFormId(txDb, { formId });
-      parsedGroups = JSON.parse(form?.json || '{}')?.question_group || [];
-      formCache?.set(formId, { dbRecord: form, parsedGroups });
-    }
-
     const repeats = {};
     let repeatIndex = 0;
     parsedGroups.forEach((group) => {
@@ -176,8 +184,7 @@ export const downloadDatapointsJson = async (
       }
     });
 
-    const isExists = await crudDataPoints.getByUUID(txDb, { uuid, form: form?.id });
-    if (isExists) {
+    if (existing) {
       await crudDataPoints.updateByUUID(txDb, {
         uuid,
         form: form?.id,
