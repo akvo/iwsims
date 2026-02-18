@@ -218,6 +218,17 @@ const dataPointsQuery = () => ({
       throw new Error(`Error in totalSavedData: ${error.message}`);
     }
   },
+  countSyncedByFormId: async (db, backendFormId) => {
+    const res = await sql.safeGetFirstRow(
+      db,
+      `SELECT COUNT(*) AS total FROM datapoints dp
+       INNER JOIN forms f ON dp.form = f.id
+       WHERE f.formId = ? AND dp.syncedAt IS NOT NULL`,
+      [backendFormId],
+      'countSyncedByFormId',
+    );
+    return res?.total || 0;
+  },
 });
 
 const crudDataPoints = dataPointsQuery();

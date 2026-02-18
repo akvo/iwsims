@@ -7,7 +7,7 @@ import api from './api';
 import { crudForms, crudDataPoints, crudUsers, crudConfig } from '../database/crud';
 import notification from './notification';
 import crudJobs from '../database/crud/crud-jobs';
-import { UIState } from '../store';
+import { UIState, DatapointSyncState } from '../store';
 import {
   DATABASE_NAME,
   QUESTION_TYPES,
@@ -180,13 +180,12 @@ const processBatch = async (db, activeJob, session, counts = { success: 0, faile
   }
 
   // Upload files for THIS BATCH only
-  const { uploadedFiles: photos, failedDataIDs: failedPhotos } = await handleOnUploadFiles(
-    data,
-    '/images',
-    [QUESTION_TYPES.photo],
-  );
-  const { uploadedFiles: attachments, failedDataIDs: failedAttachments } =
-    await handleOnUploadFiles(data, '/attachments', [QUESTION_TYPES.attachment]);
+  // Defensive defaults: under OOM conditions, Hermes can produce incomplete return objects
+  // from handleOnUploadFiles. The `|| {}` + default values prevent TypeError on spread.
+  const { uploadedFiles: photos = [], failedDataIDs: failedPhotos = new Set() } =
+    (await handleOnUploadFiles(data, '/images', [QUESTION_TYPES.photo])) || {};
+  const { uploadedFiles: attachments = [], failedDataIDs: failedAttachments = new Set() } =
+    (await handleOnUploadFiles(data, '/attachments', [QUESTION_TYPES.attachment])) || {};
 
   const failedUploadIDs = new Set([...failedPhotos, ...failedAttachments]);
 
@@ -285,14 +284,18 @@ const syncFormSubmission = async (db, activeJob = {}) => {
     }
 
     if (totalSuccess > 0 && totalFailed === 0) {
+      const { inProgress: datapointSyncActive } = DatapointSyncState.getRawState();
       UIState.update((s) => {
         s.isManualSynced = false;
         s.refreshPage = true;
-        s.statusBar = {
-          type: SYNC_STATUS.success,
-          bgColor: '#16a34a',
-          icon: 'checkmark-done',
-        };
+        // Only show success if datapoint sync is not still running
+        if (!datapointSyncActive) {
+          s.statusBar = {
+            type: SYNC_STATUS.success,
+            bgColor: '#16a34a',
+            icon: 'checkmark-done',
+          };
+        }
       });
       notification.sendPushNotification(SYNC_FORM_SUBMISSION_TASK_NAME);
     }

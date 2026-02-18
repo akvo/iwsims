@@ -79,6 +79,16 @@ const tables = [
       createdAt: 'DATETIME',
     },
   },
+  {
+    name: 'datapoint_sync_queue',
+    fields: {
+      id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
+      formId: 'INTEGER NOT NULL',
+      lastPage: 'INTEGER DEFAULT 0',
+      totalPage: 'INTEGER DEFAULT 0',
+      totalData: 'INTEGER DEFAULT 0',
+    },
+  },
 ];
 
 export default tables;

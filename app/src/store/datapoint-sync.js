@@ -6,6 +6,8 @@ const DatapointSyncState = new Store({
   added: false,
   completed: false,
   draftInProgress: false,
+  syncingFormId: null,
+  formProgress: {},
 });
 
 export default DatapointSyncState;

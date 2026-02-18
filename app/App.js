@@ -27,7 +27,7 @@ import {
 } from './src/lib/constants';
 import { tables } from './src/database';
 import sql from './src/database/sql';
-import { m03 } from './src/database/migrations';
+import { m03, m04 } from './src/database/migrations';
 
 export const setNotificationHandler = () =>
   Notifications.setNotificationHandler({
@@ -116,6 +116,7 @@ Sentry.init({
 
 const App = () => {
   const serverURLState = BuildParamsState.useState((s) => s.serverURL);
+  console.log('serverURLState', serverURLState);
   const syncValue = BuildParamsState.useState((s) => s.dataSyncInterval);
   const gpsThreshold = BuildParamsState.useState((s) => s.gpsThreshold);
   const gpsAccuracyLevel = BuildParamsState.useState((s) => s.gpsAccuracyLevel);
@@ -219,6 +220,10 @@ const App = () => {
     if (currentDbVersion === 2) {
       await m03.up(db);
       currentDbVersion = 3;
+    }
+    if (currentDbVersion === 3) {
+      await m04.up(db);
+      currentDbVersion = 4;
     }
     // eslint-disable-next-line no-console
     console.info(`Migrating database from version ${currentDbVersion} to ${DATABASE_VERSION}`);
