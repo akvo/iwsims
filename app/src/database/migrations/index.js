@@ -1,1 +1,2 @@
 export * as m03 from './03_add_draftId_to_datapoints';
+export * as m04 from './04_create_datapoint_sync_queue';
