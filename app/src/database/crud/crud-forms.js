@@ -34,10 +34,6 @@ const formsQuery = () => ({
     const rows = await sql.getFirstRow(db, 'forms', { id });
     return rows;
   },
-  selectFormByParentId: async (db, { parentId }) => {
-    const rows = await sql.getFilteredRows(db, 'forms', { parentId });
-    return rows;
-  },
   selectFormByIdAndVersion: async (db, { id: formId, version }) => {
     const rows = await sql.getFilteredRows(db, 'forms', { formId, version });
     return rows;
@@ -53,15 +49,6 @@ const formsQuery = () => ({
       json: formJSON ? JSON.stringify(formJSON).replace(/'/g, "''") : null,
       createdAt: new Date().toISOString(),
     });
-    return res;
-  },
-  updateForm: async (db, { userId, formId, version, formJSON, latest = 1 }) => {
-    const res = await sql.updateRow(
-      db,
-      'forms',
-      { userId, formId },
-      { version, latest, json: formJSON ? JSON.stringify(formJSON).replace(/'/g, "''") : null },
-    );
     return res;
   },
   getMyForms: async (db) => {

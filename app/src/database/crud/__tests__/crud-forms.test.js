@@ -43,22 +43,6 @@ describe('crudForms function', () => {
     });
   });
 
-  describe('updateForm', () => {
-    it('should update the form, set latest to 0', async () => {
-      const mockUpdateSql = jest.fn((query, params, successCallback) => {
-        successCallback(null, { rowsAffected: 1 });
-      });
-      mockDb.transaction.mockImplementation((transactionFunction) => {
-        transactionFunction({
-          executeSql: mockUpdateSql,
-        });
-      });
-      const formId = 1;
-      const result = await crudForms.updateForm({ id: formId });
-      expect(result).toEqual({ rowsAffected: 1 });
-    });
-  });
-
   describe('selectLatestFormVersion and selectFormByIdAndVersion', () => {
     const formData = [
       {

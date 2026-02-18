@@ -65,34 +65,4 @@ describe('crudUsers function', () => {
       expect(result).toEqual(mockData[0]);
     });
   });
-
-  describe('selectUserById', () => {
-    it('should return {} if user with given id not found', async () => {
-      const mockData = [];
-      const mockSelectSql = jest.fn((query, params, successCallback) => {
-        successCallback(null, { rows: { length: mockData.length, _array: mockData } });
-      });
-      mockDb.transaction.mockImplementation((transactionFunction) => {
-        transactionFunction({
-          executeSql: mockSelectSql,
-        });
-      });
-      const result = await crudUsers.selectUserById({ id: 1 });
-      expect(result).toEqual({});
-    });
-
-    it('should return user if user with given id found', async () => {
-      const mockData = users.filter((u) => u.id === 1);
-      const mockSelectSql = jest.fn((query, params, successCallback) => {
-        successCallback(null, { rows: { length: mockData.length, _array: mockData } });
-      });
-      mockDb.transaction.mockImplementation((transactionFunction) => {
-        transactionFunction({
-          executeSql: mockSelectSql,
-        });
-      });
-      const result = await crudUsers.selectUserById({ id: 1 });
-      expect(result).toEqual(mockData[0]);
-    });
-  });
 });

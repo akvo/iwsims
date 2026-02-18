@@ -19,7 +19,6 @@ jest.mock('../src/database/crud', () => ({
   },
   crudUsers: {
     getActiveUser: jest.fn(() => Promise.resolve(false)),
-    selectUserById: jest.fn(),
   },
   crudConfig: {
     getConfig: jest.fn(() => Promise.resolve(false)),

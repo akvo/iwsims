@@ -14,10 +14,6 @@ const usersQuery = () => ({
       return false;
     }
   },
-  selectUserById: async (db, { id }) => {
-    const row = await sql.getFirstRow(db, 'users', { id });
-    return row;
-  },
   addNew: async (db, payload) => {
     const params = {
       ...payload,

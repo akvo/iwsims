@@ -151,14 +151,6 @@ const dataPointsQuery = () => ({
       json: res?.json ? JSON.parse(res.json.replace(/''/g, "'")) : null,
     };
   },
-  updateDraftId: async (db, { id, draftId }) => {
-    try {
-      const res = await sql.updateRow(db, 'datapoints', { id }, { draftId });
-      return res;
-    } catch (error) {
-      throw new Error(`Error updating draft ID: ${error.message}`);
-    }
-  },
   deleteDraftIdIsNull: async (db) => {
     const res = await sql.safeExecuteQuery(
       db,
