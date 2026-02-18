@@ -29,11 +29,7 @@ const Content = ({ children = null, data = [], columns = 1, action = null }) => 
       </ScrollView>
     );
   }
-  return (
-    <Stack row columns={columns}>
-      {children}
-    </Stack>
-  );
+  return <View style={{ flex: 1, width: '100%' }}>{children}</View>;
 };
 
 export default Content;

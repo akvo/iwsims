@@ -3,7 +3,7 @@
     "newArchEnabled": true,
     "name": "DWS DataPro",
     "slug": "dws-datapro-mobile",
-    "version": "4.1.20",
+    "version": "4.1.21",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.akvo.dws_datapro",
-      "versionCode": 4120
+      "versionCode": 4121
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -62,7 +62,7 @@
       "expo-asset"
     ],
     "androidNavigationBar": {
-      "visible": "immersive",
+      "visible": "overscan",
       "barStyle": "dark-content",
       "backgroundColor": "#000000"
     },

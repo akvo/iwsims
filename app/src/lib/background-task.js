@@ -17,6 +17,9 @@ import {
 } from './constants';
 import MIME_TYPES from './mime_types';
 
+const BATCH_SIZE = 20;
+const UPLOAD_CONCURRENCY = 3;
+
 const syncFormVersion = async (
   db,
   { showNotificationOnly = true, sendPushNotification = () => {} },
@@ -31,35 +34,32 @@ const syncFormVersion = async (
     if (!session) {
       return;
     }
-    api.post('/auth', { code: session.password }).then(async (res) => {
-      const { data } = res;
-      const promises = data.formsUrl.map(async (form) => {
-        const formExist = await crudForms.selectFormByIdAndVersion(db, { ...form });
-        if (formExist) {
-          return false;
-        }
-        if (showNotificationOnly) {
-          return { id: form.id, version: form.version };
-        }
-        const formRes = await api.get(form.url);
-        // update previous form latest value to 0
-        await crudForms.updateForm(db, { ...form });
-        const savedForm = await crudForms.addForm(db, {
-          ...form,
-          userId: session?.id,
-          formJSON: formRes?.data,
-        });
-        return savedForm;
+    const res = await api.post('/auth', { code: session.password });
+    const { data } = res;
+    let hasNewForms = false;
+
+    await data.formsUrl.reduce(async (prev, form) => {
+      await prev;
+      const formExist = await crudForms.selectFormByIdAndVersion(db, { ...form });
+      if (formExist) {
+        return;
+      }
+      if (showNotificationOnly) {
+        hasNewForms = true;
+        return;
+      }
+      const formRes = await api.get(form.url);
+      await crudForms.upsertForm(db, {
+        ...form,
+        userId: session?.id,
+        formJSON: formRes?.data,
       });
-      Promise.all(promises).then((r) => {
-        const exist = r.filter((x) => x);
-        if (!exist.length || !showNotificationOnly) {
-          return;
-        }
-        sendPushNotification();
-      });
-      await db.closeAsync();
-    });
+    }, Promise.resolve());
+
+    if (hasNewForms && showNotificationOnly) {
+      sendPushNotification();
+    }
+    await db.closeAsync();
   } catch (err) {
     Sentry.captureMessage('[background-task] syncFormVersion failed');
     Sentry.captureException(err);
@@ -125,10 +125,12 @@ const handleOnUploadFiles = async (
     }
   }, []);
 
-  if (!allFiles.length) return [];
+  if (!allFiles.length) {
+    return { uploadedFiles: [], failedDataIDs: new Set() };
+  }
 
-  // Prepare file uploads
-  const uploads = allFiles.map((f) => {
+  // Prepare lazy upload functions (not executed yet)
+  const uploadFns = allFiles.map((f) => () => {
     const extension = f.value.split('.').pop()?.toLowerCase();
     const fileType = MIME_TYPES[extension] || 'application/octet-stream';
     const formData = new FormData();
@@ -145,12 +147,121 @@ const handleOnUploadFiles = async (
     });
   });
 
-  // Upload all and return merged results
-  const results = await Promise.allSettled(uploads);
-  const responses = results
-    .filter((result) => result.status === 'fulfilled')
-    .map((result) => result.value);
-  return responses.map((res, i) => ({ ...allFiles[i], ...res.data }));
+  // Build chunks for concurrency-limited upload
+  const chunks = Array.from({ length: Math.ceil(uploadFns.length / UPLOAD_CONCURRENCY) }, (_, i) =>
+    uploadFns.slice(i * UPLOAD_CONCURRENCY, (i + 1) * UPLOAD_CONCURRENCY),
+  );
+
+  // Execute chunks sequentially, each chunk runs concurrently
+  const results = await chunks.reduce(async (prevResults, chunk) => {
+    const prev = await prevResults;
+    const chunkResults = await Promise.allSettled(chunk.map((fn) => fn()));
+    return prev.concat(chunkResults);
+  }, Promise.resolve([]));
+
+  const uploadedFiles = [];
+  const failedDataIDs = new Set();
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
+      uploadedFiles.push({ ...allFiles[i], ...result.value.data });
+    } else {
+      failedDataIDs.add(allFiles[i].dataID);
+    }
+  });
+  return { uploadedFiles, failedDataIDs };
+};
+
+// Recursive batch processor: fetches BATCH_SIZE items, processes them,
+// then recurses if more remain. Stops on empty result or failures.
+const processBatch = async (db, activeJob, session, counts = { success: 0, failed: 0 }) => {
+  const data = await crudDataPoints.selectSubmissionToSync(db, BATCH_SIZE);
+  if (!data?.length) {
+    return counts;
+  }
+
+  // Upload files for THIS BATCH only
+  const { uploadedFiles: photos, failedDataIDs: failedPhotos } = await handleOnUploadFiles(
+    data,
+    '/images',
+    [QUESTION_TYPES.photo],
+  );
+  const { uploadedFiles: attachments, failedDataIDs: failedAttachments } =
+    await handleOnUploadFiles(data, '/attachments', [QUESTION_TYPES.attachment]);
+
+  const failedUploadIDs = new Set([...failedPhotos, ...failedAttachments]);
+
+  // Process each datapoint sequentially
+  await data.reduce(async (previousPromise, d) => {
+    await previousPromise;
+    if (d?.syncedAt) {
+      return;
+    }
+
+    // Skip datapoints with failed file uploads — saveAsPending keeps them
+    // in the queue so the existing retry paths (timer / manual / background) pick them up
+    if (failedUploadIDs.has(d.id)) {
+      counts.failed += 1;
+      await crudDataPoints.saveAsPending(db, d.id);
+      return;
+    }
+
+    try {
+      const geoVal = d.geo ? { geo: d.geo.split('|')?.map((x) => parseFloat(x)) } : {};
+      const answerValues = JSON.parse(d.json.replace(/''/g, "'"));
+
+      // Add photos and attachments to answers
+      [...photos, ...attachments]
+        .filter((file) => file?.dataID === d.id)
+        .forEach((file) => {
+          answerValues[file?.id] = file?.file;
+        });
+
+      const syncData = {
+        formId: d.formId,
+        name: d.name,
+        duration: Math.round(d.duration),
+        submittedAt: d.submittedAt,
+        submitter: session.name,
+        answers: answerValues,
+        ...geoVal,
+      };
+
+      // Handle UUID
+      const uuidv4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidv4Regex.test(d?.uuid)) {
+        syncData.uuid = d.uuid;
+      } else if (uuidv4Regex.test(activeJob?.info)) {
+        syncData.uuid = activeJob.info;
+      }
+
+      // sync data point
+      let syncURL = '/sync';
+      if (d?.submitted && d?.draftId) {
+        syncURL = `/sync?id=${d.draftId}&is_published=true`;
+      }
+      if (!d?.submitted) {
+        syncURL = d?.draftId ? `/sync?id=${d.draftId}&is_draft=true` : '/sync?is_draft=true';
+      }
+      const res = await api.post(syncURL, syncData);
+      if (res.status === 200) {
+        await crudDataPoints.updateDataPoint(db, {
+          ...d,
+          syncedAt: new Date().toISOString(),
+        });
+      }
+      counts.success += 1;
+    } catch (error) {
+      counts.failed += 1;
+      Sentry.captureException(error);
+      await crudDataPoints.saveAsPending(db, d.id);
+    }
+  }, Promise.resolve());
+
+  // If batch was full and no failures, fetch next batch
+  if (data.length >= BATCH_SIZE && counts.failed === 0) {
+    return processBatch(db, activeJob, session, counts);
+  }
+  return counts;
 };
 
 const syncFormSubmission = async (db, activeJob = {}) => {
@@ -159,110 +270,44 @@ const syncFormSubmission = async (db, activeJob = {}) => {
     return BackgroundFetch.BackgroundFetchResult.NoData;
   }
   try {
-    // get token
     const session = await crudUsers.getActiveUser(db);
-    // set token
     api.setToken(session.token);
-    // get all datapoints to sync
-    const data = await crudDataPoints.selectSubmissionToSync(db);
-    /**
-     * Upload all photo of questions first
-     */
-    const photos = await handleOnUploadFiles(data, '/images', [QUESTION_TYPES.photo]);
-    const attachments = await handleOnUploadFiles(data, '/attachments', [
-      QUESTION_TYPES.attachment,
-    ]);
-    const totalData = data.length;
-    let success = 0;
-    let failed = 0;
-    data.forEach(async (d) => {
-      if (d?.syncedAt) {
-        return;
-      }
-      try {
-        const geoVal = d.geo ? { geo: d.geo.split('|')?.map((x) => parseFloat(x)) } : {};
-        const answerValues = JSON.parse(d.json.replace(/''/g, "'"));
 
-        // Add photos and attachments to answers
-        [...photos, ...attachments]
-          .filter((file) => file?.dataID === d.id)
-          .forEach((file) => {
-            answerValues[file?.id] = file?.file;
-          });
+    const { success: totalSuccess, failed: totalFailed } = await processBatch(
+      db,
+      activeJob,
+      session,
+    );
 
-        const syncData = {
-          formId: d.formId,
-          name: d.name,
-          duration: Math.round(d.duration),
-          submittedAt: d.submittedAt,
-          submitter: session.name,
-          answers: answerValues,
-          ...geoVal,
+    // Status updates ONCE after all batches
+    if (activeJob?.id && totalFailed === 0) {
+      await crudJobs.deleteJob(db, activeJob.id);
+    }
+
+    if (totalSuccess > 0 && totalFailed === 0) {
+      UIState.update((s) => {
+        s.isManualSynced = false;
+        s.refreshPage = true;
+        s.statusBar = {
+          type: SYNC_STATUS.success,
+          bgColor: '#16a34a',
+          icon: 'checkmark-done',
         };
+      });
+      notification.sendPushNotification(SYNC_FORM_SUBMISSION_TASK_NAME);
+    }
 
-        // Handle UUID
-        const uuidv4Regex =
-          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        if (uuidv4Regex.test(d?.uuid)) {
-          syncData.uuid = d.uuid;
-        } else if (uuidv4Regex.test(activeJob?.info)) {
-          syncData.uuid = activeJob.info;
-        }
-
-        // sync data point
-        let syncURL = '/sync';
-        if (d?.submitted && d?.draftId) {
-          syncURL = `/sync?id=${d.draftId}&is_published=true`;
-        }
-        if (!d?.submitted) {
-          syncURL = d?.draftId ? `/sync?id=${d.draftId}&is_draft=true` : '/sync?is_draft=true';
-        }
-        const res = await api.post(syncURL, syncData);
-        if (res.status === 200) {
-          // update data point
-          await crudDataPoints.updateDataPoint(db, {
-            ...d,
-            syncedAt: new Date().toISOString(),
-          });
-        }
-        success += 1;
-      } catch (error) {
-        failed += 1;
-        Sentry.captureException(error);
-        // Mark datapoint as not submitted
-        await crudDataPoints.saveAsPending(db, d.id);
-      }
-
-      if (activeJob?.id && failed === 0) {
-        // Delete job if all data points are successfully synced
-        await crudJobs.deleteJob(db, activeJob.id);
-      }
-
-      if (success === totalData) {
-        UIState.update((s) => {
-          s.isManualSynced = false;
-          s.refreshPage = true;
-          s.statusBar = {
-            type: SYNC_STATUS.success,
-            bgColor: '#16a34a',
-            icon: 'checkmark-done',
-          };
-        });
-        notification.sendPushNotification(SYNC_FORM_SUBMISSION_TASK_NAME);
-      }
-
-      if (failed) {
-        UIState.update((s) => {
-          s.isManualSynced = false;
-          s.statusBar = {
-            type: SYNC_STATUS.failed,
-            bgColor: '#ec003f',
-            icon: 'alert-sharp',
-            failedCount: failed,
-          };
-        });
-      }
-    });
+    if (totalFailed > 0) {
+      UIState.update((s) => {
+        s.isManualSynced = false;
+        s.statusBar = {
+          type: SYNC_STATUS.failed,
+          bgColor: '#ec003f',
+          icon: 'alert-sharp',
+          failedCount: totalFailed,
+        };
+      });
+    }
 
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
@@ -270,12 +315,13 @@ const syncFormSubmission = async (db, activeJob = {}) => {
     Sentry.captureException(error);
 
     if (activeJob?.id) {
-      // Delete job immediately on error
       await crudJobs.deleteJob(db, activeJob.id);
     }
 
     return Promise.reject(
-      new Error({ errorCode: error?.response?.status, message: error?.message }),
+      new Error(
+        `syncFormSubmission failed (${error?.response?.status || 'unknown'}): ${error?.message}`,
+      ),
     );
   }
 };

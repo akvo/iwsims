@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { MultiSelect } from 'react-native-element-dropdown';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FieldLabel, OptionItem } from '../support';
 import styles from '../styles';
 import { FormState } from '../../store';
@@ -18,6 +19,7 @@ const TypeMultipleOption = ({
   option = [],
   tooltip = null,
 }) => {
+  const insets = useSafeAreaInsets();
   const showSearch = React.useMemo(() => option.length > 3, [option]);
   const activeLang = FormState.useState((s) => s.lang);
   const trans = i18n.text(activeLang);
@@ -32,6 +34,7 @@ const TypeMultipleOption = ({
       <MultiSelect
         style={style}
         selectedStyle={styles.dropdownSelectedList}
+        containerStyle={{ marginBottom: insets.bottom }}
         activeColor="#ddd"
         data={option}
         search={showSearch}

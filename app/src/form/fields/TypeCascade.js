@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FieldLabel } from '../support';
 import styles from '../styles';
@@ -20,6 +21,7 @@ const TypeCascade = ({
   disabled = false,
   tooltip = null,
 }) => {
+  const insets = useSafeAreaInsets();
   const [dataSource, setDataSource] = useState([]);
   const [dropdownItems, setDropdownItems] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -281,6 +283,7 @@ const TypeCascade = ({
               labelField="name"
               valueField="id"
               testID={`dropdown-cascade-${index}`}
+              containerStyle={{ marginBottom: insets.bottom }}
               data={item?.options}
               search={hasSearch}
               searchPlaceholder={trans.searchPlaceholder}

@@ -25,7 +25,7 @@ const dataPointsQuery = () => ({
     const rows = await sql.getFilteredRows(db, 'datapoints', { ...columns }, 'id', 'DESC', true);
     return rows;
   },
-  selectSubmissionToSync: async (db) => {
+  selectSubmissionToSync: async (db, limit = null) => {
     const rows = await sql.executeQuery(
       db,
       `SELECT
@@ -35,7 +35,8 @@ const dataPointsQuery = () => ({
         FROM datapoints
         JOIN forms ON datapoints.form = forms.id
         WHERE datapoints.syncedAt IS NULL
-        ORDER BY datapoints.createdAt ASC`,
+        ORDER BY datapoints.createdAt ASC
+        ${limit ? `LIMIT ${parseInt(limit, 10)}` : ''}`,
     );
     return rows;
   },
@@ -185,15 +186,16 @@ const dataPointsQuery = () => ({
     const res = await sql.getFirstRow(db, 'datapoints', { uuid, ...formVal });
     return res;
   },
-  updateByUUID: async (db, { uuid, json, syncedAt, repeats }) => {
+  updateByUUID: async (db, { uuid, form, json, syncedAt, repeats }) => {
     if (!json || typeof json !== 'object') {
       return false;
     }
     const repeatsVal = repeats ? { repeats } : {};
+    const formVal = form ? { form } : {};
     const res = await sql.updateRow(
       db,
       'datapoints',
-      { uuid },
+      { uuid, ...formVal },
       {
         json: JSON.stringify(json).replace(/'/g, "''"),
         syncedAt: syncedAt || new Date().toISOString(),

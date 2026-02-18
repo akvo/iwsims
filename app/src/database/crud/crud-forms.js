@@ -77,6 +77,34 @@ const formsQuery = () => ({
     const row = await sql.getFirstRow(db, 'forms', { formId });
     return row;
   },
+  upsertForm: async (db, { userId, id: formId, parentId, version, formJSON }) => {
+    const existing = await sql.getFirstRow(db, 'forms', { formId, userId: userId || 0 });
+    if (existing) {
+      await sql.updateRow(
+        db,
+        'forms',
+        { id: existing.id },
+        {
+          version,
+          latest: 1,
+          parentId: parentId || null,
+          name: formJSON?.name || null,
+          json: formJSON ? JSON.stringify(formJSON).replace(/'/g, "''") : null,
+        },
+      );
+      return existing.id;
+    }
+    return sql.insertRow(db, 'forms', {
+      formId,
+      version,
+      latest: 1,
+      userId: userId || 0,
+      parentId: parentId || null,
+      name: formJSON?.name || null,
+      json: formJSON ? JSON.stringify(formJSON).replace(/'/g, "''") : null,
+      createdAt: new Date().toISOString(),
+    });
+  },
   getFormOptions: async (db, { parentId, uuid }) => {
     const selectJoin = `SELECT
           f.id,

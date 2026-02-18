@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FieldLabel, OptionItem } from '../support';
 import styles from '../styles';
 import { FormState } from '../../store';
@@ -18,6 +19,7 @@ const TypeOption = ({
   requiredSign = '*',
   disabled = false,
 }) => {
+  const insets = useSafeAreaInsets();
   const showSearch = useMemo(() => option.length > 3, [option]);
   const activeLang = FormState.useState((s) => s.lang);
   const trans = i18n.text(activeLang);
@@ -54,6 +56,7 @@ const TypeOption = ({
       <Dropdown
         style={style}
         selectedTextStyle={selectedStyle}
+        containerStyle={{ marginBottom: insets.bottom }}
         data={option}
         search={showSearch}
         maxHeight={300}
