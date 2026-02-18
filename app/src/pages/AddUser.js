@@ -53,7 +53,7 @@ const AddUser = ({ navigation }) => {
     formsUrl.forEach(async (form) => {
       // Fetch form detail
       const formRes = await api.get(form.url);
-      await crudForms.addForm(db, {
+      await crudForms.upsertForm(db, {
         ...form,
         userId: userID,
         formJSON: formRes?.data,

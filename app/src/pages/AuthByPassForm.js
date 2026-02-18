@@ -42,7 +42,7 @@ const AuthByPassForm = ({ navigation }) => {
           }
           await cascades.createSqliteDir();
           // save forms
-          await crudForms.addForm(db, {
+          await crudForms.upsertForm(db, {
             id: data.id,
             version: data.version,
             formJSON: data,

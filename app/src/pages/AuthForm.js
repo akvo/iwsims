@@ -73,7 +73,7 @@ const AuthForm = ({ navigation }) => {
         });
         // insert all forms to database
         const form = formsUrl?.[index];
-        await crudForms.addForm(db, {
+        await crudForms.upsertForm(db, {
           ...form,
           userId: userID,
           formJSON: apiData,
