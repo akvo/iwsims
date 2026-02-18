@@ -3,7 +3,7 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Dialog, Text, Icon } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
 import * as SQLite from 'expo-sqlite';
-import { AuthState, UserState, FormState, UIState } from '../store';
+import { AuthState, UserState, FormState, UIState, DatapointSyncState } from '../store';
 import { api, cascades, i18n } from '../lib';
 import { DATABASE_NAME } from '../lib/constants';
 import sql from '../database/sql';
@@ -23,7 +23,15 @@ const LogoutButton = () => {
     const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
       useNewConnection: true,
     });
-    const tables = ['sessions', 'users', 'forms', 'config', 'datapoints', 'jobs'];
+    const tables = [
+      'sessions',
+      'users',
+      'forms',
+      'config',
+      'datapoints',
+      'jobs',
+      'datapoint_sync_queue',
+    ];
     await Promise.all(
       tables.map(async (table) => {
         await sql.truncateTable(db, table);
@@ -45,6 +53,20 @@ const LogoutButton = () => {
       s.visitedQuestionGroup = [];
       s.cascades = {};
       s.surveyDuration = 0;
+    });
+
+    DatapointSyncState.update((s) => {
+      s.added = false;
+      s.inProgress = false;
+      s.progress = 0;
+      s.completed = false;
+      s.draftInProgress = false;
+      s.syncingFormId = null;
+      s.formProgress = {};
+    });
+
+    UIState.update((s) => {
+      s.statusBar = null;
     });
 
     /**
