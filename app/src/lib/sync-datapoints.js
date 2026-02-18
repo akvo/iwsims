@@ -14,6 +14,9 @@ import api from './api';
 export const fetchDatapointsPageByPage = async (onPageReceived, pageSize = 100) => {
   let totalProcessed = 0;
 
+  // Async recursion is stack-safe: each `await` unwinds the call frame,
+  // so recursion depth equals 1 regardless of page count.
+  // At page_size=100, 10,000 datapoints = 100 pages.
   const fetchPage = async (currentPage, totalPages) => {
     if (currentPage > totalPages) {
       return;
@@ -42,6 +45,9 @@ export const fetchDatapointsPageByPage = async (onPageReceived, pageSize = 100) 
 export const fetchDraftDatapointsPageByPage = async (onPageReceived, pageSize = 100) => {
   let totalProcessed = 0;
 
+  // Async recursion is stack-safe: each `await` unwinds the call frame,
+  // so recursion depth equals 1 regardless of page count.
+  // At page_size=100, 10,000 datapoints = 100 pages.
   const fetchPage = async (currentPage, totalPages) => {
     if (currentPage > totalPages) {
       return;
