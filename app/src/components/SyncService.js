@@ -8,7 +8,7 @@ import crudJobs from '../database/crud/crud-jobs';
 import { crudConfig, crudDataPoints, crudForms } from '../database/crud';
 import {
   downloadDatapointsJson,
-  fetchDatapointsPageByPage,
+  fetchAndGroupDatapointsByForm,
   fetchDraftDatapointsPageByPage,
 } from '../lib/sync-datapoints';
 import {
@@ -41,14 +41,6 @@ const SyncService = () => {
     // No pending data → clean up the job
     if (!pendingToSync?.length) {
       await crudJobs.deleteJob(db, activeJob.id);
-      UIState.update((s) => {
-        s.statusBar = {
-          type: SYNC_STATUS.success,
-          bgColor: '#16a34a',
-          icon: 'checkmark-done',
-        };
-        s.refreshPage = true;
-      });
       return;
     }
 
@@ -112,7 +104,7 @@ const SyncService = () => {
 
     // eslint-disable-next-line consistent-return
     return () => clearInterval(syncTimer);
-  }, [syncInSecond, isOnline, isManualSynced, onSync]);
+  }, [syncInSecond, isOnline, onSync]);
 
   const onSyncDataPoint = useCallback(async () => {
     const activeJob = await crudJobs.getActiveJob(db, SYNC_DATAPOINT_JOB_NAME);
@@ -120,6 +112,8 @@ const SyncService = () => {
     DatapointSyncState.update((s) => {
       s.added = false;
       s.inProgress = !!activeJob;
+      s.syncingFormId = null;
+      s.formProgress = {};
     });
 
     if (!activeJob || activeJob.status !== jobStatus.PENDING) {
@@ -130,6 +124,8 @@ const SyncService = () => {
       DatapointSyncState.update((s) => {
         s.inProgress = false;
         s.progress = 0;
+        s.syncingFormId = null;
+        s.formProgress = {};
       });
       return;
     }
@@ -147,55 +143,84 @@ const SyncService = () => {
     });
 
     try {
-      const formCache = new Map();
+      // Phase 1: Fetch all metadata and group by form (lightweight)
+      // Update formProgress incrementally as each page arrives
+      const { formGroups, totalCount } = await fetchAndGroupDatapointsByForm((currentGroups) => {
+        const updatedFormProgress = {};
+        currentGroups.forEach((items, formId) => {
+          updatedFormProgress[formId] = { total: items.length, processed: 0 };
+        });
+        DatapointSyncState.update((s) => {
+          s.formProgress = updatedFormProgress;
+        });
+      });
 
-      await fetchDatapointsPageByPage(async (pageData, pageNumber, totalPages) => {
-        await pageData.reduce(async (previousPromise, item, index) => {
-          await previousPromise;
-          const {
-            url,
-            form_id: formId,
-            administration_id: administrationId,
-            last_updated: lastUpdated,
-          } = item;
+      // Phase 2: Process one form at a time
+      let globalProcessed = 0;
+      const formEntries = Array.from(formGroups.entries());
+
+      await formEntries.reduce(async (previousFormPromise, [formId, items]) => {
+        await previousFormPromise;
+
+        // Signal which form is now syncing
+        DatapointSyncState.update((s) => {
+          s.syncingFormId = formId;
+        });
+
+        // Fresh cache for THIS form only - max 1 entry, released after this form
+        const formCache = new Map();
+
+        // Process each datapoint in this form sequentially
+        await items.reduce(async (previousItemPromise, item, index) => {
+          await previousItemPromise;
           try {
             await downloadDatapointsJson(
               db,
-              { url, formId, administrationId, lastUpdated },
+              {
+                url: item.url,
+                formId: item.formId,
+                administrationId: item.administrationId,
+                lastUpdated: item.lastUpdated,
+              },
               activeJob.user,
               formCache,
             );
-            // Granular progress: page + item within page
-            const pageProgress = ((pageNumber - 1) / totalPages) * 100;
-            const itemProgress = ((index + 1) / pageData.length) * (100 / totalPages);
-            DatapointSyncState.update((s) => {
-              s.progress = pageProgress + itemProgress;
-            });
           } catch (error) {
-            Sentry.captureMessage(`Error downloading datapoint JSON for URL ${url}`);
+            Sentry.captureMessage(`Error downloading datapoint JSON for URL ${item.url}`);
             Sentry.captureException(error);
           }
+
+          // Update per-form and global progress
+          globalProcessed += 1;
+          DatapointSyncState.update((s) => {
+            s.progress = totalCount > 0 ? (globalProcessed / totalCount) * 100 : 0;
+            s.formProgress = {
+              ...s.formProgress,
+              [formId]: {
+                ...s.formProgress[formId],
+                processed: index + 1,
+              },
+            };
+          });
         }, Promise.resolve());
-      });
+
+        // Explicitly clear cache for this form to free memory before next form
+        formCache.clear();
+      }, Promise.resolve());
 
       await crudJobs.deleteJob(db, activeJob.id);
 
       DatapointSyncState.update((s) => {
         s.inProgress = false;
         s.progress = 0;
-      });
-
-      UIState.update((s) => {
-        s.refreshPage = true;
-        s.statusBar = {
-          type: SYNC_STATUS.success,
-          bgColor: '#16a34a',
-          icon: 'checkmark-done',
-        };
+        s.syncingFormId = null;
+        s.formProgress = {};
       });
     } catch (error) {
       DatapointSyncState.update((s) => {
         s.added = true;
+        s.syncingFormId = null;
+        s.formProgress = {};
       });
       await crudJobs.updateJob(db, activeJob.id, {
         status: jobStatus.PENDING,
@@ -269,10 +294,6 @@ const SyncService = () => {
         DatapointSyncState.update((s) => {
           s.draftInProgress = false;
         });
-
-        UIState.update((s) => {
-          s.refreshPage = true;
-        });
       } catch (error) {
         UIState.update((s) => {
           s.statusBar = {
@@ -286,13 +307,75 @@ const SyncService = () => {
     }
   }, [db, userId, isManualSynced]);
 
+  const runSyncSequence = useCallback(async () => {
+    // Prevent premature success statusBar from syncFormSubmission
+    DatapointSyncState.update((s) => {
+      s.inProgress = true;
+    });
+
+    // Phase 1: Upload submitted datapoints
+    UIState.update((s) => {
+      s.statusBar = {
+        type: SYNC_STATUS.on_progress,
+        bgColor: '#2563eb',
+        icon: 'cloud-upload',
+        syncPhase: 'uploading',
+      };
+    });
+    try {
+      await onSync();
+    } catch (error) {
+      Sentry.captureException(error);
+    }
+
+    // Phase 2: Sync draft datapoints
+    UIState.update((s) => {
+      s.statusBar = {
+        type: SYNC_STATUS.on_progress,
+        bgColor: '#2563eb',
+        icon: 'cloud-upload',
+        syncPhase: 'syncing_drafts',
+      };
+    });
+    try {
+      await onSyncDraftDatapoint();
+    } catch (error) {
+      Sentry.captureException(error);
+    }
+
+    // Phase 3: Download all datapoints from server
+    UIState.update((s) => {
+      s.statusBar = {
+        type: SYNC_STATUS.on_progress,
+        bgColor: '#2563eb',
+        icon: 'cloud-download',
+        syncPhase: 'downloading',
+      };
+    });
+    try {
+      await onSyncDataPoint();
+    } catch (error) {
+      Sentry.captureException(error);
+    }
+
+    // All phases complete
+    UIState.update((s) => {
+      s.isManualSynced = false;
+      s.refreshPage = true;
+      s.statusBar = {
+        type: SYNC_STATUS.success,
+        bgColor: '#16a34a',
+        icon: 'checkmark-done',
+      };
+    });
+  }, [onSync, onSyncDraftDatapoint, onSyncDataPoint]);
+
   useEffect(() => {
     const unsubsDataSync = DatapointSyncState.subscribe(
       (s) => s.added,
       (added) => {
         if (added) {
-          onSyncDataPoint();
-          onSyncDraftDatapoint();
+          runSyncSequence();
         }
       },
     );
@@ -300,13 +383,7 @@ const SyncService = () => {
     return () => {
       unsubsDataSync();
     };
-  }, [onSyncDataPoint, onSyncDraftDatapoint]);
-
-  useEffect(() => {
-    if (isManualSynced) {
-      onSync();
-    }
-  }, [isManualSynced, onSync]);
+  }, [runSyncSequence]);
 
   return null;
 };
