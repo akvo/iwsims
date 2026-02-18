@@ -44,9 +44,6 @@ const Home = ({ navigation, route }) => {
   const syncWifiOnly = UserState.useState((s) => s.syncWifiOnly);
   const statusBar = UIState.useState((s) => s.statusBar);
   const refreshPage = UIState.useState((s) => s.refreshPage);
-  const syncingFormId = DatapointSyncState.useState((s) => s.syncingFormId);
-  const formProgress = DatapointSyncState.useState((s) => s.formProgress);
-
   const activeLang = UIState.useState((s) => s.lang);
   const trans = i18n.text(activeLang);
   const db = useSQLiteContext();
@@ -140,18 +137,16 @@ const Home = ({ navigation, route }) => {
       await runSyncSubmisionManually();
       await syncUserForms();
       await crudUsers.updateLastSynced(db, userId);
-      await crudJobs.addJob(db, {
-        user: userId,
-        type: SYNC_DATAPOINT_JOB_NAME,
-        status: jobStatus.PENDING,
-      });
-      /**
-       * Ensure there's an active job for syncing form submissions.
-       * If not, create one. This will trigger the background sync process in SyncService.
-       * We do this check to avoid creating duplicate jobs if the user presses the sync button multiple times quickly.
-       */
-      const activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
-      if (!activeJob) {
+      const existingDatapointJob = await crudJobs.getActiveJob(db, SYNC_DATAPOINT_JOB_NAME);
+      if (!existingDatapointJob) {
+        await crudJobs.addJob(db, {
+          user: userId,
+          type: SYNC_DATAPOINT_JOB_NAME,
+          status: jobStatus.PENDING,
+        });
+      }
+      const existingSubmissionJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
+      if (!existingSubmissionJob) {
         await crudJobs.addJob(db, {
           user: userId,
           type: SYNC_FORM_SUBMISSION_TASK_NAME,
@@ -349,13 +344,7 @@ const Home = ({ navigation, route }) => {
         </TouchableOpacity>
       }
     >
-      <BaseLayout.Content
-        data={filteredData}
-        action={goToSubmission}
-        columns={2}
-        syncingFormId={syncingFormId}
-        formProgress={formProgress}
-      />
+      <BaseLayout.Content data={filteredData} action={goToSubmission} columns={2} />
       <FAButton
         label={syncLoading ? trans.syncingText : trans.syncDataPointBtn}
         onPress={handleOnSync}

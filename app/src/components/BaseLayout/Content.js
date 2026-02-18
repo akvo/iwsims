@@ -2,15 +2,12 @@ import React from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 import Card from '../Card';
 import Stack from '../Stack';
+import { DatapointSyncState } from '../../store';
 
-const Content = ({
-  children = null,
-  data = [],
-  columns = 1,
-  action = null,
-  syncingFormId = null,
-  formProgress = {},
-}) => {
+const Content = ({ children = null, data = [], columns = 1, action = null }) => {
+  const syncingFormId = DatapointSyncState.useState((s) => s.syncingFormId);
+  const formProgress = DatapointSyncState.useState((s) => s.formProgress);
+
   if (data?.length) {
     return (
       <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1 }}>
@@ -19,8 +16,8 @@ const Content = ({
             const cardFormId = d?.formId ? Number(d.formId) : null;
             const isSyncing = syncingFormId != null && cardFormId === Number(syncingFormId);
             const progress = cardFormId ? formProgress[cardFormId] : null;
-            const syncPercent =
-              isSyncing && progress?.total > 0 ? (progress.processed / progress.total) * 100 : 0;
+            const hasProgress = progress?.total > 0;
+            const syncPercent = hasProgress ? (progress.processed / progress.total) * 100 : 0;
 
             return action ? (
               <TouchableOpacity
