@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.akvo.dws_datapro",
-      "versionCode": 4120
+      "versionCode": 4121
     },
     "web": {
       "favicon": "./assets/favicon.png"
