@@ -6,7 +6,7 @@
   "dataSyncInterval": 30,
   "errorHandling": true,
   "loggingLevel": "verbose",
-  "appVersion": "4.1.20",
+  "appVersion": "4.1.21",
   "lang": "en",
   "gpsThreshold": 30,
   "apkName": "DWS DataPro"
