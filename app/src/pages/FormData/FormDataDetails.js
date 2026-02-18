@@ -4,19 +4,24 @@ import { Image, Button } from '@rneui/themed';
 import moment from 'moment';
 import * as Linking from 'expo-linking';
 import { FormState, UIState } from '../../store';
-import { cascades, helpers, i18n } from '../../lib';
+import { api, cascades, helpers, i18n } from '../../lib';
 import { BaseLayout } from '../../components';
 import FormDataNavigation from './FormDataNavigation';
 import { QUESTION_TYPES } from '../../lib/constants';
 
-const ImageView = ({ label, uri, textTestID, imageTestID }) => (
-  <View style={styles.containerImage}>
-    <Text style={styles.title} testID={textTestID}>
-      {label}
-    </Text>
-    <Image source={{ uri }} testID={imageTestID} style={styles.image} />
-  </View>
-);
+const ImageView = ({ label, uri, textTestID, imageTestID }) => {
+  // get base path from http://example.com/api/v2/any/ to http://example.com
+  const baseURL = api.getConfig().baseURL?.replace(/\/api\/v\d+\/.*$/, '');
+  const imageURL = !uri?.includes('file://') && !uri?.startsWith('http') ? `${baseURL}${uri}` : uri;
+  return (
+    <View style={styles.containerImage}>
+      <Text style={styles.title} testID={textTestID}>
+        {label}
+      </Text>
+      <Image source={{ uri: imageURL }} testID={imageTestID} style={styles.image} />
+    </View>
+  );
+};
 
 const SubtitleContent = ({ index, answer, type, source = null, option = [] }) => {
   const activeLang = UIState.useState((s) => s.lang);
