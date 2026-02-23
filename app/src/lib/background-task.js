@@ -41,7 +41,7 @@ const syncFormVersion = async (
     if (!session) {
       return;
     }
-    const res = await api.post('/auth', { code: session.password });
+    const res = await api.post('/auth?keep_last_synced_at=true', { code: session.password });
     const { data } = res;
     let hasNewForms = false;
 
@@ -348,7 +348,10 @@ const backgroundTask = backgroundTaskHandler();
 export const defineSyncFormVersionTask = () =>
   TaskManager.defineTask(SYNC_FORM_VERSION_TASK_NAME, async () => {
     try {
-      await syncFormVersion({
+      const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
+        useNewConnection: true,
+      });
+      await syncFormVersion(db, {
         sendPushNotification: notification.sendPushNotification,
         showNotificationOnly: true,
       });
