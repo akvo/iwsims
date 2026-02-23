@@ -75,6 +75,25 @@ apk_path = os.path.join(BASE_DIR, MASTER_DATA)
 
 
 @extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="keep_last_synced_at",
+            required=False,
+            default=False,
+            type=OpenApiTypes.BOOL,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "Whether to keep the existing last_synced_at value "
+                "for the assignment. "
+                "If false or not provided, "
+                "last_synced_at will be reset to None, "
+                "causing all datapoints to be returned. "
+                "If true, last_synced_at will not be modified, "
+                "and only datapoints created/updated "
+                "after the existing last_synced_at will be returned."
+            ),
+        )
+    ],
     request=MobileAssignmentFormsSerializer,
     responses={200: MobileAssignmentFormsSerializer},
     tags=["Mobile Device Form"],
@@ -93,7 +112,11 @@ def get_mobile_forms(request, version):
     try:
         passcode = CustomPasscode().encode(code)
         mobile_assignment = MobileAssignment.objects.get(passcode=passcode)
-        mobile_assignment.last_synced_at = None
+        keep_last_synced_at = request.query_params.get(
+            "keep_last_synced_at", "false"
+        ).lower() == "true"
+        if not keep_last_synced_at:
+            mobile_assignment.last_synced_at = None
         mobile_assignment.save()
     except MobileAssignment.DoesNotExist:
         return Response(
@@ -535,6 +558,16 @@ class MobileAssignmentViewSet(ModelViewSet):
 
 
 @extend_schema(
+    # Add form_id as query parameter for
+    # filtering datapoints related to a specific form
+    parameters=[
+        OpenApiParameter(
+            name="form_id",
+            required=False,
+            type=OpenApiTypes.NUMBER,
+            location=OpenApiParameter.QUERY,
+        )
+    ],
     responses={
         (200, "application/json"): inline_serializer(
             "MobileDeviceDownloadDatapointListResponse",
@@ -564,6 +597,18 @@ def get_datapoint_download_list(request, version):
     paginator = Pagination()
 
     # Start with base query for administration IDs
+    form_id = request.GET.get("form_id")
+    if form_id:
+        find_form = Forms.objects.filter(
+            id=form_id,
+            parent__isnull=True,
+        ).first()
+        if not find_form or find_form.id not in [f["id"] for f in forms]:
+            return Response(
+                {"message": "Form not found in this assignment."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        forms = [find_form.pk]
     admin_id_query = Q(
         administration_id__in=[a["id"] for a in administrations],
         form_id__in=forms,
@@ -604,10 +649,24 @@ def get_datapoint_download_list(request, version):
     )
     page = response.data["current"]
     total_page = response.data["total_page"]
-    if page == total_page:
+    if page == total_page and not form_id:
         assignment.last_synced_at = timezone.now()
         assignment.save()
     return response
+
+
+@extend_schema(
+    tags=["Mobile Device Form"],
+    summary="Mark datapoint sync as complete",
+    responses={200: DefaultResponseSerializer},
+)
+@api_view(["POST"])
+@permission_classes([IsMobileAssignment])
+def mark_sync_complete(request, version):
+    assignment = cast(MobileAssignmentToken, request.auth).assignment
+    assignment.last_synced_at = timezone.now()
+    assignment.save()
+    return Response({"message": "ok"}, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=["Mobile Draft Form Data"])
