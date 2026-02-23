@@ -195,7 +195,7 @@ const SyncService = () => {
         await formIds.reduce(async (prev, fId) => {
           await prev;
           const localCount = await crudDataPoints.countSyncedByFormId(db, Number(fId));
-          if (localCount < queueForms[fId].total) {
+          if (localCount !== queueForms[fId].total) {
             hasNewData = true;
           }
         }, Promise.resolve());
@@ -237,11 +237,7 @@ const SyncService = () => {
           .getIncompleteForms(db)
           .then((rows) => rows.find((r) => r.formId === formId));
 
-        // If queue entry exists and is complete, skip
-        if (allProgress[formId] && !queueRow) {
-          return;
-        }
-
+        // Resume from last incomplete page, or start from page 1 for fresh/complete forms
         const startPage = queueRow ? queueRow.lastPage + 1 : 1;
 
         // Signal which form is now syncing
