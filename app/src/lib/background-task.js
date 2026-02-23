@@ -1,16 +1,23 @@
-import * as BackgroundFetch from 'expo-background-fetch';
+import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import * as Network from 'expo-network';
 import * as Sentry from '@sentry/react-native';
 import * as SQLite from 'expo-sqlite';
 import api from './api';
-import { crudForms, crudDataPoints, crudUsers, crudConfig } from '../database/crud';
+import { crudForms, crudDataPoints, crudUsers, crudConfig, crudSyncQueue } from '../database/crud';
+import {
+  downloadDatapointsJson,
+  fetchFormDatapointsPageByPage,
+  markSyncComplete,
+} from './sync-datapoints';
 import notification from './notification';
 import crudJobs from '../database/crud/crud-jobs';
 import { UIState, DatapointSyncState } from '../store';
 import {
   DATABASE_NAME,
   QUESTION_TYPES,
+  SYNC_DATAPOINT_BACKGROUND_TASK_NAME,
+  SYNC_DATAPOINT_JOB_NAME,
   SYNC_FORM_SUBMISSION_TASK_NAME,
   SYNC_FORM_VERSION_TASK_NAME,
   SYNC_STATUS,
@@ -72,11 +79,10 @@ const registerBackgroundTask = async (TASK_NAME, settingsValue = null) => {
       useNewConnection: true,
     });
     const config = await crudConfig.getConfig(db);
-    const syncInterval = settingsValue || parseInt(config?.syncInterval, 10) || 3600;
-    const res = await BackgroundFetch.registerTaskAsync(TASK_NAME, {
-      minimumInterval: syncInterval,
-      stopOnTerminate: false, // android only,
-      startOnBoot: true, // android only
+    const syncIntervalSec = settingsValue || parseInt(config?.syncInterval, 10) || 3600;
+    const intervalMinutes = Math.max(Math.round(syncIntervalSec / 60), 15);
+    const res = await BackgroundTask.registerTaskAsync(TASK_NAME, {
+      minimumInterval: intervalMinutes,
     });
     await db.closeAsync();
     return res;
@@ -87,7 +93,7 @@ const registerBackgroundTask = async (TASK_NAME, settingsValue = null) => {
 
 const unregisterBackgroundTask = async (TASK_NAME) => {
   try {
-    const res = await BackgroundFetch.unregisterTaskAsync(TASK_NAME);
+    const res = await BackgroundTask.unregisterTaskAsync(TASK_NAME);
     return res;
   } catch (err) {
     return Promise.reject(err);
@@ -95,7 +101,7 @@ const unregisterBackgroundTask = async (TASK_NAME) => {
 };
 
 const backgroundTaskStatus = async (TASK_NAME) => {
-  await BackgroundFetch.getStatusAsync();
+  await BackgroundTask.getStatusAsync();
   await TaskManager.isTaskRegisteredAsync(TASK_NAME);
 };
 
@@ -266,7 +272,7 @@ const processBatch = async (db, activeJob, session, counts = { success: 0, faile
 const syncFormSubmission = async (db, activeJob = {}) => {
   const { isConnected } = await Network.getNetworkStateAsync();
   if (!isConnected) {
-    return BackgroundFetch.BackgroundFetchResult.NoData;
+    return BackgroundTask.BackgroundTaskResult.Success;
   }
   try {
     const session = await crudUsers.getActiveUser(db);
@@ -312,7 +318,7 @@ const syncFormSubmission = async (db, activeJob = {}) => {
       });
     }
 
-    return BackgroundFetch.BackgroundFetchResult.NewData;
+    return BackgroundTask.BackgroundTaskResult.Success;
   } catch (error) {
     Sentry.captureMessage(`[background-task] syncFormSubmission failed`);
     Sentry.captureException(error);
@@ -346,11 +352,107 @@ export const defineSyncFormVersionTask = () =>
         sendPushNotification: notification.sendPushNotification,
         showNotificationOnly: true,
       });
-      return BackgroundFetch.BackgroundFetchResult.NewData;
+      return BackgroundTask.BackgroundTaskResult.Success;
     } catch (err) {
       Sentry.captureMessage(`[${SYNC_FORM_VERSION_TASK_NAME}] defineSyncFormVersionTask failed`);
       Sentry.captureException(err);
-      return BackgroundFetch.Result.Failed;
+      return BackgroundTask.BackgroundTaskResult.Failed;
+    }
+  });
+
+/**
+ * Background datapoint sync: processes ONE form at a time, saves progress.
+ * Each background trigger continues from where the last one left off.
+ */
+const syncDatapointsBackground = async () => {
+  const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
+    useNewConnection: true,
+  });
+  try {
+    const session = await crudUsers.getActiveUser(db);
+    if (!session?.token) {
+      await db.closeAsync();
+      return;
+    }
+    api.setToken(session.token);
+
+    const activeJob = await crudJobs.getActiveJob(db, SYNC_DATAPOINT_JOB_NAME);
+    if (!activeJob) {
+      await db.closeAsync();
+      return;
+    }
+
+    const incompleteForms = await crudSyncQueue.getIncompleteForms(db);
+    if (!incompleteForms.length) {
+      await crudJobs.deleteJob(db, activeJob.id);
+      try {
+        await markSyncComplete();
+        await crudSyncQueue.clearQueue(db);
+      } catch (err) {
+        Sentry.captureException(err);
+      }
+      await db.closeAsync();
+      return;
+    }
+
+    // Process first incomplete form only (time-limited by OS)
+    const queueRow = incompleteForms[0];
+    const { formId } = queueRow;
+    const startPage = queueRow.lastPage + 1;
+    const formCache = new Map();
+
+    await fetchFormDatapointsPageByPage(
+      formId,
+      async (pageData, page, totalPage, total) => {
+        if (page === startPage) {
+          await crudSyncQueue.upsertQueue(db, [
+            {
+              formId,
+              totalPage,
+              totalData: total,
+            },
+          ]);
+        }
+        await pageData.reduce(async (prev, item) => {
+          await prev;
+          try {
+            await downloadDatapointsJson(
+              db,
+              {
+                url: item.url,
+                formId: item.form_id,
+                administrationId: item.administration_id,
+                lastUpdated: item.last_updated,
+              },
+              session.id,
+              formCache,
+            );
+          } catch (err) {
+            Sentry.captureException(err);
+          }
+        }, Promise.resolve());
+        await crudSyncQueue.updateLastPage(db, formId, page);
+      },
+      startPage,
+      100,
+    );
+
+    formCache.clear();
+    await db.closeAsync();
+  } catch (err) {
+    Sentry.captureException(err);
+    await db.closeAsync();
+  }
+};
+
+export const defineSyncDatapointBackgroundTask = () =>
+  TaskManager.defineTask(SYNC_DATAPOINT_BACKGROUND_TASK_NAME, async () => {
+    try {
+      await syncDatapointsBackground();
+      return BackgroundTask.BackgroundTaskResult.Success;
+    } catch (err) {
+      Sentry.captureException(err);
+      return BackgroundTask.BackgroundTaskResult.Failed;
     }
   });
 
@@ -358,13 +460,13 @@ export const defineSyncFormSubmissionTask = () => {
   TaskManager.defineTask(SYNC_FORM_SUBMISSION_TASK_NAME, async () => {
     try {
       await syncFormSubmission();
-      return BackgroundFetch.BackgroundFetchResult.NewData;
+      return BackgroundTask.BackgroundTaskResult.Success;
     } catch (err) {
       Sentry.captureMessage(
         `[${SYNC_FORM_SUBMISSION_TASK_NAME}] defineSyncFormSubmissionTask failed`,
       );
       Sentry.captureException(err);
-      return BackgroundFetch.Result.Failed;
+      return BackgroundTask.BackgroundTaskResult.Failed;
     }
   });
 };

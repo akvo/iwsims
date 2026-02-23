@@ -34,9 +34,15 @@ const syncQueueQuery = () => ({
     const rows = await sql.safeExecuteQuery(db, `SELECT * FROM ${tableName}`, [], 'getAllProgress');
     const result = {};
     rows.forEach((r) => {
+      let processed = 0;
+      if (r.lastPage >= r.totalPage) {
+        processed = r.totalData;
+      } else if (r.totalPage > 0) {
+        processed = Math.min(Math.round((r.lastPage / r.totalPage) * r.totalData), r.totalData);
+      }
       result[r.formId] = {
         total: r.totalData,
-        processed: r.lastPage * 20,
+        processed,
       };
     });
     return result;
@@ -81,6 +87,9 @@ const syncQueueQuery = () => ({
   },
   updateLastPage: async (db, formId, lastPage) => {
     await sql.updateRow(db, tableName, { formId }, { lastPage });
+  },
+  clearQueue: async (db) => {
+    await sql.safeExecuteQuery(db, `DELETE FROM ${tableName}`, [], 'clearQueue');
   },
 });
 

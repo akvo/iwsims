@@ -44,3 +44,5 @@ export const jobStatus = {
 export const MAX_ATTEMPT = 3;
 
 export const SYNC_DATAPOINT_JOB_NAME = 'sync-form-datapoints';
+
+export const SYNC_DATAPOINT_BACKGROUND_TASK_NAME = 'sync-datapoint-background';

@@ -3,7 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import NetInfo from '@react-native-community/netinfo';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
+import * as BackgroundTask from 'expo-background-task';
 import * as Sentry from '@sentry/react-native';
 import * as Location from 'expo-location';
 import * as SQLite from 'expo-sqlite';
@@ -15,9 +15,10 @@ import { UIState, AuthState, UserState, BuildParamsState } from './src/store';
 import { crudUsers, crudConfig, crudDataPoints } from './src/database/crud';
 import { api } from './src/lib';
 import { NetworkStatusBar, SyncService } from './src/components';
-import backgroundTask, { defineSyncFormVersionTask } from './src/lib/background-task';
+import backgroundTask, { defineSyncFormVersionTask, defineSyncDatapointBackgroundTask } from './src/lib/background-task';
 import crudJobs from './src/database/crud/crud-jobs';
 import {
+  SYNC_DATAPOINT_BACKGROUND_TASK_NAME,
   SYNC_FORM_SUBMISSION_TASK_NAME,
   SYNC_FORM_VERSION_TASK_NAME,
   DATABASE_NAME,
@@ -40,6 +41,7 @@ export const setNotificationHandler = () =>
 
 setNotificationHandler();
 defineSyncFormVersionTask();
+defineSyncDatapointBackgroundTask();
 
 TaskManager.defineTask(SYNC_FORM_SUBMISSION_TASK_NAME, async () => {
   try {
@@ -88,11 +90,11 @@ TaskManager.defineTask(SYNC_FORM_SUBMISSION_TASK_NAME, async () => {
       await backgroundTask.syncFormSubmission(db, activeJob);
     }
     await db.closeAsync();
-    return BackgroundFetch.BackgroundFetchResult.NewData;
+    return BackgroundTask.BackgroundTaskResult.Success;
   } catch (err) {
     Sentry.captureMessage(`[${SYNC_FORM_SUBMISSION_TASK_NAME}] Define task manager failed`);
     Sentry.captureException(err);
-    return BackgroundFetch.Result.Failed;
+    return BackgroundTask.BackgroundTaskResult.Failed;
   }
 });
 
@@ -116,7 +118,6 @@ Sentry.init({
 
 const App = () => {
   const serverURLState = BuildParamsState.useState((s) => s.serverURL);
-  console.log('serverURLState', serverURLState);
   const syncValue = BuildParamsState.useState((s) => s.dataSyncInterval);
   const gpsThreshold = BuildParamsState.useState((s) => s.gpsThreshold);
   const gpsAccuracyLevel = BuildParamsState.useState((s) => s.gpsAccuracyLevel);
@@ -225,8 +226,6 @@ const App = () => {
       await m04.up(db);
       currentDbVersion = 4;
     }
-    // eslint-disable-next-line no-console
-    console.info(`Migrating database from version ${currentDbVersion} to ${DATABASE_VERSION}`);
     await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
   };
 
@@ -248,7 +247,7 @@ const App = () => {
       const allTasks = await TaskManager.getRegisteredTasksAsync();
 
       allTasks.forEach(async (a) => {
-        if ([SYNC_FORM_SUBMISSION_TASK_NAME, SYNC_FORM_VERSION_TASK_NAME].includes(a.taskName)) {
+        if ([SYNC_FORM_SUBMISSION_TASK_NAME, SYNC_FORM_VERSION_TASK_NAME, SYNC_DATAPOINT_BACKGROUND_TASK_NAME].includes(a.taskName)) {
           await backgroundTask.registerBackgroundTask(a.taskName);
         }
       });
