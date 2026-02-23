@@ -54,9 +54,8 @@ const TypeAutofield = ({
             }
           }
         }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.info(`[TypeAutofield] Error processing fnString: ${nameFnString}`, error);
+      } catch {
+        // Ignore errors in fnString evaluation to avoid breaking the form
       }
     });
 

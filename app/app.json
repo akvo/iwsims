@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -59,11 +61,12 @@
         }
       ],
       "expo-document-picker",
-      "expo-asset"
+      "expo-asset",
+      "expo-background-task"
     ],
     "androidNavigationBar": {
       "visible": "overscan",
-      "barStyle": "dark-content",
+      "barStyle": "light-content",
       "backgroundColor": "#000000"
     },
     "runtimeVersion": {

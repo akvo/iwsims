@@ -8,6 +8,7 @@ from .views import (
     upload_apk_file,
     download_apk_file,
     get_datapoint_download_list,
+    mark_sync_complete,
     MobileAssignmentViewSet,
     check_apk_version,
     UploadAttachmentsView,
@@ -29,6 +30,10 @@ urlpatterns = [
     re_path(
         r"^(?P<version>(v1))/device/form/(?P<form_id>[0-9]+)",
         get_mobile_form_details,
+    ),
+    re_path(
+        r"^(?P<version>(v1))/device/sync-complete",
+        mark_sync_complete,
     ),
     re_path(
         r"^(?P<version>(v1))/device/sync",

@@ -37,9 +37,8 @@ const TypeNumber = ({
             setFieldColor(fnColorValue);
           }
         }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Error in fnColor function:', error);
+      } catch {
+        // Ignore errors in fnColor evaluation to avoid breaking the form
       }
     }
   }, [fnColor, fieldColor, id, value, questions, keyform]);

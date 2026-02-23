@@ -67,52 +67,51 @@ export const fetchDraftDatapointsPageByPage = async (onPageReceived, pageSize = 
 };
 
 /**
- * Fetches ALL datapoint metadata page-by-page and groups by form_id.
- * Only lightweight metadata is stored (~100 bytes/item), not the heavy JSON payloads.
- * This enables per-form processing: download one form's data at a time to reduce
- * peak memory usage.
+ * Fetches datapoints for a single form page by page using form_id filter.
+ * Only one page of data is in memory at a time, reducing peak memory usage.
  *
- * @param {Function|null} onPageReceived - optional callback(formGroups, totalCount)
- *   called after each page so the UI can show incremental progress during metadata collection
- * @param {number} pageSize - page size to request (default 20)
- * @returns {Promise<{ formGroups: Map<number, Array>, totalCount: number }>}
+ * @param {number} formId - backend form ID to filter by
+ * @param {Function} onPageReceived - async callback(pageData, page, totalPage, total)
+ * @param {number} startPage - page to start from (for resume, default 1)
+ * @param {number} pageSize - page size to request (default 100, backend max)
+ * @returns {Promise<{totalProcessed: number, totalPage: number, total: number}>}
  */
-export const fetchAndGroupDatapointsByForm = async (onPageReceived = null, pageSize = 20) => {
-  const formGroups = new Map();
-  let totalCount = 0;
+export const fetchFormDatapointsPageByPage = async (
+  formId,
+  onPageReceived,
+  startPage = 1,
+  pageSize = 100,
+) => {
+  let totalProcessed = 0;
+  let lastTotal = 0;
+  let lastTotalPage = 0;
 
   const fetchPage = async (currentPage, totalPages) => {
     if (currentPage > totalPages) {
       return;
     }
     const { data: apiData } = await api.get(
-      `/datapoint-list?page=${currentPage}&page_size=${pageSize}`,
+      `/datapoint-list?form_id=${formId}&page=${currentPage}&page_size=${pageSize}`,
     );
-    const { data, total_page: totalPage, current: page } = apiData;
+    const { data, total_page: totalPage, current: page, total } = apiData;
 
-    data.forEach((item) => {
-      const { form_id: formId } = item;
-      if (!formGroups.has(formId)) {
-        formGroups.set(formId, []);
-      }
-      formGroups.get(formId).push({
-        url: item.url,
-        formId,
-        administrationId: item.administration_id,
-        lastUpdated: item.last_updated,
-      });
-    });
-    totalCount += data.length;
-
-    if (onPageReceived) {
-      await onPageReceived(formGroups, totalCount);
-    }
-
+    lastTotal = total;
+    lastTotalPage = totalPage;
+    await onPageReceived(data, page, totalPage, total);
+    totalProcessed += data.length;
     await fetchPage(page + 1, totalPage);
   };
 
-  await fetchPage(1, 1);
-  return { formGroups, totalCount };
+  await fetchPage(startPage, startPage);
+  return { totalProcessed, totalPage: lastTotalPage, total: lastTotal };
+};
+
+/**
+ * Marks datapoint sync as complete on the backend.
+ * Updates last_synced_at so the next sync only gets new/updated datapoints.
+ */
+export const markSyncComplete = async () => {
+  await api.post('/sync-complete');
 };
 
 /**

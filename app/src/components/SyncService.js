@@ -8,8 +8,9 @@ import crudJobs from '../database/crud/crud-jobs';
 import { crudConfig, crudDataPoints, crudForms, crudSyncQueue } from '../database/crud';
 import {
   downloadDatapointsJson,
-  fetchAndGroupDatapointsByForm,
+  fetchFormDatapointsPageByPage,
   fetchDraftDatapointsPageByPage,
+  markSyncComplete,
 } from '../lib/sync-datapoints';
 import {
   jobStatus,
@@ -108,7 +109,7 @@ const SyncService = () => {
   }, [syncInSecond, isOnline, onSync]);
 
   const onSyncDataPoint = useCallback(async () => {
-    const SYNC_PAGE_SIZE = 20;
+    const SYNC_PAGE_SIZE = 100;
     const activeJob = await crudJobs.getActiveJob(db, SYNC_DATAPOINT_JOB_NAME);
 
     DatapointSyncState.update((s) => {
@@ -168,6 +169,20 @@ const SyncService = () => {
     });
 
     try {
+      // Get registration forms from local SQLite
+      const registrationForms = await crudForms.selectLatestFormVersion(db, {
+        user: activeJob.user,
+      });
+
+      if (!registrationForms?.length) {
+        await crudJobs.deleteJob(db, activeJob.id);
+        DatapointSyncState.update((s) => {
+          s.inProgress = false;
+          s.progress = 0;
+        });
+        return;
+      }
+
       // Quick check: if queue has completed entries and all local counts match, skip
       const hasEntries = await crudSyncQueue.hasEntries(db);
       const hasIncomplete = hasEntries ? await crudSyncQueue.hasIncomplete(db) : false;
@@ -180,7 +195,7 @@ const SyncService = () => {
         await formIds.reduce(async (prev, fId) => {
           await prev;
           const localCount = await crudDataPoints.countSyncedByFormId(db, Number(fId));
-          if (localCount < queueForms[fId].total) {
+          if (localCount !== queueForms[fId].total) {
             hasNewData = true;
           }
         }, Promise.resolve());
@@ -197,63 +212,33 @@ const SyncService = () => {
         }
       }
 
-      // Fetch metadata and upsert queue (handles fresh, resume, and re-check)
-      const result = await fetchAndGroupDatapointsByForm((currentGroups) => {
-        const updatedFormProgress = {};
-        currentGroups.forEach((items, formId) => {
-          updatedFormProgress[formId] = { total: items.length, processed: 0 };
-        });
-        DatapointSyncState.update((s) => {
-          s.formProgress = updatedFormProgress;
-        });
-      });
-      const { formGroups } = result;
-
-      const formEntries = [];
-      formGroups.forEach((items, formId) => {
-        formEntries.push({
-          formId,
-          totalPage: Math.ceil(items.length / SYNC_PAGE_SIZE),
-          totalData: items.length,
-        });
-      });
-      await crudSyncQueue.upsertQueue(db, formEntries);
-
-      // Build formProgress from queue
-      const allProgress = await crudSyncQueue.getAllProgress(db);
+      // Build initial formProgress from queue (for resume)
+      let allProgress = await crudSyncQueue.getAllProgress(db);
       DatapointSyncState.update((s) => {
-        s.formProgress = allProgress;
+        s.formProgress = { ...allProgress };
       });
 
-      // Calculate global totals
+      // Calculate global totals from queue (completed forms)
       let totalCount = 0;
       let globalProcessed = 0;
+      let hasErrors = false;
       Object.keys(allProgress).forEach((fId) => {
         totalCount += allProgress[fId].total;
         globalProcessed += allProgress[fId].processed;
       });
 
-      // Process incomplete forms
-      const incompleteForms = await crudSyncQueue.getIncompleteForms(db);
-
-      await incompleteForms.reduce(async (previousFormPromise, queueRow) => {
+      // Process each registration form one at a time
+      await registrationForms.reduce(async (previousFormPromise, regForm) => {
         await previousFormPromise;
-        const { formId } = queueRow;
-        const items = formGroups.get(formId) || [];
+        const { formId } = regForm;
 
-        // Skip forms already fully synced locally
-        const localSyncedCount = await crudDataPoints.countSyncedByFormId(db, formId);
-        if (localSyncedCount >= queueRow.totalData) {
-          await crudSyncQueue.updateLastPage(db, formId, queueRow.totalPage);
-          DatapointSyncState.update((s) => {
-            if (!s.formProgress[formId]) {
-              s.formProgress[formId] = { total: queueRow.totalData, processed: 0 };
-            }
-            s.formProgress[formId].processed = queueRow.totalData;
-          });
-          globalProcessed += queueRow.totalData;
-          return;
-        }
+        // Check queue for resume state
+        const queueRow = await crudSyncQueue
+          .getIncompleteForms(db)
+          .then((rows) => rows.find((r) => r.formId === formId));
+
+        // Resume from last incomplete page, or start from page 1 for fresh/complete forms
+        const startPage = queueRow ? queueRow.lastPage + 1 : 1;
 
         // Signal which form is now syncing
         DatapointSyncState.update((s) => {
@@ -262,71 +247,115 @@ const SyncService = () => {
 
         // Fresh cache for THIS form only
         const formCache = new Map();
+        let formItemsProcessed = queueRow ? allProgress[formId]?.processed || 0 : 0;
 
-        // Skip completed pages, process remaining
-        const startIndex = queueRow.lastPage * SYNC_PAGE_SIZE;
-        let currentPage = queueRow.lastPage;
+        await fetchFormDatapointsPageByPage(
+          formId,
+          async (pageData, page, totalPage, total) => {
+            // On first page response: upsert queue with actual API totals
+            if (page === startPage) {
+              await crudSyncQueue.upsertQueue(db, [
+                {
+                  formId,
+                  totalPage,
+                  totalData: total,
+                },
+              ]);
 
-        // Process items page by page
-        const remainingItems = items.slice(startIndex);
-        let itemsOnPage = 0;
+              // Update totalCount with fresh data
+              if (!allProgress[formId]) {
+                totalCount += total;
+              } else if (allProgress[formId].total !== total) {
+                totalCount += total - allProgress[formId].total;
+              }
 
-        await remainingItems.reduce(async (previousItemPromise, item) => {
-          await previousItemPromise;
-          try {
-            await downloadDatapointsJson(
-              db,
-              {
-                url: item.url,
-                formId: item.formId,
-                administrationId: item.administrationId,
-                lastUpdated: item.lastUpdated,
-              },
-              activeJob.user,
-              formCache,
-            );
-          } catch (error) {
-            Sentry.captureMessage(`Error downloading datapoint JSON for URL ${item.url}`);
-            Sentry.captureException(error);
-          }
-
-          itemsOnPage += 1;
-          globalProcessed += 1;
-
-          // Page boundary: update lastPage in DB
-          if (itemsOnPage >= SYNC_PAGE_SIZE) {
-            currentPage += 1;
-            await crudSyncQueue.updateLastPage(db, formId, currentPage);
-            itemsOnPage = 0;
-          }
-
-          // Update progress (mutate draft in-place to avoid GC pressure)
-          DatapointSyncState.update((s) => {
-            s.progress = totalCount > 0 ? (globalProcessed / totalCount) * 100 : 0;
-            if (!s.formProgress[formId]) {
-              s.formProgress[formId] = { total: items.length, processed: 0 };
+              DatapointSyncState.update((s) => {
+                if (!s.formProgress[formId]) {
+                  s.formProgress[formId] = { total, processed: 0 };
+                }
+                s.formProgress[formId].total = total;
+              });
             }
-            s.formProgress[formId].processed =
-              startIndex + itemsOnPage + (currentPage - queueRow.lastPage) * SYNC_PAGE_SIZE;
-          });
-        }, Promise.resolve());
 
-        // Mark final partial page as complete
-        if (itemsOnPage > 0) {
-          await crudSyncQueue.updateLastPage(db, formId, queueRow.totalPage);
-        }
+            // Download each datapoint on this page
+            let pageHasErrors = false;
+            await pageData.reduce(async (prev, item) => {
+              await prev;
+              try {
+                await downloadDatapointsJson(
+                  db,
+                  {
+                    url: item.url,
+                    formId: item.form_id,
+                    administrationId: item.administration_id,
+                    lastUpdated: item.last_updated,
+                  },
+                  activeJob.user,
+                  formCache,
+                );
+              } catch (error) {
+                pageHasErrors = true;
+                hasErrors = true;
+                Sentry.captureMessage(`Error downloading datapoint JSON for URL ${item.url}`);
+                Sentry.captureException(error);
+              }
+
+              formItemsProcessed += 1;
+              globalProcessed += 1;
+
+              // Update progress — capped at 100%
+              DatapointSyncState.update((s) => {
+                s.progress =
+                  totalCount > 0 ? Math.min((globalProcessed / totalCount) * 100, 100) : 0;
+                if (!s.formProgress[formId]) {
+                  s.formProgress[formId] = { total: 0, processed: 0 };
+                }
+                s.formProgress[formId].processed = formItemsProcessed;
+              });
+            }, Promise.resolve());
+
+            // Only advance page if all items succeeded — failed pages retry
+            if (!pageHasErrors) {
+              await crudSyncQueue.updateLastPage(db, formId, page);
+            }
+          },
+          startPage,
+          SYNC_PAGE_SIZE,
+        );
 
         // Clear cache for this form to free memory
         formCache.clear();
 
-        // Refresh Home page counts (submitted/synced/draft) after each form completes
+        // Refresh allProgress after form completes
+        allProgress = await crudSyncQueue.getAllProgress(db);
+
+        // Refresh Home page counts after each form completes
         UIState.update((s) => {
           s.refreshPage = true;
         });
       }, Promise.resolve());
 
-      // Done — keep queue for next re-check, delete job
-      await crudJobs.deleteJob(db, activeJob.id);
+      if (!hasErrors) {
+        // All forms done without errors — notify backend to update last_synced_at
+        try {
+          await markSyncComplete();
+          // Clear queue after successful sync so next sync starts fresh
+          // (backend uses last_synced_at to return only new data)
+          await crudSyncQueue.clearQueue(db);
+        } catch (error) {
+          Sentry.captureMessage('Failed to mark sync complete on backend');
+          Sentry.captureException(error);
+        }
+        // Done — delete job
+        await crudJobs.deleteJob(db, activeJob.id);
+      } else {
+        // Some items failed — keep job pending for retry, queue preserves progress
+        await crudJobs.updateJob(db, activeJob.id, {
+          status: jobStatus.PENDING,
+          attempt: activeJob.attempt + 1,
+          info: 'Some datapoint downloads failed',
+        });
+      }
 
       DatapointSyncState.update((s) => {
         s.inProgress = false;

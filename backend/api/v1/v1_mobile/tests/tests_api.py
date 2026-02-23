@@ -84,6 +84,62 @@ class MobileAssignmentApiTest(TestCase, ProfileTestHelperMixin):
         )
         self.assertEqual(self.mobile_assignment.last_synced_at, None)
 
+    def test_auth_resets_last_synced_at_by_default(self):
+        """POST /auth without keep_last_synced_at resets last_synced_at."""
+        # Set last_synced_at to a non-None value
+        from django.utils import timezone
+        self.mobile_assignment.last_synced_at = timezone.now()
+        self.mobile_assignment.save()
+
+        code = {'code': self.passcode}
+        response = self.client.post(
+            '/api/v1/device/auth',
+            code,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.mobile_assignment.refresh_from_db()
+        self.assertIsNone(self.mobile_assignment.last_synced_at)
+
+    def test_auth_keeps_last_synced_at_when_param_true(self):
+        """POST /auth?keep_last_synced_at=true preserves last_synced_at."""
+        from django.utils import timezone
+        synced_time = timezone.now()
+        self.mobile_assignment.last_synced_at = synced_time
+        self.mobile_assignment.save()
+
+        code = {'code': self.passcode}
+        response = self.client.post(
+            '/api/v1/device/auth?keep_last_synced_at=true',
+            code,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.mobile_assignment.refresh_from_db()
+        self.assertIsNotNone(self.mobile_assignment.last_synced_at)
+        self.assertEqual(
+            self.mobile_assignment.last_synced_at, synced_time
+        )
+
+    def test_auth_resets_last_synced_at_when_param_false(self):
+        """POST /auth?keep_last_synced_at=false resets last_synced_at."""
+        from django.utils import timezone
+        self.mobile_assignment.last_synced_at = timezone.now()
+        self.mobile_assignment.save()
+
+        code = {'code': self.passcode}
+        response = self.client.post(
+            '/api/v1/device/auth?keep_last_synced_at=false',
+            code,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.mobile_assignment.refresh_from_db()
+        self.assertIsNone(self.mobile_assignment.last_synced_at)
+
     def test_mobile_assignment_form_api_with_invalid_passcode(self):
         # wrong passcode
         code = {'code': 'wrong code'}

@@ -103,7 +103,7 @@ const Home = ({ navigation, route }) => {
   };
 
   const syncUserForms = async () => {
-    const { data: apiData } = await api.post('/auth', { code: passcode });
+    const { data: apiData } = await api.post('/auth?keep_last_synced_at=true', { code: passcode });
     api.setToken(apiData.syncToken);
 
     const myForms = await crudForms.getMyForms(db);
