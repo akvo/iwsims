@@ -21,12 +21,12 @@ const registerForPushNotificationsAsync = async () => {
       finalStatus = status;
     }
     if (finalStatus !== 'granted') {
-      console.warn('[Notification]Failed to get push token for push notification!');
+      // [Notification]Failed to get push token for push notification!
       return;
     }
     await Notifications.getExpoPushTokenAsync().data;
   } else {
-    console.warn('[Notification]Must use physical device for Push Notifications');
+    // [Notification]Must use physical device for Push Notifications
   }
 };
 
