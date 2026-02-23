@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { SYNC_FORM_SUBMISSION_TASK_NAME } from './constants';
 
 const registerForPushNotificationsAsync = async () => {
@@ -21,12 +21,15 @@ const registerForPushNotificationsAsync = async () => {
       finalStatus = status;
     }
     if (finalStatus !== 'granted') {
-      // [Notification]Failed to get push token for push notification!
+      // Show alert
+      Alert.alert(
+        'Push Notification Permission',
+        'Please enable push notification permissions in your device settings to receive updates about form synchronization.',
+        [{ text: 'OK' }],
+      );
       return;
     }
     await Notifications.getExpoPushTokenAsync().data;
-  } else {
-    // [Notification]Must use physical device for Push Notifications
   }
 };
 

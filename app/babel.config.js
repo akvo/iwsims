@@ -17,7 +17,6 @@ module.exports = function (api) {
           allowUndefined: true,
         },
       ],
-      // ['transform-remove-console'],
     ],
   };
 };
