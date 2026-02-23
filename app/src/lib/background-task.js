@@ -416,6 +416,7 @@ const syncDatapointsBackground = async () => {
             },
           ]);
         }
+        let pageHasErrors = false;
         await pageData.reduce(async (prev, item) => {
           await prev;
           try {
@@ -431,10 +432,14 @@ const syncDatapointsBackground = async () => {
               formCache,
             );
           } catch (err) {
+            pageHasErrors = true;
             Sentry.captureException(err);
           }
         }, Promise.resolve());
-        await crudSyncQueue.updateLastPage(db, formId, page);
+        // Only advance page if all items succeeded
+        if (!pageHasErrors) {
+          await crudSyncQueue.updateLastPage(db, formId, page);
+        }
       },
       startPage,
       100,

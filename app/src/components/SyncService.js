@@ -221,6 +221,7 @@ const SyncService = () => {
       // Calculate global totals from queue (completed forms)
       let totalCount = 0;
       let globalProcessed = 0;
+      let hasErrors = false;
       Object.keys(allProgress).forEach((fId) => {
         totalCount += allProgress[fId].total;
         globalProcessed += allProgress[fId].processed;
@@ -281,6 +282,7 @@ const SyncService = () => {
             }
 
             // Download each datapoint on this page
+            let pageHasErrors = false;
             await pageData.reduce(async (prev, item) => {
               await prev;
               try {
@@ -296,6 +298,8 @@ const SyncService = () => {
                   formCache,
                 );
               } catch (error) {
+                pageHasErrors = true;
+                hasErrors = true;
                 Sentry.captureMessage(`Error downloading datapoint JSON for URL ${item.url}`);
                 Sentry.captureException(error);
               }
@@ -314,8 +318,10 @@ const SyncService = () => {
               });
             }, Promise.resolve());
 
-            // Mark page complete in queue
-            await crudSyncQueue.updateLastPage(db, formId, page);
+            // Only advance page if all items succeeded — failed pages retry
+            if (!pageHasErrors) {
+              await crudSyncQueue.updateLastPage(db, formId, page);
+            }
           },
           startPage,
           SYNC_PAGE_SIZE,
@@ -333,19 +339,27 @@ const SyncService = () => {
         });
       }, Promise.resolve());
 
-      // All forms done — notify backend to update last_synced_at
-      try {
-        await markSyncComplete();
-        // Clear queue after successful sync so next sync starts fresh
-        // (backend uses last_synced_at to return only new data)
-        await crudSyncQueue.clearQueue(db);
-      } catch (error) {
-        Sentry.captureMessage('Failed to mark sync complete on backend');
-        Sentry.captureException(error);
+      if (!hasErrors) {
+        // All forms done without errors — notify backend to update last_synced_at
+        try {
+          await markSyncComplete();
+          // Clear queue after successful sync so next sync starts fresh
+          // (backend uses last_synced_at to return only new data)
+          await crudSyncQueue.clearQueue(db);
+        } catch (error) {
+          Sentry.captureMessage('Failed to mark sync complete on backend');
+          Sentry.captureException(error);
+        }
+        // Done — delete job
+        await crudJobs.deleteJob(db, activeJob.id);
+      } else {
+        // Some items failed — keep job pending for retry, queue preserves progress
+        await crudJobs.updateJob(db, activeJob.id, {
+          status: jobStatus.PENDING,
+          attempt: activeJob.attempt + 1,
+          info: 'Some datapoint downloads failed',
+        });
       }
-
-      // Done — delete job
-      await crudJobs.deleteJob(db, activeJob.id);
 
       DatapointSyncState.update((s) => {
         s.inProgress = false;
