@@ -3,8 +3,10 @@ import pandas as pd
 import os
 import pathlib
 
+from datetime import datetime, timedelta, time
 from math import ceil
 from wsgiref.util import FileWrapper
+from django.conf import settings
 from django.utils import timezone
 from django.http import HttpResponse
 from django.db.models import Q, Count
@@ -33,6 +35,7 @@ from api.v1.v1_data.serializers import (
     SubmitFormSerializer,
     ListFormDataSerializer,
     ListFormDataRequestSerializer,
+    ListPendingFormDataRequestSerializer,
     ListDataAnswerSerializer,
     ListPendingDataAnswerSerializer,
     ListPendingFormDataSerializer,
@@ -132,6 +135,22 @@ class FormDataAddListView(APIView):
                 ),
                 enum=["ascend", "descend"],
             ),
+            OpenApiParameter(
+                name="date_from",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Filter data created on or after this date "
+                "(YYYY-MM-DD)",
+            ),
+            OpenApiParameter(
+                name="date_to",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Filter data created on or before this date "
+                "(YYYY-MM-DD)",
+            ),
         ],
         summary="To get list of form data",
     )
@@ -151,6 +170,8 @@ class FormDataAddListView(APIView):
 
         parent = serializer.validated_data.get("parent")
         search = serializer.validated_data.get("search")
+        date_from = serializer.validated_data.get("date_from")
+        date_to = serializer.validated_data.get("date_to")
         sort_by = serializer.validated_data.get("sort_by", "created")
         sort_type = serializer.validated_data.get("sort_type", "descend")
         order_by = f"-{sort_by}" if sort_type == "descend" else sort_by
@@ -167,6 +188,18 @@ class FormDataAddListView(APIView):
             ))
             if search:
                 queryset = queryset.filter(name__icontains=search)
+            if date_from:
+                start_datetime = datetime.combine(date_from, time.min)
+                if settings.USE_TZ:
+                    start_datetime = timezone.make_aware(start_datetime)
+                queryset = queryset.filter(created__gte=start_datetime)
+            if date_to:
+                end_datetime = datetime.combine(
+                    date_to + timedelta(days=1), time.min
+                )
+                if settings.USE_TZ:
+                    end_datetime = timezone.make_aware(end_datetime)
+                queryset = queryset.filter(created__lt=end_datetime)
             queryset = queryset.order_by(order_by)
             instance = paginator.paginate_queryset(queryset, request)
             total = queryset.count()
@@ -223,6 +256,18 @@ class FormDataAddListView(APIView):
         )
         if search:
             queryset = queryset.filter(name__icontains=search)
+        if date_from:
+            start_datetime = datetime.combine(date_from, time.min)
+            if settings.USE_TZ:
+                start_datetime = timezone.make_aware(start_datetime)
+            queryset = queryset.filter(created__gte=start_datetime)
+        if date_to:
+            end_datetime = datetime.combine(
+                date_to + timedelta(days=1), time.min
+            )
+            if settings.USE_TZ:
+                end_datetime = timezone.make_aware(end_datetime)
+            queryset = queryset.filter(created__lt=end_datetime)
         queryset = queryset.order_by(order_by)
 
         instance = paginator.paginate_queryset(queryset, request)
@@ -560,12 +605,46 @@ class PendingFormDataView(APIView):
                 type={"type": "array", "items": {"type": "number"}},
                 location=OpenApiParameter.QUERY,
             ),
+            OpenApiParameter(
+                name="search",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Search by datapoint name",
+            ),
+            OpenApiParameter(
+                name="date_from",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Filter data created on or after this date "
+                "(YYYY-MM-DD)",
+            ),
+            OpenApiParameter(
+                name="date_to",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Filter data created on or before this date "
+                "(YYYY-MM-DD)",
+            ),
         ],
         summary="To get list of pending form data",
     )
     def get(self, request, form_id, version):
         form = get_object_or_404(Forms, pk=form_id)
+        serializer = ListPendingFormDataRequestSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(
+                {"message": validate_serializers_message(serializer.errors)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         page_size = REST_FRAMEWORK.get("PAGE_SIZE")
+
+        # Get validated filters
+        search = serializer.validated_data.get("search")
+        date_from = serializer.validated_data.get("date_from")
+        date_to = serializer.validated_data.get("date_to")
 
         # Get all child form IDs including the parent form
         form_ids = [form.id]
@@ -579,7 +658,26 @@ class PendingFormDataView(APIView):
             data_batch_list__isnull=True,
             is_pending=True,
             is_draft=False,
-        ).order_by("-created")
+        )
+        # Apply search filter (search in name or parent's name for monitoring)
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) | Q(parent__name__icontains=search)
+            )
+        # Apply date filters
+        if date_from:
+            start_datetime = datetime.combine(date_from, time.min)
+            if settings.USE_TZ:
+                start_datetime = timezone.make_aware(start_datetime)
+            queryset = queryset.filter(created__gte=start_datetime)
+        if date_to:
+            end_datetime = datetime.combine(
+                date_to + timedelta(days=1), time.min
+            )
+            if settings.USE_TZ:
+                end_datetime = timezone.make_aware(end_datetime)
+            queryset = queryset.filter(created__lt=end_datetime)
+        queryset = queryset.order_by("-created")
         # if selection_ids is provided, filter the queryset
         selection_ids = request.GET.getlist("selection_ids")
         if selection_ids:

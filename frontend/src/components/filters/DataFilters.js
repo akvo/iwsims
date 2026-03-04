@@ -11,6 +11,7 @@ import {
   Tooltip,
   Radio,
   Input,
+  DatePicker,
 } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdministrationDropdown from "./AdministrationDropdown";
@@ -27,6 +28,7 @@ import {
   FileWordOutlined,
   DownOutlined,
   SearchOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { Can } from "../can/index.js";
 
@@ -34,6 +36,8 @@ const DataFilters = ({
   loading,
   showAdm = true,
   resetFilter = true,
+  showSearch = true,
+  showDateRange = true,
   selectedRowKeys = [],
   search = "",
   onSearchChange = () => {},
@@ -44,6 +48,7 @@ const DataFilters = ({
     loadingForm,
     administration,
     showAdvancedFilters,
+    dateRange,
   } = store.useState((s) => s);
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -162,6 +167,12 @@ const DataFilters = ({
     });
     navigate(`/control-center/form/${selectedForm}`);
   };
+
+  const handleDateRangeChange = useCallback((dates) => {
+    store.update((s) => {
+      s.dateRange = dates;
+    });
+  }, []);
 
   const childFormMenuItems = useMemo(() => {
     const formItems = childForms.map((form) => ({
@@ -360,24 +371,40 @@ const DataFilters = ({
           </Space>
         </Col>
       </Row>
-      <Row>
-        <Col>
-          <Space>
-            <Input
-              prefix={<SearchOutlined />}
-              placeholder={text.searchPlaceholder}
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              allowClear
-              style={{ width: 200 }}
-            />
-            {showAdm && (
-              <AdministrationDropdown loading={loading || loadingForm} />
-            )}
-            {resetFilter && <RemoveFiltersButton />}
-          </Space>
-        </Col>
-      </Row>
+      {(showSearch || showDateRange || showAdm || resetFilter) && (
+        <Row>
+          <Col>
+            <Space>
+              {showSearch && (
+                <Input
+                  prefix={<SearchOutlined />}
+                  placeholder={text.searchPlaceholder}
+                  value={search}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  allowClear
+                  style={{ width: 200 }}
+                />
+              )}
+              {showDateRange && (
+                <DatePicker.RangePicker
+                  value={dateRange}
+                  onChange={handleDateRangeChange}
+                  allowClear
+                  placeholder={[
+                    text.dateFromPlaceholder,
+                    text.dateToPlaceholder,
+                  ]}
+                  suffixIcon={<CalendarOutlined />}
+                />
+              )}
+              {showAdm && (
+                <AdministrationDropdown loading={loading || loadingForm} />
+              )}
+              {resetFilter && <RemoveFiltersButton />}
+            </Space>
+          </Col>
+        </Row>
+      )}
       {showAdvancedFilters && <AdvancedFilters />}
     </>
   );
