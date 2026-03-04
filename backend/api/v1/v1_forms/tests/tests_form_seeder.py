@@ -1,11 +1,14 @@
+import json
+import os
 from io import StringIO
 
 from django.test.utils import override_settings
 from django.core.management import call_command
 from api.v1.v1_profile.models import Administration, Levels
+from api.v1.v1_data.models import FormData, Answers
+from api.v1.v1_forms.models import Forms, Questions
+from api.v1.v1_users.models import SystemUser
 from django.test import TestCase
-
-from api.v1.v1_forms.models import Forms
 
 
 def seed_administration_test():
@@ -239,3 +242,114 @@ class FormSeederTestCase(TestCase):
         self.assertEqual(form_2.name, "Test Form 2")
         self.assertEqual(form_1.children.count(), 2)
         self.assertEqual(form_2.children.count(), 0)
+
+    def test_answer_migration_on_question_move(self):
+        """When a question moves between forms, answers should
+        be redistributed to monitoring FormData children."""
+        seed_administration_test()
+
+        # Step 1: Seed forms — question 109 belongs to form 1
+        self.call_command("--test")
+
+        reg_form = Forms.objects.get(pk=1)
+        mon_form = Forms.objects.get(pk=10001)
+        question_109 = Questions.objects.get(pk=109)
+        self.assertEqual(question_109.form_id, 1)
+
+        # Step 2: Create test data
+        admin = Administration.objects.first()
+        user = SystemUser.objects.create_superuser(
+            email="migration_test@test.com",
+            password="Test105*",
+            first_name="Test",
+            last_name="User",
+        )
+
+        reg_data = FormData.objects.create(
+            name="Test Registration",
+            form=reg_form,
+            administration=admin,
+            created_by=user,
+        )
+        Answers.objects.create(
+            data=reg_data,
+            question=question_109,
+            value=3.14,
+            created_by=user,
+        )
+
+        # Create monitoring child
+        mon_data = FormData.objects.create(
+            name="Test Monitoring",
+            form=mon_form,
+            administration=admin,
+            created_by=user,
+            parent=reg_data,
+        )
+
+        # Step 3: Modify fixtures to move question 109 to monitoring
+        source_folder = "./source/forms/"
+        form1_path = os.path.join(source_folder, "example-1.json")
+        mon_path = os.path.join(
+            source_folder, "example-1.1.monitoring.json"
+        )
+
+        with open(form1_path, "r") as f:
+            form1_orig = f.read()
+        with open(mon_path, "r") as f:
+            mon_orig = f.read()
+
+        try:
+            form1_json = json.loads(form1_orig)
+            mon_json = json.loads(mon_orig)
+
+            # Extract question 109 from registration form
+            q109 = next(
+                q
+                for q in form1_json["question_groups"][0]["questions"]
+                if q["id"] == 109
+            )
+            form1_json["question_groups"][0]["questions"] = [
+                q
+                for q in form1_json["question_groups"][0]["questions"]
+                if q["id"] != 109
+            ]
+            # Replace question 10109 (same name "decimal") with 109
+            mon_json["question_groups"][0]["questions"] = [
+                q
+                for q in mon_json["question_groups"][0]["questions"]
+                if q["id"] != 10109
+            ]
+            mon_json["question_groups"][0]["questions"].append(q109)
+
+            with open(form1_path, "w") as f:
+                json.dump(form1_json, f, indent=2)
+            with open(mon_path, "w") as f:
+                json.dump(mon_json, f, indent=2)
+
+            # Step 4: Re-run seeder with modified fixtures
+            self.call_command("--test")
+
+            # Step 5: Assert question now belongs to monitoring form
+            question_109.refresh_from_db()
+            self.assertEqual(question_109.form_id, mon_form.id)
+
+            # Step 6: Answer redistributed to monitoring FormData
+            mon_answers = Answers.objects.filter(
+                data=mon_data, question=question_109
+            )
+            self.assertTrue(mon_answers.exists())
+            self.assertEqual(mon_answers.first().value, 3.14)
+
+            # Step 7: Original answer removed from registration data
+            reg_answers = Answers.objects.filter(
+                data=reg_data, question=question_109
+            )
+            self.assertFalse(reg_answers.exists())
+
+        finally:
+            # Restore original fixtures
+            with open(form1_path, "w") as f:
+                f.write(form1_orig)
+            with open(mon_path, "w") as f:
+                f.write(mon_orig)
