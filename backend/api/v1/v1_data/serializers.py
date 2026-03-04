@@ -340,6 +340,8 @@ class ListFormDataRequestSerializer(serializers.Serializer):
     )
     parent = serializers.CharField(required=False)
     search = serializers.CharField(required=False)
+    date_from = serializers.DateField(required=False)
+    date_to = serializers.DateField(required=False)
     sort_by = serializers.ChoiceField(
         choices=SORT_BY_CHOICES, required=False, default="created"
     )
@@ -352,6 +354,15 @@ class ListFormDataRequestSerializer(serializers.Serializer):
         self.fields.get(
             "administration"
         ).queryset = Administration.objects.all()
+
+    def validate(self, attrs):
+        date_from = attrs.get("date_from")
+        date_to = attrs.get("date_to")
+        if date_from and date_to and date_from > date_to:
+            raise serializers.ValidationError(
+                {"date_from": "date_from must be before or equal to date_to"}
+            )
+        return attrs
 
 
 class ListFormDataSerializer(serializers.ModelSerializer):

@@ -978,6 +978,8 @@ const uiText = {
       </Fragment>
     ),
     downloadAppsLinkText: "or download using the links below:",
+    dateFromPlaceholder: "From",
+    dateToPlaceholder: "To",
   },
 
   de: {},

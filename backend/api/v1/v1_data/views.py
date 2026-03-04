@@ -3,8 +3,10 @@ import pandas as pd
 import os
 import pathlib
 
+from datetime import datetime, timedelta, time
 from math import ceil
 from wsgiref.util import FileWrapper
+from django.conf import settings
 from django.utils import timezone
 from django.http import HttpResponse
 from django.db.models import Q, Count
@@ -132,6 +134,20 @@ class FormDataAddListView(APIView):
                 ),
                 enum=["ascend", "descend"],
             ),
+            OpenApiParameter(
+                name="date_from",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Filter data created on or after this date (YYYY-MM-DD)",
+            ),
+            OpenApiParameter(
+                name="date_to",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Filter data created on or before this date (YYYY-MM-DD)",
+            ),
         ],
         summary="To get list of form data",
     )
@@ -151,6 +167,8 @@ class FormDataAddListView(APIView):
 
         parent = serializer.validated_data.get("parent")
         search = serializer.validated_data.get("search")
+        date_from = serializer.validated_data.get("date_from")
+        date_to = serializer.validated_data.get("date_to")
         sort_by = serializer.validated_data.get("sort_by", "created")
         sort_type = serializer.validated_data.get("sort_type", "descend")
         order_by = f"-{sort_by}" if sort_type == "descend" else sort_by
@@ -167,6 +185,18 @@ class FormDataAddListView(APIView):
             ))
             if search:
                 queryset = queryset.filter(name__icontains=search)
+            if date_from:
+                start_datetime = datetime.combine(date_from, time.min)
+                if settings.USE_TZ:
+                    start_datetime = timezone.make_aware(start_datetime)
+                queryset = queryset.filter(created__gte=start_datetime)
+            if date_to:
+                end_datetime = datetime.combine(
+                    date_to + timedelta(days=1), time.min
+                )
+                if settings.USE_TZ:
+                    end_datetime = timezone.make_aware(end_datetime)
+                queryset = queryset.filter(created__lt=end_datetime)
             queryset = queryset.order_by(order_by)
             instance = paginator.paginate_queryset(queryset, request)
             total = queryset.count()
@@ -223,6 +253,18 @@ class FormDataAddListView(APIView):
         )
         if search:
             queryset = queryset.filter(name__icontains=search)
+        if date_from:
+            start_datetime = datetime.combine(date_from, time.min)
+            if settings.USE_TZ:
+                start_datetime = timezone.make_aware(start_datetime)
+            queryset = queryset.filter(created__gte=start_datetime)
+        if date_to:
+            end_datetime = datetime.combine(
+                date_to + timedelta(days=1), time.min
+            )
+            if settings.USE_TZ:
+                end_datetime = timezone.make_aware(end_datetime)
+            queryset = queryset.filter(created__lt=end_datetime)
         queryset = queryset.order_by(order_by)
 
         instance = paginator.paginate_queryset(queryset, request)

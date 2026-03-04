@@ -11,6 +11,7 @@ import {
   Tooltip,
   Radio,
   Input,
+  DatePicker,
 } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdministrationDropdown from "./AdministrationDropdown";
@@ -27,6 +28,7 @@ import {
   FileWordOutlined,
   DownOutlined,
   SearchOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { Can } from "../can/index.js";
 
@@ -44,6 +46,7 @@ const DataFilters = ({
     loadingForm,
     administration,
     showAdvancedFilters,
+    dateRange,
   } = store.useState((s) => s);
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -162,6 +165,12 @@ const DataFilters = ({
     });
     navigate(`/control-center/form/${selectedForm}`);
   };
+
+  const handleDateRangeChange = useCallback((dates) => {
+    store.update((s) => {
+      s.dateRange = dates;
+    });
+  }, []);
 
   const childFormMenuItems = useMemo(() => {
     const formItems = childForms.map((form) => ({
@@ -370,6 +379,13 @@ const DataFilters = ({
               onChange={(e) => onSearchChange(e.target.value)}
               allowClear
               style={{ width: 200 }}
+            />
+            <DatePicker.RangePicker
+              value={dateRange}
+              onChange={handleDateRangeChange}
+              allowClear
+              placeholder={[text.dateFromPlaceholder, text.dateToPlaceholder]}
+              suffixIcon={<CalendarOutlined />}
             />
             {showAdm && (
               <AdministrationDropdown loading={loading || loadingForm} />

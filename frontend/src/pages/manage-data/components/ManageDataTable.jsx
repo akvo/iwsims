@@ -26,7 +26,7 @@ const ManageDataTable = ({
   const { administration, selectedForm, user } = store.useState(
     (state) => state
   );
-  const { language, advancedFilters } = store.useState((s) => s);
+  const { language, advancedFilters, dateRange } = store.useState((s) => s);
   const { active: activeLang } = language;
   const text = useMemo(() => {
     return uiText[activeLang];
@@ -121,6 +121,11 @@ const ManageDataTable = ({
       if (advancedFilters && advancedFilters.length) {
         url = generateAdvanceFilterURL(advancedFilters, url);
       }
+      if (dateRange && dateRange.length === 2) {
+        const dateFrom = dateRange[0].format("YYYY-MM-DD");
+        const dateTo = dateRange[1].format("YYYY-MM-DD");
+        url += `&date_from=${dateFrom}&date_to=${dateTo}`;
+      }
       if (sortBy) {
         url += `&sort_by=${sortBy}`;
       }
@@ -149,6 +154,7 @@ const ManageDataTable = ({
     currentPage,
     isAdministrationLoaded,
     advancedFilters,
+    dateRange,
     updateRecord,
     formIdFromUrl,
     search,
@@ -178,6 +184,11 @@ const ManageDataTable = ({
     setCurrentPage(1);
     setUpdateRecord(true);
   }, [search]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setUpdateRecord(true);
+  }, [dateRange]);
 
   return (
     <div>

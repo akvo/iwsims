@@ -27,6 +27,7 @@ const defaultUIState = {
   questionGroups: [],
   showAdvancedFilters: false,
   advancedFilters: [],
+  dateRange: null,
   administrationLevel: null,
   showContactFormModal: false,
   masterData: {
