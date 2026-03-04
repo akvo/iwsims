@@ -43,30 +43,10 @@
           "meta": true
         },
         {
-          "id": 1749624452995,
-          "name": "village_leader",
-          "label": "Name of the Village Head/WC/Village's Nurse",
-          "order": 4,
-          "type": "input",
-          "required": true,
-          "meta": false,
-          "color": "#64A73B"
-        },
-        {
-          "id": 1749624452996,
-          "name": "village_leader_contact",
-          "label": "Contact of the Village Head/WC/Village's Nurse",
-          "order": 5,
-          "type": "number",
-          "required": true,
-          "meta": false,
-          "color": "#1b9e77"
-        },
-        {
           "id": 1749624452992,
           "name": "gps_location",
           "label": "GPS Location",
-          "order": 6,
+          "order": 4,
           "type": "geo",
           "required": true,
           "meta": true
@@ -75,7 +55,7 @@
           "id": 1749632480584,
           "name": "project_implementation_date",
           "label": "Project Implementation date",
-          "order": 7,
+          "order": 5,
           "type": "date",
           "required": true,
           "meta": false
@@ -84,7 +64,7 @@
           "id": 1749624452993,
           "name": "implementing_agency",
           "label": "Who is the implementing agency/agencies?",
-          "order": 8,
+          "order": 6,
           "type": "multiple_option",
           "options": [
             {
@@ -137,7 +117,7 @@
           "id": 1749630688036,
           "name": "other_implementing_agency",
           "label": "Other Implementing Agency",
-          "order": 9,
+          "order": 7,
           "type": "text",
           "required": false,
           "meta": false,
@@ -152,7 +132,7 @@
           "id": 174962445299,
           "name": "project_background",
           "label": "Project Background",
-          "order": 10,
+          "order": 8,
           "type": "text",
           "required": true,
           "meta": false
@@ -161,7 +141,7 @@
           "id": 1749624452106,
           "name": "number_of_households",
           "label": "Number of households in the village",
-          "order": 11,
+          "order": 9,
           "type": "number",
           "required": true,
           "meta": false
@@ -170,7 +150,7 @@
           "id": 1749624452107,
           "name": "total_population",
           "label": "Total population of the village",
-          "order": 12,
+          "order": 10,
           "type": "number",
           "required": true,
           "meta": false
@@ -179,7 +159,7 @@
           "id": 1749624452108,
           "name": "number_of_people_benefiting",
           "label": "Number of people benefiting",
-          "order": 13,
+          "order": 11,
           "type": "number",
           "required": true,
           "meta": false
@@ -188,7 +168,7 @@
           "id": 1749624452105,
           "name": "water_committee",
           "label": "Do you have Water Committee and Is it active?",
-          "order": 14,
+          "order": 12,
           "type": "option",
           "required": true,
           "meta": false,
