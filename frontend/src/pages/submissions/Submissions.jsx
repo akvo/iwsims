@@ -35,7 +35,8 @@ const Submissions = () => {
   const [reload, setReload] = useState(0);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [deleting, setDeleting] = useState(false);
-  const { selectedForm } = store.useState((state) => state);
+  const [search, setSearch] = useState("");
+  const { selectedForm, dateRange } = store.useState((state) => state);
   const [editedRecord, setEditedRecord] = useState({});
   const { language } = store.useState((s) => s);
   const { active: activeLang } = language;
@@ -94,6 +95,13 @@ const Submissions = () => {
     },
   ];
 
+  // Reset date range filter when component mounts
+  useEffect(() => {
+    store.update((s) => {
+      s.dateRange = null;
+    });
+  }, []);
+
   useEffect(() => {
     if (selectedForm) {
       setLoading(true);
@@ -109,6 +117,16 @@ const Submissions = () => {
         url = `batch/?form=${selectedForm}&page=${currentPage}&approved=true`;
         setModalButton(false);
       }
+      // Add search filter if set
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+      // Add date range filter if set
+      if (dateRange && dateRange.length === 2) {
+        const dateFrom = dateRange[0].format("YYYY-MM-DD");
+        const dateTo = dateRange[1].format("YYYY-MM-DD");
+        url += `&date_from=${dateFrom}&date_to=${dateTo}`;
+      }
       api
         .get(url)
         .then((res) => {
@@ -122,7 +140,7 @@ const Submissions = () => {
           setLoading(false);
         });
     }
-  }, [dataTab, currentPage, reload, selectedForm]);
+  }, [dataTab, currentPage, reload, selectedForm, dateRange, search]);
 
   useEffect(() => {
     if (selectedForm) {
@@ -245,7 +263,14 @@ const Submissions = () => {
       </div>
       <div className="table-section">
         <div className="table-wrapper">
-          <DataFilters showAdm={false} resetFilter={false} />
+          <DataFilters
+            showAdm={false}
+            resetFilter={false}
+            showSearch={dataTab === "pending-submission"}
+            showDateRange={dataTab === "pending-submission"}
+            search={search}
+            onSearchChange={setSearch}
+          />
           <div style={{ padding: 0 }} bodystyle={{ padding: 30 }}>
             <Tabs
               className="main-tab"
@@ -255,6 +280,11 @@ const Submissions = () => {
                 setCurrentPage(1);
                 setExpandedKeys([]);
                 setSelectedRowKeys([]);
+                // Reset search and date range when switching tabs
+                setSearch("");
+                store.update((s) => {
+                  s.dateRange = null;
+                });
               }}
               tabBarExtraContent={btnBatchSelected}
             >

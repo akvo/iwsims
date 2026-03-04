@@ -36,6 +36,8 @@ const DataFilters = ({
   loading,
   showAdm = true,
   resetFilter = true,
+  showSearch = true,
+  showDateRange = true,
   selectedRowKeys = [],
   search = "",
   onSearchChange = () => {},
@@ -369,31 +371,40 @@ const DataFilters = ({
           </Space>
         </Col>
       </Row>
-      <Row>
-        <Col>
-          <Space>
-            <Input
-              prefix={<SearchOutlined />}
-              placeholder={text.searchPlaceholder}
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              allowClear
-              style={{ width: 200 }}
-            />
-            <DatePicker.RangePicker
-              value={dateRange}
-              onChange={handleDateRangeChange}
-              allowClear
-              placeholder={[text.dateFromPlaceholder, text.dateToPlaceholder]}
-              suffixIcon={<CalendarOutlined />}
-            />
-            {showAdm && (
-              <AdministrationDropdown loading={loading || loadingForm} />
-            )}
-            {resetFilter && <RemoveFiltersButton />}
-          </Space>
-        </Col>
-      </Row>
+      {(showSearch || showDateRange || showAdm || resetFilter) && (
+        <Row>
+          <Col>
+            <Space>
+              {showSearch && (
+                <Input
+                  prefix={<SearchOutlined />}
+                  placeholder={text.searchPlaceholder}
+                  value={search}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  allowClear
+                  style={{ width: 200 }}
+                />
+              )}
+              {showDateRange && (
+                <DatePicker.RangePicker
+                  value={dateRange}
+                  onChange={handleDateRangeChange}
+                  allowClear
+                  placeholder={[
+                    text.dateFromPlaceholder,
+                    text.dateToPlaceholder,
+                  ]}
+                  suffixIcon={<CalendarOutlined />}
+                />
+              )}
+              {showAdm && (
+                <AdministrationDropdown loading={loading || loadingForm} />
+              )}
+              {resetFilter && <RemoveFiltersButton />}
+            </Space>
+          </Col>
+        </Row>
+      )}
       {showAdvancedFilters && <AdvancedFilters />}
     </>
   );

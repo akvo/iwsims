@@ -323,6 +323,21 @@ class FormDataSerializer(serializers.ModelSerializer):
         ]
 
 
+class ListPendingFormDataRequestSerializer(serializers.Serializer):
+    search = serializers.CharField(required=False)
+    date_from = serializers.DateField(required=False)
+    date_to = serializers.DateField(required=False)
+
+    def validate(self, attrs):
+        date_from = attrs.get("date_from")
+        date_to = attrs.get("date_to")
+        if date_from and date_to and date_from > date_to:
+            raise serializers.ValidationError(
+                {"date_from": "date_from must be before or equal to date_to"}
+            )
+        return attrs
+
+
 class ListFormDataRequestSerializer(serializers.Serializer):
     SORT_BY_CHOICES = [
         ("created", "created"),
