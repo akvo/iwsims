@@ -139,14 +139,16 @@ class FormDataAddListView(APIView):
                 required=False,
                 type=OpenApiTypes.DATE,
                 location=OpenApiParameter.QUERY,
-                description="Filter data created on or after this date (YYYY-MM-DD)",
+                description="Filter data created on or after this date "
+                "(YYYY-MM-DD)",
             ),
             OpenApiParameter(
                 name="date_to",
                 required=False,
                 type=OpenApiTypes.DATE,
                 location=OpenApiParameter.QUERY,
-                description="Filter data created on or before this date (YYYY-MM-DD)",
+                description="Filter data created on or before this date "
+                "(YYYY-MM-DD)",
             ),
         ],
         summary="To get list of form data",
