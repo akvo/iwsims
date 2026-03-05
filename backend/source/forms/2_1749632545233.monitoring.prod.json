@@ -27,7 +27,7 @@
         },
         {
           "id": 1749632793266,
-          "name": "village_contact_name",
+          "name": "village_leader",
           "label": "Name of the village headman/TNK/village nurse?",
           "order": 2,
           "type": "text",
@@ -36,7 +36,7 @@
         },
         {
           "id": 1749632819551,
-          "name": "village_contact_phone",
+          "name": "village_leader_contact",
           "label": "Phone contact of the Village Headman/TNK or village nurse?",
           "order": 3,
           "type": "number",
