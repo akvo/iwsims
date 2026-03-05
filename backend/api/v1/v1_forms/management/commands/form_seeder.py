@@ -39,24 +39,25 @@ def migrate_question_answers(question, target_form_id):
     answers = Answers.objects.filter(question=question)
     for answer in answers:
         source_data = answer.data
-        # Find monitoring children for the target form
-        children = FormData.objects.filter(
-            parent=source_data, form=target_form
-        )
-        if children.exists():
-            for child in children:
-                Answers.objects.create(
-                    data=child,
-                    question=question,
-                    name=answer.name,
-                    value=answer.value,
-                    options=answer.options,
-                    created_by=answer.created_by,
-                    updated=answer.updated,
-                    index=answer.index,
-                )
-            answer.delete()
-        # If no children exist, keep the answer on source data
+        if source_data.children.count() == 0:
+            continue  # No children to migrate to, keep answer on source data
+        print(f"Migrating answer {answer.id} for question {question.id} "
+              f"from form {source_data.form.id} to form {target_form_id}")
+        for child in source_data.children.filter(
+            is_pending=False,
+            is_draft=False,
+        ).all():
+            Answers.objects.create(
+                data=child,
+                question=question,
+                name=answer.name,
+                value=answer.value,
+                options=answer.options,
+                created_by=answer.created_by,
+                updated=answer.updated,
+                index=answer.index,
+            )
+        answer.delete()
 
     # Handle AnswerHistory the same way
     histories = AnswerHistory.objects.filter(question=question)
