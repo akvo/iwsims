@@ -5,7 +5,7 @@ from io import StringIO
 from django.test.utils import override_settings
 from django.core.management import call_command
 from api.v1.v1_profile.models import Administration, Levels
-from api.v1.v1_data.models import FormData, Answers
+from api.v1.v1_data.models import FormData, Answers, AnswerHistory
 from api.v1.v1_forms.models import Forms, Questions
 from api.v1.v1_users.models import SystemUser
 from django.test import TestCase
@@ -277,6 +277,13 @@ class FormSeederTestCase(TestCase):
             value=3.14,
             created_by=user,
         )
+        AnswerHistory.objects.create(
+            data=reg_data,
+            question=question_109,
+            name="history entry",
+            value=2.71,
+            created_by=user,
+        )
 
         # Create monitoring child
         mon_data = FormData.objects.create(
@@ -346,6 +353,20 @@ class FormSeederTestCase(TestCase):
                 data=reg_data, question=question_109
             )
             self.assertFalse(reg_answers.exists())
+
+            # Step 8: AnswerHistory redistributed to monitoring FormData
+            mon_history = AnswerHistory.objects.filter(
+                data=mon_data, question=question_109
+            )
+            self.assertTrue(mon_history.exists())
+            self.assertEqual(mon_history.first().value, 2.71)
+            self.assertEqual(mon_history.first().name, "history entry")
+
+            # Step 9: Original history removed from registration data
+            reg_history = AnswerHistory.objects.filter(
+                data=reg_data, question=question_109
+            )
+            self.assertFalse(reg_history.exists())
 
         finally:
             # Restore original fixtures

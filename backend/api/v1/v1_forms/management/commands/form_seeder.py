@@ -39,12 +39,13 @@ def migrate_question_answers(question, target_form_id):
     answers = Answers.objects.filter(question=question)
     for answer in answers:
         source_data = answer.data
-        if source_data.children.count() == 0:
-            continue  # No children to migrate to, keep answer on source data
-        for child in source_data.children.filter(
+        valid_children = source_data.children.filter(
             is_pending=False,
             is_draft=False,
-        ).all():
+        )
+        if not valid_children.exists():
+            continue  # No valid children to migrate to
+        for child in valid_children.all():
             Answers.objects.create(
                 data=child,
                 question=question,
@@ -136,6 +137,8 @@ class Command(BaseCommand):
 
         # Process all form sources in the correct order
         # (parents first, then children)
+        all_question_group_ids = []
+        all_form_ids = []
         with transaction.atomic():
             for source in parent_forms + child_forms:
                 with open(source, 'r') as f:
@@ -185,11 +188,13 @@ class Command(BaseCommand):
                 # Collect IDs from JSON before processing
                 list_of_question_ids = []
                 list_of_question_group_ids = []
+                all_form_ids.append(json_form["id"])
                 for qg in json_form["question_groups"]:
                     list_of_question_group_ids.append(qg["id"])
                     list_of_question_ids += [
                         q["id"] for q in qg["questions"]
                     ]
+                all_question_group_ids += list_of_question_group_ids
 
                 # Handle removed questions BEFORE processing
                 # to avoid unique constraint violations
@@ -274,7 +279,6 @@ class Command(BaseCommand):
                             question.fn = q.get("fn")
                             question.display_only = q.get("displayOnly")
                             question.pre = q.get("pre")
-                            question.extra = q.get("extra")
                             question.save()
                         QO.objects.filter(
                             question=question).all().delete()
@@ -303,11 +307,13 @@ class Command(BaseCommand):
                                 ) for a in q.get("attributes")
                             ])
 
-                # Delete question groups with no remaining questions
-                QG.objects.filter(
-                    form=form
-                ).exclude(
-                    id__in=list_of_question_group_ids
-                ).filter(
-                    question_group_question__isnull=True
-                ).delete()
+            # Final cleanup: delete question groups not present in any
+            # JSON and with no remaining questions. This catches groups
+            # emptied by cross-form question moves.
+            QG.objects.filter(
+                form_id__in=all_form_ids
+            ).exclude(
+                id__in=all_question_group_ids
+            ).filter(
+                question_group_question__isnull=True
+            ).delete()
