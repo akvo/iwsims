@@ -305,7 +305,7 @@ def transform_form_data_for_report(
         child_forms = list(form.children.all())
         if child_form_ids and len(child_form_ids):
             child_forms = [f for f in child_forms if f.id in child_form_ids]
-        forms.extend(child_forms)
+            forms.extend(child_forms)
 
         # When selection_ids is provided, query by ID only (no form filter)
         # This allows child form data IDs to be included directly
