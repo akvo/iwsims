@@ -344,6 +344,7 @@ class ListFormDataRequestSerializer(serializers.Serializer):
         ("updated", "updated"),
         ("name", "name"),
         ("total_children", "total_children"),
+        ("latest_activity", "latest_activity"),
     ]
     SORT_TYPE_CHOICES = [
         ("ascend", "ascend"),
@@ -385,6 +386,8 @@ class ListFormDataSerializer(serializers.ModelSerializer):
     updated_by = serializers.SerializerMethodField()
     created = serializers.SerializerMethodField()
     updated = serializers.SerializerMethodField()
+    latest_activity = serializers.SerializerMethodField()
+    latest_activity_source = serializers.SerializerMethodField()
     administration = serializers.SerializerMethodField()
     pending_data = serializers.SerializerMethodField()
     total_children = serializers.SerializerMethodField()
@@ -406,6 +409,17 @@ class ListFormDataSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_updated(self, instance: FormData):
         return update_date_time_format(instance.updated)
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_latest_activity(self, instance: FormData):
+        latest_activity = getattr(instance, "latest_activity", None)
+        if latest_activity:
+            return update_date_time_format(latest_activity)
+        return update_date_time_format(instance.updated)
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_latest_activity_source(self, instance: FormData):
+        return getattr(instance, "latest_activity_source", None)
 
     @extend_schema_field(
         inline_serializer(
@@ -447,6 +461,8 @@ class ListFormDataSerializer(serializers.ModelSerializer):
             "updated_by",
             "created",
             "updated",
+            "latest_activity",
+            "latest_activity_source",
             "pending_data",
             "submitter",
             "total_children",

@@ -5,6 +5,7 @@ Object {
   "administration": Array [],
   "administrationLevel": null,
   "advancedFilters": Array [],
+  "dateRange": null,
   "filters": Object {
     "attributeType": null,
     "entityType": Array [],
