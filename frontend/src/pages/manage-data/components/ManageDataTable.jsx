@@ -52,11 +52,11 @@ const ManageDataTable = ({
 
   const handleChange = (e, _, sorter) => {
     const newPage = e.current;
-    const newSortBy = sorter?.field;
-    const newSortType = sorter?.order;
+    const newSortBy = sorter?.field || "latest_activity";
+    const newSortType = sorter?.order || null;
 
-    if (sortType !== newSortType) {
-      // setSelectedRowKeys([]);
+    const sortChanged = sortBy !== newSortBy || sortType !== newSortType;
+    if (sortChanged) {
       setSortBy(newSortBy);
       setSortType(newSortType);
       setCurrentPage(1);

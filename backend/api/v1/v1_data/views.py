@@ -9,7 +9,7 @@ from wsgiref.util import FileWrapper
 from django.conf import settings
 from django.utils import timezone
 from django.http import HttpResponse
-from django.db.models import Q, Count, Max
+from django.db.models import Q, Count, Max, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django_q.tasks import async_task
 from drf_spectacular.types import OpenApiTypes
@@ -179,6 +179,11 @@ class FormDataAddListView(APIView):
         date_to = serializer.validated_data.get("date_to")
         sort_by = serializer.validated_data.get("sort_by", "created")
         sort_type = serializer.validated_data.get("sort_type", "descend")
+
+        # latest_activity sorting is not supported for monitoring data
+        if parent and sort_by == "latest_activity":
+            sort_by = "updated"
+
         order_by = f"-{sort_by}" if sort_type == "descend" else sort_by
 
         if parent:
@@ -253,6 +258,13 @@ class FormDataAddListView(APIView):
             user_path = adm.path if adm.path else f"{adm.pk}."
             filter_data["administration__path__startswith"] = user_path
 
+        # Subquery to get the form name of the child with latest activity
+        latest_child_form_subquery = FormData.objects.filter(
+            parent=OuterRef('pk'),
+            is_pending=False,
+            is_draft=False
+        ).order_by('-updated').values('form__name')[:1]
+
         queryset = form.form_form_data.filter(**filter_data).annotate(
             total_children=Count(
                 'children',
@@ -262,6 +274,7 @@ class FormDataAddListView(APIView):
                 'children__updated',
                 filter=Q(children__is_pending=False, children__is_draft=False)
             ),
+            latest_activity_source=Subquery(latest_child_form_subquery),
         ).annotate(
             latest_activity=Coalesce('latest_child_activity', 'updated')
         )

@@ -419,20 +419,7 @@ class ListFormDataSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_latest_activity_source(self, instance: FormData):
-        latest_child_activity = getattr(
-            instance, "latest_child_activity", None
-        )
-        if latest_child_activity:
-            # Find the child with the latest activity
-            latest_child = instance.children.filter(
-                is_pending=False,
-                is_draft=False,
-                updated=latest_child_activity
-            ).select_related('form').first()
-            if latest_child:
-                return latest_child.form.name
-            return "Monitoring"
-        return None
+        return getattr(instance, "latest_activity_source", None)
 
     @extend_schema_field(
         inline_serializer(
