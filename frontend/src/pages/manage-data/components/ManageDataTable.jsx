@@ -18,8 +18,8 @@ const ManageDataTable = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [updateRecord, setUpdateRecord] = useState(true);
   const [activeFilter, setActiveFilter] = useState(null);
-  const [sortBy, setSortBy] = useState("created");
-  const [sortType, setSortType] = useState(null);
+  const [sortBy, setSortBy] = useState("latest_activity");
+  const [sortType, setSortType] = useState("descend");
 
   const navigate = useNavigate();
 
@@ -204,9 +204,24 @@ const ManageDataTable = ({
         <Table
           columns={[
             {
-              title: text.lastUpdatedCol,
-              dataIndex: "updated",
-              render: (cell, row) => cell || row.created,
+              title: text.recentActivityCol,
+              dataIndex: "latest_activity",
+              key: "latest_activity",
+              width: 210,
+              sorter: true,
+              sortDirections: ["descend", "ascend"],
+              sortOrder: sortBy === "latest_activity" ? sortType : null,
+              render: (cell, row) => {
+                const displayDate = cell || row.updated || row.created;
+                const source =
+                  row.latest_activity_source || text.initialRegistration;
+                return (
+                  <div>
+                    <div>{displayDate}</div>
+                    <div style={{ fontSize: 12, color: "#888" }}>{source}</div>
+                  </div>
+                );
+              },
               onCell: (record) => ({
                 onClick: () => goToMonitoring(record),
               }),

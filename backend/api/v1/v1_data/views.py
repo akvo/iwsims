@@ -9,7 +9,8 @@ from wsgiref.util import FileWrapper
 from django.conf import settings
 from django.utils import timezone
 from django.http import HttpResponse
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Max
+from django.db.models.functions import Coalesce
 from django_q.tasks import async_task
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -121,9 +122,13 @@ class FormDataAddListView(APIView):
                 type=OpenApiTypes.STR,
                 location=OpenApiParameter.QUERY,
                 description=(
-                    "Field to sort by (created, updated, name, total_children)"
+                    "Field to sort by (created, updated, name, "
+                    "total_children, latest_activity)"
                 ),
-                enum=["created", "updated", "name", "total_children"],
+                enum=[
+                    "created", "updated", "name",
+                    "total_children", "latest_activity"
+                ],
             ),
             OpenApiParameter(
                 name="sort_type",
@@ -252,7 +257,13 @@ class FormDataAddListView(APIView):
             total_children=Count(
                 'children',
                 filter=Q(children__is_pending=False, children__is_draft=False)
-            )
+            ),
+            latest_child_activity=Max(
+                'children__updated',
+                filter=Q(children__is_pending=False, children__is_draft=False)
+            ),
+        ).annotate(
+            latest_activity=Coalesce('latest_child_activity', 'updated')
         )
         if search:
             queryset = queryset.filter(name__icontains=search)

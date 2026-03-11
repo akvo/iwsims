@@ -844,6 +844,8 @@ const uiText = {
     selectFormPlaceholder: "Select Form",
     selectIndicatorPlaceholder: "Select Indicator",
     lastUpdatedCol: "Last Updated",
+    recentActivityCol: "Recent Activity",
+    initialRegistration: "Initial Registration",
     nameCol: "Name",
     channelCol: "Channel",
     userCol: "User",
