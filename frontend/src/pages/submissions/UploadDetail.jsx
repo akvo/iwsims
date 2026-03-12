@@ -21,12 +21,29 @@ import { getTimeDifferenceText } from "../../util/date";
 import UploadAttachmentModal from "./UploadAttachmentModal";
 const { TabPane } = Tabs;
 
-const summaryColumns = [
+const getSummaryColumns = (data) => [
+  {
+    title: "Form",
+    dataIndex: "form_name",
+    key: "form_name",
+    width: "20%",
+    onCell: (record) => {
+      const formRows = data.filter((d) => d.form === record.form);
+      const firstRow = formRows[0];
+      if (record.key === firstRow.key) {
+        return {
+          rowSpan: formRows.length,
+          style: { verticalAlign: "top" },
+        };
+      }
+      return { rowSpan: 0 };
+    },
+  },
   {
     title: "Question",
     dataIndex: "question",
     key: "question",
-    width: "50%",
+    width: "30%",
   },
   {
     title: "Value",
@@ -34,12 +51,12 @@ const summaryColumns = [
     className: "blue",
     render: (value, row) => {
       if (row.type === "Option" || row.type === "Multiple_Option") {
-        const data = value
+        const filtered = value
           .filter((x) => x.total)
           .map((val) => `${val.type} - (${val.total})`);
         return (
           <ul className="option-list">
-            {data.map((d, di) => (
+            {filtered.map((d, di) => (
               <li key={di}>{d}</li>
             ))}
           </ul>
@@ -53,7 +70,7 @@ const summaryColumns = [
 const UploadDetail = ({ record: batch, setReload }) => {
   const [values, setValues] = useState([]);
   const [rawValues, setRawValues] = useState([]);
-  const [columns, setColumns] = useState(summaryColumns);
+  const [columns, setColumns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(null);
   const [saving, setSaving] = useState(null);
@@ -151,7 +168,7 @@ const UploadDetail = ({ record: batch, setReload }) => {
       return;
     }
     if (e === "data-summary") {
-      setColumns(summaryColumns);
+      setColumns(getSummaryColumns(values));
     } else {
       setExpandedRowKeys([]);
       setColumns([...columnsRawData, Table.EXPAND_COLUMN]);
@@ -168,7 +185,7 @@ const UploadDetail = ({ record: batch, setReload }) => {
           const data = res.data.map((r, i) => {
             return { key: `Q-${i}`, ...r };
           });
-          setColumns(summaryColumns);
+          setColumns(getSummaryColumns(data));
           setValues(data);
           setLoading(false);
         })
