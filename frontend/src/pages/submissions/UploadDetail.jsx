@@ -201,7 +201,8 @@ const UploadDetail = ({ record: batch, setReload }) => {
       api
         .get(`/batch/summary/${batch.id}`)
         .then((res) => {
-          const data = res.data.map((r, i) => {
+          const sorted = [...res.data].sort((a, b) => a.form - b.form);
+          const data = sorted.map((r, i) => {
             return { key: `Q-${i}`, ...r };
           });
           setColumns(getSummaryColumns(data));
