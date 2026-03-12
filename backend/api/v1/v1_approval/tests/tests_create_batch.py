@@ -3,6 +3,7 @@ from django.test.utils import override_settings
 from django.core.management import call_command
 from io import StringIO
 from api.v1.v1_data.models import FormData
+from api.v1.v1_forms.models import Forms
 from api.v1.v1_profile.models import Administration
 from api.v1.v1_profile.tests.mixins import ProfileTestHelperMixin
 
@@ -277,3 +278,38 @@ class CreateDataBatchTestCase(TestCase, ProfileTestHelperMixin):
             HTTP_AUTHORIZATION=f"Bearer {self.token}",
         )
         self.assertEqual(response.status_code, 201)
+
+    def test_create_batch_with_monitoring_data_without_parent(self):
+        # Get a monitoring form (form with parent)
+        monitoring_form = Forms.objects.filter(
+            parent__isnull=False,
+        ).first()
+        self.assertIsNotNone(monitoring_form, "No monitoring form found")
+        # Create monitoring data without a parent registration data
+        orphan_data = FormData.objects.create(
+            name="Orphan Monitoring Data",
+            geo=[0, 0],
+            form=monitoring_form,
+            administration=self.data.administration,
+            created_by=self.submitter,
+            parent=None,
+            is_pending=True,
+        )
+        payload = {
+            "name": "Test Batch with Orphan Monitoring",
+            "comment": "This batch contains monitoring data without parent",
+            "data": [orphan_data.id],
+        }
+        response = self.client.post(
+            "/api/v1/batch",
+            payload,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("detail", response.json())
+        error_data = response.json()["detail"]["data"]
+        self.assertIn(
+            "Monitoring data must have a parent registration data.",
+            error_data,
+        )
