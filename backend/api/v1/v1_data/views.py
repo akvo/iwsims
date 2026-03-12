@@ -276,7 +276,9 @@ class FormDataAddListView(APIView):
             ),
             latest_activity_source=Subquery(latest_child_form_subquery),
         ).annotate(
-            latest_activity=Coalesce('latest_child_activity', 'updated')
+            latest_activity=Coalesce(
+                'latest_child_activity', 'updated', 'created'
+            )
         )
         if search:
             queryset = queryset.filter(name__icontains=search)

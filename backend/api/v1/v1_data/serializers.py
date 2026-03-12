@@ -415,7 +415,9 @@ class ListFormDataSerializer(serializers.ModelSerializer):
         latest_activity = getattr(instance, "latest_activity", None)
         if latest_activity:
             return update_date_time_format(latest_activity)
-        return update_date_time_format(instance.updated)
+        if instance.updated:
+            return update_date_time_format(instance.updated)
+        return update_date_time_format(instance.created)
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_latest_activity_source(self, instance: FormData):
