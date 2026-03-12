@@ -514,6 +514,8 @@ class ListBatchSerializer(serializers.ModelSerializer):
 
 class ListBatchSummarySerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source="question.id")
+    form = serializers.ReadOnlyField(source="question.form_id")
+    form_name = serializers.ReadOnlyField(source="question.form.name")
     question = serializers.ReadOnlyField(source="question.label")
     type = serializers.SerializerMethodField()
     value = serializers.SerializerMethodField()
@@ -557,7 +559,7 @@ class ListBatchSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Answers
-        fields = ["id", "question", "type", "value"]
+        fields = ["id", "form", "form_name", "question", "type", "value"]
 
 
 class ListBatchCommentSerializer(serializers.ModelSerializer):
@@ -645,6 +647,10 @@ class CreateBatchSerializer(serializers.Serializer):
                         "Registration data must be included in the batch "
                         "if it is pending."
                     )
+            if item.form.parent and not item.parent:
+                raise ValidationError(
+                    "Monitoring data must have a parent registration data."
+                )
         return data
 
     def validate_files(self, files):
