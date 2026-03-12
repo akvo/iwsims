@@ -228,16 +228,9 @@ const processBatch = async (db, activeJob, session, counts = { success: 0, faile
         submittedAt: d.submittedAt,
         submitter: session.name,
         answers: answerValues,
+        uuid: d.uuid,
         ...geoVal,
       };
-
-      // Handle UUID
-      const uuidv4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (uuidv4Regex.test(d?.uuid)) {
-        syncData.uuid = d.uuid;
-      } else if (uuidv4Regex.test(activeJob?.info)) {
-        syncData.uuid = activeJob.info;
-      }
 
       // sync data point
       let syncURL = '/sync';
