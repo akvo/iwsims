@@ -21,51 +21,70 @@ import { getTimeDifferenceText } from "../../util/date";
 import UploadAttachmentModal from "./UploadAttachmentModal";
 const { TabPane } = Tabs;
 
-const getSummaryColumns = (data) => [
-  {
-    title: "Form",
-    dataIndex: "form_name",
-    key: "form_name",
-    width: "20%",
-    onCell: (record) => {
-      const formRows = data.filter((d) => d.form === record.form);
-      const firstRow = formRows[0];
-      if (record.key === firstRow.key) {
-        return {
-          rowSpan: formRows.length,
-          style: { verticalAlign: "top" },
-        };
+const getSummaryColumns = (data) => {
+  const uniqueForms = new Set(data.map((d) => d.form));
+  const hasMultipleForms = uniqueForms.size > 1;
+
+  const formColumn = [];
+  if (hasMultipleForms) {
+    // Precompute rowSpan map: { [key]: rowSpan } for first row of each form
+    const spanMap = {};
+    const formCount = {};
+    const formFirstKey = {};
+    data.forEach((d) => {
+      formCount[d.form] = (formCount[d.form] || 0) + 1;
+      if (!formFirstKey[d.form]) {
+        formFirstKey[d.form] = d.key;
       }
-      return { rowSpan: 0 };
+    });
+    Object.keys(formFirstKey).forEach((form) => {
+      spanMap[formFirstKey[form]] = formCount[form];
+    });
+    formColumn.push({
+      title: "Form",
+      dataIndex: "form_name",
+      key: "form_name",
+      width: "20%",
+      onCell: (record) => {
+        const rowSpan = spanMap[record.key];
+        if (rowSpan) {
+          return { rowSpan, style: { verticalAlign: "top" } };
+        }
+        return { rowSpan: 0 };
+      },
+    });
+  }
+
+  return [
+    ...formColumn,
+    {
+      title: "Question",
+      dataIndex: "question",
+      key: "question",
+      width: hasMultipleForms ? "30%" : "50%",
     },
-  },
-  {
-    title: "Question",
-    dataIndex: "question",
-    key: "question",
-    width: "30%",
-  },
-  {
-    title: "Value",
-    dataIndex: "value",
-    className: "blue",
-    render: (value, row) => {
-      if (row.type === "Option" || row.type === "Multiple_Option") {
-        const filtered = value
-          .filter((x) => x.total)
-          .map((val) => `${val.type} - (${val.total})`);
-        return (
-          <ul className="option-list">
-            {filtered.map((d, di) => (
-              <li key={di}>{d}</li>
-            ))}
-          </ul>
-        );
-      }
-      return value;
+    {
+      title: "Value",
+      dataIndex: "value",
+      className: "blue",
+      render: (value, row) => {
+        if (row.type === "Option" || row.type === "Multiple_Option") {
+          const filtered = value
+            .filter((x) => x.total)
+            .map((val) => `${val.type} - (${val.total})`);
+          return (
+            <ul className="option-list">
+              {filtered.map((d, di) => (
+                <li key={di}>{d}</li>
+              ))}
+            </ul>
+          );
+        }
+        return value;
+      },
     },
-  },
-];
+  ];
+};
 
 const UploadDetail = ({ record: batch, setReload }) => {
   const [values, setValues] = useState([]);
