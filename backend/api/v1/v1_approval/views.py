@@ -37,7 +37,7 @@ from api.v1.v1_forms.constants import (
 )
 from api.v1.v1_forms.models import Questions
 from api.v1.v1_users.models import SystemUser
-from api.v1.v1_data.models import Answers
+from api.v1.v1_data.models import Answers, FormData
 from mis.settings import REST_FRAMEWORK
 from utils.custom_permissions import (
     IsSuperAdmin,
@@ -329,12 +329,17 @@ class BatchSummaryView(APIView):
     )
     def get(self, request, batch_id, version):
         batch = get_object_or_404(DataBatch, pk=batch_id)
-        # Get questions for option and multiple_option types
+        # Get form IDs from data in this batch
+        batch_form_ids = FormData.objects.filter(
+            data_batch_list__batch=batch
+        ).values_list("form_id", flat=True).distinct()
+        # Get questions scoped to batch forms
         questions = Questions.objects.filter(
+            form_id__in=batch_form_ids,
             type__in=[
                 QuestionTypes.option,
                 QuestionTypes.multiple_option,
-            ]
+            ],
         )
         # Get all answers for these questions in the batch
         answers = Answers.objects.filter(

@@ -88,6 +88,8 @@ class DataBatchDetailsTestCase(TestCase, ProfileTestHelperMixin):
             list(response_json[0]),
             [
                 "id",
+                "form",
+                "form_name",
                 "question",
                 "type",
                 "value",

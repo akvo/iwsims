@@ -117,19 +117,22 @@ export const columnsPending = [
     title: "Type",
     dataIndex: "parent",
     key: "parent",
-    render: (parent) =>
-      parent?.id ? (
-        <Tag color="orange">Monitoring</Tag>
-      ) : (
-        <Tag color="purple">Registration</Tag>
-      ),
+    render: (parent) => {
+      if (parent === null) {
+        return <Tag color="purple">Registration</Tag>;
+      }
+      if (parent?.id) {
+        return <Tag color="orange">Monitoring</Tag>;
+      }
+      return <Tag color="red">INVALID</Tag>;
+    },
   },
   {
     title: "Name",
     dataIndex: "name",
     key: "name",
     render: (name, row) =>
-      row?.parent ? (
+      row?.parent?.id ? (
         row.parent.is_pending ? (
           <div>{row.parent.name}</div>
         ) : (

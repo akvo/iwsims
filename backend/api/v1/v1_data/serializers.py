@@ -581,6 +581,13 @@ class ListPendingFormDataSerializer(serializers.ModelSerializer):
     def get_parent(self, instance: FormData):
         if instance.parent:
             return ParentFormDataSerializer(instance=instance.parent).data
+        if instance.form.parent and not instance.parent:
+            return {
+                "id": None,
+                "name": None,
+                "form": None,
+                "is_pending": None,
+            }
         return None
 
     class Meta:

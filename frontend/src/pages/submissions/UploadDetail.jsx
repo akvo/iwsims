@@ -21,39 +21,75 @@ import { getTimeDifferenceText } from "../../util/date";
 import UploadAttachmentModal from "./UploadAttachmentModal";
 const { TabPane } = Tabs;
 
-const summaryColumns = [
-  {
-    title: "Question",
-    dataIndex: "question",
-    key: "question",
-    width: "50%",
-  },
-  {
-    title: "Value",
-    dataIndex: "value",
-    className: "blue",
-    render: (value, row) => {
-      if (row.type === "Option" || row.type === "Multiple_Option") {
-        const data = value
-          .filter((x) => x.total)
-          .map((val) => `${val.type} - (${val.total})`);
-        return (
-          <ul className="option-list">
-            {data.map((d, di) => (
-              <li key={di}>{d}</li>
-            ))}
-          </ul>
-        );
+const getSummaryColumns = (data) => {
+  const uniqueForms = new Set(data.map((d) => d.form));
+  const hasMultipleForms = uniqueForms.size > 1;
+
+  const formColumn = [];
+  if (hasMultipleForms) {
+    // Precompute rowSpan map: { [key]: rowSpan } for first row of each form
+    const spanMap = {};
+    const formCount = {};
+    const formFirstKey = {};
+    data.forEach((d) => {
+      formCount[d.form] = (formCount[d.form] || 0) + 1;
+      if (!formFirstKey[d.form]) {
+        formFirstKey[d.form] = d.key;
       }
-      return value;
+    });
+    Object.keys(formFirstKey).forEach((form) => {
+      spanMap[formFirstKey[form]] = formCount[form];
+    });
+    formColumn.push({
+      title: "Form",
+      dataIndex: "form_name",
+      key: "form_name",
+      width: "20%",
+      onCell: (record) => {
+        const rowSpan = spanMap[record.key];
+        if (rowSpan) {
+          return { rowSpan, style: { verticalAlign: "top" } };
+        }
+        return { rowSpan: 0 };
+      },
+    });
+  }
+
+  return [
+    ...formColumn,
+    {
+      title: "Question",
+      dataIndex: "question",
+      key: "question",
+      width: hasMultipleForms ? "30%" : "50%",
     },
-  },
-];
+    {
+      title: "Value",
+      dataIndex: "value",
+      className: "blue",
+      render: (value, row) => {
+        if (row.type === "Option" || row.type === "Multiple_Option") {
+          const filtered = value
+            .filter((x) => x.total)
+            .map((val) => `${val.type} - (${val.total})`);
+          return (
+            <ul className="option-list">
+              {filtered.map((d, di) => (
+                <li key={di}>{d}</li>
+              ))}
+            </ul>
+          );
+        }
+        return value;
+      },
+    },
+  ];
+};
 
 const UploadDetail = ({ record: batch, setReload }) => {
   const [values, setValues] = useState([]);
   const [rawValues, setRawValues] = useState([]);
-  const [columns, setColumns] = useState(summaryColumns);
+  const [columns, setColumns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(null);
   const [saving, setSaving] = useState(null);
@@ -151,7 +187,7 @@ const UploadDetail = ({ record: batch, setReload }) => {
       return;
     }
     if (e === "data-summary") {
-      setColumns(summaryColumns);
+      setColumns(getSummaryColumns(values));
     } else {
       setExpandedRowKeys([]);
       setColumns([...columnsRawData, Table.EXPAND_COLUMN]);
@@ -165,10 +201,11 @@ const UploadDetail = ({ record: batch, setReload }) => {
       api
         .get(`/batch/summary/${batch.id}`)
         .then((res) => {
-          const data = res.data.map((r, i) => {
+          const sorted = [...res.data].sort((a, b) => a.form - b.form);
+          const data = sorted.map((r, i) => {
             return { key: `Q-${i}`, ...r };
           });
-          setColumns(summaryColumns);
+          setColumns(getSummaryColumns(data));
           setValues(data);
           setLoading(false);
         })
