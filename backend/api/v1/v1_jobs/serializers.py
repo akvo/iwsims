@@ -34,6 +34,8 @@ class DownloadDataRequestSerializer(serializers.Serializer):
         ),
         required=False,
     )
+    date_from = serializers.DateField(required=False, allow_null=True)
+    date_to = serializers.DateField(required=False, allow_null=True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -42,6 +44,15 @@ class DownloadDataRequestSerializer(serializers.Serializer):
             "administration_id"
         ).queryset = Administration.objects.all()
         self.fields.get("child_form_ids").child.queryset = Forms.objects.all()
+
+    def validate(self, data):
+        date_from = data.get("date_from")
+        date_to = data.get("date_to")
+        if date_from and date_to and date_from > date_to:
+            raise serializers.ValidationError(
+                "date_from must be before or equal to date_to"
+            )
+        return data
 
 
 class DownloadListSerializer(serializers.ModelSerializer):

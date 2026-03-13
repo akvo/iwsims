@@ -1,9 +1,11 @@
 import logging
 import os
+from datetime import datetime, time, timedelta
 from dateutil import parser
 from django_q.models import Task
 
 import pandas as pd
+from django.conf import settings
 from django.utils import timezone
 from django_q.tasks import async_task
 from api.v1.v1_jobs.administrations_bulk_upload import (
@@ -44,19 +46,83 @@ from utils.report_generator import generate_datapoint_report
 logger = logging.getLogger(__name__)
 
 
+def _build_date_filter(date_from=None, date_to=None):
+    """Build created__gte / created__lt filter kwargs from date strings."""
+    date_filter = {}
+    if date_from:
+        start_date = parser.parse(date_from)
+        start_datetime = datetime.combine(start_date, time.min)
+        if settings.USE_TZ:
+            start_datetime = timezone.make_aware(start_datetime)
+        date_filter["created__gte"] = start_datetime
+    if date_to:
+        end_date = parser.parse(date_to)
+        end_datetime = datetime.combine(
+            end_date + timedelta(days=1), time.min
+        )
+        if settings.USE_TZ:
+            end_datetime = timezone.make_aware(end_datetime)
+        date_filter["created__lt"] = end_datetime
+    return date_filter
+
+
 def download_data(
     form: Forms,
     administration_ids: list = None,
     download_type: str = DataDownloadTypes.recent,
-    child_form_ids: list = []
+    child_form_ids: list = None,
+    date_from: str = None,
+    date_to: str = None,
 ) -> list:
+    if child_form_ids is None:
+        child_form_ids = []
+    has_date_filter = date_from or date_to
+    date_filter = _build_date_filter(date_from, date_to)
+
     filter_data = {
         "is_pending": False,
         "is_draft": False,
     }
     if administration_ids:
         filter_data["administration_id__in"] = administration_ids
-    data = form.form_form_data.filter(**filter_data).order_by("id").all()
+
+    if has_date_filter and child_form_ids:
+        # Filter children by date, include their parents regardless
+        child_filter = {
+            "is_pending": False,
+            "is_draft": False,
+            "form_id__in": child_form_ids,
+            **date_filter,
+        }
+        if administration_ids:
+            child_filter["administration_id__in"] = administration_ids
+        matched_children = FormData.objects.filter(**child_filter)
+        parent_ids_from_children = set(
+            matched_children.values_list("parent_id", flat=True)
+        )
+        # Parents in date range themselves
+        parent_date_filter = {**filter_data, **date_filter}
+        parent_ids_in_range = set(
+            form.form_form_data.filter(**parent_date_filter)
+            .values_list("id", flat=True)
+        )
+        # Union: parents with in-range children OR in-range themselves
+        all_parent_ids = parent_ids_from_children | parent_ids_in_range
+        data = form.form_form_data.filter(
+            id__in=all_parent_ids, **filter_data
+        ).order_by("id").all()
+    elif has_date_filter:
+        # No child forms — filter parents directly by date
+        filter_data.update(date_filter)
+        data = form.form_form_data.filter(
+            **filter_data
+        ).order_by("id").all()
+    else:
+        # No date filter — existing behavior
+        data = form.form_form_data.filter(
+            **filter_data
+        ).order_by("id").all()
+
     data_items = []
     for d in data:
         if download_type == DataDownloadTypes.recent:
@@ -66,7 +132,8 @@ def download_data(
                     form_id=child_form,
                     is_pending=False,
                     is_draft=False,
-                ).last()
+                    **date_filter,
+                ).order_by("-created").first()
                 if dl:
                     # merge parent and child data
                     item = {**item, **dl.to_data_frame}
@@ -74,28 +141,30 @@ def download_data(
                     item["datapoint_name"] = d.name
                     item["created_at"] = d.to_data_frame.get("created_at")
                     item["created_by"] = d.created_by.get_full_name()
+                    item["updated_at"] = dl.to_data_frame.get("created_at")
                     item["updated_by"] = dl.created_by.get_full_name()
             data_items.append(item)
         if download_type == DataDownloadTypes.all:
+            has_children = False
             for child_form in child_form_ids:
                 for dl in d.children.filter(
                     form_id=child_form,
                     is_pending=False,
                     is_draft=False,
-                ).all():
+                    **date_filter,
+                ).order_by("created").all():
+                    has_children = True
                     data_items.append({
                         **d.to_data_frame,
                         **dl.to_data_frame,
                         "datapoint_name": d.name,
                         "created_at": d.to_data_frame.get("created_at"),
                         "created_by": d.created_by.get_full_name(),
+                        "updated_at": dl.to_data_frame.get("created_at"),
                         "updated_by": dl.created_by.get_full_name(),
                     })
-        if d.children.filter(
-            is_pending=False,
-            is_draft=False,
-        ).count() == 0 and download_type == DataDownloadTypes.all:
-            data_items.append(d.to_data_frame)
+            if not has_children:
+                data_items.append(d.to_data_frame)
     return data_items
 
 
@@ -119,8 +188,12 @@ def generate_data_sheet(
     administration_ids: list = None,
     download_type: str = DataDownloadTypes.recent,
     use_label: bool = True,
-    child_form_ids: list = [],
+    child_form_ids: list = None,
+    date_from: str = None,
+    date_to: str = None,
 ) -> None:
+    if child_form_ids is None:
+        child_form_ids = []
     questions = get_question_names(form=form)
     if len(child_form_ids):
         child_forms = form.children.filter(id__in=child_form_ids).all()
@@ -131,6 +204,8 @@ def generate_data_sheet(
         administration_ids=administration_ids,
         download_type=download_type,
         child_form_ids=child_form_ids,
+        date_from=date_from,
+        date_to=date_to,
     )
     if len(data):
         df = pd.DataFrame(data)
@@ -222,6 +297,8 @@ def job_generate_data_download(job_id, **kwargs):
     download_type = kwargs.get("download_type", DataDownloadTypes.recent)
     use_label = kwargs.get("use_label", True)
     child_form_ids = job.info.get("child_form_ids", [])
+    date_from = kwargs.get("date_from")
+    date_to = kwargs.get("date_to")
 
     writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
     generate_data_sheet(
@@ -231,6 +308,8 @@ def job_generate_data_download(job_id, **kwargs):
         download_type=download_type,
         use_label=use_label,
         child_form_ids=child_form_ids,
+        date_from=date_from,
+        date_to=date_to,
     )
 
     monitoring_forms = form.children.filter(pk__in=child_form_ids).all()
@@ -256,6 +335,13 @@ def job_generate_data_download(job_id, **kwargs):
             ),
         },
     ]
+    if date_from or date_to:
+        date_range_str = (
+            f"{date_from or 'beginning'} to {date_to or 'present'}"
+        )
+        context.append(
+            {"context": "Date Range Filter", "value": date_range_str}
+        )
 
     context = (
         pd.DataFrame(context).groupby(["context", "value"], sort=False).first()

@@ -76,6 +76,18 @@ from utils.custom_serializer_fields import validate_serializers_message
             type={"type": "array", "items": {"type": "number"}},
             location=OpenApiParameter.QUERY,
         ),
+        OpenApiParameter(
+            name="date_from",
+            required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="date_to",
+            required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
     ],
     responses={
         (200, "application/json"): inline_serializer(
@@ -103,7 +115,7 @@ def download_generate(request, version):
         child.id
         for child in serializer.validated_data.get("child_form_ids", [])
     ]
-    result = call_command(
+    cmd_args = [
         "job_download",
         serializer.validated_data.get("form_id").id,
         request.user.id,
@@ -115,7 +127,14 @@ def download_generate(request, version):
         1 if serializer.validated_data.get("use_label") else 0,
         "-c",
         *child_forms,
-    )
+    ]
+    date_from = serializer.validated_data.get("date_from")
+    date_to = serializer.validated_data.get("date_to")
+    if date_from:
+        cmd_args.extend(["-df", str(date_from)])
+    if date_to:
+        cmd_args.extend(["-dt", str(date_to)])
+    result = call_command(*cmd_args)
     job = Jobs.objects.get(pk=result)
     data = {
         "task_id": job.task_id,
