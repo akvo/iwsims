@@ -90,6 +90,10 @@ const DataFilters = ({
       if (["all", "recent"].includes(downloadType)) {
         urls.push(`type=${downloadType}`);
       }
+      if (dateRange) {
+        urls.push(`date_from=${dateRange[0].format("YYYY-MM-DD")}`);
+        urls.push(`date_to=${dateRange[1].format("YYYY-MM-DD")}`);
+      }
       const apiURL = `/${urls.join("&")}`;
       await api.get(apiURL);
       notify({
@@ -112,6 +116,7 @@ const DataFilters = ({
     selectedChildForms,
     notify,
     downloadType,
+    dateRange,
     text.export2ExcelSuccess,
     text.export2ExcelError,
     navigate,
