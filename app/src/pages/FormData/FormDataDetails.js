@@ -12,7 +12,10 @@ import { QUESTION_TYPES } from '../../lib/constants';
 const ImageView = ({ label, uri, textTestID, imageTestID }) => {
   // get base path from http://example.com/api/v2/any/ to http://example.com
   const baseURL = api.getConfig().baseURL?.replace(/\/api\/v\d+\/.*$/, '');
-  const imageURL = !uri?.includes('file://') && !uri?.startsWith('http') ? `${baseURL}${uri}` : uri;
+  const imageURL =
+    !uri?.includes('file://') && !uri?.startsWith('http') && !uri.startsWith('data:image')
+      ? `${baseURL}${uri}`
+      : uri;
   return (
     <View style={styles.containerImage}>
       <Text style={styles.title} testID={textTestID}>
