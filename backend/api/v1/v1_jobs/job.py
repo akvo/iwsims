@@ -139,6 +139,7 @@ def download_data(
                     item["datapoint_name"] = d.name
                     item["created_at"] = d.to_data_frame.get("created_at")
                     item["created_by"] = d.created_by.get_full_name()
+                    item["updated_at"] = dl.to_data_frame.get("created_at")
                     item["updated_by"] = dl.created_by.get_full_name()
             data_items.append(item)
         if download_type == DataDownloadTypes.all:
@@ -155,6 +156,7 @@ def download_data(
                         "datapoint_name": d.name,
                         "created_at": d.to_data_frame.get("created_at"),
                         "created_by": d.created_by.get_full_name(),
+                        "updated_at": dl.to_data_frame.get("created_at"),
                         "updated_by": dl.created_by.get_full_name(),
                     })
         if d.children.filter(
