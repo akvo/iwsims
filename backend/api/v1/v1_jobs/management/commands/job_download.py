@@ -29,6 +29,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "-c", "--child_form_ids", nargs="*", default=[], type=int
         )
+        parser.add_argument(
+            "-df", "--date_from", nargs="?", default=None, type=str
+        )
+        parser.add_argument(
+            "-dt", "--date_to", nargs="?", default=None, type=str
+        )
 
     def handle(self, *args, **options):
         administration = options.get("administration")
@@ -64,12 +70,16 @@ class Command(BaseCommand):
                         )
                     )
                     return
+        date_from = options.get("date_from")
+        date_to = options.get("date_to")
         info = {
             "form_id": form_id,
             "administration": administration if administration > 0 else None,
             "download_type": download_type,
             "use_label": use_label == 1,
             "child_form_ids": child_form_ids,
+            "date_from": date_from,
+            "date_to": date_to,
         }
         form_name = form.name.replace(" ", "_").lower()
         today = timezone.datetime.today().strftime("%y%m%d")
