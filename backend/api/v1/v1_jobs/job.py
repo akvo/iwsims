@@ -70,10 +70,12 @@ def download_data(
     form: Forms,
     administration_ids: list = None,
     download_type: str = DataDownloadTypes.recent,
-    child_form_ids: list = [],
+    child_form_ids: list = None,
     date_from: str = None,
     date_to: str = None,
 ) -> list:
+    if child_form_ids is None:
+        child_form_ids = []
     has_date_filter = date_from or date_to
     date_filter = _build_date_filter(date_from, date_to)
 
@@ -131,7 +133,7 @@ def download_data(
                     is_pending=False,
                     is_draft=False,
                     **date_filter,
-                ).last()
+                ).order_by("-created").first()
                 if dl:
                     # merge parent and child data
                     item = {**item, **dl.to_data_frame}
@@ -143,13 +145,15 @@ def download_data(
                     item["updated_by"] = dl.created_by.get_full_name()
             data_items.append(item)
         if download_type == DataDownloadTypes.all:
+            has_children = False
             for child_form in child_form_ids:
                 for dl in d.children.filter(
                     form_id=child_form,
                     is_pending=False,
                     is_draft=False,
                     **date_filter,
-                ).all():
+                ).order_by("created").all():
+                    has_children = True
                     data_items.append({
                         **d.to_data_frame,
                         **dl.to_data_frame,
@@ -159,12 +163,8 @@ def download_data(
                         "updated_at": dl.to_data_frame.get("created_at"),
                         "updated_by": dl.created_by.get_full_name(),
                     })
-        if d.children.filter(
-            is_pending=False,
-            is_draft=False,
-            **date_filter,
-        ).count() == 0 and download_type == DataDownloadTypes.all:
-            data_items.append(d.to_data_frame)
+            if not has_children:
+                data_items.append(d.to_data_frame)
     return data_items
 
 
@@ -188,10 +188,12 @@ def generate_data_sheet(
     administration_ids: list = None,
     download_type: str = DataDownloadTypes.recent,
     use_label: bool = True,
-    child_form_ids: list = [],
+    child_form_ids: list = None,
     date_from: str = None,
     date_to: str = None,
 ) -> None:
+    if child_form_ids is None:
+        child_form_ids = []
     questions = get_question_names(form=form)
     if len(child_form_ids):
         child_forms = form.children.filter(id__in=child_form_ids).all()
