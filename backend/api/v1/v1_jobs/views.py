@@ -190,7 +190,9 @@ def download_file(request, version, file_name):
     filename = job.result
     zip_file = open(filepath, "rb")
     # Set content type based on file extension
-    if filename.endswith('.docx'):
+    if filename.endswith('.zip'):
+        content_type = "application/zip"
+    elif filename.endswith('.docx'):
         content_type = (
             "application/vnd.openxmlformats-officedocument"
             ".wordprocessingml.document"
