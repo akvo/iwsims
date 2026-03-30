@@ -9,12 +9,12 @@ import {
   List,
 } from "antd";
 import {
-  FileTextFilled,
   LoadingOutlined,
   DownloadOutlined,
   ExclamationCircleOutlined,
   FileMarkdownFilled,
   FileWordFilled,
+  FileZipFilled,
 } from "@ant-design/icons";
 import { api, store, uiText } from "../../../lib";
 import { useNotification } from "../../../util/hooks";
@@ -31,7 +31,7 @@ const DownloadIcon = ({ type }) => {
     case "download_entities":
       return <FileMarkdownFilled style={{ color: "blue" }} />;
     default:
-      return <FileTextFilled style={{ color: "green" }} />;
+      return <FileZipFilled style={{ color: "green" }} />;
   }
 };
 
