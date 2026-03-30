@@ -1,5 +1,6 @@
 import logging
 import os
+import zipfile
 from datetime import datetime, time, timedelta
 from dateutil import parser
 from django_q.models import Task
@@ -37,6 +38,7 @@ from utils.export_form import (
     get_question_names,
     blank_data_template,
     meta_columns,
+    monitoring_meta_columns,
 )
 from utils.functions import update_date_time_format
 from utils.storage import upload
@@ -264,56 +266,141 @@ def generate_data_sheet(
         blank_data_template(form=form, writer=writer)
 
 
-def job_generate_data_download(job_id, **kwargs):
-    job = Jobs.objects.get(pk=job_id)
-    file_path = "./tmp/{0}".format(job.result)
-    if os.path.exists(file_path):
-        os.remove(file_path)
-    administration_ids = False
-    administration_name = "All Administration Level"
-    if kwargs.get("administration"):
-        administration = Administration.objects.get(
-            pk=kwargs.get("administration")
-        )
-        if administration.path:
-            filter_path = "{0}{1}.".format(
-                administration.path, administration.id
-            )
-        else:
-            filter_path = f"{administration.id}."
-        administration_ids = list(
-            Administration.objects.filter(
-                path__startswith=filter_path
-            ).values_list("id", flat=True)
-        )
-        administration_ids.append(administration.id)
+def download_monitoring_data(
+    parent_form: Forms,
+    child_form: Forms,
+    administration_ids: list = None,
+    download_type: str = DataDownloadTypes.recent,
+    date_from: str = None,
+    date_to: str = None,
+) -> list:
+    date_filter = _build_date_filter(date_from, date_to)
+    filter_data = {
+        "form": child_form,
+        "parent__form": parent_form,
+        "parent__isnull": False,
+        "is_pending": False,
+        "is_draft": False,
+    }
+    if administration_ids:
+        filter_data["parent__administration_id__in"] = administration_ids
+    filter_data.update(date_filter)
 
-        administration_name = list(
-            Administration.objects.filter(
-                path__startswith=filter_path
-            ).values_list("name", flat=True)
-        )
-    form = Forms.objects.get(pk=job.info.get("form_id"))
-    download_type = kwargs.get("download_type", DataDownloadTypes.recent)
-    use_label = kwargs.get("use_label", True)
-    child_form_ids = job.info.get("child_form_ids", [])
-    date_from = kwargs.get("date_from")
-    date_to = kwargs.get("date_to")
+    queryset = FormData.objects.filter(
+        **filter_data
+    ).select_related("parent", "parent__administration", "created_by")
 
-    writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
-    generate_data_sheet(
-        writer=writer,
-        form=form,
+    if download_type == DataDownloadTypes.recent:
+        # Get latest monitoring submission per parent
+        seen_parents = {}
+        for fd in queryset.order_by("parent_id", "-created"):
+            if fd.parent_id not in seen_parents:
+                seen_parents[fd.parent_id] = fd
+        monitoring_records = list(seen_parents.values())
+    else:
+        monitoring_records = list(
+            queryset.order_by("parent_id", "created").all()
+        )
+
+    data_items = []
+    for fd in monitoring_records:
+        item = fd.to_data_frame
+        item["parent_id"] = fd.parent_id
+        item["datapoint_name"] = fd.parent.name
+        parent_admin = fd.parent.administration
+        item["administration"] = (
+            parent_admin.administration_column if parent_admin else None
+        )
+        data_items.append(item)
+    return data_items
+
+
+def generate_monitoring_data_sheet(
+    writer: pd.ExcelWriter,
+    parent_form: Forms,
+    child_form: Forms,
+    administration_ids: list = None,
+    download_type: str = DataDownloadTypes.recent,
+    use_label: bool = True,
+    date_from: str = None,
+    date_to: str = None,
+) -> None:
+    questions = get_question_names(form=child_form)
+    data = download_monitoring_data(
+        parent_form=parent_form,
+        child_form=child_form,
         administration_ids=administration_ids,
         download_type=download_type,
-        use_label=use_label,
-        child_form_ids=child_form_ids,
         date_from=date_from,
         date_to=date_to,
     )
+    if len(data):
+        df = pd.DataFrame(data)
+        question_map = {}
+        for question in questions:
+            question_id, question_name, question_type = question
+            question_map[question_name] = {
+                'id': question_id,
+                'type': question_type,
+                'name': question_name
+            }
+        actual_columns = [
+            col for col in df.columns
+            if col not in monitoring_meta_columns
+        ]
+        for question in questions:
+            question_id, question_name, question_type = question
+            if question_name not in df:
+                df[question_name] = None
 
-    monitoring_forms = form.children.filter(pk__in=child_form_ids).all()
+        new_columns = {}
+        if use_label:
+            for col_name in actual_columns:
+                base_question_name = (
+                    col_name.split('_')[0]
+                    if '_' in col_name else col_name
+                )
+                if base_question_name in question_map:
+                    question_info = question_map[base_question_name]
+                    if question_info['type'] in [
+                        QuestionTypes.option,
+                        QuestionTypes.multiple_option,
+                    ]:
+                        new_columns[col_name] = df[col_name].apply(
+                            lambda x: get_answer_label(
+                                x, question_info['id']
+                            )
+                        )
+        if use_label and new_columns:
+            new_df = pd.DataFrame(new_columns)
+            df.drop(columns=list(new_columns.keys()), inplace=True)
+            df = pd.concat([df, new_df], axis=1)
 
+        available_question_columns = [
+            col for col in df.columns
+            if col not in monitoring_meta_columns
+        ]
+        final_columns = monitoring_meta_columns + available_question_columns
+        # Only include columns that exist in the dataframe
+        final_columns = [c for c in final_columns if c in df.columns]
+        df = df[final_columns]
+        df.to_excel(writer, sheet_name="data", index=False)
+        generate_definition_sheet(
+            writer=writer,
+            form=child_form,
+        )
+    else:
+        blank_data_template(form=child_form, writer=writer)
+
+
+def _sanitize_form_name(name: str) -> str:
+    return name.replace(" ", "_").lower()
+
+
+def _write_context_sheet(
+    writer, form, monitoring_forms, job,
+    administration_name, date_from, date_to,
+):
     context = [
         {"context": "Form Name", "value": form.name},
         {
@@ -342,22 +429,23 @@ def job_generate_data_download(job_id, **kwargs):
         context.append(
             {"context": "Date Range Filter", "value": date_range_str}
         )
-
     context = (
-        pd.DataFrame(context).groupby(["context", "value"], sort=False).first()
+        pd.DataFrame(context)
+        .groupby(["context", "value"], sort=False)
+        .first()
     )
     context.to_excel(writer, sheet_name="context", startrow=0, header=False)
     workbook = writer.book
     worksheet = writer.sheets["context"]
-    f = workbook.add_format(
+    fmt = workbook.add_format(
         {
             "align": "left",
             "bold": False,
             "border": 0,
         }
     )
-    worksheet.set_column("A:A", 20, f)
-    worksheet.set_column("B:B", 30, f)
+    worksheet.set_column("A:A", 20, fmt)
+    worksheet.set_column("B:B", 30, fmt)
     merge_format = workbook.add_format(
         {
             "bold": True,
@@ -369,9 +457,144 @@ def job_generate_data_download(job_id, **kwargs):
         }
     )
     worksheet.merge_range("A1:B1", "Context", merge_format)
+
+
+def _resolve_administration(kwargs):
+    administration_ids = False
+    administration_name = "All Administration Level"
+    if kwargs.get("administration"):
+        administration = Administration.objects.get(
+            pk=kwargs.get("administration")
+        )
+        if administration.path:
+            filter_path = "{0}{1}.".format(
+                administration.path, administration.id
+            )
+        else:
+            filter_path = f"{administration.id}."
+        administration_ids = list(
+            Administration.objects.filter(
+                path__startswith=filter_path
+            ).values_list("id", flat=True)
+        )
+        administration_ids.append(administration.id)
+        administration_name = list(
+            Administration.objects.filter(
+                path__startswith=filter_path
+            ).values_list("name", flat=True)
+        )
+    return administration_ids, administration_name
+
+
+def _generate_excel_download(job, **kwargs):
+    file_path = "./tmp/{0}".format(job.result)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    administration_ids, administration_name = _resolve_administration(kwargs)
+    form = Forms.objects.get(pk=job.info.get("form_id"))
+    download_type = kwargs.get("download_type", DataDownloadTypes.recent)
+    use_label = kwargs.get("use_label", True)
+    child_form_ids = job.info.get("child_form_ids", [])
+    date_from = kwargs.get("date_from")
+    date_to = kwargs.get("date_to")
+
+    writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
+    generate_data_sheet(
+        writer=writer,
+        form=form,
+        administration_ids=administration_ids,
+        download_type=download_type,
+        use_label=use_label,
+        child_form_ids=child_form_ids,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    monitoring_forms = form.children.filter(pk__in=child_form_ids).all()
+    _write_context_sheet(
+        writer, form, monitoring_forms, job,
+        administration_name, date_from, date_to,
+    )
     writer.save()
     url = upload(file=file_path, folder="download")
     return url
+
+
+def _generate_zip_download(job, **kwargs):
+    zip_path = "./tmp/{0}".format(job.result)
+    if os.path.exists(zip_path):
+        os.remove(zip_path)
+    administration_ids, administration_name = _resolve_administration(kwargs)
+    form = Forms.objects.get(pk=job.info.get("form_id"))
+    download_type = kwargs.get("download_type", DataDownloadTypes.recent)
+    use_label = kwargs.get("use_label", True)
+    child_form_ids = job.info.get("child_form_ids", [])
+    child_forms = form.children.filter(pk__in=child_form_ids).all()
+    date_from = kwargs.get("date_from")
+    date_to = kwargs.get("date_to")
+
+    tmp_files = []
+    try:
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            # Registration Excel
+            reg_name = _sanitize_form_name(form.name)
+            reg_path = f"./tmp/reg_{job.id}.xlsx"
+            tmp_files.append(reg_path)
+            reg_writer = pd.ExcelWriter(reg_path, engine="xlsxwriter")
+            generate_data_sheet(
+                writer=reg_writer,
+                form=form,
+                administration_ids=administration_ids,
+                download_type=download_type,
+                use_label=use_label,
+                child_form_ids=[],
+                date_from=date_from,
+                date_to=date_to,
+            )
+            _write_context_sheet(
+                reg_writer, form, child_forms, job,
+                administration_name, date_from, date_to,
+            )
+            reg_writer.save()
+            zf.write(reg_path, f"{reg_name}.xlsx")
+
+            # One Excel per monitoring form
+            for child_form in child_forms:
+                child_name = _sanitize_form_name(child_form.name)
+                child_path = (
+                    f"./tmp/child_{child_form.id}_{job.id}.xlsx"
+                )
+                tmp_files.append(child_path)
+                child_writer = pd.ExcelWriter(
+                    child_path, engine="xlsxwriter"
+                )
+                generate_monitoring_data_sheet(
+                    writer=child_writer,
+                    parent_form=form,
+                    child_form=child_form,
+                    administration_ids=administration_ids,
+                    download_type=download_type,
+                    use_label=use_label,
+                    date_from=date_from,
+                    date_to=date_to,
+                )
+                child_writer.save()
+                zf.write(child_path, f"{child_name}.xlsx")
+
+        url = upload(file=zip_path, folder="download")
+        return url
+    finally:
+        for f in tmp_files:
+            if os.path.exists(f):
+                os.remove(f)
+
+
+def job_generate_data_download(job_id, **kwargs):
+    job = Jobs.objects.get(pk=job_id)
+    child_form_ids = job.info.get("child_form_ids", [])
+    if child_form_ids:
+        return _generate_zip_download(job, **kwargs)
+    else:
+        return _generate_excel_download(job, **kwargs)
 
 
 def transform_form_data_for_report(
