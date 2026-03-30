@@ -83,8 +83,9 @@ class Command(BaseCommand):
         }
         form_name = form.name.replace(" ", "_").lower()
         today = timezone.datetime.today().strftime("%y%m%d")
-        out_file = "download-{0}-{1}-{2}.xlsx".format(
-            form_name, today, uuid.uuid4()
+        ext = "zip" if child_form_ids else "xlsx"
+        out_file = "download-{0}-{1}-{2}.{3}".format(
+            form_name, today, uuid.uuid4(), ext
         )
         job = Jobs.objects.create(
             type=JobTypes.download,
