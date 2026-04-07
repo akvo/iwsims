@@ -16,7 +16,7 @@ from api.v1.v1_jobs.constants import (
     JobStatus,
     JobTypes,
 )
-from api.v1.v1_jobs.job import job_generate_data_download
+from api.v1.v1_jobs.job import job_generate_data_download, _sanitize_form_name
 from api.v1.v1_jobs.models import Jobs
 from api.v1.v1_profile.management.commands import administration_seeder
 from api.v1.v1_profile.models import Administration
@@ -191,7 +191,7 @@ class ZipDownloadWithSelectionIdsTestCase(TestCase, ProfileTestHelperMixin):
 
         storage.download(f"download/{job.result}")
         zip_path = f"./tmp/{job.result}"
-        reg_name = self.form.name.replace(" ", "_").lower() + ".xlsx"
+        reg_name = _sanitize_form_name(self.form.name) + ".xlsx"
 
         with zipfile.ZipFile(zip_path, "r") as zf:
             self.assertIn(reg_name, zf.namelist())
@@ -225,7 +225,10 @@ class ZipDownloadWithSelectionIdsTestCase(TestCase, ProfileTestHelperMixin):
         storage.download(f"download/{job.result}")
         zip_path = f"./tmp/{job.result}"
         child_name = (
-            self.child_form.name.replace(" ", "_").lower() + ".xlsx"
+            _sanitize_form_name(
+                self.child_form.name,
+                form_id=self.child_form.id
+            ) + ".xlsx"
         )
 
         with zipfile.ZipFile(zip_path, "r") as zf:
@@ -254,7 +257,7 @@ class ZipDownloadWithSelectionIdsTestCase(TestCase, ProfileTestHelperMixin):
         )
         storage.download(f"download/{job_normal.result}")
         zip_normal = f"./tmp/{job_normal.result}"
-        reg_name = self.form.name.replace(" ", "_").lower() + ".xlsx"
+        reg_name = _sanitize_form_name(self.form.name) + ".xlsx"
 
         with zipfile.ZipFile(zip_normal, "r") as zf:
             zf.extract(reg_name, "./tmp/zip_extract/")

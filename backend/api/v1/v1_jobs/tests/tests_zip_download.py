@@ -10,7 +10,7 @@ from django.utils import timezone
 from api.v1.v1_data.models import FormData
 from api.v1.v1_forms.models import Forms
 from api.v1.v1_jobs.models import Jobs
-from api.v1.v1_jobs.job import job_generate_data_download
+from api.v1.v1_jobs.job import job_generate_data_download, _sanitize_form_name
 from api.v1.v1_jobs.constants import (
     DataDownloadTypes,
     JobStatus,
@@ -178,7 +178,7 @@ class ZipDownloadTestCase(TestCase, ProfileTestHelperMixin):
         storage.download(f"download/{job.result}")
         zip_path = f"./tmp/{job.result}"
         with zipfile.ZipFile(zip_path, 'r') as zf:
-            reg_name = self.form.name.replace(" ", "_").lower() + ".xlsx"
+            reg_name = _sanitize_form_name(self.form.name) + ".xlsx"
             self.assertIn(reg_name, zf.namelist())
             zf.extract(reg_name, "./tmp/zip_extract/")
             df = pd.read_excel(
@@ -200,7 +200,10 @@ class ZipDownloadTestCase(TestCase, ProfileTestHelperMixin):
         zip_path = f"./tmp/{job.result}"
         with zipfile.ZipFile(zip_path, 'r') as zf:
             child_name = (
-                self.child_form.name.replace(" ", "_").lower() + ".xlsx"
+                _sanitize_form_name(
+                    self.child_form.name,
+                    form_id=self.child_form.id
+                ) + ".xlsx"
             )
             self.assertIn(child_name, zf.namelist())
             zf.extract(child_name, "./tmp/zip_extract/")
@@ -240,7 +243,10 @@ class ZipDownloadTestCase(TestCase, ProfileTestHelperMixin):
         zip_path = f"./tmp/{job.result}"
         with zipfile.ZipFile(zip_path, 'r') as zf:
             child_name = (
-                self.child_form.name.replace(" ", "_").lower() + ".xlsx"
+                _sanitize_form_name(
+                    self.child_form.name,
+                    form_id=self.child_form.id
+                ) + ".xlsx"
             )
             zf.extract(child_name, "./tmp/zip_extract/")
             df = pd.read_excel(
@@ -268,7 +274,10 @@ class ZipDownloadTestCase(TestCase, ProfileTestHelperMixin):
         zip_path = f"./tmp/{job.result}"
         with zipfile.ZipFile(zip_path, 'r') as zf:
             child_name = (
-                self.child_form.name.replace(" ", "_").lower() + ".xlsx"
+                _sanitize_form_name(
+                    self.child_form.name,
+                    form_id=self.child_form.id
+                ) + ".xlsx"
             )
             zf.extract(child_name, "./tmp/zip_extract/")
             df = pd.read_excel(
@@ -314,7 +323,10 @@ class ZipDownloadTestCase(TestCase, ProfileTestHelperMixin):
         zip_path = f"./tmp/{job.result}"
         with zipfile.ZipFile(zip_path, 'r') as zf:
             child_name = (
-                self.child_form.name.replace(" ", "_").lower() + ".xlsx"
+                _sanitize_form_name(
+                    self.child_form.name,
+                    form_id=self.child_form.id
+                ) + ".xlsx"
             )
             zf.extract(child_name, "./tmp/zip_extract/")
             df = pd.read_excel(
@@ -356,9 +368,12 @@ class ZipDownloadTestCase(TestCase, ProfileTestHelperMixin):
         job_generate_data_download(job_id=job.id, **job.info)
         storage.download(f"download/{job.result}")
         zip_path = f"./tmp/{job.result}"
-        reg_name = self.form.name.replace(" ", "_").lower() + ".xlsx"
+        reg_name = _sanitize_form_name(self.form.name) + ".xlsx"
         child_name = (
-            self.child_form.name.replace(" ", "_").lower() + ".xlsx"
+            _sanitize_form_name(
+                self.child_form.name,
+                form_id=self.child_form.id
+            ) + ".xlsx"
         )
         with zipfile.ZipFile(zip_path, 'r') as zf:
             zf.extractall("./tmp/zip_extract/")

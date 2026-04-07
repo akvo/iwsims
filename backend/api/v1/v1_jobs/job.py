@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import zipfile
 from datetime import datetime, time, timedelta
 from dateutil import parser
@@ -427,8 +428,12 @@ def generate_monitoring_data_sheet(
         blank_data_template(form=child_form, writer=writer)
 
 
-def _sanitize_form_name(name: str) -> str:
-    return name.replace(" ", "_").lower()
+def _sanitize_form_name(name: str, form_id: int = None) -> str:
+    safe = re.sub(r'[^a-z0-9_-]', '_', name.lower())
+    safe = re.sub(r'_+', '_', safe).strip('_')
+    if form_id is not None:
+        safe = f"{safe}_{form_id}"
+    return safe
 
 
 def _write_context_sheet(
@@ -533,24 +538,23 @@ def _generate_excel_download(job, **kwargs):
     date_from = kwargs.get("date_from")
     date_to = kwargs.get("date_to")
 
-    writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
-    generate_data_sheet(
-        writer=writer,
-        form=form,
-        administration_ids=administration_ids,
-        download_type=download_type,
-        use_label=use_label,
-        child_form_ids=child_form_ids,
-        date_from=date_from,
-        date_to=date_to,
-        selection_ids=selection_ids or None,
-    )
-    monitoring_forms = form.children.filter(pk__in=child_form_ids).all()
-    _write_context_sheet(
-        writer, form, monitoring_forms, job,
-        administration_name, date_from, date_to,
-    )
-    writer.save()
+    with pd.ExcelWriter(file_path, engine="xlsxwriter") as writer:
+        generate_data_sheet(
+            writer=writer,
+            form=form,
+            administration_ids=administration_ids,
+            download_type=download_type,
+            use_label=use_label,
+            child_form_ids=child_form_ids,
+            date_from=date_from,
+            date_to=date_to,
+            selection_ids=selection_ids or None,
+        )
+        monitoring_forms = form.children.filter(pk__in=child_form_ids).all()
+        _write_context_sheet(
+            writer, form, monitoring_forms, job,
+            administration_name, date_from, date_to,
+        )
     url = upload(file=file_path, folder="download")
     return url
 
@@ -576,47 +580,47 @@ def _generate_zip_download(job, **kwargs):
             reg_name = _sanitize_form_name(form.name)
             reg_path = f"./tmp/reg_{job.id}.xlsx"
             tmp_files.append(reg_path)
-            reg_writer = pd.ExcelWriter(reg_path, engine="xlsxwriter")
-            generate_data_sheet(
-                writer=reg_writer,
-                form=form,
-                administration_ids=administration_ids,
-                download_type=download_type,
-                use_label=use_label,
-                child_form_ids=[],
-                date_from=date_from,
-                date_to=date_to,
-                selection_ids=selection_ids or None,
-            )
-            _write_context_sheet(
-                reg_writer, form, child_forms, job,
-                administration_name, date_from, date_to,
-            )
-            reg_writer.save()
-            zf.write(reg_path, f"{reg_name}.xlsx")
-
-            # One Excel per monitoring form
-            for child_form in child_forms:
-                child_name = _sanitize_form_name(child_form.name)
-                child_path = (
-                    f"./tmp/child_{child_form.id}_{job.id}.xlsx"
-                )
-                tmp_files.append(child_path)
-                child_writer = pd.ExcelWriter(
-                    child_path, engine="xlsxwriter"
-                )
-                generate_monitoring_data_sheet(
-                    writer=child_writer,
-                    parent_form=form,
-                    child_form=child_form,
+            with pd.ExcelWriter(reg_path, engine="xlsxwriter") as rw:
+                generate_data_sheet(
+                    writer=rw,
+                    form=form,
                     administration_ids=administration_ids,
                     download_type=download_type,
                     use_label=use_label,
+                    child_form_ids=[],
                     date_from=date_from,
                     date_to=date_to,
                     selection_ids=selection_ids or None,
                 )
-                child_writer.save()
+                _write_context_sheet(
+                    rw, form, child_forms, job,
+                    administration_name, date_from, date_to,
+                )
+            zf.write(reg_path, f"{reg_name}.xlsx")
+
+            # One Excel per monitoring form
+            for child_form in child_forms:
+                child_name = _sanitize_form_name(
+                    child_form.name, form_id=child_form.id
+                )
+                child_path = (
+                    f"./tmp/child_{child_form.id}_{job.id}.xlsx"
+                )
+                tmp_files.append(child_path)
+                with pd.ExcelWriter(
+                    child_path, engine="xlsxwriter"
+                ) as cw:
+                    generate_monitoring_data_sheet(
+                        writer=cw,
+                        parent_form=form,
+                        child_form=child_form,
+                        administration_ids=administration_ids,
+                        download_type=download_type,
+                        use_label=use_label,
+                        date_from=date_from,
+                        date_to=date_to,
+                        selection_ids=selection_ids or None,
+                    )
                 zf.write(child_path, f"{child_name}.xlsx")
 
         url = upload(file=zip_path, folder="download")
