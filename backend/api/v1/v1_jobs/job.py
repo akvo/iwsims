@@ -75,9 +75,36 @@ def download_data(
     child_form_ids: list = None,
     date_from: str = None,
     date_to: str = None,
+    selection_ids: list = None,
 ) -> list:
     if child_form_ids is None:
         child_form_ids = []
+
+    if selection_ids:
+        data = form.form_form_data.filter(
+            id__in=selection_ids,
+            is_pending=False,
+            is_draft=False,
+        ).order_by("id").all()
+        data_items = []
+        for d in data:
+            item = d.to_data_frame
+            for child_form in child_form_ids:
+                dl = d.children.filter(
+                    form_id=child_form,
+                    is_pending=False,
+                    is_draft=False,
+                ).order_by("-created").first()
+                if dl:
+                    item = {**item, **dl.to_data_frame}
+                    item["datapoint_name"] = d.name
+                    item["created_at"] = d.to_data_frame.get("created_at")
+                    item["created_by"] = d.created_by.get_full_name()
+                    item["updated_at"] = dl.to_data_frame.get("created_at")
+                    item["updated_by"] = dl.created_by.get_full_name()
+            data_items.append(item)
+        return data_items
+
     has_date_filter = date_from or date_to
     date_filter = _build_date_filter(date_from, date_to)
 
@@ -193,6 +220,7 @@ def generate_data_sheet(
     child_form_ids: list = None,
     date_from: str = None,
     date_to: str = None,
+    selection_ids: list = None,
 ) -> None:
     if child_form_ids is None:
         child_form_ids = []
@@ -208,6 +236,7 @@ def generate_data_sheet(
         child_form_ids=child_form_ids,
         date_from=date_from,
         date_to=date_to,
+        selection_ids=selection_ids,
     )
     if len(data):
         df = pd.DataFrame(data)
@@ -273,6 +302,7 @@ def download_monitoring_data(
     download_type: str = DataDownloadTypes.recent,
     date_from: str = None,
     date_to: str = None,
+    selection_ids: list = None,
 ) -> list:
     date_filter = _build_date_filter(date_from, date_to)
     filter_data = {
@@ -282,6 +312,8 @@ def download_monitoring_data(
         "is_pending": False,
         "is_draft": False,
     }
+    if selection_ids:
+        filter_data["parent_id__in"] = selection_ids
     if administration_ids:
         filter_data["parent__administration_id__in"] = administration_ids
     filter_data.update(date_filter)
@@ -324,6 +356,7 @@ def generate_monitoring_data_sheet(
     use_label: bool = True,
     date_from: str = None,
     date_to: str = None,
+    selection_ids: list = None,
 ) -> None:
     questions = get_question_names(form=child_form)
     data = download_monitoring_data(
@@ -333,6 +366,7 @@ def generate_monitoring_data_sheet(
         download_type=download_type,
         date_from=date_from,
         date_to=date_to,
+        selection_ids=selection_ids,
     )
     if len(data):
         df = pd.DataFrame(data)
@@ -495,6 +529,7 @@ def _generate_excel_download(job, **kwargs):
     download_type = kwargs.get("download_type", DataDownloadTypes.recent)
     use_label = kwargs.get("use_label", True)
     child_form_ids = job.info.get("child_form_ids", [])
+    selection_ids = job.info.get("selection_ids", [])
     date_from = kwargs.get("date_from")
     date_to = kwargs.get("date_to")
 
@@ -508,6 +543,7 @@ def _generate_excel_download(job, **kwargs):
         child_form_ids=child_form_ids,
         date_from=date_from,
         date_to=date_to,
+        selection_ids=selection_ids or None,
     )
     monitoring_forms = form.children.filter(pk__in=child_form_ids).all()
     _write_context_sheet(
@@ -529,6 +565,7 @@ def _generate_zip_download(job, **kwargs):
     use_label = kwargs.get("use_label", True)
     child_form_ids = job.info.get("child_form_ids", [])
     child_forms = form.children.filter(pk__in=child_form_ids).all()
+    selection_ids = job.info.get("selection_ids", [])
     date_from = kwargs.get("date_from")
     date_to = kwargs.get("date_to")
 
@@ -549,6 +586,7 @@ def _generate_zip_download(job, **kwargs):
                 child_form_ids=[],
                 date_from=date_from,
                 date_to=date_to,
+                selection_ids=selection_ids or None,
             )
             _write_context_sheet(
                 reg_writer, form, child_forms, job,
@@ -576,6 +614,7 @@ def _generate_zip_download(job, **kwargs):
                     use_label=use_label,
                     date_from=date_from,
                     date_to=date_to,
+                    selection_ids=selection_ids or None,
                 )
                 child_writer.save()
                 zf.write(child_path, f"{child_name}.xlsx")
