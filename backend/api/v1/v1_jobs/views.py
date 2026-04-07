@@ -115,6 +115,10 @@ def download_generate(request, version):
         child.id
         for child in serializer.validated_data.get("child_form_ids", [])
     ]
+    selection_ids = [
+        fd.id
+        for fd in serializer.validated_data.get("selection_ids", [])
+    ]
     cmd_args = [
         "job_download",
         serializer.validated_data.get("form_id").id,
@@ -128,6 +132,8 @@ def download_generate(request, version):
         "-c",
         *child_forms,
     ]
+    if selection_ids:
+        cmd_args.extend(["-s", *selection_ids])
     date_from = serializer.validated_data.get("date_from")
     date_to = serializer.validated_data.get("date_to")
     if date_from:
