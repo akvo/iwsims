@@ -246,6 +246,7 @@ Object {
       </b>
        using the QR codes below
     </React.Fragment>,
+    "downloadData": "Download Data",
     "downloadHere": "download here",
     "downloadReport": "Download Report",
     "downloadReportError": "Unable to download report",
