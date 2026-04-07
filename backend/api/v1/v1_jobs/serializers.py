@@ -36,6 +36,12 @@ class DownloadDataRequestSerializer(serializers.Serializer):
     )
     date_from = serializers.DateField(required=False, allow_null=True)
     date_to = serializers.DateField(required=False, allow_null=True)
+    selection_ids = CustomListField(
+        child=CustomPrimaryKeyRelatedField(
+            queryset=FormData.objects.none()
+        ),
+        required=False,
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -44,6 +50,11 @@ class DownloadDataRequestSerializer(serializers.Serializer):
             "administration_id"
         ).queryset = Administration.objects.all()
         self.fields.get("child_form_ids").child.queryset = Forms.objects.all()
+        self.fields.get(
+            "selection_ids"
+        ).child.queryset = FormData.objects.filter(
+            form__parent__isnull=True
+        ).all()
 
     def validate(self, data):
         date_from = data.get("date_from")
@@ -135,18 +146,27 @@ class DownloadListSerializer(serializers.ModelSerializer):
                 )
                 return list(fd)
         if instance.type == JobTypes.download:
+            selection_ids = instance.info.get("selection_ids", [])
+            if selection_ids:
+                fd = FormData.objects.filter(
+                    pk__in=selection_ids
+                ).values("id", "name", "form_id")
+                return list(fd)
+            items = []
             child_form_ids = instance.info.get("child_form_ids")
             if child_form_ids:
-                forms = Forms.objects.filter(pk__in=child_form_ids).values(
-                    "id", "name"
-                )
-                forms = [f for f in forms]
-                return forms
+                forms = Forms.objects.filter(
+                    pk__in=child_form_ids
+                ).values("id", "name")
+                items.extend(list(forms))
+            return items
 
         return instance.info.get("attributes")
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_download_type(self, instance):
+        if instance.info.get("selection_ids"):
+            return None
         return instance.info.get("download_type")
 
     class Meta:
