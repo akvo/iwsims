@@ -88,6 +88,13 @@ from utils.custom_serializer_fields import validate_serializers_message
             type=OpenApiTypes.DATE,
             location=OpenApiParameter.QUERY,
         ),
+        OpenApiParameter(
+            name="selection_ids",
+            required=False,
+            type={"type": "array", "items": {"type": "number"}},
+            location=OpenApiParameter.QUERY,
+            description="Registration FormData IDs to download",
+        ),
     ],
     responses={
         (200, "application/json"): inline_serializer(
