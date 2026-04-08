@@ -36,6 +36,12 @@ class DownloadDataRequestSerializer(serializers.Serializer):
     )
     date_from = serializers.DateField(required=False, allow_null=True)
     date_to = serializers.DateField(required=False, allow_null=True)
+    selection_ids = CustomListField(
+        child=CustomPrimaryKeyRelatedField(
+            queryset=FormData.objects.none()
+        ),
+        required=False,
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -44,6 +50,11 @@ class DownloadDataRequestSerializer(serializers.Serializer):
             "administration_id"
         ).queryset = Administration.objects.all()
         self.fields.get("child_form_ids").child.queryset = Forms.objects.all()
+        self.fields.get(
+            "selection_ids"
+        ).child.queryset = FormData.objects.filter(
+            form__parent__isnull=True
+        ).all()
 
     def validate(self, data):
         date_from = data.get("date_from")
@@ -52,6 +63,16 @@ class DownloadDataRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "date_from must be before or equal to date_to"
             )
+        selection_ids = data.get("selection_ids", [])
+        form_id = data.get("form_id")
+        if selection_ids and form_id:
+            invalid = [
+                fd for fd in selection_ids if fd.form_id != form_id.id
+            ]
+            if invalid:
+                raise serializers.ValidationError(
+                    "selection_ids must belong to the requested form_id"
+                )
         return data
 
 
@@ -127,26 +148,38 @@ class DownloadListSerializer(serializers.ModelSerializer):
             attributes = [a for a in attributes]
             return attributes
         if instance.type == JobTypes.download_datapoint_report:
-            # Get a list of selected datapoint IDs
             selection_ids = instance.info.get("selection_ids", [])
+            form_id = instance.info.get("form_id")
             if selection_ids:
-                fd = FormData.objects.filter(pk__in=selection_ids).values(
-                    "id", "name", "form_id",
-                )
+                fd = FormData.objects.filter(
+                    pk__in=selection_ids,
+                    form_id=form_id,
+                ).values("id", "name", "form_id")
                 return list(fd)
         if instance.type == JobTypes.download:
+            selection_ids = instance.info.get("selection_ids", [])
+            form_id = instance.info.get("form_id")
+            if selection_ids:
+                fd = FormData.objects.filter(
+                    pk__in=selection_ids,
+                    form_id=form_id,
+                ).values("id", "name", "form_id")
+                return list(fd)
+            items = []
             child_form_ids = instance.info.get("child_form_ids")
             if child_form_ids:
-                forms = Forms.objects.filter(pk__in=child_form_ids).values(
-                    "id", "name"
-                )
-                forms = [f for f in forms]
-                return forms
+                forms = Forms.objects.filter(
+                    pk__in=child_form_ids
+                ).values("id", "name")
+                items.extend(list(forms))
+            return items
 
         return instance.info.get("attributes")
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_download_type(self, instance):
+        if instance.info.get("selection_ids"):
+            return None
         return instance.info.get("download_type")
 
     class Meta:

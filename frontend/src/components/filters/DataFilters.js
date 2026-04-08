@@ -29,6 +29,7 @@ import {
   DownOutlined,
   SearchOutlined,
   CalendarOutlined,
+  FileZipOutlined,
 } from "@ant-design/icons";
 import { Can } from "../can/index.js";
 
@@ -55,7 +56,8 @@ const DataFilters = ({
   const { notify } = useNotification();
   const [exporting, setExporting] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [selectedChildForms, setSelectedChildForms] = useState([]);
+  const [excelChildForms, setExcelChildForms] = useState([]);
+  const [docxChildForms, setDocxChildForms] = useState([]);
   const [openDocx, setOpenDocx] = useState(false);
   const [openExcel, setOpenExcel] = useState(false);
   const [downloadType, setDownloadType] = useState("recent");
@@ -77,17 +79,23 @@ const DataFilters = ({
     setExporting(true);
     try {
       const adm_id = selectedAdm?.id;
-      const childFormIds = selectedChildForms
+      const childFormIds = excelChildForms
         .map((id) => `child_form_ids=${id}`)
         .join("&");
       const urls = [`download/generate?form_id=${selectedForm}`];
       if (adm_id && selectedAdm?.parent) {
         urls.push(`administration_id=${adm_id}`);
       }
-      if (selectedChildForms.length) {
+      if (excelChildForms.length) {
         urls.push(childFormIds);
       }
-      if (["all", "recent"].includes(downloadType)) {
+      if (selectedRowKeys.length) {
+        const selectionIds = selectedRowKeys
+          .map((id) => `selection_ids=${id}`)
+          .join("&");
+        urls.push(selectionIds);
+      }
+      if (!selectedRowKeys.length && ["all", "recent"].includes(downloadType)) {
         urls.push(`type=${downloadType}`);
       }
       if (dateRange && dateRange.length === 2 && dateRange[0] && dateRange[1]) {
@@ -113,10 +121,11 @@ const DataFilters = ({
   }, [
     selectedAdm,
     selectedForm,
-    selectedChildForms,
+    excelChildForms,
     notify,
     downloadType,
     dateRange,
+    selectedRowKeys,
     text.export2ExcelSuccess,
     text.export2ExcelError,
     navigate,
@@ -125,16 +134,14 @@ const DataFilters = ({
   const export2Docx = useCallback(async () => {
     setDownloading(true);
     try {
-      // Create parameters list URL for selection_ids based on selectedRowKeys
       const selectionIds = selectedRowKeys
         .map((id) => `selection_ids=${id}`)
         .join("&");
-      const childFormIds = selectedChildForms
+      const childFormIds = docxChildForms
         .map((id) => `child_form_ids=${id}`)
         .join("&");
-      // If no child forms are selected, use the selected form
       let apiURL = `/download/datapoint-report?form_id=${selectedForm}&${selectionIds}`;
-      if (selectedChildForms.length) {
+      if (docxChildForms.length) {
         apiURL += `&${childFormIds}`;
       }
       await api.get(apiURL);
@@ -155,7 +162,7 @@ const DataFilters = ({
     }
   }, [
     selectedRowKeys,
-    selectedChildForms,
+    docxChildForms,
     notify,
     selectedForm,
     text.downloadReportError,
@@ -179,28 +186,29 @@ const DataFilters = ({
     });
   }, []);
 
-  const childFormMenuItems = useMemo(() => {
-    const formItems = childForms.map((form) => ({
-      key: form.id,
-      label: (
-        <Checkbox
-          checked={selectedChildForms.includes(form.id)}
-          onChange={(e) => {
-            const { checked } = e.target;
-            if (checked) {
-              setSelectedChildForms([...selectedChildForms, form.id]);
-            } else {
-              setSelectedChildForms(
-                selectedChildForms.filter((id) => id !== form.id)
-              );
-            }
-          }}
-        >
-          {form.content.name}
-        </Checkbox>
-      ),
-    }));
+  const buildCheckboxItems = useCallback(
+    (selected, setSelected) =>
+      childForms.map((form) => ({
+        key: form.id,
+        label: (
+          <Checkbox
+            checked={selected.includes(form.id)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelected([...selected, form.id]);
+              } else {
+                setSelected(selected.filter((id) => id !== form.id));
+              }
+            }}
+          >
+            {form.content.name}
+          </Checkbox>
+        ),
+      })),
+    [childForms]
+  );
 
+  const excelMenuItems = useMemo(() => {
     const menuItems = [];
 
     if (childForms.length > 0) {
@@ -216,7 +224,7 @@ const DataFilters = ({
           ),
           disabled: true,
         },
-        ...formItems,
+        ...buildCheckboxItems(excelChildForms, setExcelChildForms),
         {
           key: "divider",
           type: "divider",
@@ -224,7 +232,7 @@ const DataFilters = ({
       );
     }
 
-    if (openExcel) {
+    if (!selectedRowKeys.length) {
       menuItems.push({
         key: "download-type",
         label: (
@@ -246,16 +254,66 @@ const DataFilters = ({
         label: (
           <Button
             type="primary"
+            icon={<FileZipOutlined />}
+            loading={exporting}
+            onClick={export2Excel}
+            style={{ width: "100%" }}
+          >
+            {text.downloadData}
+          </Button>
+        ),
+        disabled: true,
+      },
+    ];
+  }, [
+    childForms,
+    buildCheckboxItems,
+    excelChildForms,
+    selectedRowKeys,
+    downloadType,
+    exporting,
+    text.selectChildForms,
+    text.allData,
+    text.latestData,
+    text.downloadData,
+    export2Excel,
+  ]);
+
+  const docxMenuItems = useMemo(() => {
+    const menuItems = [];
+
+    if (childForms.length > 0) {
+      menuItems.push(
+        {
+          key: "header",
+          label: (
+            <div
+              style={{ fontWeight: 500, color: "#262626", padding: "4px 0" }}
+            >
+              {text.selectChildForms}
+            </div>
+          ),
+          disabled: true,
+        },
+        ...buildCheckboxItems(docxChildForms, setDocxChildForms),
+        {
+          key: "divider",
+          type: "divider",
+        }
+      );
+    }
+
+    return [
+      ...menuItems,
+      {
+        key: "download-footer",
+        label: (
+          <Button
+            type="primary"
             icon={<FileWordOutlined />}
             loading={downloading}
-            onClick={() => {
-              if (openExcel) {
-                export2Excel();
-              } else {
-                export2Docx();
-              }
-            }}
-            disabled={openDocx && !selectedRowKeys?.length}
+            onClick={export2Docx}
+            disabled={!selectedRowKeys?.length}
             style={{ width: "100%" }}
           >
             {text.downloadReport}
@@ -266,18 +324,13 @@ const DataFilters = ({
     ];
   }, [
     childForms,
-    selectedChildForms,
+    buildCheckboxItems,
+    docxChildForms,
     downloading,
-    openExcel,
-    openDocx,
-    downloadType,
     selectedRowKeys,
-    text.downloadReport,
     text.selectChildForms,
-    text.allData,
-    text.latestData,
+    text.downloadReport,
     export2Docx,
-    export2Excel,
   ]);
 
   return (
@@ -321,7 +374,7 @@ const DataFilters = ({
                     open={openDocx}
                     onOpenChange={setOpenDocx}
                     menu={{
-                      items: childFormMenuItems,
+                      items: docxMenuItems,
                       style: { minWidth: "200px" },
                     }}
                     disabled={!selectedRowKeys.length}
@@ -347,18 +400,20 @@ const DataFilters = ({
                   open={openExcel}
                   onOpenChange={setOpenExcel}
                   menu={{
-                    items: childFormMenuItems,
+                    items: excelMenuItems,
                     style: { minWidth: "200px" },
                   }}
                   placement="bottomRight"
                 >
-                  <Button
-                    icon={<DownloadOutlined />}
-                    shape="round"
-                    loading={exporting}
-                  >
-                    {text.download}
-                  </Button>
+                  <Badge count={selectedRowKeys.length}>
+                    <Button
+                      icon={<DownloadOutlined />}
+                      shape="round"
+                      loading={exporting}
+                    >
+                      {text.download}
+                    </Button>
+                  </Badge>
                 </Dropdown>
               </Can>
             )}

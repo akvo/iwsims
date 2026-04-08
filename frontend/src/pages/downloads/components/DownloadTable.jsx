@@ -9,12 +9,13 @@ import {
   List,
 } from "antd";
 import {
-  FileTextFilled,
   LoadingOutlined,
   DownloadOutlined,
   ExclamationCircleOutlined,
   FileMarkdownFilled,
   FileWordFilled,
+  FileZipFilled,
+  FileExcelFilled,
 } from "@ant-design/icons";
 import { api, store, uiText } from "../../../lib";
 import { useNotification } from "../../../util/hooks";
@@ -30,8 +31,10 @@ const DownloadIcon = ({ type }) => {
     case "download_administration":
     case "download_entities":
       return <FileMarkdownFilled style={{ color: "blue" }} />;
+    case "download_excel":
+      return <FileExcelFilled style={{ color: "green" }} />;
     default:
-      return <FileTextFilled style={{ color: "green" }} />;
+      return <FileZipFilled style={{ color: "green" }} />;
   }
 };
 
@@ -155,9 +158,12 @@ const DownloadTable = ({ type = "download" }) => {
   const columns = [
     {
       dataIndex: "type",
-      render: (value) => (
-        <DownloadIcon type={value} style={{ fontSize: "20px" }} />
-      ),
+      render: (value, { attributes }) => {
+        const downloadType = attributes?.length ? value : "download_excel";
+        return (
+          <DownloadIcon type={downloadType} style={{ fontSize: "20px" }} />
+        );
+      },
       width: 40,
     },
     {
@@ -176,7 +182,7 @@ const DownloadTable = ({ type = "download" }) => {
           <div>
             <strong>{row?.form || row?.category}</strong>
           </div>
-          {row?.download_type && (
+          {row?.download_type && row?.attributes?.length > 0 && (
             <span
               className={`download-filter download-type ${row.download_type.toLowerCase()}`}
             >{`${row.download_type} Data - `}</span>

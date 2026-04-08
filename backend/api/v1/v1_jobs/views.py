@@ -88,6 +88,13 @@ from utils.custom_serializer_fields import validate_serializers_message
             type=OpenApiTypes.DATE,
             location=OpenApiParameter.QUERY,
         ),
+        OpenApiParameter(
+            name="selection_ids",
+            required=False,
+            type={"type": "array", "items": {"type": "number"}},
+            location=OpenApiParameter.QUERY,
+            description="Registration FormData IDs to download",
+        ),
     ],
     responses={
         (200, "application/json"): inline_serializer(
@@ -115,6 +122,10 @@ def download_generate(request, version):
         child.id
         for child in serializer.validated_data.get("child_form_ids", [])
     ]
+    selection_ids = [
+        fd.id
+        for fd in serializer.validated_data.get("selection_ids", [])
+    ]
     cmd_args = [
         "job_download",
         serializer.validated_data.get("form_id").id,
@@ -128,6 +139,8 @@ def download_generate(request, version):
         "-c",
         *child_forms,
     ]
+    if selection_ids:
+        cmd_args.extend(["-s", *selection_ids])
     date_from = serializer.validated_data.get("date_from")
     date_to = serializer.validated_data.get("date_to")
     if date_from:
@@ -190,7 +203,9 @@ def download_file(request, version, file_name):
     filename = job.result
     zip_file = open(filepath, "rb")
     # Set content type based on file extension
-    if filename.endswith('.docx'):
+    if filename.endswith('.zip'):
+        content_type = "application/zip"
+    elif filename.endswith('.docx'):
         content_type = (
             "application/vnd.openxmlformats-officedocument"
             ".wordprocessingml.document"

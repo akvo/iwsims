@@ -30,6 +30,9 @@ class Command(BaseCommand):
             "-c", "--child_form_ids", nargs="*", default=[], type=int
         )
         parser.add_argument(
+            "-s", "--selection_ids", nargs="*", default=[], type=int
+        )
+        parser.add_argument(
             "-df", "--date_from", nargs="?", default=None, type=str
         )
         parser.add_argument(
@@ -70,6 +73,7 @@ class Command(BaseCommand):
                         )
                     )
                     return
+        selection_ids = options.get("selection_ids", [])
         date_from = options.get("date_from")
         date_to = options.get("date_to")
         info = {
@@ -78,13 +82,15 @@ class Command(BaseCommand):
             "download_type": download_type,
             "use_label": use_label == 1,
             "child_form_ids": child_form_ids,
+            "selection_ids": selection_ids,
             "date_from": date_from,
             "date_to": date_to,
         }
         form_name = form.name.replace(" ", "_").lower()
         today = timezone.datetime.today().strftime("%y%m%d")
-        out_file = "download-{0}-{1}-{2}.xlsx".format(
-            form_name, today, uuid.uuid4()
+        ext = "zip" if child_form_ids else "xlsx"
+        out_file = "download-{0}-{1}-{2}.{3}".format(
+            form_name, today, uuid.uuid4(), ext
         )
         job = Jobs.objects.create(
             type=JobTypes.download,

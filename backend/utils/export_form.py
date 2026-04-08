@@ -14,6 +14,16 @@ meta_columns = [
     "geolocation",
 ]
 
+monitoring_meta_columns = [
+    "id",
+    "parent_id",
+    "datapoint_name",
+    "administration",
+    "geolocation",
+    "created_at",
+    "created_by",
+]
+
 
 def get_question_names(form: Forms):
     questions = []

@@ -181,6 +181,10 @@ const ManageDataTable = ({
   }, [setSelectedRowKeys]);
 
   useEffect(() => {
+    setSelectedRowKeys([]);
+  }, [administration, setSelectedRowKeys]);
+
+  useEffect(() => {
     setCurrentPage(1);
     setUpdateRecord(true);
   }, [search]);

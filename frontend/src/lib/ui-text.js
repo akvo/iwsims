@@ -923,6 +923,7 @@ const uiText = {
     downloadReport: "Download Report",
     downloadReportSuccess: "Report downloaded successfully",
     downloadReportError: "Unable to download report",
+    downloadData: "Download Data",
     bulkUpload: "Bulk Upload",
     selectChildForms: "Select Monitoring Forms",
     allData: "All Data",
