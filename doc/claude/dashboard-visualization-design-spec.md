@@ -24,7 +24,7 @@ graph TB
             V[views.py<br/>dashboard endpoints]
             S[serializers.py<br/>response serializers]
             F[functions.py<br/>computation logic]
-            M[models.py<br/>materialized views]
+            M[models.py<br/>models]
         end
     end
 
@@ -39,7 +39,7 @@ graph TB
         end
         subgraph MatViews["Materialized Views"]
             MV1[view_data_options<br/>existing]
-            MV2[view_dashboard_stats<br/>new]
+            MV2[composite indexes<br/>new]
         end
     end
 
@@ -905,7 +905,7 @@ backend/api/v1/v1_visualization/
 ├── models.py                    # ViewDataOptions (existing) + ViewDashboardStats (new)
 ├── views.py                     # Existing + new dashboard views
 ├── serializers.py               # Existing + new dashboard serializers
-├── functions.py                 # refresh_materialized_data (existing) + new helpers
+├── functions.py                 # refresh_materialized_data (existing)
 ├── urls.py                      # Existing + new dashboard URL patterns
 ├── constants.py                 # NEW: formula types, threshold logic
 ├── dashboard_config.py          # NEW: config loader + validator
@@ -923,7 +923,7 @@ backend/api/v1/v1_visualization/
 └── migrations/
     ├── __init__.py
     ├── 0001_create_view_data_options.py    # existing
-    └── 0002_create_view_dashboard_stats.py # NEW
+    └── 0002_add_composite_indexes.py # NEW
 ```
 
 ### 4.2 Key Module: `dashboard_config.py`
@@ -1130,53 +1130,37 @@ def compute_construction_progress(parent_form, config, filters):
     ...
 ```
 
-### 4.4 Materialized View: `view_dashboard_stats`
+### 4.4 Performance: Composite Indexes
 
-For performance on the KPI stats endpoint, create a materialized view that pre-joins latest monitoring data per parent:
+Instead of a materialized view (which introduces staleness and refresh complexity), we use composite indexes that make all dashboard queries fast on live data.
+
+**Existing indexes** (auto-created by Django):
+- `data_parent_id_*` — single column on `parent_id`
+- `data_form_id_*` — single column on `form_id`
+- `answer_data_id_*` — single column on `data_id`
+- `answer_question_id_*` — single column on `question_id`
+
+**New composite indexes** (added via migration):
 
 ```sql
-CREATE MATERIALIZED VIEW view_dashboard_stats AS
-SELECT
-    parent.id AS parent_data_id,
-    parent.name AS eps_name,
-    parent.administration_id,
-    parent.form_id AS parent_form_id,
-    parent.geo,
-    -- Latest water quality monitoring
-    wq.id AS wq_data_id,
-    wq.created AS wq_date,
-    -- Latest construction monitoring
-    con.id AS con_data_id,
-    con.created AS con_date
-FROM data parent
-LEFT JOIN LATERAL (
-    SELECT id, created
-    FROM data d
-    WHERE d.parent_id = parent.id
-      AND d.form_id IN (SELECT id FROM form WHERE parent_id = parent.form_id AND type = 2)
-      AND d.is_pending = FALSE
-      AND d.is_draft = FALSE
-    ORDER BY d.created DESC
-    LIMIT 1
-) wq ON TRUE
-LEFT JOIN LATERAL (
-    SELECT id, created
-    FROM data d
-    WHERE d.parent_id = parent.id
-      AND d.form_id IN (SELECT id FROM form WHERE parent_id = parent.form_id AND type = 2)
-      AND d.is_pending = FALSE
-      AND d.is_draft = FALSE
-    ORDER BY d.created DESC
-    LIMIT 1
-) con ON TRUE
-WHERE parent.parent_id IS NULL
-  AND parent.is_pending = FALSE
-  AND parent.is_draft = FALSE;
+-- Optimizes "latest monitoring per parent" subquery
+-- Covers: WHERE parent_id=X AND form_id=Y ORDER BY created DESC LIMIT 1
+CREATE INDEX idx_data_monitoring_latest
+    ON data (parent_id, form_id, created DESC)
+    WHERE is_pending = FALSE AND is_draft = FALSE
+      AND parent_id IS NOT NULL;
+
+-- Optimizes answer lookups by data + question
+-- Covers: WHERE data_id IN (...) AND question_id = X
+CREATE INDEX idx_answer_data_question
+    ON answer (data_id, question_id);
 ```
 
-**Note**: The exact view SQL will be refined during implementation to properly separate water quality vs construction monitoring form IDs. The above is a structural template.
-
-**Refresh**: Called from `functions.py` alongside existing `refresh_materialized_data()`.
+**Why not a materialized view?**
+- At 150 EPS / ~2,000 monitoring records, indexed queries take ~50-100ms for a full dashboard load
+- New submissions are immediately reflected — no staleness risk
+- No Django-Q refresh task needed — simpler operations
+- Reconsider materialized views only if data grows beyond 10,000 registrations
 
 ### 4.5 Serializers: `dashboard_serializers.py`
 
@@ -1611,8 +1595,7 @@ Frontend:
 
 ### Phase 5: Polish & Reusability
 ```
-  27. Create materialized view for performance
-  28. Add Django-Q refresh task on submission
+  27. Add composite indexes migration (idx_data_monitoring_latest, idx_answer_data_question)
   29. Remove stale frontend code
   30. Create dashboard config for Rural Water Project form
   31. Verify reusability with second form family

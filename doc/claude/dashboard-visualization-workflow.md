@@ -490,41 +490,39 @@
 
 > Goal: Performance optimization, stale code cleanup, verify reusability.
 
-### Step 5.1 — Materialized view for dashboard stats
+### Step 5.1 — Add composite indexes
 
-**Create** migration `0002_create_view_dashboard_stats.py`
+**Create** migration `0002_add_composite_indexes.py`
 
-- Pre-joins latest monitoring per parent form
-- Includes key answer values needed for KPI computation
-- Refresh function added to `functions.py`
+Two composite indexes that optimize all dashboard query patterns:
+
+```sql
+-- "Latest monitoring per parent" subquery (used by most API calls)
+CREATE INDEX idx_data_monitoring_latest
+    ON data (parent_id, form_id, created DESC)
+    WHERE is_pending = FALSE AND is_draft = FALSE
+      AND parent_id IS NOT NULL;
+
+-- Answer lookups by data + question (used by every value query)
+CREATE INDEX idx_answer_data_question
+    ON answer (data_id, question_id);
+```
+
+**Why indexes instead of materialized view?**
+- At 150 EPS / ~2,000 monitoring records, indexed queries take ~50-100ms for full dashboard
+- New submissions are immediately reflected — no staleness risk
+- No Django-Q refresh task needed — simpler operations
+- Reconsider materialized views only if data grows beyond 10,000 registrations
 
 **Files**:
-- `backend/api/v1/v1_visualization/migrations/0002_create_view_dashboard_stats.py` (new)
-- `backend/api/v1/v1_visualization/models.py` (edit — add ViewDashboardStats)
-- `backend/api/v1/v1_visualization/functions.py` (edit — refresh function)
+- `backend/api/v1/v1_visualization/migrations/0002_add_composite_indexes.py` (new)
 
-**Depends on**: Phases 1-4 (optimize after correctness proven)
-**Validate**: Stats endpoint returns same results but faster. Refresh works.
+**Depends on**: Nothing (can be added early, but placed in Phase 5 to avoid blocking)
+**Validate**: `EXPLAIN ANALYZE` on dashboard queries shows index scans instead of sequential scans
 
 ---
 
-### Step 5.2 — Django-Q refresh task
-
-**Add** task that refreshes materialized views on new monitoring submission
-
-- Hook into form data submission flow (post-save signal or explicit call)
-- Rate-limit to max 1 refresh per minute
-
-**Files**:
-- `backend/api/v1/v1_visualization/functions.py` (edit)
-- `backend/api/v1/v1_data/views.py` or signal handler (edit — trigger refresh)
-
-**Depends on**: Step 5.1
-**Validate**: Submit monitoring data → materialized view refreshes → stats endpoint reflects new data
-
----
-
-### Step 5.3 — Remove stale frontend code
+### Step 5.2 — Remove stale frontend code
 
 **Delete**:
 - `frontend/src/components/chart/` (internal ECharts wrappers)
@@ -540,7 +538,7 @@
 
 ---
 
-### Step 5.4 — Verify reusability with Rural Water Project
+### Step 5.3 — Verify reusability with Rural Water Project
 
 **Create** `backend/source/dashboard/1749621221728.json` for Rural Water Project form
 
@@ -556,8 +554,7 @@
 
 ### Phase 5 Checkpoint
 
-- [ ] Materialized view speeds up stats endpoint
-- [ ] Auto-refresh triggers on submission
+- [ ] Composite indexes added, EXPLAIN shows index scans
 - [ ] Stale code removed, build passes
 - [ ] Rural Water Project dashboard loads
 - [ ] All backend + frontend tests pass
@@ -633,12 +630,9 @@ graph LR
     end
 
     subgraph Phase5["Phase 5: Polish"]
-        S5_1[5.1 Materialized view]
-        S5_2[5.2 Django-Q refresh]
-        S5_3[5.3 Remove stale code]
-        S5_4[5.4 RWP config]
-
-        S5_1 --> S5_2
+        S5_1[5.1 Composite indexes]
+        S5_2[5.2 Remove stale code]
+        S5_3[5.3 RWP config]
     end
 
     Phase1 --> Phase2
