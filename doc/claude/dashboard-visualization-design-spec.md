@@ -316,6 +316,138 @@ backend/source/dashboard/
 
 The config is loaded once per dashboard page load via a dedicated endpoint. The backend reads the JSON file from disk (same pattern as form seeder loading form definitions from `backend/source/forms/`).
 
+### 2.4 Config Type Reference
+
+Use this section as a reference when creating dashboard configs for new form families.
+
+#### KPI Types (`kpis[].type`)
+
+| Type | Description | Required Fields | Returns |
+|------|-------------|----------------|---------|
+| `count_distinct_parent` | Count all registration (parent) records | — | `integer` |
+| `count_by_option` | Count parents where latest monitoring answer matches an option value | `question_id`, `option_value`, `monitoring_form_id` | `integer` |
+| `count_by_option_percentage` | Same as `count_by_option` but also returns percentage of total | `question_id`, `option_value`, `monitoring_form_id` | `{ count, total, percentage }` |
+| `count_by_test_method` | Count parents where a multiple_option answer includes a specific value | `question_id`, `option_value`, `monitoring_form_id` | `integer` |
+| `count_overdue` | Count incomplete projects past their deadline | `completion_question_id`, `deadline_question_id`, `monitoring_form_id` | `{ count, percentage }` |
+
+**Example — defining a KPI for a new form:**
+```json
+{
+  "total_projects": {
+    "label": "Total Projects",
+    "type": "count_distinct_parent"
+  },
+  "active_projects": {
+    "label": "Active Projects",
+    "type": "count_by_option",
+    "question_id": 123456789,
+    "option_value": "active",
+    "monitoring_form_id": 987654321
+  }
+}
+```
+
+#### Chart Types (`charts[].type`)
+
+| Type | Description | akvo-charts Component | `raw_config` | Notes |
+|------|-------------|----------------------|--------------|-------|
+| `doughnut` | Distribution of option/multiple_option answers | `Doughnut` | No | Colors taken from `QuestionOptions.color` |
+| `bar` | Count grouped by month or category | `Bar` | No | `group_by: "month"` groups by date question |
+| `bar_threshold` | Numeric values per EPS with acceptance threshold line | `Bar` | Yes (markLine) | Used for water quality parameters |
+
+#### Chart Source (`charts[].source`)
+
+| Source | Description | When to Use |
+|--------|-------------|-------------|
+| `registration` | Query answers from parent (registration) data | Questions on the registration form (e.g., water committee, implementing agency) |
+| *(omitted / default)* | Query answers from latest monitoring data | Questions on monitoring forms (requires `monitoring_form_id`) |
+
+**Example — defining charts for a new form:**
+```json
+{
+  "project_status": {
+    "type": "doughnut",
+    "question_id": 123456789,
+    "monitoring_form_id": 987654321
+  },
+  "target_group": {
+    "type": "doughnut",
+    "question_id": 111222333,
+    "source": "registration"
+  },
+  "inspections_per_month": {
+    "type": "bar",
+    "group_by": "month",
+    "date_question_id": 444555666,
+    "monitoring_form_id": 987654321
+  }
+}
+```
+
+#### Construction Formula Types (`construction.components[].formula`)
+
+| Formula | Description | Logic | Required Fields |
+|---------|-------------|-------|----------------|
+| `any_yes` | Binary — 100% if any listed question is answered 'Yes' | `any(answers == 'yes') → 100%, else 0%` | `question_ids[]` (multiple) |
+| `completed_binary` | Binary — 100% if answered 'Completed' | `answer == 'completed' → 100%, else 0%` | `question_ids[]` (single) |
+| `ratio` | Proportional — implemented ÷ planned | `answer_value / planned_value × 100%` | `question_ids[]` (single, numeric) |
+| `multi_select_proportion` | Proportional — count of selected items ÷ total possible | `len(selected_options) / total_items × 100%` | `question_ids[]` (single), `total_items` |
+
+**Overall progress** = average of all enabled components (only components listed in `scope_question_id` selection).
+
+**Example — defining construction components for a new form:**
+```json
+{
+  "components": [
+    {
+      "key": "foundation",
+      "label": "Foundation Work",
+      "question_ids": [111, 222, 333],
+      "formula": "any_yes"
+    },
+    {
+      "key": "plumbing",
+      "label": "Plumbing Installation",
+      "question_ids": [444],
+      "formula": "completed_binary"
+    },
+    {
+      "key": "taps",
+      "label": "Tap Stands",
+      "question_ids": [555],
+      "formula": "ratio"
+    }
+  ]
+}
+```
+
+#### Escalation Criteria Types (`escalation.criteria[].type`)
+
+| Type | Description | Required Fields | Inclusion Logic |
+|------|-------------|----------------|-----------------|
+| `option_equals` | EPS where latest monitoring answer matches a value | `question_id`, `value`, `label` | `answer == value` |
+| `quality_violation` | EPS with any water quality parameter outside threshold | *(none — uses `water_quality.parameters` thresholds)* | Any parameter fails threshold check |
+| `overdue` | Incomplete project past its deadline | `completion_qid`, `deadline_qid` | `completion == 'no' AND deadline < TODAY` |
+
+**Example — defining escalation for a new form:**
+```json
+{
+  "monitoring": {
+    "criteria": [
+      { "type": "option_equals", "question_id": 123, "value": "inactive", "label": "System inactive" },
+      { "type": "quality_violation", "label": "Water quality issue" }
+    ]
+  }
+}
+```
+
+#### Filter Types (`filters.custom[].type`)
+
+| Type | Description | Filter Behavior |
+|------|-------------|-----------------|
+| `option` | Single-select option question | `answer.options contains [value]` |
+| `multiple_option` | Multi-select option question | `answer.options contains [value]` |
+
 ---
 
 ## 3. Backend API Specification
