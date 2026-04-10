@@ -9,6 +9,268 @@ Frontend dashboard configuration for the IWSIMS EPS form family. Consumes the ge
 
 **Target route**: `/dashboard/1749623934933`
 
+---
+
+## Config Walkthrough (for reviewers & new teammates)
+
+This section explains, top-to-bottom, what each block does and why it is shaped that way. Share this with anyone onboarding to the dashboard.
+
+### 1. The mental model
+
+The config is a **pure-frontend description of a dashboard**. The backend has three generic endpoints (`/values`, `/escalation/{form_id}`, `/progress/{form_id}`) that take query parameters. This JSON tells the frontend:
+
+- which **form family** the dashboard belongs to,
+- which **widgets** (KPIs, charts, tables, maps) to render,
+- what **query parameters** to send for each widget,
+- how to **lay them out** per tab,
+- and which items are currently **hidden** (`hide: true`).
+
+**Zero backend changes** are required to add, remove, or reshape widgets. Adding a dashboard for a new form family means creating a new JSON file and registering it.
+
+### 2. Top-level keys
+
+```
+parent_form_id           // Anchors the dashboard to a registration form
+name, description        // Display metadata
+tabs[]                   // Top nav tabs
+filters{}                // Filter bar (date, administration, custom)
+kpis{}                   // KPI tile definitions
+charts{}                 // Chart definitions
+water_quality{}          // Parameters block (shared by microbial/physical/chemical sections)
+progress{}               // Progress histograms (bucketed percentages)
+escalation{}             // Escalation tables
+map{}                    // Map widget
+layout{}                 // Per-tab ordering: which KPIs/charts/tables appear where
+```
+
+Everything under `kpis`, `charts`, `water_quality.parameters`, `progress`, `escalation`, `map`, and `layout.sections` is a **definition** that is rendered only when referenced by `layout` — definitions and layout are separate on purpose. This way you can define a KPI once and reuse it across multiple tabs.
+
+### 3. `tabs` — top navigation
+
+```json
+"tabs": [
+  { "key": "monitoring_overview", "label": "Monitoring overview", "hide": false },
+  { "key": "water_quality",        "label": "Water quality",        "hide": false },
+  { "key": "construction_monitoring","label": "Construction monitoring","hide": false }
+]
+```
+
+Each tab `key` must have a matching entry under `layout.{key}.sections`. Setting `hide: true` removes a tab entirely without touching its layout.
+
+### 4. `filters` — the filter bar
+
+Three parts: `date`, `administration`, `custom[]`.
+
+#### 4.1 `filters.date`
+
+```json
+"date": {
+  "label": "Monitoring Period",
+  "date_question_ids": {
+    "water_quality": 1749632545235,
+    "construction":  1749624452911
+  },
+  "fiscal_year_start_month": 7,
+  "hide": false
+}
+```
+
+- `date_question_ids` maps a monitoring form family to the **question** that holds its "inspection date" (or equivalent). The dashboard has two monitoring forms, so each has its own date question. When a KPI/chart queries the water-quality form it sends `date_question_id=1749632545235`; construction queries send `date_question_id=1749624452911`.
+- `fiscal_year_start_month: 7` defines July as the fiscal-year anchor for presets like "This fiscal year" (FY runs Jul → Jun). Set it to `1` for calendar-year accounting (Jan → Dec), `4` for India/UK tax year, `10` for US federal fiscal year. This is **frontend-only** — the backend only speaks in absolute `from_date`/`to_date`, so the frontend resolves the preset label into concrete dates before calling the API.
+
+#### 4.2 `filters.administration`
+
+Global admin-hierarchy filter that resolves to an `administration_id` query param sent to every API call. No IDs needed — uses the global admin tree.
+
+#### 4.3 `filters.custom[]`
+
+Free-form filters specific to this dashboard:
+
+```json
+{
+  "key": "implementing_agency",
+  "question_id": 1749624452993,
+  "form_id": 1749623934933,
+  "label": "Implementing Agency",
+  "type": "multiple_option",
+  "hide": false
+}
+```
+
+Custom filters have a `form_id` because they only apply to API calls targeting that form (see "Filter propagation" below).
+
+### 5. `kpis` — tile definitions
+
+Each KPI is a named entry whose `api` block is the exact query-param payload passed to `/visualization/values`. For example:
+
+```json
+"under_construction": {
+  "label": "Total EPS under construction",
+  "color": "#fa8c16",
+  "hide": false,
+  "api": {
+    "form_id": 1749624452908,
+    "question_id": 1749630516826,
+    "option_value": "no",
+    "monitoring": "latest",
+    "sum_by": "parent_id"
+  }
+}
+```
+
+Translated: "Hit `/visualization/values?form_id=1749624452908&question_id=1749630516826&option_value=no&monitoring=latest&sum_by=parent_id` and render the single returned number as a tile." The backend logic: count distinct parents whose latest construction answer is `no`.
+
+A few KPIs use frontend-computed extensions (`fiscal_year: true`, `past_due: true`). These are **hints** that the frontend expands into concrete `from_date`/`to_date` or additional filters before calling the API. They are not understood by the backend directly.
+
+### 6. `charts` — chart definitions
+
+Same shape as `kpis` but with a `chart_type` (`doughnut`, `bar`, `line`) and a `config` block that passes through to akvo-charts as chart props. Three variants you will see:
+
+1. **API-driven** (`operational_status`) — has an `api` block; the response is rendered directly.
+2. **Composed** (`drinking_water_compliance`) — has `compute: "compliance"` + `compliance_params_ref: "water_quality.parameters"`. The frontend **does not** hit the backend for this chart; it runs each parameter's query and combines results locally.
+3. **Cross-referenced** (`construction_progression`) — has `source: "progress"` + `progress_ref: "construction"`, meaning "reuse the histogram computed by `/visualization/progress`, no extra API call."
+
+The chart system uses a **"define once, reference anywhere"** pattern so one computation can drive multiple widgets.
+
+### 7. `water_quality.parameters`
+
+A **list** of water-quality parameters grouped by `microbial` | `physical` | `chemical`. Each parameter is a self-contained bar-chart definition:
+
+```json
+{
+  "key": "ph",
+  "label": "pH",
+  "group": "chemical",
+  "chart_type": "bar",
+  "threshold": { "min": 6.5, "max": 8.5 },
+  "api": { ... }
+}
+```
+
+`threshold` is used in two places:
+- **Chart rendering** — draws a threshold line on the bar.
+- **Compliance computation** — each parameter contributes to the "drinking water compliance" doughnut (rule: all parameters within threshold = compliant).
+
+Layout sections reference groups via `parameter_grid.group = "microbial"`, which expands into all parameters with matching `group`.
+
+### 8. `progress` — configurable histograms
+
+```json
+"progress": {
+  "construction": {
+    "api": {
+      "form_id": 1749623934933,
+      "monitoring_form_id": 1749624452908,
+      "filter_question_id": 1749630516826,
+      "filter_option_value": "no",
+      "components": [
+        { "key": "concrete_base", "formula": "any_yes", "question_ids": [...] },
+        { "key": "urf_tank",      "formula": "completed_binary", "question_ids": [...] },
+        { "key": "standpipes",    "formula": "ratio", "question_ids": [...] },
+        { "key": "site_security", "formula": "multi_select_proportion", "total_items": 3, "question_ids": [...] },
+        { "key": "drainage",      "formula": "completed_binary", "hide": true, "question_ids": [] }
+      ]
+    }
+  }
+}
+```
+
+This maps directly to `/visualization/progress/{form_id}`. Each component declares a formula:
+
+| Formula | Meaning |
+|---|---|
+| `any_yes` | 100% if any of the listed questions answered "yes" |
+| `completed_binary` | 100% if the single question equals "completed" |
+| `ratio` | Percentage from a numeric answer (e.g., implemented/planned) |
+| `multi_select_proportion` | Count of selected options ÷ `total_items` × 100 |
+
+The backend loops over the components per parent EPS, averages the enabled ones, and buckets the overall percentage into ten 10% bins. The `drainage` component is `hide: true` because its formula is still being finalized — it stays in the config so it's obvious what's pending without losing the placeholder.
+
+### 9. `escalation` — criteria-driven tables
+
+Two tables (`monitoring` and `construction`), each a declarative list of `criteria` (rows to include) and `columns` (what to render per row).
+
+```json
+"criteria": [
+  { "type": "option_equals", "question_id": 1749632647507, "value": "no", "label": "No water sample" },
+  { "type": "threshold_gt",  "question_id": 1749633220746, "value": 0,    "label": "E.coli above threshold" },
+  { "type": "threshold_gt",  "question_id": 1749633220745, "value": 5,    "label": "Turbidity above threshold" }
+]
+```
+
+The frontend **serializes this list** into the `criteria=` query-param format the backend expects:
+
+```
+criteria=option_equals:1749632647507:no,threshold_gt:1749633220746:0,threshold_gt:1749633220745:5
+```
+
+A row appears in the table if **any** criterion matches (inclusive OR). Each criterion can carry its own `hide: true` to drop a rule without deleting it — handy for "temporarily relax turbidity threshold during the rainy season".
+
+Columns work the same way: a list of `{ key, source, question_id? }` serialized into a comma-colon string. Supported `source` values: `parent_name`, `administration`, `answer`, `latest_date` (backend), plus frontend-computed sources like `violations`, `computed_progress`, `expected_progress`, `answer_date`.
+
+### 10. `map`
+
+Single-entry block with:
+- `source_form_id` — the registration form whose datapoints are plotted (each has `geo` coords),
+- `status_question_id` / `status_monitoring_form_id` — the monitoring answer used to color markers,
+- `status_colors` — option-value → hex mapping,
+- `click_url_template` — where to route on marker click. `{parent_form_id}` and `{data_id}` are replaced at render time.
+
+### 11. `layout` — what shows up and in what order
+
+`layout.{tab_key}.sections[]` is a flat list of section objects. Section `type` values drive a small frontend component registry:
+
+| `type` | What it renders |
+|---|---|
+| `kpi_row` | A horizontal row of KPI tiles referenced by `kpis[]` string keys |
+| `chart_grid` | An N-column grid of charts referenced by `charts[]` string keys |
+| `chart` | A single chart referenced by `chart_key` |
+| `map` | The map widget |
+| `section_title` | A text heading |
+| `parameter_grid` | All water-quality parameters matching `group`, laid out in `columns` columns |
+| `escalation_table` | Renders `escalation[escalation_key]` |
+| `progress_breakdown` | Renders per-component progress bars for a `progress_ref` |
+
+A section's `hide: true` drops it without affecting the underlying definitions — and definitions in `kpis`/`charts`/etc. that nothing references are never rendered. This means you can experiment by adding/removing one string from a layout list instead of touching the definition blocks.
+
+### 12. Filter propagation (how the pieces fit together at runtime)
+
+This is the load-bearing bit. The frontend maintains a global `filterState`:
+
+```js
+const filterState = {
+  dateRange: [from, to],
+  administrationId: 12,
+  custom: { implementing_agency: "ngo_a", water_committee: "active" }
+};
+```
+
+For **every API call**, it builds `params = { ...widget.api, ...commonFilters }`, where `commonFilters` comes from `filterState`. So changing the date picker refetches every widget with the new `from_date`/`to_date`. Custom filters are only merged into calls whose `form_id` matches `filters.custom[].form_id`.
+
+This means: **a widget's `api` block is not a request — it's a template.** The runtime request is `api + commonFilters`.
+
+### 13. The `hide` flag, recap
+
+`hide: true` is the recommended way to disable anything. It is cheap, reversible, and shows intent (e.g., "drainage component is known-missing"). Prefer it over deleting blocks during development or gradual rollout. Per the Known Gaps table at the bottom of this doc, drainage is the current canonical example.
+
+### 14. Adding a new widget — checklist
+
+1. **Pick the API shape** (`/values`, `/escalation/{form_id}`, or `/progress/{form_id}`).
+2. **Define it** under the matching top-level key (`kpis`, `charts`, `progress`, `escalation`).
+3. **Reference it** in the right `layout.{tab}.sections[]`.
+4. **Ship with `hide: true`** if it's experimental.
+5. **Remove `hide`** when ready.
+
+No backend work unless the widget genuinely needs a new formula or data source that the generic API can't express — at which point the decision point is either (a) add a new `formula` to `progress_functions.py` + `VALID_PROGRESS_FORMULAS`, or (b) compute it in the frontend using existing API responses.
+
+### 15. What the config does **not** own
+
+- **The data model.** All question IDs must exist in the referenced forms. The config is not a schema.
+- **Permissions.** Admin-hierarchy filtering is enforced by the visualization endpoints based on user role, not by the config.
+- **Form definitions.** If a question ID changes (e.g., a form is re-seeded), the config must be updated.
+
+---
+
 ## Base Requirements Source
 
 This config implements the metrics and queries from the original dashboard plan:
