@@ -79,7 +79,7 @@ class ValuesNumberTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.q_number.id}"
-            "&group_by=month"
+            "&group_by=month&monitoring=all"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -232,7 +232,7 @@ class ValuesNumberTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.q_number.id}"
-            "&group_by=month&value_type=percentage"
+            "&group_by=month&monitoring=all&value_type=percentage"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()

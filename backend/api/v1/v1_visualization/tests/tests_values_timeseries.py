@@ -166,7 +166,7 @@ class ValuesTimeseriesTestCases(VisualizationValuesTestMixin, APITestCase):
         )
 
         # Find each date row
-        rows = {list(d.values())[0]: d for d in data["data"]}
+        rows = {d["date"]: d for d in data["data"]}
 
         self.assertEqual(rows["2025-01-15"]["Site Alpha"], 10.0)
         self.assertIsNone(rows["2025-01-15"].get("Site Beta"))
@@ -200,14 +200,10 @@ class ValuesTimeseriesTestCases(VisualizationValuesTestMixin, APITestCase):
             ["Site Alpha", "Site Beta"],
         )
 
-        jan = next(
-            d for d in data["data"]
-            if "2025-01" in str(d.values())
-        )
-        mar = next(
-            d for d in data["data"]
-            if "2025-03" in str(d.values())
-        )
+        # month handler uses "month" key with label value
+        rows = {d["month"]: d for d in data["data"]}
+        jan = rows["Jan 2025"]
+        mar = rows["Mar 2025"]
 
         self.assertEqual(jan["Site Alpha"], 10.0)
         self.assertEqual(jan["Site Beta"], 30.0)
@@ -229,7 +225,7 @@ class ValuesTimeseriesTestCases(VisualizationValuesTestMixin, APITestCase):
         data = response.json()
 
         self.assertEqual(len(data["data"]), 2)
-        rows = {list(d.values())[0]: d for d in data["data"]}
+        rows = {d["date"]: d for d in data["data"]}
         self.assertEqual(rows["2025-03-10"]["Site Alpha"], 20.0)
         self.assertEqual(rows["2025-03-15"]["Site Beta"], 40.0)
 
@@ -274,7 +270,7 @@ class ValuesTimeseriesTestCases(VisualizationValuesTestMixin, APITestCase):
         data = response.json()
 
         self.assertEqual(len(data["data"]), 4)
-        rows = {list(d.values())[0]: d for d in data["data"]}
+        rows = {d["date"]: d for d in data["data"]}
 
         self.assertEqual(rows["2025-01-15"]["Site Alpha"], 10.0)
         self.assertAlmostEqual(rows["2025-03-10"]["Site Alpha"], 8.0)

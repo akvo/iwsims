@@ -28,10 +28,11 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
     def test_count_total_monitoring(self):
         """Count monitoring records — 4 total monitoring submissions.
 
-        Expected: 4 monitoring records.
+        Expected: 4 monitoring records (monitoring=all).
         """
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&monitoring=all"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -41,11 +42,11 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         """Count monitoring records grouped by month.
 
         Setup: 2 in Jan 2025, 2 in Mar 2025.
-        Expected: 2 groups with counts.
+        Expected: 2 groups with counts (monitoring=all).
         """
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
-            "&group_by=month"
+            "&group_by=month&monitoring=all"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -63,11 +64,11 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
     def test_count_group_by_parent_id(self):
         """Count monitoring records per parent registration.
 
-        Expected: 2 parents, each with 2 monitoring records.
+        Expected: 2 parents, each with 2 monitoring records (monitoring=all).
         """
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
-            "&group_by=parent_id"
+            "&group_by=parent_id&monitoring=all"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -84,6 +85,7 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&administration_id={self.adm_child.id}"
+            "&monitoring=all"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -161,7 +163,7 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         """
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
-            f"&group_by=month"
+            f"&group_by=month&monitoring=all"
             f"&date_question_id={self.Q_DATE_ID}"
             f"&administration_id={self.adm_child.id}"
             "&from_date=2025-01-01&to_date=2025-12-31"

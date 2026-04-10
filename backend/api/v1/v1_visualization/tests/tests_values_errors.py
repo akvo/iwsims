@@ -14,14 +14,14 @@ class ValuesErrorTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(f"{self.BASE_URL}")
         self.assertEqual(response.status_code, 400)
         data = response.json()
-        self.assertIn("detail", data)
+        self.assertIn("message", data)
 
     def test_invalid_form_id(self):
-        """Non-existent form_id — returns 404."""
+        """Non-existent form_id — returns 400."""
         response = self.client.get(
             f"{self.BASE_URL}?form_id=99999"
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
     def test_invalid_question_id(self):
         """Non-existent question_id — returns 400."""

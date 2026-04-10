@@ -58,14 +58,9 @@ class ValuesStackTestCases(VisualizationValuesTestMixin, APITestCase):
         )
 
         # Verify data rows — each row has month + option counts
-        jan = next(
-            d for d in data["data"]
-            if "2025-01" in str(d.values())
-        )
-        mar = next(
-            d for d in data["data"]
-            if "2025-03" in str(d.values())
-        )
+        rows_by_group = {d["group"]: d for d in data["data"]}
+        jan = rows_by_group["2025-01"]
+        mar = rows_by_group["2025-03"]
 
         self.assertEqual(jan["Active"], 1)
         self.assertEqual(jan["Inactive"], 1)
@@ -91,10 +86,7 @@ class ValuesStackTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(len(data["data"]), 2)
         self.assertIn("stack_labels", data)
 
-        rows_by_label = {
-            list(d.values())[0]: d
-            for d in data["data"]
-        }
+        rows_by_label = {d["label"]: d for d in data["data"]}
 
         alpha = rows_by_label.get("Site Alpha")
         beta = rows_by_label.get("Site Beta")
@@ -153,14 +145,9 @@ class ValuesStackTestCases(VisualizationValuesTestMixin, APITestCase):
             ["Feature X", "Feature Y", "Feature Z"],
         )
 
-        jan = next(
-            d for d in data["data"]
-            if "2025-01" in str(d.values())
-        )
-        mar = next(
-            d for d in data["data"]
-            if "2025-03" in str(d.values())
-        )
+        rows_by_group = {d["group"]: d for d in data["data"]}
+        jan = rows_by_group["2025-01"]
+        mar = rows_by_group["2025-03"]
 
         self.assertEqual(jan["Feature X"], 2)
         self.assertEqual(jan["Feature Y"], 1)
@@ -207,19 +194,14 @@ class ValuesStackTestCases(VisualizationValuesTestMixin, APITestCase):
 
         self.assertEqual(len(data["data"]), 2)
 
-        jan = next(
-            d for d in data["data"]
-            if "2025-01" in str(d.values())
-        )
-        mar = next(
-            d for d in data["data"]
-            if "2025-03" in str(d.values())
-        )
+        rows_by_group = {d["group"]: d for d in data["data"]}
+        jan = rows_by_group["2025-01"]
+        mar = rows_by_group["2025-03"]
 
         self.assertEqual(jan["Inactive"], 1)
-        self.assertNotIn("Active", jan)
+        self.assertEqual(jan["Active"], 0)
         self.assertEqual(mar["Pending"], 1)
-        self.assertNotIn("Active", mar)
+        self.assertEqual(mar["Active"], 0)
 
     def test_stack_by_option_percentage(self):
         """Stacked chart with value_type=percentage.
@@ -239,14 +221,9 @@ class ValuesStackTestCases(VisualizationValuesTestMixin, APITestCase):
 
         self.assertEqual(len(data["data"]), 2)
 
-        jan = next(
-            d for d in data["data"]
-            if "2025-01" in str(d.values())
-        )
-        mar = next(
-            d for d in data["data"]
-            if "2025-03" in str(d.values())
-        )
+        rows_by_group = {d["group"]: d for d in data["data"]}
+        jan = rows_by_group["2025-01"]
+        mar = rows_by_group["2025-03"]
 
         self.assertEqual(jan["Active"], 50.0)
         self.assertEqual(jan["Inactive"], 50.0)
