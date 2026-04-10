@@ -72,12 +72,101 @@ A single generic endpoint that serves data for all chart types. The frontend com
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `data` | array | Array of data point objects |
+| `data` | array | Array of data point objects, one row per category/bucket |
 | `data[].value` | number \| string | Numeric value, percentage, or date based on `value_type` |
-| `data[].label` | string | Human-readable label for visualization |
-| `data[].group` | string (optional) | Group identifier for multi-series charts |
+| `data[].label` | string | Human-readable name of **this single data point** (axis tick / legend entry / tooltip) |
+| `data[].group` | string | Machine-readable identity of this data point. Stable across translations and reorders |
 | `data[].color` | string (optional) | Hex color from `QuestionOptions.color` (only when `group_by=option`) |
-| `labels` | array | All unique labels for axis or legend configuration |
+| `labels` | array<string> | Ordered list of all `data[].label` values, derived from `data.map(d => d.label)` |
+
+### `label` vs `group` vs `labels`
+
+Three fields, three different jobs. Getting them confused is the most common source of frontend bugs against this API.
+
+#### Per-row `label` — for humans
+
+`data[i].label` is the display text for **one** data point. It's what appears on an axis tick, in a legend entry, or in a tooltip. It can be translated, re-cased, or reworded without breaking anything, because no code is expected to match on it.
+
+| `group_by` | What `label` looks like |
+|---|---|
+| `option` | `QuestionOptions.label` — e.g. `"Yes"`, `"Operational"`, `"Feature X"` |
+| `parent_id` | `FormData.name` — e.g. `"Site Alpha"`, `"EPS Navua"` |
+| `id` | `FormData.name` — e.g. `"Site Alpha - Monitoring"` |
+| `month` | Formatted month — e.g. `"Jan 2025"`, `"Mar 2025"` |
+| `date` | ISO date — e.g. `"2025-01-15"` |
+
+#### Per-row `group` — for code
+
+`data[i].group` is the machine-readable identity of the same data point. It is **stable** across translations, reorders, and filter changes. Use it for equality checks, click handler URLs, cache keys, and merging data across fetches.
+
+| `group_by` | What `group` looks like |
+|---|---|
+| `option` | Raw option `value` — e.g. `"yes"`, `"operational"`, `"feature_x"` |
+| `parent_id` | `FormData.id` as string — e.g. `"7200"` |
+| `id` | `FormData.id` as string — e.g. `"8394"` |
+| `month` | ISO year-month — e.g. `"2025-01"` (sortable) |
+| `date` | ISO date — e.g. `"2025-01-15"` (sortable, identical to `label` in this case) |
+
+**Rule of thumb**: would this still make sense if the form was translated into French? If yes → `label`. If no → `group`.
+
+```js
+// GOOD: robust to translation
+const yesRow = data.find(d => d.group === "yes");
+
+// BAD: breaks when the form is translated to "Oui"
+const yesRow = data.find(d => d.label === "Yes");
+```
+
+#### Top-level `labels` — ordered axis/legend array
+
+`labels` is a convenience copy: the ordered list of every `data[i].label` in the same order. It exists so chart libraries that want parallel arrays (ECharts, Chart.js, akvo-charts) don't have to do the `.map()` themselves. Libraries that prefer row-object arrays (Recharts, Nivo) ignore `labels` and read `data[i].label` directly.
+
+```js
+response.labels[i] === response.data[i].label       // always true
+response.labels.length === response.data.length     // always true
+```
+
+Depending on chart type, `labels` plays one of these roles:
+
+| Chart type | Role of `labels` |
+|---|---|
+| Vertical bar, line, time series | X-axis categories |
+| Horizontal bar | Y-axis categories |
+| Pie, doughnut | Legend entries |
+| KPI tile | Ignored (single value) |
+| Tooltip | Hover text (per index) |
+
+For stacked/multi-line charts (`stack_by=option` or `stack_by=parent_id`) the legend moves to a separate `stack_labels` field and `labels` stays on the axis. See [stack_by section](#stack_by) below.
+
+### Invariant: zero-value rows are always included
+
+When `group_by=option`, the response includes a row for **every defined option** — including options whose count is zero. This is load-bearing for pie/doughnut charts:
+
+- Legends stay stable across filter changes
+- Slice colors stay consistent (each color is attached to its row)
+- `data.find(d => d.group === "yes")` always succeeds regardless of the current filter
+- Click handlers and tooltips work on empty categories
+
+```json
+// GET /visualization/values?form_id=...&question_id=...&group_by=option
+{
+  "data": [
+    { "value": 0, "label": "Yes", "group": "yes", "color": "#64A73B" },
+    { "value": 3, "label": "No",  "group": "no",  "color": "#e41a1c" }
+  ],
+  "labels": ["Yes", "No"]
+}
+```
+
+If a specific chart needs to hide empty slices, that is a **frontend presentation choice**, not an API concern:
+
+```js
+const visibleSlices = response.data.filter(d => d.value > 0);
+<PieChart data={visibleSlices} />  // only non-zero drawn
+<Legend data={response.data} />    // but full legend kept
+```
+
+The API's contract is "report the complete picture"; dropping zero rows at the backend would break equality merging across fetches, leave orphaned legend entries, and distort share-of-total calculations on the client.
 
 ---
 
