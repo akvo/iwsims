@@ -1,0 +1,116 @@
+{
+  "id": 6002,
+  "form": "Visualization Test Monitoring",
+  "version": 1,
+  "type": 2,
+  "parent_id": 6001,
+  "description": "Monitoring form for visualization API tests",
+  "question_groups": [
+    {
+      "id": 60021,
+      "order": 1,
+      "name": "monitoring_info",
+      "label": "Monitoring Info",
+      "questions": [
+        {
+          "id": 600201,
+          "order": 1,
+          "name": "inspection_date",
+          "label": "Inspection Date",
+          "meta": true,
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": 600202,
+          "order": 2,
+          "name": "measurement_value",
+          "label": "Measurement Value",
+          "meta": false,
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": 600203,
+          "order": 3,
+          "name": "operational_status",
+          "label": "Operational Status",
+          "meta": false,
+          "type": "option",
+          "required": true,
+          "options": [
+            {
+              "label": "Active",
+              "value": "active",
+              "color": "#64A73B"
+            },
+            {
+              "label": "Inactive",
+              "value": "inactive",
+              "color": "#e41a1c"
+            },
+            {
+              "label": "Pending",
+              "value": "pending",
+              "color": "#ff7f00"
+            }
+          ]
+        },
+        {
+          "id": 600204,
+          "order": 4,
+          "name": "features",
+          "label": "Available Features",
+          "meta": false,
+          "type": "multiple_option",
+          "required": false,
+          "options": [
+            {
+              "label": "Feature X",
+              "value": "feature_x",
+              "color": "#1f77b4"
+            },
+            {
+              "label": "Feature Y",
+              "value": "feature_y",
+              "color": "#ff7f0e"
+            },
+            {
+              "label": "Feature Z",
+              "value": "feature_z",
+              "color": "#2ca02c"
+            }
+          ]
+        },
+        {
+          "id": 600205,
+          "order": 5,
+          "name": "notes",
+          "label": "Notes",
+          "meta": false,
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": 60022,
+      "order": 2,
+      "name": "water_quality_tests",
+      "label": "Water Quality Tests",
+      "repeatable": true,
+      "repeat_text": "Add another test",
+      "questions": [
+        {
+          "id": 600206,
+          "order": 1,
+          "name": "test_result",
+          "label": "Test Result Value",
+          "meta": false,
+          "type": "number",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

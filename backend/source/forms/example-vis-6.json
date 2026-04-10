@@ -1,0 +1,70 @@
+{
+  "id": 6001,
+  "form": "Visualization Test Registration",
+  "version": 1,
+  "type": 1,
+  "description": "Registration form for visualization API tests",
+  "question_groups": [
+    {
+      "id": 60011,
+      "order": 1,
+      "name": "registration_info",
+      "label": "Registration Info",
+      "questions": [
+        {
+          "id": 600101,
+          "order": 1,
+          "name": "site_name",
+          "label": "Site Name",
+          "meta": true,
+          "type": "input",
+          "required": true
+        },
+        {
+          "id": 600102,
+          "order": 2,
+          "name": "site_type",
+          "label": "Site Type",
+          "meta": false,
+          "type": "option",
+          "required": true,
+          "options": [
+            {
+              "label": "Urban",
+              "value": "urban",
+              "color": "#1f77b4"
+            },
+            {
+              "label": "Rural",
+              "value": "rural",
+              "color": "#ff7f0e"
+            },
+            {
+              "label": "Peri-urban",
+              "value": "peri_urban",
+              "color": "#2ca02c"
+            }
+          ]
+        },
+        {
+          "id": 600103,
+          "order": 3,
+          "name": "location",
+          "label": "Location",
+          "meta": true,
+          "type": "administration",
+          "required": true
+        },
+        {
+          "id": 600104,
+          "order": 4,
+          "name": "geolocation",
+          "label": "Geolocation",
+          "meta": true,
+          "type": "geo",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

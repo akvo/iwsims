@@ -33,6 +33,7 @@ A single generic endpoint that serves data for all chart types. The frontend com
 | Param | Type | Options | Default | Description |
 |-------|------|---------|---------|-------------|
 | `group_by` | string | `date`, `month`, `id`, `parent_id`, `option` | *(none)* | How to group results. When omitted, returns a single aggregate value. |
+| `stack_by` | string | `option`, `parent_id` | *(none)* | Second grouping dimension for stacked/multi-line charts. Requires `group_by`. Each unique value becomes a column in the response. |
 
 ### Aggregation
 
@@ -119,6 +120,64 @@ Aggregates answer values for the specified question.
 | `group_by` | Returns |
 |-----------|---------|
 | `month` | Count per month extracted from date answers |
+
+### With `stack_by=option` — Stacked Charts
+
+Adds a second grouping dimension. Requires `group_by` and `question_id` (option or multiple_option type). Each option value becomes a separate column in the response data.
+
+```
+# Operational status per month (stacked bar)
+?form_id=6002&question_id=600203&group_by=month&stack_by=option&monitoring=all
+
+→ {
+    "data": [
+      { "month": "Jan 2025", "Active": 1, "Inactive": 1, "Pending": 0 },
+      { "month": "Mar 2025", "Active": 1, "Inactive": 0, "Pending": 1 }
+    ],
+    "labels": ["Jan 2025", "Mar 2025"],
+    "stack_labels": ["Active", "Inactive", "Pending"],
+    "colors": ["#64A73B", "#e41a1c", "#ff7f00"]
+  }
+```
+
+Frontend pass-through with `akvo-charts`:
+```jsx
+<StackBar config={config} data={response.data} />
+```
+
+Supported `group_by` + `stack_by` combinations:
+
+| `group_by` | `stack_by` | Use case | Chart type |
+|-----------|-----------|----------|-----------|
+| `month` | `option` | Status distribution over time | StackBar |
+| `parent_id` | `option` | Status breakdown per site | StackBar |
+| `date` | `parent_id` | Value per site over time (multi-line) | Line |
+| `month` | `parent_id` | Value per site over months (multi-line) | Line |
+
+**Response shape**: Row-based format where the first key is the group label and remaining keys are stack dimension labels. `stack_labels` array is always included. `colors` array is included when `stack_by=option` (from `QuestionOptions.color`).
+
+**Time series example** (`group_by=date&stack_by=parent_id`):
+```
+# Temperature readings per site over time (multi-line chart)
+?form_id=6002&question_id=600202&group_by=date&stack_by=parent_id
+  &date_question_id=600201&monitoring=all
+
+→ {
+    "data": [
+      { "date": "2025-01-15", "Site Alpha": 10.0, "Site Beta": null },
+      { "date": "2025-01-20", "Site Alpha": null, "Site Beta": 30.0 },
+      { "date": "2025-03-10", "Site Alpha": 20.0, "Site Beta": null },
+      { "date": "2025-03-15", "Site Alpha": null, "Site Beta": 40.0 }
+    ],
+    "labels": ["2025-01-15", "2025-01-20", "2025-03-10", "2025-03-15"],
+    "stack_labels": ["Site Alpha", "Site Beta"]
+  }
+```
+
+Frontend usage:
+```jsx
+<Line config={config} data={response.data} />
+```
 
 ### With `option_value` — Filtered Count
 
@@ -261,276 +320,86 @@ The generic `/values` endpoint handles ~80% of dashboard use cases. These 3 addi
 
 ### `GET /api/v1/visualization/escalation/{form_id}`
 
-Returns paginated table of records matching **any** escalation criteria (OR logic), with configurable columns.
+Returns paginated table of records matching **any** escalation criteria (OR logic), with dynamic columns. All configuration passed via query parameters — no backend config files.
 
 #### Query Parameters
 
 | Param | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `tab` | string | Yes | — | Which criteria set from config (e.g., `monitoring`, `construction`) |
+| `monitoring_form_id` | integer | Yes | — | Which monitoring form to query |
+| `criteria` | string | Yes | — | Comma-separated criteria. Format: `type:qid:value` |
+| `columns` | string | Yes | — | Comma-separated column defs. Format: `key:source:qid` |
 | `page` | integer | No | 1 | Page number |
 | `page_size` | integer | No | 20 | Results per page |
 | `from_date` | YYYY-MM-DD | No | — | Date filter |
 | `to_date` | YYYY-MM-DD | No | — | Date filter |
+| `date_question_id` | integer | No | — | Which date question to filter against |
 | `administration_id` | integer | No | — | Admin hierarchy filter |
+
+#### Criteria Format
+
+Comma-separated, colon-delimited:
+
+```
+criteria=option_equals:600203:inactive,option_equals:600204:feature_x
+```
+
+| Type | Format | Description |
+|------|--------|-------------|
+| `option_equals` | `option_equals:{qid}:{value}` | Answer matches option value |
+| `threshold_gt` | `threshold_gt:{qid}:{max_value}` | Numeric answer > threshold |
+| `threshold_lt` | `threshold_lt:{qid}:{min_value}` | Numeric answer < threshold |
+| `overdue` | `overdue:{completion_qid}:{deadline_qid}` | Incomplete AND past deadline |
+
+#### Columns Format
+
+Comma-separated, colon-delimited:
+
+```
+columns=name:parent_name,status:answer:600203,date:latest_date:600201
+```
+
+| Source | Format | Returns |
+|--------|--------|---------|
+| `parent_name` | `{key}:parent_name` | Registration datapoint name |
+| `administration` | `{key}:administration` | Admin hierarchy path |
+| `answer` | `{key}:answer:{qid}` | Answer value from latest monitoring |
+| `latest_date` | `{key}:latest_date:{date_qid}` | Date from latest monitoring |
 
 #### Response Format
 
 ```json
 {
-  "count": 42,
-  "next": "/api/v1/visualization/escalation/1749623934933?tab=monitoring&page=2",
+  "count": 2,
+  "next": null,
   "previous": null,
   "results": [
     {
-      "id": 245170944,
-      "eps_name": "EPS Navua",
-      "village_name": "Navua Village",
-      "last_monitoring": "2025-12-15",
-      "operational_status": "issue_with_system",
-      "water_collection": "no",
-      "critical_issues": ["E.coli above threshold", "Temperature > 30°C"]
+      "id": 7200,
+      "name": "Site Alpha",
+      "status": "inactive",
+      "date": "2025-03-10"
     }
   ]
 }
 ```
 
-Response columns are **dynamic** — defined in the config's `escalation[tab].columns` array.
+#### Example Calls
 
-#### Config Format
-
-```json
-{
-  "escalation": {
-    "monitoring": {
-      "monitoring_form_id": 1749632545233,
-      "date_question_id": 1749632545235,
-      "criteria": [
-        { "type": "option_equals", "question_id": 1749632647507, "value": "no", "label": "No water sample" },
-        { "type": "option_equals", "question_id": 1749633373968, "value": "issue_with_system", "label": "System issue" },
-        { "type": "threshold_violation", "parameters_ref": "water_quality", "label": "Water quality violation" }
-      ],
-      "columns": [
-        { "key": "eps_name", "source": "parent_name" },
-        { "key": "village_name", "source": "administration" },
-        { "key": "last_monitoring", "source": "latest_date", "date_question_id": 1749632545235 },
-        { "key": "operational_status", "source": "answer", "question_id": 1749633373968 },
-        { "key": "water_collection", "source": "answer", "question_id": 1749632647507 },
-        { "key": "critical_issues", "source": "violations" }
-      ]
-    },
-    "construction": {
-      "monitoring_form_id": 1749624452908,
-      "date_question_id": 1749624452911,
-      "criteria": [
-        { "type": "overdue", "completion_qid": 1749630516826, "deadline_qid": 1749630516825 }
-      ],
-      "columns": [
-        { "key": "eps_name", "source": "parent_name" },
-        { "key": "last_monitoring", "source": "latest_date", "date_question_id": 1749624452911 },
-        { "key": "overall_progress", "source": "computed_progress", "progress_ref": "construction" },
-        { "key": "expected_progress", "source": "expected_progress", "progress_ref": "construction" },
-        { "key": "deadline", "source": "answer_date", "question_id": 1749630516825 }
-      ]
-    }
-  }
-}
 ```
+# Sites where operational_status is inactive OR measurement > 25
+GET /visualization/escalation/6001
+  ?monitoring_form_id=6002
+  &criteria=option_equals:600203:inactive,threshold_gt:600202:25
+  &columns=name:parent_name,status:answer:600203,value:answer:600202
+  &page=1&page_size=20
 
-#### Criteria Types Reference
-
-| Type | Description | Required Fields | SQL Logic |
-|------|-------------|----------------|-----------|
-| `option_equals` | Answer matches a specific option value | `question_id`, `value` | `answer.options @> '[value]'` |
-| `threshold_violation` | Any parameter in referenced group outside threshold | `parameters_ref` (points to `water_quality` or similar section) | Checks each parameter's value against its `threshold.min`/`threshold.max` |
-| `overdue` | Incomplete and past deadline | `completion_qid`, `deadline_qid` | `completion == 'no' AND deadline < TODAY` |
-
-#### Column Source Types Reference
-
-| Source | Description | Required Fields | Returns |
-|--------|-------------|----------------|---------|
-| `parent_name` | Registration datapoint name | — | `string` |
-| `administration` | Administration path (e.g., "Central > Rewa > Bau") | — | `string` |
-| `latest_date` | Date from latest monitoring (answer or FormData.created) | `date_question_id` (optional) | `date` |
-| `answer` | Answer value from latest monitoring | `question_id` | `string` (option label) |
-| `answer_date` | Date answer from latest monitoring | `question_id` | `date` |
-| `violations` | List of threshold violation labels | — (uses `water_quality.parameters`) | `string[]` |
-| `computed_progress` | Overall progress from progress computation | `progress_ref` | `float` |
-| `expected_progress` | Expected progress based on elapsed time | `progress_ref` | `float` |
-
-#### Reusability Example — Different Form Family
-
-```json
-{
-  "escalation": {
-    "maintenance": {
-      "monitoring_form_id": 888777666,
-      "criteria": [
-        { "type": "option_equals", "question_id": 999111, "value": "broken", "label": "System broken" },
-        { "type": "option_equals", "question_id": 999222, "value": "no", "label": "No maintenance" }
-      ],
-      "columns": [
-        { "key": "project_name", "source": "parent_name" },
-        { "key": "status", "source": "answer", "question_id": 999111 },
-        { "key": "last_inspection", "source": "latest_date", "date_question_id": 999333 }
-      ]
-    }
-  }
-}
-```
-
-#### Django Implementation
-
-```python
-# Criteria type → Q object builder mapping
-CRITERIA_BUILDERS = {
-    "option_equals": build_option_equals_filter,
-    "threshold_violation": build_threshold_filter,
-    "overdue": build_overdue_filter,
-}
-
-# Column source → value extractor mapping
-COLUMN_EXTRACTORS = {
-    "parent_name": lambda parent, col, cfg: parent.name,
-    "administration": lambda parent, col, cfg: get_admin_path(parent),
-    "latest_date": lambda parent, col, cfg: get_latest_date(
-        parent.latest_id, col.get("date_question_id")
-    ),
-    "answer": lambda parent, col, cfg: get_answer_display(
-        parent.latest_id, col["question_id"]
-    ),
-    "answer_date": lambda parent, col, cfg: get_answer_value(
-        parent.latest_id, col["question_id"]
-    ),
-    "violations": lambda parent, col, cfg: get_violations(
-        parent.latest_id, cfg
-    ),
-    "computed_progress": lambda parent, col, cfg: compute_eps_progress(
-        parent.latest_id, cfg["progress"][col["progress_ref"]]
-    ),
-    "expected_progress": lambda parent, col, cfg: compute_expected(
-        parent.latest_id, cfg["progress"][col["progress_ref"]]
-    ),
-}
-
-
-def build_option_equals_filter(criterion, config, latest_ids):
-    """Build Q filter: answer for question matches option value."""
-    matching_data_ids = Answers.objects.filter(
-        data_id__in=latest_ids,
-        question_id=criterion["question_id"],
-        options__contains=[criterion["value"]],
-    ).values_list("data_id", flat=True)
-    return Q(latest_id__in=matching_data_ids)
-
-
-def build_threshold_filter(criterion, config, latest_ids):
-    """Build Q filter: any water quality parameter outside threshold."""
-    params = config[criterion["parameters_ref"]]["parameters"]
-    violating_data_ids = set()
-    for param in params:
-        qs = Answers.objects.filter(
-            data_id__in=latest_ids,
-            question_id=param["api"]["question_id"],
-            value__isnull=False,
-        )
-        threshold = param["threshold"]
-        if "max" in threshold:
-            violating_data_ids |= set(
-                qs.filter(value__gt=threshold["max"])
-                .values_list("data_id", flat=True)
-            )
-        if "min" in threshold:
-            violating_data_ids |= set(
-                qs.filter(value__lt=threshold["min"])
-                .values_list("data_id", flat=True)
-            )
-    return Q(latest_id__in=violating_data_ids)
-
-
-def build_overdue_filter(criterion, config, latest_ids):
-    """Build Q filter: incomplete AND past deadline."""
-    from datetime import date
-    # Incomplete
-    incomplete_ids = set(Answers.objects.filter(
-        data_id__in=latest_ids,
-        question_id=criterion["completion_qid"],
-        options__contains=["no"],
-    ).values_list("data_id", flat=True))
-    # Past deadline
-    overdue_ids = set(Answers.objects.filter(
-        data_id__in=latest_ids,
-        question_id=criterion["deadline_qid"],
-        name__lt=date.today().isoformat(),
-    ).values_list("data_id", flat=True))
-    return Q(latest_id__in=incomplete_ids & overdue_ids)
-
-
-@extend_schema(
-    description="Config-driven escalation table with dynamic criteria and columns",
-    tags=["Visualization"],
-)
-@api_view(["GET"])
-def visualization_escalation(request, form_id, version):
-    config = get_dashboard_config(form_id)
-    tab = request.query_params.get("tab")
-    if not tab or tab not in config.get("escalation", {}):
-        return Response(
-            {"detail": f"Invalid tab. Options: {list(config.get('escalation', {}).keys())}"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    esc_config = config["escalation"][tab]
-    parent_form = get_object_or_404(Forms, pk=form_id)
-    monitoring_form_id = esc_config["monitoring_form_id"]
-
-    # Get parents with latest monitoring
-    parents = FormData.objects.filter(
-        form=parent_form,
-        parent__isnull=True,
-        is_pending=False,
-        is_draft=False,
-    ).annotate(
-        latest_id=latest_monitoring_subquery(monitoring_form_id),
-    ).filter(latest_id__isnull=False)
-
-    # Apply admin filter
-    if request.query_params.get("administration_id"):
-        parents = apply_administration_filter(
-            parents, int(request.query_params["administration_id"])
-        )
-
-    latest_ids = list(parents.values_list("latest_id", flat=True))
-
-    # Build OR query from criteria
-    or_condition = Q()
-    for criterion in esc_config["criteria"]:
-        builder = CRITERIA_BUILDERS[criterion["type"]]
-        or_condition |= builder(criterion, config, latest_ids)
-
-    matching_parents = parents.filter(or_condition)
-
-    # Paginate
-    page = int(request.query_params.get("page", 1))
-    page_size = int(request.query_params.get("page_size", 20))
-    total = matching_parents.count()
-    paginated = matching_parents[(page - 1) * page_size:page * page_size]
-
-    # Build dynamic columns
-    results = []
-    for parent in paginated:
-        row = {"id": parent.id}
-        for col in esc_config["columns"]:
-            extractor = COLUMN_EXTRACTORS[col["source"]]
-            row[col["key"]] = extractor(parent, col, config)
-        results.append(row)
-
-    return Response({
-        "count": total,
-        "next": f"?tab={tab}&page={page + 1}" if page * page_size < total else None,
-        "previous": f"?tab={tab}&page={page - 1}" if page > 1 else None,
-        "results": results,
-    })
+# Sites where operational_status is inactive, filtered by admin
+GET /visualization/escalation/6001
+  ?monitoring_form_id=6002
+  &criteria=option_equals:600203:inactive
+  &columns=name:parent_name,admin:administration,status:answer:600203
+  &administration_id=42
 ```
 
 ---
@@ -539,313 +408,83 @@ def visualization_escalation(request, form_id, version):
 
 ### `GET /api/v1/visualization/progress/{form_id}`
 
-Computes multi-component progress per record using configurable formulas.
+Computes multi-component progress per record using configurable formulas. All configuration passed via query parameters.
 
 #### Query Parameters
 
 | Param | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `progress_key` | string | Yes | — | Which progress config to use (e.g., `construction`) |
+| `monitoring_form_id` | integer | Yes | — | Which monitoring form to query |
+| `components` | string | Yes | — | Comma-separated component defs. Format: `key:formula:qid1:qid2...` |
+| `filter_question_id` | integer | No | — | Filter to only parents where this option question matches `filter_option_value` |
+| `filter_option_value` | string | No | — | Option value to filter by (used with `filter_question_id`) |
+| `deadline_question_id` | integer | No | — | Date question for completion timeline |
 | `from_date` | YYYY-MM-DD | No | — | Date filter |
 | `to_date` | YYYY-MM-DD | No | — | Date filter |
 | `administration_id` | integer | No | — | Admin hierarchy filter |
+
+#### Components Format
+
+Comma-separated, colon-delimited:
+
+```
+components=base:any_yes:111:222:333,tank:completed_binary:444,pipes:ratio:555,security:multi_select_proportion:666:3
+```
+
+Format: `{key}:{formula}:{qid1}:{qid2}:...:{total_items}`
+
+`total_items` is only required for `multi_select_proportion` formula (appended as last segment).
+
+#### Formula Types
+
+| Formula | Description | Logic |
+|---------|-------------|-------|
+| `any_yes` | 100% if any question answered 'Yes' | `any(answers == 'yes') → 100%, else 0%` |
+| `completed_binary` | 100% if answered 'Completed' | `answer == 'completed' → 100%, else 0%` |
+| `ratio` | Numeric answer as percentage | `answer.value` |
+| `multi_select_proportion` | Selected ÷ total items | `len(selected) / total_items × 100%` |
+
+**Overall progress** = average of all component scores.
 
 #### Response Format
 
 ```json
 {
-  "histogram": {
-    "config": {
-      "title": "Percentage of projects completed",
-      "xAxisLabel": "Progress",
-      "yAxisLabel": "Number of EPS"
-    },
-    "data": [
-      { "progress": "0-10%", "count": 5 },
-      { "progress": "11-20%", "count": 3 },
-      { "progress": "91-100%", "count": 3 }
-    ]
-  },
-  "completion_timeline": {
-    "config": {
-      "title": "Proposed completion data",
-      "xAxisLabel": "Month",
-      "yAxisLabel": "Number of EPS"
-    },
-    "data": [
-      { "month": "Jan 2026", "count": 4 },
-      { "month": "Feb 2026", "count": 6 }
-    ]
-  },
+  "histogram": [
+    { "progress": "0-10%", "count": 1 },
+    { "progress": "41-50%", "count": 1 }
+  ],
   "details": [
     {
-      "label": "EPS Navua",
-      "group": "245170944",
+      "label": "Site Alpha",
+      "group": "7200",
       "components": {
-        "concrete_base": 100.0,
-        "urf_tank": 100.0,
-        "eps_tank": 0.0,
-        "standpipes": 50.0,
-        "site_security": 66.67
+        "base": 100.0,
+        "tank": 0.0,
+        "pipes": 50.0
       },
-      "overall": 63.3
+      "overall": 50.0
     }
   ]
 }
 ```
 
-#### Config Format
+#### Example Calls
 
-```json
-{
-  "progress": {
-    "construction": {
-      "monitoring_form_id": 1749624452908,
-      "filter": {
-        "question_id": 1749630516826,
-        "option_value": "no",
-        "label": "Under construction"
-      },
-      "scope_question_id": 1749624505915,
-      "deadline_question_id": 1749630516825,
-      "components": [
-        {
-          "key": "concrete_base",
-          "label": "Concrete Base",
-          "question_ids": [1849633499999, 1849633498888, 1849633497777],
-          "formula": "any_yes"
-        },
-        {
-          "key": "urf_tank",
-          "label": "URF Tank",
-          "question_ids": [1849633720001],
-          "formula": "completed_binary"
-        },
-        {
-          "key": "standpipes",
-          "label": "Standpipes",
-          "question_ids": [1849634900001],
-          "formula": "ratio"
-        },
-        {
-          "key": "site_security",
-          "label": "Site Security",
-          "question_ids": [1849635500001],
-          "formula": "multi_select_proportion",
-          "total_items": 3
-        }
-      ]
-    }
-  }
-}
 ```
+# Construction progress with 3 components
+GET /visualization/progress/6001
+  ?monitoring_form_id=6002
+  &components=base:any_yes:600203,tank:completed_binary:600203,quality:ratio:600202
+  &filter_question_id=600203
+  &filter_option_value=active
 
-#### Formula Types Reference
-
-| Formula | Description | Logic | Required Fields |
-|---------|-------------|-------|----------------|
-| `any_yes` | Binary — 100% if any question answered 'Yes' | `any(answers == 'yes') → 100%, else 0%` | `question_ids[]` |
-| `completed_binary` | Binary — 100% if answered 'Completed' | `answer == 'completed' → 100%, else 0%` | `question_ids[]` |
-| `ratio` | Proportional — value as percentage | `answer.value` (already a percentage) | `question_ids[]` |
-| `multi_select_proportion` | Proportional — selected ÷ total | `len(selected) / total_items × 100%` | `question_ids[]`, `total_items` |
-
-**Overall progress** = average of all component scores (filtered by `scope_question_id` if configured).
-
-#### Reusability Example — Different Form Family
-
-```json
-{
-  "progress": {
-    "installation": {
-      "monitoring_form_id": 888777666,
-      "filter": {
-        "question_id": 888111,
-        "option_value": "in_progress"
-      },
-      "components": [
-        { "key": "piping", "label": "Piping", "question_ids": [888222], "formula": "completed_binary" },
-        { "key": "electrical", "label": "Electrical", "question_ids": [888333], "formula": "completed_binary" },
-        { "key": "testing", "label": "Testing", "question_ids": [888444], "formula": "ratio" }
-      ]
-    }
-  }
-}
+# With deadline timeline
+GET /visualization/progress/6001
+  ?monitoring_form_id=6002
+  &components=base:completed_binary:600203
+  &deadline_question_id=600201
 ```
-
-#### Django Implementation
-
-```python
-FORMULA_HANDLERS = {
-    "any_yes": compute_any_yes,
-    "completed_binary": compute_completed_binary,
-    "ratio": compute_ratio,
-    "multi_select_proportion": compute_multi_select_proportion,
-}
-
-
-def compute_any_yes(latest_data_id, question_ids, **kwargs):
-    """100% if ANY question answered 'Yes', else 0%."""
-    has_yes = Answers.objects.filter(
-        data_id=latest_data_id,
-        question_id__in=question_ids,
-        options__contains=["yes"],
-    ).exists()
-    return 100.0 if has_yes else 0.0
-
-
-def compute_completed_binary(latest_data_id, question_ids, **kwargs):
-    """100% if answered 'Completed', else 0%."""
-    is_completed = Answers.objects.filter(
-        data_id=latest_data_id,
-        question_id__in=question_ids,
-        options__contains=["completed"],
-    ).exists()
-    return 100.0 if is_completed else 0.0
-
-
-def compute_ratio(latest_data_id, question_ids, **kwargs):
-    """Value as percentage (numeric answer)."""
-    answer = Answers.objects.filter(
-        data_id=latest_data_id,
-        question_id__in=question_ids,
-    ).first()
-    if not answer or answer.value is None:
-        return 0.0
-    return float(answer.value)
-
-
-def compute_multi_select_proportion(latest_data_id, question_ids,
-                                     total_items=1, **kwargs):
-    """Percentage based on number of selected options."""
-    answer = Answers.objects.filter(
-        data_id=latest_data_id,
-        question_id__in=question_ids,
-    ).first()
-    if not answer or not answer.options:
-        return 0.0
-    return round((len(answer.options) / total_items) * 100, 2)
-
-
-@extend_schema(
-    description="Config-driven progress computation with multiple formulas",
-    tags=["Visualization"],
-)
-@api_view(["GET"])
-def visualization_progress(request, form_id, version):
-    config = get_dashboard_config(form_id)
-    progress_key = request.query_params.get("progress_key")
-    if not progress_key or progress_key not in config.get("progress", {}):
-        return Response(
-            {"detail": f"Invalid progress_key. Options: {list(config.get('progress', {}).keys())}"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    prog_config = config["progress"][progress_key]
-    parent_form = get_object_or_404(Forms, pk=form_id)
-    monitoring_form_id = prog_config["monitoring_form_id"]
-
-    # Get parents with latest monitoring
-    parents = FormData.objects.filter(
-        form=parent_form,
-        parent__isnull=True,
-        is_pending=False,
-        is_draft=False,
-    ).annotate(
-        latest_id=latest_monitoring_subquery(monitoring_form_id),
-    ).filter(latest_id__isnull=False)
-
-    # Apply filter (e.g., only "under construction")
-    pf = prog_config.get("filter")
-    if pf:
-        matching_data_ids = Answers.objects.filter(
-            data_id__in=parents.values_list("latest_id", flat=True),
-            question_id=pf["question_id"],
-            options__contains=[pf["option_value"]],
-        ).values_list("data_id", flat=True)
-        parents = parents.filter(latest_id__in=matching_data_ids)
-
-    # Apply admin filter
-    if request.query_params.get("administration_id"):
-        parents = apply_administration_filter(
-            parents, int(request.query_params["administration_id"])
-        )
-
-    # Compute per-EPS progress
-    components = prog_config["components"]
-    eps_results = []
-    for parent in parents:
-        scores = {}
-        for comp in components:
-            handler = FORMULA_HANDLERS[comp["formula"]]
-            kwargs = {}
-            if comp.get("total_items"):
-                kwargs["total_items"] = comp["total_items"]
-            scores[comp["key"]] = handler(
-                parent.latest_id, comp["question_ids"], **kwargs
-            )
-        overall = (
-            round(sum(scores.values()) / len(scores), 1)
-            if scores else 0.0
-        )
-        eps_results.append({
-            "label": parent.name,
-            "group": str(parent.id),
-            "components": scores,
-            "overall": overall,
-        })
-
-    # Build histogram
-    buckets = [
-        "0-10%", "11-20%", "21-30%", "31-40%", "41-50%",
-        "51-60%", "61-70%", "71-80%", "81-90%", "91-100%",
-    ]
-    histogram_counts = [0] * 10
-    for eps in eps_results:
-        idx = min(int(eps["overall"] / 10), 9)
-        histogram_counts[idx] += 1
-
-    # Build completion timeline
-    deadline_qid = prog_config.get("deadline_question_id")
-    timeline_data = []
-    if deadline_qid:
-        deadline_answers = Answers.objects.filter(
-            data_id__in=parents.values_list("latest_id", flat=True),
-            question_id=deadline_qid,
-            name__isnull=False,
-        ).values_list("name", flat=True)
-        from collections import Counter
-        month_counts = Counter()
-        for d in deadline_answers:
-            month_key = d[:7]  # "YYYY-MM"
-            month_counts[month_key] += 1
-        for month_key in sorted(month_counts.keys()):
-            timeline_data.append({
-                "month": format_month(month_key),
-                "count": month_counts[month_key],
-            })
-
-    return Response({
-        "histogram": {
-            "config": {
-                "title": "Percentage of projects completed",
-                "xAxisLabel": "Progress",
-                "yAxisLabel": "Count",
-            },
-            "data": [
-                {"progress": buckets[i], "count": histogram_counts[i]}
-                for i in range(10)
-            ],
-        },
-        "completion_timeline": {
-            "config": {
-                "title": "Proposed completion data",
-                "xAxisLabel": "Month",
-                "yAxisLabel": "Count",
-            },
-            "data": timeline_data,
-        },
-        "details": eps_results,
-    })
 
 ---
 
