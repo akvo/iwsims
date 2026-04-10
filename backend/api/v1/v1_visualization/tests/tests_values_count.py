@@ -400,7 +400,8 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         values_by_group = {d["group"]: d["value"] for d in data["data"]}
         self.assertEqual(values_by_group["active"], 50.0)
         self.assertEqual(values_by_group["pending"], 50.0)
-        self.assertNotIn("inactive", values_by_group)
+        # Zero-count option still present for pie chart stability
+        self.assertEqual(values_by_group["inactive"], 0.0)
 
     def test_option_percentage_with_admin_filter(self):
         """Option percentage filtered by administration.
@@ -424,4 +425,5 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         values_by_group = {d["group"]: d["value"] for d in data["data"]}
         self.assertEqual(values_by_group["inactive"], 50.0)
         self.assertEqual(values_by_group["pending"], 50.0)
-        self.assertNotIn("active", values_by_group)
+        # Zero-count option still present for pie chart stability
+        self.assertEqual(values_by_group["active"], 0.0)

@@ -45,7 +45,8 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         """Option question group_by=option, monitoring=latest.
 
         Latest: reg1→active, reg2→pending.
-        Expected: active(1), pending(1). Inactive not present.
+        Expected: active(1), pending(1), inactive(0) — all options
+        present so pie/doughnut charts have stable legends and colors.
         """
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
@@ -58,9 +59,76 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         values_by_group = {d["group"]: d for d in data["data"]}
         self.assertEqual(values_by_group["active"]["value"], 1)
         self.assertEqual(values_by_group["pending"]["value"], 1)
-        # inactive should either be absent or have value=0
-        if "inactive" in values_by_group:
-            self.assertEqual(values_by_group["inactive"]["value"], 0)
+        # Zero-count options MUST be present for chart stability
+        self.assertIn("inactive", values_by_group)
+        self.assertEqual(values_by_group["inactive"]["value"], 0)
+        self.assertEqual(
+            values_by_group["inactive"]["color"], "#e41a1c"
+        )
+
+    def test_option_group_by_option_all_options_in_labels(self):
+        """All defined options must appear in data and labels array.
+
+        Even with monitoring=latest where "inactive" has 0 records,
+        the labels array must list all 3 options so the frontend
+        pie chart renders a complete legend.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertEqual(len(data["data"]), 3)
+        groups = {d["group"] for d in data["data"]}
+        self.assertEqual(groups, {"active", "inactive", "pending"})
+        labels = set(data["labels"])
+        self.assertEqual(labels, {"Active", "Inactive", "Pending"})
+
+    def test_option_group_by_option_empty_dataset(self):
+        """No matching records — still return all options with value=0.
+
+        Filter by a date range with no monitoring records. All 3
+        operational_status options must appear with value=0 so the
+        frontend can render an empty-but-labeled pie chart.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=all"
+            "&from_date=2020-01-01&to_date=2020-12-31"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 3)
+        for row in data["data"]:
+            self.assertEqual(row["value"], 0)
+        groups = {d["group"] for d in data["data"]}
+        self.assertEqual(groups, {"active", "inactive", "pending"})
+
+    def test_option_group_by_option_percentage_zero_count(self):
+        """Percentage mode must include zero-count options as 0.0.
+
+        Latest monitoring: active=50%, pending=50%, inactive=0%.
+        All 3 must be in the response.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+            "&value_type=percentage"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        values_by_group = {
+            d["group"]: d["value"] for d in data["data"]
+        }
+        self.assertEqual(len(data["data"]), 3)
+        self.assertEqual(values_by_group["active"], 50.0)
+        self.assertEqual(values_by_group["pending"], 50.0)
+        self.assertEqual(values_by_group["inactive"], 0.0)
 
     def test_multiple_option_group_by_option(self):
         """Multiple option question group_by=option, monitoring=all.

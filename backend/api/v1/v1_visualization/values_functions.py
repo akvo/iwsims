@@ -344,7 +344,12 @@ def _option_group_by_option(
     question, options, data_ids, qs,
     is_latest, value_type
 ):
-    """Group by option values (donut chart)."""
+    """Group by option values (donut chart).
+
+    Returns a row for every defined option — including zero-count
+    options — so pie/doughnut charts have stable legends and colors
+    across refreshes and filter changes.
+    """
     total_for_pct = (
         qs.count() if is_latest else len(data_ids)
     )
@@ -355,14 +360,10 @@ def _option_group_by_option(
             question_id=question.id,
             options__contains=[opt.value],
         ).count()
-        if count == 0 and value_type != "percentage":
-            continue
         if value_type == "percentage":
             val = round(
                 (count / total_for_pct * 100), 2
-            ) if total_for_pct > 0 else 0
-            if val == 0:
-                continue
+            ) if total_for_pct > 0 else 0.0
         else:
             val = count
         data.append({
