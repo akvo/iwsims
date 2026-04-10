@@ -66,6 +66,39 @@ class ValuesTimeseriesTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(values_by_group["2025-03-10"], 20.0)
         self.assertEqual(values_by_group["2025-03-15"], 40.0)
 
+    def test_timeseries_number_by_date_fills_gaps_with_date_range(self):
+        """Gap-fill empty days in a number time series.
+
+        Number data on Jan 15 (10.0) + Jan 20 (30.0). Requesting
+        Jan 15..Jan 20 must return 6 rows — the 4 empty days get
+        value=0 so a line chart plots a continuous x-axis.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.Q_NUMBER_ID}"
+            f"&date_question_id={self.Q_DATE_ID}"
+            "&group_by=date&monitoring=all"
+            "&from_date=2025-01-15&to_date=2025-01-20"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 6)
+        groups_in_order = [d["group"] for d in data["data"]]
+        self.assertEqual(
+            groups_in_order,
+            [
+                "2025-01-15", "2025-01-16", "2025-01-17",
+                "2025-01-18", "2025-01-19", "2025-01-20",
+            ],
+        )
+        values = {d["group"]: d["value"] for d in data["data"]}
+        self.assertEqual(values["2025-01-15"], 10.0)
+        self.assertEqual(values["2025-01-16"], 0)
+        self.assertEqual(values["2025-01-17"], 0)
+        self.assertEqual(values["2025-01-18"], 0)
+        self.assertEqual(values["2025-01-19"], 0)
+        self.assertEqual(values["2025-01-20"], 30.0)
+
     def test_timeseries_with_date_range_filter(self):
         """Time series filtered by date range.
 

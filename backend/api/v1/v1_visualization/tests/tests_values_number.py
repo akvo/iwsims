@@ -219,6 +219,40 @@ class ValuesNumberTestCases(VisualizationValuesTestMixin, APITestCase):
             values_by_label["Site Beta"], 78.95, places=2
         )
 
+    def test_number_group_by_month_fills_gaps_with_date_range(self):
+        """Gap-fill empty months for number aggregate time series.
+
+        Number values exist in Jan + Mar 2025 only. Requesting
+        Jan..Jun returns 6 rows: Jan and Mar carry averaged values,
+        Feb/Apr/May/Jun are filled with value=0 and labeled so the
+        line chart keeps its x-axis.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_number.id}"
+            "&group_by=month&monitoring=all"
+            "&from_date=2025-01-01&to_date=2025-06-30"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 6)
+        groups_in_order = [d["group"] for d in data["data"]]
+        self.assertEqual(
+            groups_in_order,
+            [
+                "2025-01", "2025-02", "2025-03",
+                "2025-04", "2025-05", "2025-06",
+            ],
+        )
+        values = {d["group"]: d["value"] for d in data["data"]}
+        # Jan avg(10, 30) = 20.0; Mar avg(20, 40) = 30.0
+        self.assertEqual(values["2025-01"], 20.0)
+        self.assertEqual(values["2025-03"], 30.0)
+        self.assertEqual(values["2025-02"], 0)
+        self.assertEqual(values["2025-04"], 0)
+        self.assertEqual(values["2025-05"], 0)
+        self.assertEqual(values["2025-06"], 0)
+
     def test_number_percentage_group_by_month(self):
         """Number question percentage grouped by month.
 

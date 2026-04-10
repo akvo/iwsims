@@ -2,7 +2,7 @@ from django.db import transaction, connection
 from django.db.models import (
     Q, Subquery, OuterRef,
 )
-from datetime import datetime as dt_datetime
+from datetime import datetime as dt_datetime, timedelta, date
 
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_profile.models import Administration
@@ -38,6 +38,17 @@ def apply_administration_filter(queryset, administration_id):
     )
 
 
+def _to_date_upper_bound(value):
+    """Produce an inclusive upper bound for an ISO date-time string.
+
+    `Answers.name` stores dates as ISO-8601 with time (e.g.
+    '2025-01-20T00:00:00.000Z'), so a plain `name__lte='2025-01-20'`
+    excludes same-day records lexically. Appending the latest time
+    makes `<=` work as an inclusive day boundary.
+    """
+    return f"{value}T23:59:59.999Z"
+
+
 def latest_monitoring_subquery(form_id, date_filters=None):
     """Subquery: latest monitoring FormData ID per parent."""
     qs = FormData.objects.filter(
@@ -59,7 +70,9 @@ def latest_monitoring_subquery(form_id, date_filters=None):
                 )
             if date_filters.get("to_date"):
                 sub = sub.filter(
-                    name__lte=date_filters["to_date"],
+                    name__lte=_to_date_upper_bound(
+                        date_filters["to_date"]
+                    ),
                 )
             qs = qs.filter(
                 pk__in=Subquery(sub.values("data_id"))
@@ -151,7 +164,7 @@ def get_base_monitoring_qs(form, monitoring_form_id, params):
                 )
             if to_date:
                 matching_ids = matching_ids.filter(
-                    name__lte=to_date
+                    name__lte=_to_date_upper_bound(to_date)
                 )
             qs = qs.filter(
                 id__in=matching_ids.values("data_id")
@@ -201,3 +214,68 @@ def format_date_group(dt):
     if hasattr(dt, 'strftime'):
         return dt.strftime("%Y-%m-%d")
     return str(dt)[:10]
+
+
+def _parse_iso_date(value):
+    """Parse YYYY-MM-DD string or pass through date/datetime."""
+    if isinstance(value, (dt_datetime, date)):
+        return value if isinstance(value, date) else value.date()
+    return dt_datetime.strptime(str(value)[:10], "%Y-%m-%d").date()
+
+
+def fill_month_gaps(data, from_date, to_date):
+    """Return a new list with zero-filled month rows between bounds.
+
+    Preserves existing rows (by `group` key) and inserts zero rows
+    for every month in [from_date, to_date] that is missing. Output
+    is sorted chronologically by `group`.
+    """
+    start = _parse_iso_date(from_date).replace(day=1)
+    end = _parse_iso_date(to_date).replace(day=1)
+    existing = {row["group"]: row for row in data}
+
+    filled = []
+    cursor = start
+    while cursor <= end:
+        key = cursor.strftime("%Y-%m")
+        if key in existing:
+            filled.append(existing[key])
+        else:
+            filled.append({
+                "value": 0,
+                "label": cursor.strftime("%b %Y"),
+                "group": key,
+            })
+        # advance to first day of next month
+        if cursor.month == 12:
+            cursor = cursor.replace(year=cursor.year + 1, month=1)
+        else:
+            cursor = cursor.replace(month=cursor.month + 1)
+    return filled
+
+
+def fill_date_gaps(data, from_date, to_date):
+    """Return a new list with zero-filled day rows between bounds.
+
+    Preserves existing rows (by `group` key) and inserts zero rows
+    for every day in [from_date, to_date] that is missing. Output
+    is sorted chronologically by `group`.
+    """
+    start = _parse_iso_date(from_date)
+    end = _parse_iso_date(to_date)
+    existing = {row["group"]: row for row in data}
+
+    filled = []
+    cursor = start
+    while cursor <= end:
+        key = cursor.strftime("%Y-%m-%d")
+        if key in existing:
+            filled.append(existing[key])
+        else:
+            filled.append({
+                "value": 0,
+                "label": key,
+                "group": key,
+            })
+        cursor = cursor + timedelta(days=1)
+    return filled

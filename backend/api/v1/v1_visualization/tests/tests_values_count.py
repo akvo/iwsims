@@ -156,10 +156,9 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
 
         Covers: filtering by both district and time period.
 
-        Filter: adm_child only + full date range.
-        Expected: 2 months, but only adm_child records:
-        - Jan: mon2a (1 record)
-        - Mar: mon2b (1 record)
+        Filter: adm_child only + full calendar year range.
+        Expected: 12 months (gap-filled), with values:
+        - Jan: mon2a (1), Mar: mon2b (1), all others: 0.
         """
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
@@ -170,16 +169,27 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(len(data["data"]), 2)
+        self.assertEqual(len(data["data"]), 12)
         groups = {d["group"]: d["value"] for d in data["data"]}
         self.assertEqual(groups["2025-01"], 1)
         self.assertEqual(groups["2025-03"], 1)
+        # All other months filled with zero
+        for month in [
+            "2025-02", "2025-04", "2025-05", "2025-06",
+            "2025-07", "2025-08", "2025-09", "2025-10",
+            "2025-11", "2025-12",
+        ]:
+            self.assertEqual(groups[month], 0)
+        # Order must be chronological
+        groups_in_order = [d["group"] for d in data["data"]]
+        self.assertEqual(groups_in_order, sorted(groups_in_order))
 
     def test_count_by_month_with_date_range_no_results(self):
-        """Date range that has no inspections — empty months.
+        """Date range that has no inspections — still returns a row.
 
         Filter: from_date=2025-06-01, to_date=2025-06-30.
-        No monitoring records in June.
+        No monitoring records in June, but gap-fill adds one row
+        with value=0 so the chart axis stays stable.
         """
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
@@ -189,8 +199,92 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(len(data["data"]), 0)
-        self.assertEqual(data["labels"], [])
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["group"], "2025-06")
+        self.assertEqual(data["data"][0]["value"], 0)
+        self.assertEqual(data["data"][0]["label"], "Jun 2025")
+        self.assertEqual(data["labels"], ["Jun 2025"])
+
+    def test_count_group_by_month_fills_gaps_with_date_range(self):
+        """Gap-fill empty months when both from_date and to_date present.
+
+        Data exists in Jan + Mar 2025 only. Requesting Jan..Jun must
+        return 6 rows (Jan=2, Feb=0, Mar=2, Apr=0, May=0, Jun=0) so
+        line/bar charts show continuous time axis.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&group_by=month&monitoring=all"
+            "&from_date=2025-01-01&to_date=2025-06-30"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 6)
+        groups_in_order = [d["group"] for d in data["data"]]
+        self.assertEqual(
+            groups_in_order,
+            [
+                "2025-01", "2025-02", "2025-03",
+                "2025-04", "2025-05", "2025-06",
+            ],
+        )
+        values = {d["group"]: d["value"] for d in data["data"]}
+        self.assertEqual(values["2025-01"], 2)
+        self.assertEqual(values["2025-02"], 0)
+        self.assertEqual(values["2025-03"], 2)
+        self.assertEqual(values["2025-04"], 0)
+        self.assertEqual(values["2025-05"], 0)
+        self.assertEqual(values["2025-06"], 0)
+        self.assertEqual(
+            data["labels"],
+            [
+                "Jan 2025", "Feb 2025", "Mar 2025",
+                "Apr 2025", "May 2025", "Jun 2025",
+            ],
+        )
+
+    def test_count_group_by_month_no_fill_without_date_range(self):
+        """Without both from/to, do NOT gap-fill (preserve legacy)."""
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&group_by=month&monitoring=all"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        # Only buckets with actual data — no Feb filler
+        groups = {d["group"] for d in data["data"]}
+        self.assertEqual(groups, {"2025-01", "2025-03"})
+
+    def test_count_group_by_date_fills_gaps_with_date_range(self):
+        """Gap-fill empty days when both from_date and to_date present.
+
+        Data on Jan 15 + Jan 20. Requesting Jan 15..Jan 20 must
+        return 6 rows with value=0 for the 4 empty days in between.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&group_by=date&monitoring=all"
+            f"&date_question_id={self.Q_DATE_ID}"
+            "&from_date=2025-01-15&to_date=2025-01-20"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 6)
+        groups_in_order = [d["group"] for d in data["data"]]
+        self.assertEqual(
+            groups_in_order,
+            [
+                "2025-01-15", "2025-01-16", "2025-01-17",
+                "2025-01-18", "2025-01-19", "2025-01-20",
+            ],
+        )
+        values = {d["group"]: d["value"] for d in data["data"]}
+        self.assertEqual(values["2025-01-15"], 1)  # mon1a
+        self.assertEqual(values["2025-01-16"], 0)
+        self.assertEqual(values["2025-01-17"], 0)
+        self.assertEqual(values["2025-01-18"], 0)
+        self.assertEqual(values["2025-01-19"], 0)
+        self.assertEqual(values["2025-01-20"], 1)  # mon2a
 
     def test_count_group_by_id_all(self):
         """Count per individual record ID — monitoring=all.

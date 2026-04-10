@@ -10,7 +10,16 @@ from api.v1.v1_visualization.functions import (
     format_month_label,
     format_month_group,
     format_date_group,
+    fill_month_gaps,
+    fill_date_gaps,
 )
+
+
+def _should_fill_gaps(params):
+    """Only gap-fill when both from_date and to_date are provided."""
+    return bool(
+        params.get("from_date") and params.get("to_date")
+    )
 
 
 # -- Count mode handler --
@@ -165,6 +174,10 @@ def _count_group_by_month(qs, is_latest, params):
                 for r in results
             ]
 
+    if _should_fill_gaps(params):
+        data = fill_month_gaps(
+            data, params["from_date"], params["to_date"]
+        )
     labels = [d["label"] for d in data]
     return data, labels
 
@@ -264,6 +277,10 @@ def _count_group_by_date(qs, is_latest, params):
             }
             for r in results
         ]
+    if _should_fill_gaps(params):
+        data = fill_date_gaps(
+            data, params["from_date"], params["to_date"]
+        )
     labels = [d["label"] for d in data]
     return data, labels
 
@@ -410,7 +427,7 @@ def handle_number_question(form, question, params):
 
     if group_by == "month":
         return _number_group_by_month(
-            question, data_ids, agg_func, value_type
+            question, data_ids, agg_func, value_type, params
         )
 
     result = Answers.objects.filter(
@@ -513,12 +530,16 @@ def _number_group_by_date(question, data_ids, params):
         ]
 
     data.sort(key=lambda x: x["group"])
+    if _should_fill_gaps(params):
+        data = fill_date_gaps(
+            data, params["from_date"], params["to_date"]
+        )
     labels = [d["label"] for d in data]
     return data, labels
 
 
 def _number_group_by_month(
-    question, data_ids, agg_func, value_type
+    question, data_ids, agg_func, value_type, params
 ):
     """Number question grouped by month."""
     results = Answers.objects.filter(
@@ -547,6 +568,11 @@ def _number_group_by_month(
                 d["value"] = round(
                     d["value"] / total * 100, 2
                 )
+
+    if _should_fill_gaps(params):
+        data = fill_month_gaps(
+            data, params["from_date"], params["to_date"]
+        )
 
     labels = [d["label"] for d in data]
     return data, labels
