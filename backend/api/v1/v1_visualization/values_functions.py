@@ -76,6 +76,12 @@ def handle_count_mode(form, params):
     if group_by == "parent_id":
         return _count_group_by_parent(qs, is_latest)
 
+    if group_by == "id":
+        return _count_group_by_id(qs, is_latest)
+
+    if group_by == "date":
+        return _count_group_by_date(qs, is_latest, params)
+
     return [{"value": 0, "label": "Total"}], ["Total"]
 
 
@@ -188,6 +194,73 @@ def _count_group_by_parent(qs, is_latest):
                 "value": r["count"],
                 "label": r["parent_name"],
                 "group": str(r["parent_id"]),
+            }
+            for r in results
+        ]
+    labels = [d["label"] for d in data]
+    return data, labels
+
+
+def _count_group_by_id(qs, is_latest):
+    """Count grouped by individual record id (value=1 per row)."""
+    if is_latest:
+        data = [
+            {
+                "value": 1,
+                "label": p.name,
+                "group": str(p.latest_id),
+            }
+            for p in qs
+        ]
+    else:
+        data = [
+            {
+                "value": 1,
+                "label": r.name,
+                "group": str(r.id),
+            }
+            for r in qs.order_by("id")
+        ]
+    labels = [d["label"] for d in data]
+    return data, labels
+
+
+def _count_group_by_date(qs, is_latest, params):
+    """Count grouped by individual date (not month bucket)."""
+    date_qid = params.get("date_question_id")
+    data_ids = get_monitoring_data_ids(qs, is_latest)
+
+    if date_qid:
+        results = Answers.objects.filter(
+            data_id__in=data_ids,
+            question_id=date_qid,
+            name__isnull=False,
+        ).annotate(
+            day=Substr("name", 1, 10),
+        ).values("day").annotate(
+            count=Count("data_id", distinct=True),
+        ).order_by("day")
+        data = [
+            {
+                "value": r["count"],
+                "label": r["day"],
+                "group": r["day"],
+            }
+            for r in results
+        ]
+    else:
+        results = FormData.objects.filter(
+            id__in=data_ids,
+        ).values(
+            day=F("created__date"),
+        ).annotate(
+            count=Count("id"),
+        ).order_by("day")
+        data = [
+            {
+                "value": r["count"],
+                "label": format_date_group(r["day"]),
+                "group": format_date_group(r["day"]),
             }
             for r in results
         ]

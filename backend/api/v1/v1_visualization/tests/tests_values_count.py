@@ -192,6 +192,147 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(len(data["data"]), 0)
         self.assertEqual(data["labels"], [])
 
+    def test_count_group_by_id_all(self):
+        """Count per individual record ID — monitoring=all.
+
+        group_by=id lists each record with value=1.
+        Expected: 4 rows (one per monitoring record), each value=1.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&group_by=id&monitoring=all"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 4)
+        for row in data["data"]:
+            self.assertEqual(row["value"], 1)
+            self.assertIn("group", row)
+            self.assertIn("label", row)
+        groups = {row["group"] for row in data["data"]}
+        self.assertEqual(
+            groups,
+            {
+                str(self.mon1a.id), str(self.mon1b.id),
+                str(self.mon2a.id), str(self.mon2b.id),
+            },
+        )
+
+    def test_count_group_by_id_latest(self):
+        """Count per latest record ID — monitoring=latest.
+
+        group_by=id + latest returns only latest per parent.
+        Expected: 2 rows (latest of reg1 and reg2), each value=1.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&group_by=id&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 2)
+        for row in data["data"]:
+            self.assertEqual(row["value"], 1)
+        groups = {row["group"] for row in data["data"]}
+        self.assertEqual(
+            groups,
+            {str(self.mon1b.id), str(self.mon2b.id)},
+        )
+
+    def test_count_group_by_date_all(self):
+        """Count per individual inspection date — monitoring=all.
+
+        group_by=date + date_question_id buckets per exact date.
+        Test data dates (from inspection_date answers):
+        - mon1a: 2025-01-15, mon1b: 2025-03-10
+        - mon2a: 2025-01-20, mon2b: 2025-03-15
+        Expected: 4 distinct dates, each value=1.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&group_by=date&monitoring=all"
+            f"&date_question_id={self.Q_DATE_ID}"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 4)
+        groups = {row["group"] for row in data["data"]}
+        self.assertEqual(
+            groups,
+            {
+                "2025-01-15", "2025-01-20",
+                "2025-03-10", "2025-03-15",
+            },
+        )
+        for row in data["data"]:
+            self.assertEqual(row["value"], 1)
+
+    def test_count_group_by_month_monitoring_latest(self):
+        """Count by month with monitoring=latest.
+
+        Latest per parent: mon1b (Mar) + mon2b (Mar) — both March.
+        Expected: 1 group (2025-03) with value=2.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&group_by=month&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["group"], "2025-03")
+        self.assertEqual(data["data"][0]["value"], 2)
+
+    def test_count_group_by_parent_id_monitoring_latest(self):
+        """Count by parent_id with monitoring=latest.
+
+        Each parent shows its latest monitoring as value=1.
+        Expected: 2 rows (reg1, reg2), each value=1.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&group_by=parent_id&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 2)
+        for row in data["data"]:
+            self.assertEqual(row["value"], 1)
+        groups = {row["group"] for row in data["data"]}
+        self.assertEqual(
+            groups,
+            {str(self.reg1.id), str(self.reg2.id)},
+        )
+
+    def test_count_sum_by_id_all(self):
+        """Count with sum_by=id (distinct record IDs).
+
+        monitoring=all + sum_by=id returns total distinct records.
+        Expected: 4 distinct monitoring records.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&sum_by=id&monitoring=all"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["data"][0]["value"], 4)
+        self.assertEqual(data["data"][0]["label"], "Total")
+
+    def test_count_value_type_percentage_latest_no_sum_by(self):
+        """Percentage coverage without sum_by — monitoring=latest.
+
+        Coverage ratio: latest monitoring count / parent count.
+        2 parents monitored / 2 total parents = 100%.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&monitoring=latest&value_type=percentage"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["data"][0]["value"], 100.0)
+
     def test_option_percentage_by_group_latest(self):
         """Option percentage grouped by option, latest monitoring.
 
