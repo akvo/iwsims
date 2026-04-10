@@ -9,10 +9,20 @@ from api.v1.v1_forms.constants import QuestionTypes
 from api.v1.v1_visualization.dashboard_serializers import (
     ValuesFilterSerializer,
 )
-from api.v1.v1_visualization.functions import (
+from api.v1.v1_visualization.values_functions import (
     handle_count_mode,
     handle_option_question,
     handle_number_question,
+)
+from api.v1.v1_visualization.escalation_functions import (
+    handle_escalation,
+)
+from api.v1.v1_visualization.progress_functions import (
+    handle_progress,
+)
+from api.v1.v1_visualization.dashboard_serializers import (
+    EscalationFilterSerializer,
+    ProgressFilterSerializer,
 )
 from utils.custom_serializer_fields import (
     validate_serializers_message,
@@ -177,22 +187,146 @@ def visualization_values(request, version):
 
 
 @extend_schema(
-    description="Config-driven escalation table",
+    description="Escalation table with dynamic criteria and columns",
     tags=["Visualization"],
+    parameters=[
+        OpenApiParameter(
+            name="monitoring_form_id", required=True,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="criteria", required=True,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="columns", required=True,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="page", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="page_size", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="administration_id", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
+    ],
 )
 @api_view(["GET"])
 def visualization_escalation(request, form_id, version):
-    raise NotImplementedError(
-        "visualization_escalation not implemented"
+    """Escalation table with query-param-driven criteria."""
+    parent_form = get_object_or_404(Forms, pk=form_id)
+
+    serializer = EscalationFilterSerializer(
+        data=request.query_params
     )
+    if not serializer.is_valid():
+        return Response(
+            {"message": validate_serializers_message(
+                serializer.errors
+            )},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    validated = serializer.validated_data
+    result = handle_escalation(
+        parent_form=parent_form,
+        monitoring_form_id=validated["monitoring_form_id"],
+        criteria=validated["criteria"],
+        columns=validated["columns"],
+        params={
+            "page": validated.get("page", 1),
+            "page_size": validated.get("page_size", 20),
+            "administration_id": validated.get(
+                "administration_id"
+            ),
+            "from_date": validated.get("from_date"),
+            "to_date": validated.get("to_date"),
+            "date_question_id": validated.get(
+                "date_question_id"
+            ),
+        },
+    )
+    return Response(result, status=status.HTTP_200_OK)
 
 
 @extend_schema(
-    description="Config-driven progress computation",
+    description="Progress computation with configurable formulas",
     tags=["Visualization"],
+    parameters=[
+        OpenApiParameter(
+            name="monitoring_form_id", required=True,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="components", required=True,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="filter_question_id", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="filter_option_value", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="administration_id", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
+    ],
 )
 @api_view(["GET"])
 def visualization_progress(request, form_id, version):
-    raise NotImplementedError(
-        "visualization_progress not implemented"
+    """Progress computation endpoint."""
+    parent_form = get_object_or_404(Forms, pk=form_id)
+
+    serializer = ProgressFilterSerializer(
+        data=request.query_params
     )
+    if not serializer.is_valid():
+        return Response(
+            {"message": validate_serializers_message(
+                serializer.errors
+            )},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    validated = serializer.validated_data
+    result = handle_progress(
+        parent_form=parent_form,
+        monitoring_form_id=validated["monitoring_form_id"],
+        components=validated["components"],
+        params={
+            "filter_question_id": validated.get(
+                "filter_question_id"
+            ),
+            "filter_option_value": validated.get(
+                "filter_option_value"
+            ),
+            "administration_id": validated.get(
+                "administration_id"
+            ),
+            "from_date": validated.get("from_date"),
+            "to_date": validated.get("to_date"),
+            "date_question_id": validated.get(
+                "date_question_id"
+            ),
+        },
+    )
+    return Response(result, status=status.HTTP_200_OK)

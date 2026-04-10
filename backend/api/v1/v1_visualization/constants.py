@@ -18,3 +18,27 @@ AGG_FUNCS = {
     "max": Max,
     "min": Min,
 }
+
+# Escalation criteria types
+VALID_CRITERIA_TYPES = {
+    "option_equals",
+    "threshold_gt",
+    "threshold_lt",
+    "overdue",
+}
+
+# Escalation column source types
+VALID_COLUMN_SOURCES = {
+    "parent_name",
+    "administration",
+    "answer",
+    "latest_date",
+}
+
+# Progress formula types
+VALID_PROGRESS_FORMULAS = {
+    "any_yes",
+    "completed_binary",
+    "ratio",
+    "multi_select_proportion",
+}
