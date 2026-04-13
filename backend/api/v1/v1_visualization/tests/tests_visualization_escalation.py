@@ -195,6 +195,55 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(result["status"], "active")
         self.assertIn("last_visit", result)
 
+    def test_columns_parent_answer(self):
+        """parent_answer reads the registration (parent) datapoint.
+
+        reg1 has a Q_REG_ADMIN answer with value=adm_parent.id.
+        Looking up the same QID via `answer:` (latest monitoring)
+        returns None because monitoring records have no answer for
+        that question.
+        """
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&columns=name:parent_name"
+            f",reg_admin:parent_answer:{self.Q_REG_ADMIN_ID}"
+            f",mon_admin:answer:{self.Q_REG_ADMIN_ID}"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        result = data["results"][0]
+        self.assertEqual(result["name"], "Site Alpha")
+        self.assertEqual(
+            result["reg_admin"], self.adm_parent.id
+        )
+        self.assertIsNone(result["mon_admin"])
+
+    def test_columns_parent_answer_missing_qid(self):
+        """parent_answer with a QID that has no answer → None."""
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&columns=name:parent_name"
+            f",missing:parent_answer:99999999"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNone(data["results"][0]["missing"])
+
+    def test_invalid_column_source_rejected(self):
+        """Unknown column source → 400 with the valid-set message."""
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            "&columns=name:not_a_real_source"
+        )
+        self.assertEqual(response.status_code, 400)
+
     # -- Pagination --
 
     def test_pagination(self):

@@ -122,6 +122,25 @@ def extract_column_value(parent, latest_id, col):
             return answer.value
         return answer.name
 
+    if source == "parent_answer":
+        qid = col.get("question_id")
+        if not qid:
+            return None
+        answer = Answers.objects.filter(
+            data_id=parent.id,
+            question_id=qid,
+        ).first()
+        if not answer:
+            return None
+        if answer.options:
+            return (
+                answer.options[0]
+                if answer.options else None
+            )
+        if answer.value is not None:
+            return answer.value
+        return answer.name
+
     if source == "latest_date":
         qid = col.get("question_id")
         if qid:

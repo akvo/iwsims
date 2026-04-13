@@ -32,6 +32,7 @@ VALID_COLUMN_SOURCES = {
     "parent_name",
     "administration",
     "answer",
+    "parent_answer",
     "latest_date",
 }
 
