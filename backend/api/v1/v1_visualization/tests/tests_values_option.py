@@ -130,6 +130,51 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(values_by_group["pending"], 50.0)
         self.assertEqual(values_by_group["inactive"], 0.0)
 
+    def test_option_group_by_option_percentage_sums_to_100(self):
+        """Percentages must sum to 100 across options (pie semantics).
+
+        monitoring=all: active(2), inactive(1), pending(1). Sum=4.
+        Expected: active=50%, inactive=25%, pending=25%.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=all"
+            "&value_type=percentage"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        values_by_group = {
+            d["group"]: d["value"] for d in data["data"]
+        }
+        self.assertEqual(values_by_group["active"], 50.0)
+        self.assertEqual(values_by_group["inactive"], 25.0)
+        self.assertEqual(values_by_group["pending"], 25.0)
+        self.assertEqual(
+            sum(values_by_group.values()), 100.0
+        )
+
+    def test_multiple_option_group_by_option_percentage(self):
+        """Multiple_option percentage = share-of-selections.
+
+        feature_x=3, feature_y=3, feature_z=3. Sum=9.
+        Each ≈ 33.33%. Sum ≈ 100 (rounding).
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=option&monitoring=all"
+            "&value_type=percentage"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        values_by_group = {
+            d["group"]: d["value"] for d in data["data"]
+        }
+        self.assertEqual(values_by_group["feature_x"], 33.33)
+        self.assertEqual(values_by_group["feature_y"], 33.33)
+        self.assertEqual(values_by_group["feature_z"], 33.33)
+
     def test_multiple_option_group_by_option(self):
         """Multiple option question group_by=option, monitoring=all.
 
@@ -170,6 +215,67 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         data = response.json()
         self.assertEqual(len(data["data"]), 1)
         self.assertEqual(data["data"][0]["value"], 1)
+
+    def test_option_value_group_by_month_with_date_qid(self):
+        """option_value + group_by=month buckets by date_question_id.
+
+        Latest monitoring (after option_value='active' filter):
+        - mon1b: inspection_date 2025-03-10 → bucket "2025-03"
+        Expected: one bucket "2025-03" with value=1.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&monitoring=latest"
+            f"&group_by=month&date_question_id={self.q_date.id}"
+            "&sum_by=parent_id"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["group"], "2025-03")
+        self.assertEqual(data["data"][0]["value"], 1)
+        self.assertEqual(data["data"][0]["label"], "Mar 2025")
+
+    def test_option_value_group_by_month_gap_fill(self):
+        """Gap-fill produces zero buckets across the from/to range.
+
+        With from_date=2025-01-01 to_date=2025-04-30 we expect 4
+        monthly buckets; only 2025-03 has a count, the others are 0.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&monitoring=latest"
+            f"&group_by=month&date_question_id={self.q_date.id}"
+            "&sum_by=parent_id"
+            "&from_date=2025-01-01&to_date=2025-04-30"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        groups = [d["group"] for d in data["data"]]
+        self.assertEqual(
+            groups,
+            ["2025-01", "2025-02", "2025-03", "2025-04"],
+        )
+        values = {d["group"]: d["value"] for d in data["data"]}
+        self.assertEqual(values["2025-01"], 0)
+        self.assertEqual(values["2025-02"], 0)
+        self.assertEqual(values["2025-03"], 1)
+        self.assertEqual(values["2025-04"], 0)
+
+    def test_option_value_group_by_month_no_match(self):
+        """No record matches option_value → empty data list."""
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=does_not_exist&monitoring=latest"
+            f"&group_by=month&date_question_id={self.q_date.id}"
+            "&sum_by=parent_id"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["data"], [])
 
     def test_option_value_percentage(self):
         """Filter by option_value with value_type=percentage.

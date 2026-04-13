@@ -305,6 +305,11 @@ def handle_option_question(form, question, params):
         question=question,
     ).order_by("order")
 
+    if option_value and group_by == "month":
+        return _option_value_group_by_month(
+            question, data_ids, option_value, sum_by, params
+        )
+
     if option_value:
         return _option_value_filter(
             question, data_ids, qs, is_latest,
@@ -357,6 +362,87 @@ def _option_value_filter(
     )
 
 
+def _option_value_group_by_month(
+    question, data_ids, option_value, sum_by, params
+):
+    """Filter by option_value, then bucket by month.
+
+    Used by charts like "Proposed completion date": filter to
+    incomplete projects (option_value='no') and bucket the count
+    by a date question (e.g. project deadline). When `sum_by` is
+    `parent_id`, counts distinct parents per month.
+    """
+    date_qid = params.get("date_question_id")
+
+    matching_ids = list(Answers.objects.filter(
+        data_id__in=data_ids,
+        question_id=question.id,
+        options__contains=[option_value],
+    ).values_list("data_id", flat=True))
+
+    if not matching_ids:
+        data = []
+    elif date_qid:
+        answer_qs = Answers.objects.filter(
+            data_id__in=matching_ids,
+            question_id=date_qid,
+            name__isnull=False,
+        )
+        if sum_by == "parent_id":
+            answer_qs = answer_qs.annotate(
+                year_month=Substr("name", 1, 7),
+            ).values("year_month").annotate(
+                count=Count(
+                    "data__parent_id", distinct=True
+                ),
+            ).order_by("year_month")
+        else:
+            answer_qs = answer_qs.annotate(
+                year_month=Substr("name", 1, 7),
+            ).values("year_month").annotate(
+                count=Count("data_id", distinct=True),
+            ).order_by("year_month")
+        data = [
+            {
+                "value": r["count"],
+                "label": format_month_label(
+                    r["year_month"]
+                ),
+                "group": r["year_month"],
+            }
+            for r in answer_qs
+        ]
+    else:
+        fd_qs = FormData.objects.filter(
+            id__in=matching_ids,
+        ).annotate(
+            month=TruncMonth("created"),
+        ).values("month")
+        if sum_by == "parent_id":
+            fd_qs = fd_qs.annotate(
+                count=Count("parent_id", distinct=True),
+            ).order_by("month")
+        else:
+            fd_qs = fd_qs.annotate(
+                count=Count("id"),
+            ).order_by("month")
+        data = [
+            {
+                "value": r["count"],
+                "label": format_month_label(r["month"]),
+                "group": format_month_group(r["month"]),
+            }
+            for r in fd_qs
+        ]
+
+    if _should_fill_gaps(params):
+        data = fill_month_gaps(
+            data, params["from_date"], params["to_date"]
+        )
+    labels = [d["label"] for d in data]
+    return data, labels
+
+
 def _option_group_by_option(
     question, options, data_ids, qs,
     is_latest, value_type
@@ -367,16 +453,18 @@ def _option_group_by_option(
     options — so pie/doughnut charts have stable legends and colors
     across refreshes and filter changes.
     """
-    total_for_pct = (
-        qs.count() if is_latest else len(data_ids)
-    )
-    data = []
+    counts = []
     for opt in options:
         count = Answers.objects.filter(
             data_id__in=data_ids,
             question_id=question.id,
             options__contains=[opt.value],
         ).count()
+        counts.append(count)
+
+    total_for_pct = sum(counts)
+    data = []
+    for opt, count in zip(options, counts):
         if value_type == "percentage":
             val = round(
                 (count / total_for_pct * 100), 2
