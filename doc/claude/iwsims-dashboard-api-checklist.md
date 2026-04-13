@@ -97,17 +97,73 @@ curl -X GET \
   -H 'accept: */*'
 ```
 
+### Tab-bottom KPIs (Monitoring overview)
+
+Three additional KPIs render under the donut row, before the escalation table.
+
+**Total EPS monitored in last 12 months** — distinct count of registration EPS that have at least one water-quality monitoring submission whose `inspection_date` (`1749632545235`) falls in the rolling 12-month window. Frontend templates `from_date = today - 12 months` and `to_date = today`. Display as `count / total` ("52/total").
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&monitoring=latest&sum_by=parent_id&date_question_id=1749632545235&from_date=<TODAY-12M>&to_date=<TODAY>' \
+  -H 'accept: */*'
+```
+
+**Total EPS with critical issues** — same call as the top-row KPI in §Monitoring Overview KPIs (operational_status = `issue_with_system`); reuse the response.
+
+**Total EPS where water sample collection was not possible** — distinct EPS whose latest water-quality monitoring marks `1749632647507 = no`.
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=1749632647507&option_value=no&monitoring=latest&sum_by=parent_id' \
+  -H 'accept: */*'
+```
+
+### Escalation list (table)
+
+Surfaces EPS where water-quality parameters are out of range OR the system has an issue OR the sample could not be collected. Single `/escalation` call; rows are the inclusive OR of the criteria. The "Accessibility issues" column in the design is a placeholder — render an empty cell until a QID is assigned.
+
+| Column | Source | Notes |
+|---|---|---|
+| EPS name | `parent_answer:1749624452994` | Lives on the registration form, so use `parent_answer` (not `answer`, which only reads the latest monitoring submission). `parent_name` is also acceptable if you want the auto-generated datapoint name |
+| Village Name | `parent_answer:1749624452991` | Registration-form question |
+| Last Monitoring | `latest_date:1749632545235` | inspection_date from latest water-quality submission |
+| Operational Status | `answer:1749633373968` | `operational` / `issue_with_system` |
+| Not able to collect the water sample | `answer:1749632647507` | `yes` / `no` |
+| Critical water quality issues | `answer` per parameter QID OR client-side `violations` summary | `/escalation` has no `violations` source — fan out a column per parameter (`ecoli:answer:1749633220746`, …) and roll up client-side, or just show the failing parameter labels via the frontend |
+| Accessibility issues | *(placeholder)* | QID pending |
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/escalation/1749623934933?monitoring_form_id=1749632545233&page=1&page_size=20&criteria=option_equals:1749632647507:no,option_equals:1749633373968:issue_with_system,threshold_gt:1749633220746:0,threshold_gt:1749633259392:0,threshold_gt:1749633295165:0,threshold_gt:1749633220745:5,threshold_gt:1797307852531:30,threshold_gt:1797307852533:1000,threshold_gt:1797307852534:1&columns=eps_name:parent_answer:1749624452994,village_name:parent_answer:1749624452991,last_monitoring:latest_date:1749632545235,operational_status:answer:1749633373968,water_collection:answer:1749632647507,ecoli:answer:1749633220746,coliform:answer:1749633259392,turbidity:answer:1749633220745' \
+  -H 'accept: */*'
+```
+
+> The design's red alert annotation ("alert when not able to collect the water sample…") is a frontend row-styling rule based on the `water_collection` and `operational_status` cells — no backend involvement.
+
+### Inspections per month over last year (bar chart, fiscal axis)
+
+Bar chart of **count of monitoring submissions per month** over the last year. The header label in the design is templated client-side ("Inspections [\<adm\>] (between \<from\> - \<to\>) per Month over Last Year"). Same fiscal-year axis convention as §2 Proposed completion date — backend returns chronological `YYYY-MM` groups, frontend rotates them to start at `filters.date.fiscal_year_start_month`. `monitoring=all` is critical so revisits to the same EPS each contribute a bar instead of being collapsed to the latest.
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&group_by=month&monitoring=all&date_question_id=1749632545235&from_date=<FY_START>&to_date=<FY_END>' \
+  -H 'accept: */*'
+```
+
+Frontend transform mirrors the construction "Proposed completion date" chart: sort by `group` ascending, rotate to fiscal order, render as bars. Pass `from_date`/`to_date` covering the active fiscal year so the backend gap-fills empty months for a clean 12-bar axis.
+
 ---
 
 ## 2. Construction Monitoring
 
 ### KPIs
 
-**Total EPS under construction (percentage)** — share of EPS whose "project completed" flag is `yes`.
+**Total EPS under construction (percentage)** — share of registered EPS whose construction-complete flag (`1749630516826`) is `no`. Matches `kpis.under_construction_pct` in the config; the top-row `under_construction` count KPI uses the same question with `value_type=number`.
 
 ```bash
 curl -X GET \
-  'http://localhost:3000/api/v1/visualization/values?form_id=1749624452908&question_id=1849635800001&option_value=yes&monitoring=latest&sum_by=parent_id&value_type=percentage' \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749624452908&question_id=1749630516826&option_value=no&monitoring=latest&sum_by=parent_id&value_type=percentage' \
   -H 'accept: */*'
 ```
 
@@ -170,7 +226,7 @@ Component → column mapping:
 | EPS tank implementation | `answer:1849633900003` | |
 | Balance tank implementation | `answer:1849634300002` | |
 | Storage tank implementation | `answer:1849634690001` | |
-| Standpipes | `answer:1849634900001` | Raw ratio answer; format client-side. |
+| Standpipes | `implemented:answer:1849635200001`, `planned:answer:1849634950001` | `ratio` formula needs both QIDs; compute `implemented ÷ planned` client-side, or join with `/progress` details to read the pre-computed score. |
 | Drainage | *(placeholder)* | QID pending definition. |
 | Site security and perimeter | `answer:1849635500001` | `multi_select_proportion` — raw selection array; compute `selected/3` client-side if the cell should show a percentage. |
 | Deadline | `answer:1749630516825` | |

@@ -120,7 +120,13 @@ Each KPI is a named entry whose `api` block is the exact query-param payload pas
 
 Translated: "Hit `/visualization/values?form_id=1749624452908&question_id=1749630516826&option_value=no&monitoring=latest&sum_by=parent_id` and render the single returned number as a tile." The backend logic: count distinct parents whose latest construction answer is `no`.
 
-A few KPIs use frontend-computed extensions (`fiscal_year: true`, `past_due: true`). These are **hints** that the frontend expands into concrete `from_date`/`to_date` or additional filters before calling the API. They are not understood by the backend directly.
+A few KPIs use frontend-computed extensions — **hints** that the frontend expands into concrete `from_date`/`to_date` or additional filters before calling the API. They are not understood by the backend directly.
+
+| Hint | Expansion |
+|---|---|
+| `rolling_months: 12` | `from_date = today - 12 months`, `to_date = today` (rolling window anchored at TODAY). Used by `monitored_last_12_months` / `water_sample_last_12_months`. |
+| `fiscal_year: true` | `from_date` / `to_date` set to the current fiscal year's start/end, using `filters.date.fiscal_year_start_month`. Used by the `inspections_per_month` chart. |
+| `past_due: true` | Adds `to_date = today - 1 day` against the chart's `deadline_question_id`, combined with `completion_question_id=<incomplete>`. Used by `construction_past_due`. |
 
 ### 6. `charts` — chart definitions
 
@@ -493,6 +499,20 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "sum_by": "parent_id"
       }
     },
+    "under_construction_pct": {
+      "label": "Total EPS under construction",
+      "description": "Share of registered EPS still under construction. Renders as a percentage tile on the Construction Monitoring tab.",
+      "color": "#fa8c16",
+      "hide": false,
+      "api": {
+        "form_id": 1749624452908,
+        "question_id": 1749630516826,
+        "option_value": "no",
+        "monitoring": "latest",
+        "sum_by": "parent_id",
+        "value_type": "percentage"
+      }
+    },
     "operational": {
       "label": "Total EPS operational",
       "color": "#64A73B",
@@ -517,8 +537,9 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "sum_by": "parent_id"
       }
     },
-    "monitored_fiscal_year": {
+    "monitored_last_12_months": {
       "label": "EPS monitored last 12 months",
+      "description": "Rolling 12-month window anchored at TODAY. Frontend expands `rolling_months: 12` to `from_date = today - 12 months`, `to_date = today` before calling the API.",
       "hide": false,
       "api": {
         "form_id": 1749632545233,
@@ -526,7 +547,7 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "sum_by": "parent_id",
         "value_type": "percentage",
         "date_question_id": 1749632545235,
-        "fiscal_year": true
+        "rolling_months": 12
       }
     },
     "no_water_sample": {
@@ -540,8 +561,9 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "sum_by": "parent_id"
       }
     },
-    "water_sample_fiscal_year": {
+    "water_sample_last_12_months": {
       "label": "EPS with water sample taken last 12 months",
+      "description": "Same rolling 12-month window as `monitored_last_12_months`; numerator is EPS whose latest water-sample answer is `yes`.",
       "hide": false,
       "api": {
         "form_id": 1749632545233,
@@ -550,7 +572,8 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "monitoring": "latest",
         "sum_by": "parent_id",
         "value_type": "percentage",
-        "fiscal_year": true
+        "date_question_id": 1749632545235,
+        "rolling_months": 12
       }
     },
     "lab_tested": {
@@ -757,7 +780,7 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "label": "Fecal coliform presence",
         "group": "microbial",
         "chart_type": "bar",
-        "hide": false,
+        "hide": true,
         "config": {
           "title": "Fecal coliform presence",
           "xAxisLabel": "CFU/100mL",
@@ -1114,7 +1137,7 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
           "type": "kpi_row",
           "hide": false,
           "kpis": [
-            "monitored_fiscal_year",
+            "monitored_last_12_months",
             "critical_issues",
             "no_water_sample"
           ]
@@ -1137,7 +1160,7 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
           "type": "kpi_row",
           "hide": false,
           "kpis": [
-            "water_sample_fiscal_year",
+            "water_sample_last_12_months",
             "lab_tested",
             "cbt_tested"
           ]
@@ -1182,7 +1205,7 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         {
           "type": "kpi_row",
           "hide": false,
-          "kpis": ["under_construction", "construction_past_due"]
+          "kpis": ["under_construction_pct", "construction_past_due"]
         },
         {
           "type": "chart_row",
@@ -1530,5 +1553,7 @@ To add a dashboard for a new form family:
 |------|--------|
 | Drainage component progress formula | **Pending definition** — `hide: true` in config until spec is final |
 | "Fiscal year" exact start month | **Configurable** via `filters.date.fiscal_year_start_month` (default July) |
-| Compliance doughnut colors | Derived from config; validate against design mockup on implementation |
-| EPS name column source | Uses answer to `1749624452994` rather than parent datapoint name |
+| Compliance stacked-bar colors | Derived from config; validate against design mockup on implementation |
+| EPS name column source | Uses `parent_answer:1749624452994` on the registration form rather than the auto-generated datapoint name |
+| Fecal coliform parameter | `hide: true` — QID `1749633295165` is defined in the water-quality form but not shown on the design. Un-hide once stakeholders confirm whether to render it in the Microbial grid |
+| Accessibility issues tile/column | **Pending QID** — rendered as a placeholder in the EPS-at-a-Glance section and the monitoring escalation table's last column until a form question is assigned |

@@ -463,7 +463,8 @@ columns=name:parent_name,status:answer:600203,date:latest_date:600201
 |--------|--------|---------|
 | `parent_name` | `{key}:parent_name` | Registration datapoint name |
 | `administration` | `{key}:administration` | Admin hierarchy path |
-| `answer` | `{key}:answer:{qid}` | Answer value from latest monitoring |
+| `answer` | `{key}:answer:{qid}` | Answer value from **latest monitoring** |
+| `parent_answer` | `{key}:parent_answer:{qid}` | Answer value from the **registration (parent)** datapoint — use for fields that only exist on the registration form (e.g. EPS name, village name) |
 | `latest_date` | `{key}:latest_date:{date_qid}` | Date from latest monitoring |
 
 #### Response Format

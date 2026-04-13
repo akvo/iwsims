@@ -17,7 +17,7 @@ This document defines the data structure and queries for the Akvo MIS Water Syst
 
 ## 1. Monitoring Overview
 
-### Key Metrics
+### Key Metrics (shared top-row KPIs, rendered on every tab)
 
 | Metric | Query |
 |--------|-------|
@@ -25,8 +25,8 @@ This document defines the data structure and queries for the Akvo MIS Water Syst
 | EPS Under Construction | COUNT(UNIQUE 1749630516826 == 'No') |
 | EPS Operational | COUNT(UNIQUE 1749633373968 == 'Operational') |
 | EPS with Critical Issues | COUNT(UNIQUE 1749633373968 == 'Issue with the system') |
-| Lab Tested | COUNT(UNIQUE 1749624452994 WHERE 1749633001462 == 'Lab Test') |
-| CBT Bag Tested | COUNT(UNIQUE 1749624452994 WHERE 1749633001462 == 'CBT Test') |
+
+> Lab Tested and CBT Bag Tested are **not** in the shared top row; they live in the Water Quality tab's KPI row (see §2).
 
 ### Monitoring Overview Tab
 
@@ -43,8 +43,8 @@ This document defines the data structure and queries for the Akvo MIS Water Syst
 **Drinking Water Compliance** (All conditions must be met):
 - E. coli (1749633220746) ≤ 0
 - Turbidity (1749633220745) ≤ 5
-- Coliform (1749633259392) ≤ 0
-- (Parameter 1749633295165) ≤ 0
+- Total Coliform (1749633259392) ≤ 0
+- Fecal Coliform (1749633295165) ≤ 0
 - Temperature (1797307852531) ≤ 30
 - pH (1797307852532): 6.5 ≤ value ≤ 8.5
 - Conductivity (1797307852533) ≤ 1000
@@ -66,37 +66,37 @@ This document defines the data structure and queries for the Akvo MIS Water Syst
 | Column | Question ID | Notes |
 |--------|------------|-------|
 | EPS Name | 1749624452994 | |
-| Village Name | 1749624452990 | |
+| Village Name | 1749624452991 | |
 | Last Monitoring | 1749632545235 / 1749624452911 | |
 | Operational Status | 1749633373968 | |
 | Water Collection Ability | 1749632647507 | |
 | Critical Quality Issue | — | Display parameter causing escalation |
+| Accessibility Issues | — | *Placeholder — pending QID* |
 
 ### Inspections Per Month
 
-**Visualization**: Monthly count of monitoring activities
+**Visualization**: Monthly count of monitoring activities, x-axis rotated to **fiscal-year order** (frontend rotates backend's chronological `YYYY-MM` groups using `filters.date.fiscal_year_start_month`).
 
-**Query**: COUNT(1749624452994) grouped by month extracted from 1749632545235
+**Query**: COUNT(1749624452994) grouped by month extracted from 1749632545235, with `from_date`/`to_date` bounded to the active fiscal year so the backend gap-fills empty months.
 
 ---
 
 ## 2. Water Quality
 
-### Key Metrics (Same as Monitoring Overview)
+### Tab KPI Row (below shared top row)
 
 | Metric | Query |
 |--------|-------|
-| Total EPS Registered | COUNT(UNIQUE 1749624452994) |
-| EPS Operational | COUNT(UNIQUE 1749633373968 == 'Operational') |
-| EPS Monitored (Last 12 Months) | COUNT(UNIQUE 1749624452994 WHERE 1749632545235 within last 12 months) |
-| Lab Tested | COUNT(UNIQUE 1749624452994 WHERE 1749633001462 == 'Lab Test') |
-| CBT Bag Tested | COUNT(UNIQUE 1749624452994 WHERE 1749633001462 == 'CBT Test') |
+| EPS with water sample taken last 12 months (%) | COUNT(1749632647507 == 'Yes' WHERE 1749632545235 within last 12 months) ÷ COUNT(all registered) × 100 |
+| Lab Tested EPS | COUNT(UNIQUE 1749624452994 WHERE 1749633001462 == 'Lab Test') |
+| CBT Tested EPS | COUNT(UNIQUE 1749624452994 WHERE 1749633001462 == 'CBT Test') |
 
 ### Water Quality Parameters
 
 **Microbial Parameters**:
 - E. coli: 1749633220746
-- Coliform: 1749633259392
+- Total Coliform: 1749633259392
+- Fecal Coliform: 1749633295165 *(hidden by default; un-hide when stakeholders confirm)*
 
 **Physical Parameters**:
 - Turbidity: 1749633220745
@@ -124,7 +124,7 @@ Both tiles render as percentages per the design. For raw counts add companion ti
 
 **Percentage of projects completed** — distribution of EPS across overall-progress buckets (0-10%, 11-20%, …, 91-100%). Sourced from `/visualization/progress` histogram; no extra API call.
 
-**Proposed completion date** — monthly histogram of `1749630516825` with TODAY() reference line.
+**Proposed completion date** — monthly histogram of `1749630516825` with TODAY() reference line. X-axis rotated to fiscal-year order (same mechanism as Inspections Per Month in §1).
 - **Filter**: Only EPS not yet completed (`1749630516826 == 'No'`).
 
 ### Project Progress Calculation
