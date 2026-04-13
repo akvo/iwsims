@@ -1,0 +1,192 @@
+# IWSIMS Dashboard API Checklist
+
+Reference list of every API call required by the EPS Overview dashboard, grouped by tab and chart. All calls hit `http://localhost:3000` in development. Common filters (date range, administration, implementing agency, water committee) are omitted for brevity — apply them as additional query params where relevant.
+
+---
+
+## 1. Monitoring Overview
+
+### KPIs
+
+**Total EPS registered**
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749623934933' \
+  -H 'accept: */*'
+```
+
+**Total EPS under construction**
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749624452908&question_id=1749630516826&option_value=no&monitoring=latest&sum_by=parent_id' \
+  -H 'accept: */*'
+```
+
+**Total EPS operational**
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=1749633373968&option_value=operational&monitoring=latest&sum_by=parent_id' \
+  -H 'accept: */*'
+```
+
+**Total EPS with critical issues**
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=1749633373968&option_value=issue_with_system&monitoring=latest&sum_by=parent_id' \
+  -H 'accept: */*'
+```
+
+### Donut charts
+
+**Operational status**
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=1749633373968&group_by=option&monitoring=latest&sum_by=parent_id&value_type=percentage' \
+  -H 'accept: */*'
+```
+
+**Water committee** (registration donut — one answer per record)
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749623934933&question_id=1749624452105&group_by=option&sum_by=id&value_type=percentage' \
+  -H 'accept: */*'
+```
+
+**Implementing authority** (registration donut)
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749623934933&question_id=1749624452993&group_by=option&sum_by=id&value_type=number' \
+  -H 'accept: */*'
+```
+
+**Lab tested vs CBT tested** (monitoring donut — aggregate per parent EPS)
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=1749633001462&group_by=option&monitoring=latest&sum_by=parent_id&value_type=percentage' \
+  -H 'accept: */*'
+```
+
+### Drinking water compliance (stacked bar — frontend computed)
+
+Fan out **one `/values` call per parameter**, merge responses by `data[].group` (parent EPS id), then classify each EPS against its thresholds to build the `Yes` / `No` stacked bar. See [iwsims-dashboard-config-example.md §6](iwsims-dashboard-config-example.md) for the transform.
+
+| Parameter | Question ID | Threshold |
+|---|---|---|
+| E. coli | `1749633220746` | ≤ 0 |
+| Turbidity | `1749633220745` | ≤ 5 |
+| Coliform | `1749633259392` | ≤ 0 |
+| Parameter X | `1749633295165` | ≤ 0 |
+| Temperature | `1797307852531` | ≤ 30 |
+| pH | `1797307852532` | 6.5–8.5 |
+| Conductivity | `1797307852533` | ≤ 1000 |
+| Salinity | `1797307852534` | ≤ 1 |
+
+Template (one call per `question_id` above):
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=<QID>&group_by=parent_id&monitoring=latest&repeat_agg=average' \
+  -H 'accept: */*'
+```
+
+---
+
+## 2. Construction Monitoring
+
+### KPIs
+
+**Total EPS under construction (percentage)** — share of EPS whose "project completed" flag is `yes`.
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749624452908&question_id=1849635800001&option_value=yes&monitoring=latest&sum_by=parent_id&value_type=percentage' \
+  -H 'accept: */*'
+```
+
+**EPS with a past-due completion date** — `to_date` is templated client-side as `today - 1 day` for strict `< TODAY()`; use `today` for `<= TODAY()`.
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749624452908&question_id=1749630516826&option_value=no&date_question_id=1749630516825&to_date=<YYYY-MM-DD>&monitoring=latest&sum_by=parent_id&value_type=percentage' \
+  -H 'accept: */*'
+```
+
+### Charts
+
+**Percentage of projects completed** — progress-bucket histogram (`0-10%`, `11-20%`, …, `91-100%`). Single call to `/progress`; frontend reads `response.histogram`.
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/progress/1749623934933?monitoring_form_id=1749624452908&filter_question_id=1749630516826&filter_option_value=no&deadline_question_id=1749630516825&components=concrete_base:any_yes:1849633499999:1849633498888:1849633497777,urf_tank:completed_binary:1849633720001,eps_tank:completed_binary:1849633900003,balance_tank:completed_binary:1849634300002,storage_tank:completed_binary:1849634690001,standpipes:ratio:1849635200001:1849634950001,site_security:multi_select_proportion:1849635500001:3' \
+  -H 'accept: */*'
+```
+
+**Proposed completion date** — bar chart of incomplete projects bucketed by deadline month. The x-axis follows the **fiscal year ordering** defined by `filters.date.fiscal_year_start_month` (e.g., Jul → Jun for FY anchor `7`, Apr → Mar for `4`); the backend returns chronological `YYYY-MM` groups and the frontend rotates them to fiscal order before rendering. A red vertical reference line marks **TODAY** (client-side `raw_config`). Filtered to incomplete projects only (`1749630516826 = no`).
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749624452908&question_id=1749630516826&option_value=no&group_by=month&date_question_id=1749630516825&monitoring=latest&sum_by=parent_id&from_date=2026-01-01&to_date=2026-12-31' \
+  -H 'accept: */*'
+```
+
+**Frontend transform** (sketch):
+
+```js
+// 1. Fetch /values → { data: [{ value, label, group: "YYYY-MM" }, ...] }
+// 2. Sort by group ascending, then rotate so the first bucket is the
+//    first month of the fiscal year window covering TODAY.
+// 3. Insert a vertical marker line at the bucket containing TODAY
+//    (use raw_config.markLine in akvo-charts / ECharts).
+```
+
+To bound the x-axis to a single fiscal year, pass `from_date` and `to_date` as the FY start/end (the backend gap-fills missing months when both are provided — see [generic-visualization-api-spec.md](generic-visualization-api-spec.md)).
+
+### Escalation list (table)
+
+Server-side call surfaces overdue incomplete projects via the `overdue` criterion. Design intent is `overall_progress < expected_progress` — that comparison is computed client-side on `/progress` `response.details` and applied as a post-filter.
+
+The `/escalation` `columns` param only supports four source types (`parent_name`, `administration`, `answer:{qid}`, `latest_date:{qid}`). For the component columns shown in the design there are two patterns:
+
+#### Pattern A — raw answers (single call)
+
+One `answer:{qid}` column per component. Fast, one round trip. Cell renders the literal answer text ("Completed", "Ongoing", "Pending", selection array, etc.).
+
+Component → column mapping:
+
+| Column | Source | Notes |
+|---|---|---|
+| EPS name | `parent_name` | |
+| Last monitoring | `latest_date:1749624452911` | |
+| Concrete base construction | `answer:1849633499999` | Base formula is `any_yes` across 3 QIDs (`1849633499999`, `1849633498888`, `1849633497777`). Pick one as representative, or render all three client-side. |
+| URF tank implementation | `answer:1849633720001` | |
+| EPS tank implementation | `answer:1849633900003` | |
+| Balance tank implementation | `answer:1849634300002` | |
+| Storage tank implementation | `answer:1849634690001` | |
+| Standpipes | `answer:1849634900001` | Raw ratio answer; format client-side. |
+| Drainage | *(placeholder)* | QID pending definition. |
+| Site security and perimeter | `answer:1849635500001` | `multi_select_proportion` — raw selection array; compute `selected/3` client-side if the cell should show a percentage. |
+| Deadline | `answer:1749630516825` | |
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/escalation/1749623934933?monitoring_form_id=1749624452908&criteria=overdue:1749630516826:1749630516825&columns=name:parent_name,last_monitoring:latest_date:1749624452911,concrete_base:answer:1849633499999,urf_tank:answer:1849633720001,eps_tank:answer:1849633900003,balance_tank:answer:1849634300002,storage_tank:answer:1849634690001,standpipes:answer:1849634900001,site_security:answer:1849635500001,deadline:answer:1749630516825&page=1&page_size=20' \
+  -H 'accept: */*'
+```
+
+The `Progress` and `Expected progress` columns can't come from this call — `/escalation` has no formula engine. Either:
+
+- **Progress**: join with the `/progress` call above by `parent_id` → read `details[i].overall`.
+- **Expected progress**: compute client-side as `(TODAY - project_start) / (deadline - project_start) × 100%` using `answer:1749624452910` (start date) and `answer:1749630516825` (deadline). Add both as extra `answer:` columns if you prefer fetching the raw dates in one call:
+  `start_date:answer:1749624452910` (already have `deadline` above).
+
+#### Pattern B — join with `/progress` for computed component scores
+
+Use when cells must show computed percentages (e.g. `50%` for concrete base, `33%` for site security). Call `/escalation` for the row set and `/progress` for the component scores, then merge in the frontend by `parent_id`. This is also how the `overall < expected` post-filter is applied, so if you're already fetching `/progress` for that, the join is free.

@@ -127,7 +127,7 @@ A few KPIs use frontend-computed extensions (`fiscal_year: true`, `past_due: tru
 Same shape as `kpis` but with a `chart_type` (`doughnut`, `bar`, `line`) and a `config` block that passes through to akvo-charts as chart props. Three variants you will see:
 
 1. **API-driven** (`operational_status`) — has an `api` block; the response is rendered directly.
-2. **Composed** (`drinking_water_compliance`) — has `compute: "compliance"` + `compliance_params_ref: "water_quality.parameters"`. The frontend **does not** hit the backend for this chart; it runs each parameter's query and combines results locally.
+2. **Composed** (`drinking_water_compliance`) — has `compute: "compliance"` + `compliance_params_ref: "water_quality.parameters"`. The frontend **does not** hit the backend for this chart; it runs each parameter's query and combines results locally. Rendered as a **stacked bar** with two x-axis categories — `Yes` (single "Compliant" stack segment) and `No` (one stack segment per failing parameter, so the bar's segments show *which* parameters drove non-compliance).
 3. **Cross-referenced** (`construction_progression`) — has `source: "progress"` + `progress_ref: "construction"`, meaning "reuse the histogram computed by `/visualization/progress`, no extra API call."
 
 The chart system uses a **"define once, reference anywhere"** pattern so one computation can drive multiple widgets.
@@ -148,8 +148,8 @@ A **list** of water-quality parameters grouped by `microbial` | `physical` | `ch
 ```
 
 `threshold` is used in two places:
-- **Chart rendering** — draws a threshold line on the bar.
-- **Compliance computation** — each parameter contributes to the "drinking water compliance" doughnut (rule: all parameters within threshold = compliant).
+- **Chart rendering** — draws a threshold line on the bar. `min` and `max` are both optional; provide `min` for two-sided ranges (e.g. pH).
+- **Compliance computation** — each parameter contributes to the "drinking water compliance" stacked bar. An EPS is compliant only if **every** parameter answer satisfies both `min` (if set) and `max` (if set). Parameters a given EPS hasn't reported are treated as "no data" and do not count as a violation.
 
 Layout sections reference groups via `parameter_grid.group = "microbial"`, which expands into all parameters with matching `group`.
 
@@ -166,7 +166,7 @@ Layout sections reference groups via `parameter_grid.group = "microbial"`, which
       "components": [
         { "key": "concrete_base", "formula": "any_yes", "question_ids": [...] },
         { "key": "urf_tank",      "formula": "completed_binary", "question_ids": [...] },
-        { "key": "standpipes",    "formula": "ratio", "question_ids": [...] },
+        { "key": "standpipes",    "formula": "ratio", "question_ids": [implemented_qid, planned_qid] },
         { "key": "site_security", "formula": "multi_select_proportion", "total_items": 3, "question_ids": [...] },
         { "key": "drainage",      "formula": "completed_binary", "hide": true, "question_ids": [] }
       ]
@@ -181,7 +181,7 @@ This maps directly to `/visualization/progress/{form_id}`. Each component declar
 |---|---|
 | `any_yes` | 100% if any of the listed questions answered "yes" |
 | `completed_binary` | 100% if the single question equals "completed" |
-| `ratio` | Percentage from a numeric answer (e.g., implemented/planned) |
+| `ratio` | `(implemented ÷ planned) × 100`, clamped to 100. Requires exactly 2 `question_ids`: `[implemented_qid, planned_qid]`. |
 | `multi_select_proportion` | Count of selected options ÷ `total_items` × 100 |
 
 The backend loops over the components per parent EPS, averages the enabled ones, and buckets the overall percentage into ten 10% bins. The `drainage` component is `hide: true` because its formula is still being finalized — it stays in the config so it's obvious what's pending without losing the placeholder.
@@ -597,14 +597,17 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
       }
     },
     "drinking_water_compliance": {
-      "chart_type": "doughnut",
+      "chart_type": "stack_bar",
       "hide": false,
       "config": {
         "title": "Drinking Water Compliance",
-        "color": ["#64A73B", "#e41a1c", "#cccccc"]
+        "xAxisLabel": "Compliant",
+        "yAxisLabel": "EPS count",
+        "color": ["#64A73B", "#e41a1c", "#ff7f00", "#984ea3", "#377eb8", "#a65628", "#f781bf", "#999999", "#cccccc"]
       },
       "compute": "compliance",
-      "compliance_params_ref": "water_quality.parameters"
+      "compliance_params_ref": "water_quality.parameters",
+      "include_no_data": false
     },
     "water_committee": {
       "chart_type": "doughnut",
@@ -658,7 +661,8 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
       "hide": false,
       "config": {
         "title": "Percentage of projects completed",
-        "xAxisLabel": "Progress",
+        "description": "Distribution of EPS across overall-progress buckets (0-10%, 11-20%, ..., 91-100%). Bars sum to total active construction projects.",
+        "xAxisLabel": "Progress bucket",
         "yAxisLabel": "Number of EPS"
       },
       "source": "progress",
@@ -670,11 +674,15 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
       "hide": false,
       "config": {
         "title": "Proposed completion date",
+        "description": "EPS counted by month of their planned completion date. Incomplete projects only; TODAY reference line drawn on x-axis.",
         "xAxisLabel": "Month",
         "yAxisLabel": "Number of EPS"
       },
       "api": {
         "form_id": 1749624452908,
+        "question_id": 1749630516826,
+        "option_value": "no",
+        "sum_by": "parent_id",
         "group_by": "month",
         "date_question_id": 1749630516825,
         "monitoring": "latest"
@@ -913,7 +921,7 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
             "label": "Standpipes",
             "formula": "ratio",
             "hide": false,
-            "question_ids": [1849634900001]
+            "question_ids": [1849635200001, 1849634950001]
           },
           {
             "key": "drainage",
@@ -1374,7 +1382,9 @@ fetch(url) → { histogram: [...], details: [...] }
 />
 ```
 
-### 6. Compliance Doughnut (frontend computed)
+### 6. Compliance Stacked Bar (frontend computed)
+
+Shape of the chart: x-axis has two categories, `Yes` and `No`. The `Yes` bar is a single "Compliant" stack segment. The `No` bar stacks one segment per parameter, where each segment's height is the number of EPS that failed that parameter (an EPS that fails multiple parameters contributes to each of its failing segments, so the `No` stack total ≥ count of non-compliant EPS).
 
 ```
 // Fetch all non-hidden water quality parameter values in parallel
@@ -1388,38 +1398,42 @@ const allResponses = await Promise.all(
   ))
 );
 
-// Group by EPS, check each parameter against its threshold
-const epsCompliance = {};
+// Merge responses by EPS id (row.group === FormData.id)
+const byEps = {};
 allResponses.forEach((response, idx) => {
-  const param = params[idx];
+  const key = params[idx].key;
   response.data.forEach(row => {
-    const epsId = row.group;
-    if (!epsCompliance[epsId]) {
-      epsCompliance[epsId] = { compliant: true, violations: [] };
-    }
-    if (!checkThreshold(row.value, param.threshold)) {
-      epsCompliance[epsId].compliant = false;
-      epsCompliance[epsId].violations.push(param.label);
-    }
+    (byEps[row.group] ??= {})[key] = row.value;
   });
 });
 
-const counts = {
-  compliant: Object.values(epsCompliance).filter(e => e.compliant).length,
-  non_compliant: Object.values(epsCompliance).filter(e => !e.compliant).length,
-  no_data: totalRegistered - Object.keys(epsCompliance).length
-};
+// Classify each EPS, tallying per-parameter failures for the "No" stack
+const yesRow = { compliance: "Yes", Compliant: 0 };
+const noRow  = { compliance: "No"  };
+params.forEach(p => { noRow[p.label] = 0; });
+
+for (const eps of Object.values(byEps)) {
+  const failed = params.filter(p => !checkThreshold(eps[p.key], p.threshold));
+  if (failed.length === 0) {
+    yesRow.Compliant += 1;
+  } else {
+    failed.forEach(p => { noRow[p.label] += 1; });
+  }
+}
+
+const chartData = [yesRow, noRow];
+const stackLabels = ["Compliant", ...params.map(p => p.label)];
 
 render:
-  <Doughnut
+  <StackBar
     config={config.charts.drinking_water_compliance.config}
-    data={[
-      { name: "Compliant", value: counts.compliant },
-      { name: "Non-compliant", value: counts.non_compliant },
-      { name: "No data", value: counts.no_data }
-    ]}
+    data={chartData}
+    xKey="compliance"
+    stackKeys={stackLabels}
   />
 ```
+
+`checkThreshold(value, { min, max })` returns `true` when `value` is within range. Missing values (EPS never reported that parameter) should return `true` — they are "no data", not a violation. If you want a third bar for "No data", set `include_no_data: true` in the chart config and add a matching branch here.
 
 ### 7. Expected Progress (frontend computed)
 

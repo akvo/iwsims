@@ -40,7 +40,7 @@ A single generic endpoint that serves data for all chart types. The frontend com
 | Param | Type | Options | Default | Description |
 |-------|------|---------|---------|-------------|
 | `sum_by` | string | `id`, `parent_id` | *(none)* | Aggregation scope |
-| `value_type` | string | `number`, `percentage` | `number` | Format of returned values |
+| `value_type` | string | `number`, `percentage` | `number` | Format of returned values. For `group_by=option` the denominator is the sum of option counts (slices sum to 100%); for `option_value` filters it is the total parent/record count. |
 | `repeat_agg` | string | `average`, `sum`, `max`, `min`, `last` | `average` | How to aggregate answers in repeatable question groups |
 
 ### Filtering
@@ -281,13 +281,24 @@ Filters to only answers matching the option value, then counts.
 
 ### With `value_type=percentage`
 
-Returns the count as a percentage of total parent records:
+Behavior depends on context:
+
+- With `option_value` filter: returns the count as a percentage of total parent/records.
+- With `group_by=option` (donut/pie): each slice = `option_count / sum(option_counts) * 100`, so slices always sum to **100%**. For `multiple_option` questions this represents share-of-selections (one record may contribute to multiple slices).
 
 ```
-# What % of EPS are operational?
+# What % of EPS are operational? (filtered count)
 ?form_id=1749632545233&question_id=1749633373968&option_value=operational&monitoring=latest&sum_by=parent_id&value_type=percentage
 
 → { data: [{ value: 60.0, label: "operational" }], labels: ["operational"] }
+
+# Donut: distribution across options (sums to 100%)
+?form_id=1749632545233&question_id=1749633001462&group_by=option&monitoring=latest&value_type=percentage
+
+→ { data: [
+      { value: 90.32, label: "Lab Test",  group: "lab_test",  color: "#1b9e77" },
+      { value: 9.68,  label: "CBT Test",  group: "cbt_test",  color: "#d95f02" }
+    ], labels: ["Lab Test", "CBT Test"] }
 ```
 
 ---
@@ -517,12 +528,13 @@ Computes multi-component progress per record using configurable formulas. All co
 Comma-separated, colon-delimited:
 
 ```
-components=base:any_yes:111:222:333,tank:completed_binary:444,pipes:ratio:555,security:multi_select_proportion:666:3
+components=base:any_yes:111:222:333,tank:completed_binary:444,pipes:ratio:555:556,security:multi_select_proportion:666:3
 ```
 
 Format: `{key}:{formula}:{qid1}:{qid2}:...:{total_items}`
 
-`total_items` is only required for `multi_select_proportion` formula (appended as last segment).
+- `total_items` is only required for `multi_select_proportion` (appended as last segment).
+- `ratio` requires **exactly two** question IDs in `implemented:planned` order.
 
 #### Formula Types
 
@@ -530,7 +542,7 @@ Format: `{key}:{formula}:{qid1}:{qid2}:...:{total_items}`
 |---------|-------------|-------|
 | `any_yes` | 100% if any question answered 'Yes' | `any(answers == 'yes') → 100%, else 0%` |
 | `completed_binary` | 100% if answered 'Completed' | `answer == 'completed' → 100%, else 0%` |
-| `ratio` | Numeric answer as percentage | `answer.value` |
+| `ratio` | Implemented ÷ Planned × 100 | `min(implemented / planned * 100, 100)` — `0` if either missing or `planned <= 0` |
 | `multi_select_proportion` | Selected ÷ total items | `len(selected) / total_items × 100%` |
 
 **Overall progress** = average of all component scores.
@@ -564,7 +576,7 @@ Format: `{key}:{formula}:{qid1}:{qid2}:...:{total_items}`
 # Construction progress with 3 components
 GET /visualization/progress/6001
   ?monitoring_form_id=6002
-  &components=base:any_yes:600203,tank:completed_binary:600203,quality:ratio:600202
+  &components=base:any_yes:600203,tank:completed_binary:600203,quality:ratio:600202:600202
   &filter_question_id=600203
   &filter_option_value=active
 
@@ -887,7 +899,7 @@ With the generic API, the dashboard config changes from specifying backend compu
         {
           "key": "standpipes",
           "label": "Standpipes",
-          "question_ids": [1849634900001],
+          "question_ids": [1849635200001, 1849634950001],
           "formula": "ratio"
         },
         {
@@ -1188,15 +1200,25 @@ parent_qs = FormData.objects.filter(
 latest_ids = parent_qs.values_list("latest_id", flat=True)
 
 # Count answers per option value
-data = []
+counts = []
 for opt in options:
     count = Answers.objects.filter(
         data_id__in=latest_ids,
         question_id=question_id,
         options__contains=[opt.value],
     ).count()
+    counts.append(count)
+
+# Percentage mode: normalize by sum of counts so slices sum to 100%
+total_for_pct = sum(counts)
+data = []
+for opt, count in zip(options, counts):
+    if value_type == "percentage":
+        val = round((count / total_for_pct * 100), 2) if total_for_pct > 0 else 0.0
+    else:
+        val = count
     data.append({
-        "value": count,
+        "value": val,
         "label": opt.label,
         "group": opt.value,
         "color": opt.color,
