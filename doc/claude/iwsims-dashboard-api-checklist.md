@@ -190,3 +190,66 @@ The `Progress` and `Expected progress` columns can't come from this call — `/e
 #### Pattern B — join with `/progress` for computed component scores
 
 Use when cells must show computed percentages (e.g. `50%` for concrete base, `33%` for site security). Call `/escalation` for the row set and `/progress` for the component scores, then merge in the frontend by `parent_id`. This is also how the `overall < expected` post-filter is applied, so if you're already fetching `/progress` for that, the join is free.
+
+
+
+
+## 3. Water Quality
+
+### KPIs
+
+**EPS with water sample taken last 12 months** — share of registered EPS that have at least one water-quality monitoring submission whose `inspection_date` (`1749632545235`) falls in the rolling 12-month window. Frontend templates `from_date = today - 12 months` and `to_date = today` (ISO `YYYY-MM-DD`).
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&monitoring=latest&sum_by=parent_id&value_type=percentage&date_question_id=1749632545235&from_date=<TODAY-12M>&to_date=<TODAY>' \
+  -H 'accept: */*'
+```
+
+**Lab tested EPS** — distinct count of EPS whose latest monitoring `test_type` (`1749633001462`) is `lab_test`.
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=1749633001462&option_value=lab_test&monitoring=latest&sum_by=parent_id' \
+  -H 'accept: */*'
+```
+
+**CBT tested EPS** — same shape as Lab tested, with `option_value=cbt_test`.
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=1749633001462&option_value=cbt_test&monitoring=latest&sum_by=parent_id' \
+  -H 'accept: */*'
+```
+
+> Verify the actual option `value` strings against the form definition — replace `lab_test` / `cbt_test` if the seeder uses different slugs (e.g. `lab`, `cbt`).
+
+### Parameter histograms (frontend computed)
+
+Each chart on this tab is a **value-distribution histogram** of one numeric parameter measured per EPS, with a red threshold reference line. The backend serves the **per-EPS aggregated value** (latest monitoring, `repeat_agg=average`); the frontend bins the values along the x-axis using `display.bin_width` from the parameter's config block ([iwsims-dashboard-config-example.md §7](iwsims-dashboard-config-example.md)) and draws the threshold marker via `raw_config.markLine`.
+
+Template (one call per parameter):
+
+```bash
+curl -X GET \
+  'http://localhost:3000/api/v1/visualization/values?form_id=1749632545233&question_id=<QID>&group_by=parent_id&monitoring=latest&repeat_agg=average' \
+  -H 'accept: */*'
+```
+
+Response shape: `{ data: [{ value: <avg>, label: <eps_name>, group: <parent_id> }, ...], labels: [...] }`. Frontend buckets `data[].value` into bins and renders count-per-bin as a bar chart.
+
+| Section | Parameter | Question ID | Threshold marker | `bin_width` |
+|---|---|---|---|---|
+| Microbial | E. coli presence | `1749633220746` | `≤ 0` CFU/100 mL | `50` |
+| Microbial | Total coliform presence | `1749633259392` | `≤ 0` CFU/100 mL | `50` |
+| Physical | Turbidity | `1749633220745` | `< 5` NTU | `1` |
+| Physical | Water temperature | `1797307852531` | `< 30 °C` | `1` |
+| Chemical | pH | `1797307852532` | `6.5 – 8.5` (band) | `0.5` |
+| Chemical | Conductivity | `1797307852533` | `< 1000` µS/cm | `100` |
+| Chemical | Salinity | `1797307852534` | `< 1` ppt | `0.1` |
+
+> The Drinking Water Compliance stacked bar in §1 uses the **same per-EPS values** to classify each EPS as compliant/non-compliant. If both charts are visible at once, fetch each parameter once and reuse the response for both transforms — see [iwsims-dashboard-config-example.md §6](iwsims-dashboard-config-example.md) for the `compliance` compute.
+
+### Filters
+
+All Water Quality calls accept the global `administration_id`, `from_date`, `to_date` filters from the dashboard filter bar. Default scope (no `administration_id`) is the root administration — see [generic-visualization-api-spec.md §Filters](generic-visualization-api-spec.md).

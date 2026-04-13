@@ -142,6 +142,7 @@ A **list** of water-quality parameters grouped by `microbial` | `physical` | `ch
   "label": "pH",
   "group": "chemical",
   "chart_type": "bar",
+  "display": { "mode": "histogram", "bin_width": 0.5 },
   "threshold": { "min": 6.5, "max": 8.5 },
   "api": { ... }
 }
@@ -150,6 +151,10 @@ A **list** of water-quality parameters grouped by `microbial` | `physical` | `ch
 `threshold` is used in two places:
 - **Chart rendering** — draws a threshold line on the bar. `min` and `max` are both optional; provide `min` for two-sided ranges (e.g. pH).
 - **Compliance computation** — each parameter contributes to the "drinking water compliance" stacked bar. An EPS is compliant only if **every** parameter answer satisfies both `min` (if set) and `max` (if set). Parameters a given EPS hasn't reported are treated as "no data" and do not count as a violation.
+
+`display` controls how the per-EPS values are rendered:
+- `mode: "per_eps"` (default if `display` is omitted) — one bar per EPS, x-axis = EPS name, y-axis = the measured value.
+- `mode: "histogram"` — frontend bins each EPS's value into buckets of width `bin_width` (in the parameter's natural unit) and renders count-of-EPS per bin. The threshold becomes a `markLine` at the relevant x-axis value (or two lines for `{min, max}` bands like pH). Same `/values?...&group_by=parent_id` API call powers both modes — the transform is purely client-side, so the same response can also feed `compute: "compliance"`.
 
 Layout sections reference groups via `parameter_grid.group = "microbial"`, which expands into all parameters with matching `group`.
 
@@ -713,9 +718,10 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "hide": false,
         "config": {
           "title": "E-coli presence",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "CFU/100ml"
+          "xAxisLabel": "CFU/100mL",
+          "yAxisLabel": "EPS count"
         },
+        "display": { "mode": "histogram", "bin_width": 50 },
         "threshold": { "max": 0 },
         "api": {
           "form_id": 1749632545233,
@@ -733,9 +739,10 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "hide": false,
         "config": {
           "title": "Total coliform presence",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "CFU/100ml"
+          "xAxisLabel": "CFU/100mL",
+          "yAxisLabel": "EPS count"
         },
+        "display": { "mode": "histogram", "bin_width": 50 },
         "threshold": { "max": 0 },
         "api": {
           "form_id": 1749632545233,
@@ -753,9 +760,10 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "hide": false,
         "config": {
           "title": "Fecal coliform presence",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "CFU/100ml"
+          "xAxisLabel": "CFU/100mL",
+          "yAxisLabel": "EPS count"
         },
+        "display": { "mode": "histogram", "bin_width": 50 },
         "threshold": { "max": 0 },
         "api": {
           "form_id": 1749632545233,
@@ -773,9 +781,10 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "hide": false,
         "config": {
           "title": "Turbidity",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "NTU"
+          "xAxisLabel": "NTU",
+          "yAxisLabel": "EPS count"
         },
+        "display": { "mode": "histogram", "bin_width": 1 },
         "threshold": { "max": 5 },
         "api": {
           "form_id": 1749632545233,
@@ -793,9 +802,10 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "hide": false,
         "config": {
           "title": "Water Temperature",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "°C"
+          "xAxisLabel": "°C",
+          "yAxisLabel": "EPS count"
         },
+        "display": { "mode": "histogram", "bin_width": 1 },
         "threshold": { "max": 30 },
         "api": {
           "form_id": 1749632545233,
@@ -813,9 +823,10 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "hide": false,
         "config": {
           "title": "pH",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": ""
+          "xAxisLabel": "pH",
+          "yAxisLabel": "EPS count"
         },
+        "display": { "mode": "histogram", "bin_width": 0.5 },
         "threshold": { "min": 6.5, "max": 8.5 },
         "api": {
           "form_id": 1749632545233,
@@ -833,9 +844,10 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "hide": false,
         "config": {
           "title": "Conductivity",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "µS/cm"
+          "xAxisLabel": "µS/cm",
+          "yAxisLabel": "EPS count"
         },
+        "display": { "mode": "histogram", "bin_width": 100 },
         "threshold": { "max": 1000 },
         "api": {
           "form_id": 1749632545233,
@@ -853,9 +865,10 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         "hide": false,
         "config": {
           "title": "Salinity",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "PPT"
+          "xAxisLabel": "ppt",
+          "yAxisLabel": "EPS count"
         },
+        "display": { "mode": "histogram", "bin_width": 0.1 },
         "threshold": { "max": 1 },
         "api": {
           "form_id": 1749632545233,
