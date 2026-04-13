@@ -235,6 +235,18 @@ class ProgressFilterSerializer(serializers.Serializer):
                     int(q) for q in parts[2:-1]
                 ]
                 comp["total_items"] = int(parts[-1])
+            elif formula == "ratio":
+                # ratio requires implemented_qid:planned_qid
+                if len(parts) != 4:
+                    raise serializers.ValidationError(
+                        f"{formula} requires exactly two"
+                        " question ids"
+                        " (implemented:planned):"
+                        f" '{item}'"
+                    )
+                comp["question_ids"] = [
+                    int(parts[2]), int(parts[3]),
+                ]
             else:
                 comp["question_ids"] = [
                     int(q) for q in parts[2:]

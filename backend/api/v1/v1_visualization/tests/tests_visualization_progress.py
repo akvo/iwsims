@@ -22,7 +22,8 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
     For progress formulas, we use existing questions creatively:
     - any_yes via option question (600203): active → yes-like
     - completed_binary via option question (600203)
-    - ratio via number question (600202): value as percentage
+    - ratio via number question (600202): implemented/planned with the
+      same QID for both → 100%
     - multi_select_proportion via multi option (600204): count/total
     """
 
@@ -34,7 +35,7 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
         """monitoring_form_id is required — returns 400."""
         response = self.client.get(
             f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
-            "?components=base:ratio:600202"
+            "?components=base:ratio:600202:600202"
         )
         self.assertEqual(response.status_code, 400)
 
@@ -67,19 +68,20 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
     # -- Formula: ratio --
 
     def test_ratio_formula(self):
-        """Ratio formula: uses numeric answer value as percentage.
+        """Ratio formula: (implemented / planned) * 100, clamped to 100.
+
+        Test reuses Q_NUMBER_ID for both implemented and planned, so
+        the ratio is 1.0 → 100% for any non-zero value.
 
         Latest monitoring values:
-        - reg1 (mon1b): measurement_value = 20.0
-        - reg2 (mon2b): measurement_value = 40.0
-
-        Component "quality" uses ratio formula on measurement_value.
-        Overall = average of single component = same as value.
+        - reg1 (mon1b): measurement_value = 20.0 → 20/20 = 100%
+        - reg2 (mon2b): measurement_value = 40.0 → 40/40 = 100%
         """
         response = self.client.get(
             f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&components=quality:ratio:{self.Q_NUMBER_ID}"
+            f"&components=quality:ratio"
+            f":{self.Q_NUMBER_ID}:{self.Q_NUMBER_ID}"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -93,18 +95,27 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
         }
         self.assertEqual(
             details_by_label["Site Alpha"]["components"]["quality"],
-            20.0,
+            100.0,
         )
         self.assertEqual(
             details_by_label["Site Beta"]["components"]["quality"],
-            40.0,
+            100.0,
         )
         self.assertEqual(
-            details_by_label["Site Alpha"]["overall"], 20.0
+            details_by_label["Site Alpha"]["overall"], 100.0
         )
         self.assertEqual(
-            details_by_label["Site Beta"]["overall"], 40.0
+            details_by_label["Site Beta"]["overall"], 100.0
         )
+
+    def test_ratio_requires_two_qids(self):
+        """ratio with single QID returns 400."""
+        response = self.client.get(
+            f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&components=quality:ratio:{self.Q_NUMBER_ID}"
+        )
+        self.assertEqual(response.status_code, 400)
 
     # -- Formula: multi_select_proportion --
 
@@ -144,19 +155,20 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
         """Multiple components — overall is average.
 
         Components:
-        - quality: ratio on measurement_value
-            reg1=20.0, reg2=40.0
+        - quality: ratio (implemented==planned via same QID)
+            reg1=100%, reg2=100%
         - features: multi_select_proportion on features (total=3)
             reg1=66.67%, reg2=100%
 
         Overall:
-        - reg1 = (20.0 + 66.67) / 2 = 43.3
-        - reg2 = (40.0 + 100.0) / 2 = 70.0
+        - reg1 = (100 + 66.67) / 2 = 83.3
+        - reg2 = (100 + 100) / 2 = 100
         """
         response = self.client.get(
             f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&components=quality:ratio:{self.Q_NUMBER_ID}"
+            f"&components=quality:ratio"
+            f":{self.Q_NUMBER_ID}:{self.Q_NUMBER_ID}"
             f",features:multi_select_proportion:{self.Q_MULTI_ID}:3"
         )
         self.assertEqual(response.status_code, 200)
@@ -167,11 +179,11 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
         }
         self.assertAlmostEqual(
             details_by_label["Site Alpha"]["overall"],
-            43.3, places=1,
+            83.3, places=1,
         )
         self.assertAlmostEqual(
             details_by_label["Site Beta"]["overall"],
-            70.0, places=1,
+            100.0, places=1,
         )
 
     # -- Histogram --
@@ -179,14 +191,15 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
     def test_histogram_buckets(self):
         """Histogram distributes overall progress into buckets.
 
-        With ratio on measurement_value:
-        - reg1 = 20.0 → "11-20%" bucket
-        - reg2 = 40.0 → "31-40%" bucket
+        With ratio (implemented/planned, same QID for both):
+        - reg1 = 100% → "91-100%" bucket
+        - reg2 = 100% → "91-100%" bucket
         """
         response = self.client.get(
             f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&components=quality:ratio:{self.Q_NUMBER_ID}"
+            f"&components=quality:ratio"
+            f":{self.Q_NUMBER_ID}:{self.Q_NUMBER_ID}"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -195,11 +208,9 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(len(histogram), 10)
 
         buckets = {h["progress"]: h["count"] for h in histogram}
-        self.assertEqual(buckets["11-20%"], 1)
-        self.assertEqual(buckets["31-40%"], 1)
-        # All other buckets should be 0
+        self.assertEqual(buckets["91-100%"], 2)
         for key, val in buckets.items():
-            if key not in ("11-20%", "31-40%"):
+            if key != "91-100%":
                 self.assertEqual(val, 0, f"Bucket {key} should be 0")
 
     # -- Filter --
@@ -214,7 +225,8 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&components=quality:ratio:{self.Q_NUMBER_ID}"
+            f"&components=quality:ratio"
+            f":{self.Q_NUMBER_ID}:{self.Q_NUMBER_ID}"
             f"&filter_question_id={self.Q_OPTION_ID}"
             "&filter_option_value=active"
         )
@@ -233,7 +245,8 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&components=quality:ratio:{self.Q_NUMBER_ID}"
+            f"&components=quality:ratio"
+            f":{self.Q_NUMBER_ID}:{self.Q_NUMBER_ID}"
             f"&administration_id={self.adm_child.id}"
         )
         self.assertEqual(response.status_code, 200)

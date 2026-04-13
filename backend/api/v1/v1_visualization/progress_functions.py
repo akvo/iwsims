@@ -28,15 +28,35 @@ def compute_completed_binary(
 
 
 def compute_ratio(latest_data_id, question_ids, **kwargs):
-    """Value as percentage (numeric answer)."""
-    answer = Answers.objects.filter(
-        data_id=latest_data_id,
-        question_id__in=question_ids,
-        value__isnull=False,
-    ).first()
-    if not answer or answer.value is None:
+    """(Implemented / Planned) * 100, clamped to [0, 100].
+
+    Expects question_ids = [implemented_qid, planned_qid].
+    Returns 0.0 if either value is missing or planned <= 0.
+    """
+    if len(question_ids) < 2:
         return 0.0
-    return float(answer.value)
+    implemented_qid, planned_qid = question_ids[0], question_ids[1]
+
+    def _first_value(qid):
+        ans = Answers.objects.filter(
+            data_id=latest_data_id,
+            question_id=qid,
+            value__isnull=False,
+        ).first()
+        return ans.value if ans else None
+
+    implemented = _first_value(implemented_qid)
+    planned = _first_value(planned_qid)
+    if implemented is None or planned is None:
+        return 0.0
+    try:
+        planned = float(planned)
+        implemented = float(implemented)
+    except (TypeError, ValueError):
+        return 0.0
+    if planned <= 0:
+        return 0.0
+    return round(min((implemented / planned) * 100, 100.0), 2)
 
 
 def compute_multi_select_proportion(
