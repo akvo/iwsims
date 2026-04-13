@@ -38,6 +38,19 @@ def apply_administration_filter(queryset, administration_id):
     )
 
 
+def resolve_default_administration_id(administration_id):
+    """Fall back to the root administration (parent IS NULL) when no
+    administration_id is provided. These visualization endpoints are
+    public, so we scope to the top-level country by default instead of
+    leaking data across unrelated administrations."""
+    if administration_id:
+        return administration_id
+    root = Administration.objects.filter(
+        parent__isnull=True
+    ).values_list("id", flat=True).first()
+    return root
+
+
 def _to_date_upper_bound(value):
     """Produce an inclusive upper bound for an ISO date-time string.
 

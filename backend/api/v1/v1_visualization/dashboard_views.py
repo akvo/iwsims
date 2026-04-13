@@ -20,6 +20,9 @@ from api.v1.v1_visualization.escalation_functions import (
 from api.v1.v1_visualization.progress_functions import (
     handle_progress,
 )
+from api.v1.v1_visualization.functions import (
+    resolve_default_administration_id,
+)
 from api.v1.v1_visualization.dashboard_serializers import (
     EscalationFilterSerializer,
     ProgressFilterSerializer,
@@ -153,8 +156,8 @@ def visualization_values(request, version):
         "date_question_id": validated.get(
             "date_question_id"
         ),
-        "administration_id": validated.get(
-            "administration_id"
+        "administration_id": resolve_default_administration_id(
+            validated.get("administration_id"),
         ),
         "option_value": validated.get("option_value"),
     }
@@ -247,8 +250,8 @@ def visualization_escalation(request, form_id, version):
         params={
             "page": validated.get("page", 1),
             "page_size": validated.get("page_size", 20),
-            "administration_id": validated.get(
-                "administration_id"
+            "administration_id": resolve_default_administration_id(
+                validated.get("administration_id"),
             ),
             "from_date": validated.get("from_date"),
             "to_date": validated.get("to_date"),
@@ -319,8 +322,8 @@ def visualization_progress(request, form_id, version):
             "filter_option_value": validated.get(
                 "filter_option_value"
             ),
-            "administration_id": validated.get(
-                "administration_id"
+            "administration_id": resolve_default_administration_id(
+                validated.get("administration_id"),
             ),
             "from_date": validated.get("from_date"),
             "to_date": validated.get("to_date"),
