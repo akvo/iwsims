@@ -5,6 +5,7 @@ from django.db.models import Q
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_visualization.functions import (
     apply_administration_filter,
+    build_date_filters,
     latest_monitoring_subquery,
     format_date_group,
 )
@@ -221,15 +222,7 @@ def handle_escalation(
     page_size = params.get("page_size", 20)
     administration_id = params.get("administration_id")
 
-    date_filters = {}
-    if params.get("from_date"):
-        date_filters["from_date"] = params["from_date"]
-    if params.get("to_date"):
-        date_filters["to_date"] = params["to_date"]
-    if params.get("date_question_id"):
-        date_filters["date_question_id"] = (
-            params["date_question_id"]
-        )
+    date_filters = build_date_filters(params)
 
     parents = FormData.objects.filter(
         form=parent_form,

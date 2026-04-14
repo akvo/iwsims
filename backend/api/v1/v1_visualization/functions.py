@@ -57,6 +57,23 @@ def resolve_default_administration_id(administration_id):
     return root
 
 
+def build_date_filters(params):
+    """Collect from_date/to_date/date_question_id into a dict.
+
+    Returns an empty dict when no date filter is set, so callers can
+    pass `date_filters or None` to subqueries that treat falsy as
+    'no filter'.
+    """
+    date_filters = {}
+    if params.get("from_date"):
+        date_filters["from_date"] = params["from_date"]
+    if params.get("to_date"):
+        date_filters["to_date"] = params["to_date"]
+    if params.get("date_question_id"):
+        date_filters["date_question_id"] = params["date_question_id"]
+    return date_filters
+
+
 def _to_date_upper_bound(value):
     """Produce an inclusive upper bound for an ISO date-time string.
 
@@ -126,15 +143,7 @@ def get_base_monitoring_qs(form, monitoring_form_id, params):
     date_question_id = params.get("date_question_id")
     administration_id = params.get("administration_id")
 
-    date_filters = {}
-    if from_date:
-        date_filters["from_date"] = from_date
-    if to_date:
-        date_filters["to_date"] = to_date
-    if date_question_id:
-        date_filters["date_question_id"] = (
-            date_question_id
-        )
+    date_filters = build_date_filters(params)
 
     is_monitoring = form.parent is not None
     parent_form = (
