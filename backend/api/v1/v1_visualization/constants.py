@@ -1,5 +1,22 @@
-from django.db.models import Avg, Sum, Max, Min
+from django.db.models import Avg, Sum, Max, Min, Aggregate, FloatField
 from api.v1.v1_forms.constants import QuestionTypes
+
+
+class Last(Aggregate):
+    """Aggregate returning the value at the highest repeat index.
+
+    Uses PostgreSQL ARRAY_AGG with ORDER BY to pick the value from
+    the last repeat (Answers.index DESC). Intended for use on
+    Answers.value within an Answers queryset grouped per data/parent.
+    """
+
+    name = "Last"
+    function = ""
+    template = (
+        '(ARRAY_AGG(%(expressions)s ORDER BY "index" DESC))[1]'
+    )
+    output_field = FloatField()
+
 
 VALID_GROUP_BY = {"date", "month", "id", "parent_id", "option"}
 VALID_MONITORING = {"latest", "all"}
@@ -17,6 +34,7 @@ AGG_FUNCS = {
     "sum": Sum,
     "max": Max,
     "min": Min,
+    "last": Last,
 }
 
 # Escalation criteria types
