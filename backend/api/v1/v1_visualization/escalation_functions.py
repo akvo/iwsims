@@ -77,19 +77,84 @@ def build_escalation_criteria_filter(criteria, latest_ids):
     return or_condition
 
 
-def extract_column_value(parent, latest_id, col):
-    """Extract a column value for a single parent row.
+def _answer_cell_value(answer):
+    """Collapse an Answers row into the cell value used by escalation."""
+    if not answer:
+        return None
+    if answer.get("options"):
+        return answer["options"][0]
+    if answer.get("value") is not None:
+        return answer["value"]
+    return answer.get("name")
 
-    Args:
-        parent: Parent FormData instance (with
-            latest_id annotation).
-        latest_id: The latest monitoring data ID.
-        col: Parsed column dict with 'key', 'source',
-            and optional 'question_id'.
 
-    Returns:
-        The extracted value for this column.
+def build_column_caches(paginated, columns):
+    """Pre-fetch answers and FormData needed for rendering one page.
+
+    Reduces the per-row work in extract_column_value from O(columns)
+    queries per row to a handful of bulk queries per page.
     """
+    latest_ids = [p.latest_id for p in paginated]
+    parent_ids = [p.id for p in paginated]
+
+    answer_qids = set()
+    parent_answer_qids = set()
+    latest_date_qids = set()
+    need_created_fallback = False
+
+    for c in columns:
+        src = c["source"]
+        qid = c.get("question_id")
+        if src == "answer" and qid:
+            answer_qids.add(qid)
+        elif src == "parent_answer" and qid:
+            parent_answer_qids.add(qid)
+        elif src == "latest_date":
+            if qid:
+                latest_date_qids.add(qid)
+            else:
+                need_created_fallback = True
+
+    answer_map = {}
+    if answer_qids or latest_date_qids:
+        rows = Answers.objects.filter(
+            data_id__in=latest_ids,
+            question_id__in=answer_qids | latest_date_qids,
+        ).values(
+            "data_id", "question_id",
+            "name", "value", "options",
+        )
+        for r in rows:
+            answer_map[(r["data_id"], r["question_id"])] = r
+
+    parent_answer_map = {}
+    if parent_answer_qids:
+        rows = Answers.objects.filter(
+            data_id__in=parent_ids,
+            question_id__in=parent_answer_qids,
+        ).values(
+            "data_id", "question_id",
+            "name", "value", "options",
+        )
+        for r in rows:
+            parent_answer_map[(r["data_id"], r["question_id"])] = r
+
+    created_map = {}
+    if need_created_fallback:
+        fd_rows = FormData.objects.filter(
+            id__in=latest_ids,
+        ).values("id", "created")
+        created_map = {r["id"]: r["created"] for r in fd_rows}
+
+    return {
+        "answer": answer_map,
+        "parent_answer": parent_answer_map,
+        "created": created_map,
+    }
+
+
+def extract_column_value(parent, latest_id, col, caches):
+    """Extract a column value for a single parent row using caches."""
     source = col["source"]
 
     if source == "parent_name":
@@ -109,54 +174,27 @@ def extract_column_value(parent, latest_id, col):
         qid = col.get("question_id")
         if not qid:
             return None
-        answer = Answers.objects.filter(
-            data_id=latest_id,
-            question_id=qid,
-        ).first()
-        if not answer:
-            return None
-        if answer.options:
-            return (
-                answer.options[0]
-                if answer.options else None
-            )
-        if answer.value is not None:
-            return answer.value
-        return answer.name
+        return _answer_cell_value(
+            caches["answer"].get((latest_id, qid))
+        )
 
     if source == "parent_answer":
         qid = col.get("question_id")
         if not qid:
             return None
-        answer = Answers.objects.filter(
-            data_id=parent.id,
-            question_id=qid,
-        ).first()
-        if not answer:
-            return None
-        if answer.options:
-            return (
-                answer.options[0]
-                if answer.options else None
-            )
-        if answer.value is not None:
-            return answer.value
-        return answer.name
+        return _answer_cell_value(
+            caches["parent_answer"].get((parent.id, qid))
+        )
 
     if source == "latest_date":
         qid = col.get("question_id")
         if qid:
-            answer = Answers.objects.filter(
-                data_id=latest_id,
-                question_id=qid,
-            ).first()
-            if answer and answer.name:
-                return format_date_group(answer.name)
-        fd = FormData.objects.filter(
-            id=latest_id,
-        ).values("created").first()
-        if fd:
-            return format_date_group(fd["created"])
+            answer = caches["answer"].get((latest_id, qid))
+            if answer and answer.get("name"):
+                return format_date_group(answer["name"])
+        created = caches["created"].get(latest_id)
+        if created:
+            return format_date_group(created)
         return None
 
     return None
@@ -221,14 +259,18 @@ def handle_escalation(
     total = matching.count()
     start = (page - 1) * page_size
     end = start + page_size
-    paginated = matching[start:end]
+    paginated = list(
+        matching[start:end].select_related("administration")
+    )
+
+    caches = build_column_caches(paginated, columns)
 
     results = []
     for parent in paginated:
         row = {"id": parent.id}
         for col in columns:
             row[col["key"]] = extract_column_value(
-                parent, parent.latest_id, col
+                parent, parent.latest_id, col, caches,
             )
         results.append(row)
 

@@ -5,29 +5,29 @@ from api.v1.v1_visualization.functions import (
 )
 
 
-def compute_any_yes(latest_data_id, question_ids, **kwargs):
+def compute_any_yes(latest_data_id, question_ids, answers_map, **kwargs):
     """100% if ANY listed question answered 'Yes'."""
-    has_yes = Answers.objects.filter(
-        data_id=latest_data_id,
-        question_id__in=question_ids,
-        options__contains=["yes"],
-    ).exists()
-    return 100.0 if has_yes else 0.0
+    for qid in question_ids:
+        a = answers_map.get((latest_data_id, qid))
+        if a and a.get("options") and "yes" in a["options"]:
+            return 100.0
+    return 0.0
 
 
 def compute_completed_binary(
-    latest_data_id, question_ids, **kwargs
+    latest_data_id, question_ids, answers_map, **kwargs
 ):
     """100% if answered 'Completed'."""
-    is_completed = Answers.objects.filter(
-        data_id=latest_data_id,
-        question_id__in=question_ids,
-        options__contains=["completed"],
-    ).exists()
-    return 100.0 if is_completed else 0.0
+    for qid in question_ids:
+        a = answers_map.get((latest_data_id, qid))
+        if a and a.get("options") and "completed" in a["options"]:
+            return 100.0
+    return 0.0
 
 
-def compute_ratio(latest_data_id, question_ids, **kwargs):
+def compute_ratio(
+    latest_data_id, question_ids, answers_map, **kwargs
+):
     """(Implemented / Planned) * 100, clamped to [0, 100].
 
     Expects question_ids = [implemented_qid, planned_qid].
@@ -36,17 +36,10 @@ def compute_ratio(latest_data_id, question_ids, **kwargs):
     if len(question_ids) < 2:
         return 0.0
     implemented_qid, planned_qid = question_ids[0], question_ids[1]
-
-    def _first_value(qid):
-        ans = Answers.objects.filter(
-            data_id=latest_data_id,
-            question_id=qid,
-            value__isnull=False,
-        ).first()
-        return ans.value if ans else None
-
-    implemented = _first_value(implemented_qid)
-    planned = _first_value(planned_qid)
+    impl_row = answers_map.get((latest_data_id, implemented_qid))
+    plan_row = answers_map.get((latest_data_id, planned_qid))
+    implemented = impl_row.get("value") if impl_row else None
+    planned = plan_row.get("value") if plan_row else None
     if implemented is None or planned is None:
         return 0.0
     try:
@@ -60,19 +53,21 @@ def compute_ratio(latest_data_id, question_ids, **kwargs):
 
 
 def compute_multi_select_proportion(
-    latest_data_id, question_ids,
+    latest_data_id, question_ids, answers_map,
     total_items=1, **kwargs
 ):
     """Percentage based on number of selected options."""
-    answer = Answers.objects.filter(
-        data_id=latest_data_id,
-        question_id__in=question_ids,
-    ).first()
-    if not answer or not answer.options:
+    selected = None
+    for qid in question_ids:
+        a = answers_map.get((latest_data_id, qid))
+        if a and a.get("options"):
+            selected = a["options"]
+            break
+    if not selected:
         return 0.0
     if not total_items or total_items <= 0:
         return 0.0
-    pct = (len(answer.options) / total_items) * 100
+    pct = (len(selected) / total_items) * 100
     return round(min(pct, 100.0), 2)
 
 
@@ -86,8 +81,8 @@ FORMULA_HANDLERS = {
 }
 
 
-def compute_component_scores(latest_id, components):
-    """Compute progress scores for all components."""
+def compute_component_scores(latest_id, components, answers_map):
+    """Compute progress scores for all components using a shared map."""
     scores = {}
     for comp in components:
         handler = FORMULA_HANDLERS[comp["formula"]]
@@ -97,9 +92,30 @@ def compute_component_scores(latest_id, components):
         scores[comp["key"]] = handler(
             latest_id,
             comp["question_ids"],
+            answers_map,
             **kwargs,
         )
     return scores
+
+
+def build_progress_answers_map(latest_ids, components):
+    """Bulk-fetch answers needed to score all components for all parents.
+
+    Returns dict keyed by (data_id, question_id) carrying the fields
+    formula handlers read (options, value).
+    """
+    qids = {
+        q for c in components for q in c.get("question_ids", [])
+    }
+    if not qids or not latest_ids:
+        return {}
+    rows = Answers.objects.filter(
+        data_id__in=latest_ids,
+        question_id__in=qids,
+    ).values("data_id", "question_id", "options", "value")
+    return {
+        (r["data_id"], r["question_id"]): r for r in rows
+    }
 
 
 def build_histogram(eps_results):
@@ -189,10 +205,16 @@ def handle_progress(
         )
 
     # Compute scores per parent
+    parents = list(parents.only("id", "name"))
+    latest_ids = [p.latest_id for p in parents]
+    answers_map = build_progress_answers_map(
+        latest_ids, components
+    )
+
     eps_results = []
     for parent in parents:
         scores = compute_component_scores(
-            parent.latest_id, components
+            parent.latest_id, components, answers_map,
         )
         overall = (
             round(sum(scores.values()) / len(scores), 2)
