@@ -258,6 +258,11 @@ def visualization_escalation(request, form_id, version):
             "date_question_id": validated.get(
                 "date_question_id"
             ),
+            "query_string": [
+                (k, v)
+                for k, values in request.query_params.lists()
+                for v in values
+            ],
         },
     )
     return Response(result, status=status.HTTP_200_OK)

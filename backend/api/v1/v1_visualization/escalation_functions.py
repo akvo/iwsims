@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django.db.models import Q
 
 from api.v1.v1_data.models import FormData, Answers
@@ -230,16 +232,32 @@ def handle_escalation(
             )
         results.append(row)
 
-    base = f"monitoring_form_id={monitoring_form_id}"
+    query_string = params.get("query_string")
+    if query_string:
+        base_params = [
+            (k, v) for k, v in query_string
+            if k != "page"
+        ]
+    else:
+        base_params = [
+            ("monitoring_form_id", monitoring_form_id),
+            ("page_size", page_size),
+        ]
+        if administration_id:
+            base_params.append(
+                ("administration_id", administration_id)
+            )
+        for key in ("from_date", "to_date", "date_question_id"):
+            if params.get(key):
+                base_params.append((key, params[key]))
+
+    def build_link(target_page):
+        link_params = base_params + [("page", target_page)]
+        return f"?{urlencode(link_params, doseq=True)}"
+
     return {
         "count": total,
-        "next": (
-            f"?{base}&page={page + 1}"
-            if end < total else None
-        ),
-        "previous": (
-            f"?{base}&page={page - 1}"
-            if page > 1 else None
-        ),
+        "next": build_link(page + 1) if end < total else None,
+        "previous": build_link(page - 1) if page > 1 else None,
         "results": results,
     }
