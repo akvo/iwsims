@@ -193,7 +193,7 @@ def _count_group_by_parent(qs, is_latest):
                 "label": p.name,
                 "group": str(p.id),
             }
-            for p in qs
+            for p in qs.only("id", "name")
         ]
     else:
         results = qs.filter(
@@ -225,7 +225,7 @@ def _count_group_by_id(qs, is_latest):
                 "label": p.name,
                 "group": str(p.latest_id),
             }
-            for p in qs
+            for p in qs.only("id", "name")
         ]
     else:
         data = [
@@ -234,7 +234,7 @@ def _count_group_by_id(qs, is_latest):
                 "label": r.name,
                 "group": str(r.id),
             }
-            for r in qs.order_by("id")
+            for r in qs.only("id", "name").order_by("id")
         ]
     labels = [d["label"] for d in data]
     return data, labels
@@ -455,15 +455,19 @@ def _option_group_by_option(
     options — so pie/doughnut charts have stable legends and colors
     across refreshes and filter changes.
     """
-    counts = []
-    for opt in options:
-        count = Answers.objects.filter(
-            data_id__in=data_ids,
-            question_id=question.id,
-            options__contains=[opt.value],
-        ).count()
-        counts.append(count)
+    option_values = {o.value for o in options}
+    tallies = defaultdict(int)
+    rows = Answers.objects.filter(
+        data_id__in=data_ids,
+        question_id=question.id,
+        options__isnull=False,
+    ).values_list("options", flat=True)
+    for opts in rows:
+        for v in (opts or []):
+            if v in option_values:
+                tallies[v] += 1
 
+    counts = [tallies.get(opt.value, 0) for opt in options]
     total_for_pct = sum(counts)
     data = []
     for opt, count in zip(options, counts):
