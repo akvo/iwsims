@@ -1055,12 +1055,12 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         ]
       },
       "columns": [
-        { "key": "eps_name", "label": "EPS name", "source": "answer", "question_id": 1749624452994, "hide": false },
-        { "key": "village_name", "label": "Village Name", "source": "answer", "question_id": 1749624452990, "hide": false },
+        { "key": "eps_name", "label": "EPS name", "source": "parent_answer", "question_id": 1749624452994, "hide": false },
+        { "key": "village_name", "label": "Village Name", "source": "parent_answer", "question_id": 1749624452990, "hide": false },
         { "key": "last_monitoring", "label": "Last Monitoring", "source": "latest_date", "question_id": 1749632545235, "hide": false },
         { "key": "operational_status", "label": "Operational Status", "source": "answer", "question_id": 1749633373968, "hide": false },
         { "key": "water_collection", "label": "Not able to collect the water sample", "source": "answer", "question_id": 1749632647507, "hide": false },
-        { "key": "critical_issues", "label": "Critical water quality issues", "source": "violations", "hide": false }
+        { "key": "critical_issues", "label": "Critical water quality issues", "computed": true, "hide": false }
       ]
     },
     "construction": {
@@ -1080,11 +1080,11 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
         ]
       },
       "columns": [
-        { "key": "eps_name", "label": "EPS name", "source": "answer", "question_id": 1749624452994, "hide": false },
+        { "key": "eps_name", "label": "EPS name", "source": "parent_answer", "question_id": 1749624452994, "hide": false },
         { "key": "last_monitoring", "label": "Last Monitoring", "source": "latest_date", "question_id": 1749624452911, "hide": false },
-        { "key": "overall_progress", "label": "Progress", "source": "computed_progress", "progress_ref": "construction", "hide": false },
-        { "key": "expected_progress", "label": "Expected progress", "source": "expected_progress", "progress_ref": "construction", "hide": false },
-        { "key": "deadline", "label": "Deadline", "source": "answer_date", "question_id": 1749630516825, "hide": false }
+        { "key": "overall_progress", "label": "Progress", "computed": true, "progress_ref": "construction", "hide": false },
+        { "key": "expected_progress", "label": "Expected progress", "computed": true, "progress_ref": "construction", "hide": false },
+        { "key": "deadline", "label": "Deadline", "source": "latest_date", "question_id": 1749630516825, "hide": false }
       ]
     }
   },

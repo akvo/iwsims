@@ -181,7 +181,7 @@ curl -X GET \
 
 ```bash
 curl -X GET \
-  'http://localhost:3000/api/v1/visualization/progress/1749623934933?monitoring_form_id=1749624452908&filter_question_id=1749630516826&filter_option_value=no&deadline_question_id=1749630516825&components=concrete_base:any_yes:1849633499999:1849633498888:1849633497777,urf_tank:completed_binary:1849633720001,eps_tank:completed_binary:1849633900003,balance_tank:completed_binary:1849634300002,storage_tank:completed_binary:1849634690001,standpipes:ratio:1849635200001:1849634950001,site_security:multi_select_proportion:1849635500001:3' \
+  'http://localhost:3000/api/v1/visualization/progress/1749623934933?monitoring_form_id=1749624452908&filter_question_id=1749630516826&filter_option_value=no&components=concrete_base:any_yes:1849633499999:1849633498888:1849633497777,urf_tank:completed_binary:1849633720001,eps_tank:completed_binary:1849633900003,balance_tank:completed_binary:1849634300002,storage_tank:completed_binary:1849634690001,standpipes:ratio:1849635200001:1849634950001,site_security:multi_select_proportion:1849635500001:3' \
   -H 'accept: */*'
 ```
 
@@ -233,7 +233,7 @@ Component → column mapping:
 
 ```bash
 curl -X GET \
-  'http://localhost:3000/api/v1/visualization/escalation/1749623934933?monitoring_form_id=1749624452908&criteria=overdue:1749630516826:1749630516825&columns=name:parent_name,last_monitoring:latest_date:1749624452911,concrete_base:answer:1849633499999,urf_tank:answer:1849633720001,eps_tank:answer:1849633900003,balance_tank:answer:1849634300002,storage_tank:answer:1849634690001,standpipes:answer:1849634900001,site_security:answer:1849635500001,deadline:answer:1749630516825&page=1&page_size=20' \
+  'http://localhost:3000/api/v1/visualization/escalation/1749623934933?monitoring_form_id=1749624452908&criteria=overdue:1749630516826:1749630516825&columns=name:parent_name,last_monitoring:latest_date:1749624452911,concrete_base:answer:1849633499999,urf_tank:answer:1849633720001,eps_tank:answer:1849633900003,balance_tank:answer:1849634300002,storage_tank:answer:1849634690001,standpipes_implemented:answer:1849635200001,standpipes_planned:answer:1849634950001,site_security:answer:1849635500001,deadline:answer:1749630516825&page=1&page_size=20' \
   -H 'accept: */*'
 ```
 
