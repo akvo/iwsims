@@ -144,14 +144,35 @@ class EscalationFilterSerializer(serializers.Serializer):
                     f"Invalid criteria type: '{ctype}'."
                     f" Options: {VALID_CRITERIA_TYPES}"
                 )
+
+            try:
+                if ctype == "option_equals":
+                    qid = int(parts[1])
+                    normalized = [qid, parts[2]]
+                elif ctype in ("threshold_gt", "threshold_lt"):
+                    qid = int(parts[1])
+                    threshold = float(parts[2])
+                    normalized = [qid, threshold]
+                elif ctype == "overdue":
+                    completion_qid = int(parts[1])
+                    deadline_qid = int(parts[2])
+                    normalized = [completion_qid, deadline_qid]
+            except ValueError:
+                raise serializers.ValidationError(
+                    f"Invalid numeric value in criteria: '{item}'."
+                )
+
             parsed.append({
                 "type": ctype,
-                "parts": parts[1:],
+                "parts": normalized,
             })
         return parsed
 
     def validate_columns(self, value):
         """Parse and validate columns string."""
+        qid_required_sources = {
+            "answer", "parent_answer", "latest_date",
+        }
         parsed = []
         for item in value.split(","):
             parts = item.strip().split(":")
@@ -168,8 +189,18 @@ class EscalationFilterSerializer(serializers.Serializer):
                     f" Options: {VALID_COLUMN_SOURCES}"
                 )
             col = {"key": key, "source": source}
+            if source in qid_required_sources and len(parts) < 3:
+                raise serializers.ValidationError(
+                    f"Column source '{source}' requires a"
+                    f" question_id: '{item}'"
+                )
             if len(parts) > 2:
-                col["question_id"] = int(parts[2])
+                try:
+                    col["question_id"] = int(parts[2])
+                except ValueError:
+                    raise serializers.ValidationError(
+                        f"Invalid question_id in column: '{item}'."
+                    )
             parsed.append(col)
         return parsed
 
