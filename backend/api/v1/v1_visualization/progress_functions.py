@@ -70,9 +70,10 @@ def compute_multi_select_proportion(
     ).first()
     if not answer or not answer.options:
         return 0.0
-    return round(
-        (len(answer.options) / total_items) * 100, 2
-    )
+    if not total_items or total_items <= 0:
+        return 0.0
+    pct = (len(answer.options) / total_items) * 100
+    return round(min(pct, 100.0), 2)
 
 
 FORMULA_HANDLERS = {
