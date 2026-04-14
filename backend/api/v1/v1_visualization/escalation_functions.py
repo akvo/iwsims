@@ -216,7 +216,7 @@ def handle_escalation(
     or_condition = build_escalation_criteria_filter(
         criteria, latest_ids
     )
-    matching = parents.filter(or_condition)
+    matching = parents.filter(or_condition).order_by("id")
 
     total = matching.count()
     start = (page - 1) * page_size
