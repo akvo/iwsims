@@ -37,7 +37,7 @@ class ValuesErrorTestCases(VisualizationValuesTestMixin, APITestCase):
         from api.v1.v1_forms.constants import QuestionTypes
         other_form = self.registration
         other_qg = QuestionGroup.objects.create(
-            form=other_form, name="other_qg",
+            id=79999, form=other_form, name="other_qg",
         )
         other_q = Questions.objects.create(
             id=7999,
