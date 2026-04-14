@@ -31,9 +31,6 @@ import {
   Organisations,
   AddOrganisation,
   Dashboard,
-  Glaas,
-  ReportDashboard,
-  GlaasReportDashboard,
   MobileAssignment,
   AddAssignment,
   MasterData,
@@ -48,7 +45,6 @@ import {
   UploadAdministrationData,
   UploadEntitiesData,
   DownloadAdministrationData,
-  BIDashboard,
   MonitoringDetail,
   Downloads,
   DownloadEntitiesData,
@@ -112,17 +108,6 @@ const RouteList = () => {
       <Route exact path="/forgot-password" element={<Login />} />
       <Route exact path="/data" element={<Home />} />
       <Route exact path="/dashboard/:formId" element={<Dashboard />} />
-      <Route exact path="/glaas/:formId" element={<Glaas />} />
-      <Route
-        exact
-        path="/report-dashboard/:formId"
-        element={<ReportDashboard />}
-      />
-      <Route
-        exact
-        path="/glaas-report-dashboard/:formId"
-        element={<GlaasReportDashboard />}
-      />
       <Route
         path="/control-center"
         element={
@@ -312,7 +297,6 @@ const RouteList = () => {
         path="/report/:templateId"
         element={<Private element={Report} alias="reports" />}
       />
-      <Route path="/bi/:path" element={<BIDashboard />} />
       <Route path="/news-events" element={<NewsEvents />} />
       <Route path="/how-we-work" element={<HowWeWork />} />
       <Route path="/terms" element={<Terms />} />

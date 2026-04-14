@@ -1,284 +1,381 @@
-import React, { useState, useEffect, useMemo } from "react";
-import "./style.scss";
+import React, { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Row, Col, Tabs, Affix } from "antd";
-import { VisualisationFilters } from "../../components";
-import { useNotification } from "../../util/hooks";
-import { api, uiText, store } from "../../lib";
-import { capitalize, takeRight } from "lodash";
-import { Maps } from "../../components";
+import { Alert, Card, Col, Empty, Row, Tabs, Typography } from "antd";
 import {
-  CardVisual,
-  TableVisual,
-  ChartVisual,
-  ReportVisual,
-} from "./components";
-import { generateAdvanceFilterURL } from "../../util/filter";
-import { useCallback } from "react";
+  useDashboardConfig,
+  useDashboardFilters,
+  useDashboardProgress,
+  useDashboardValues,
+} from "../../util/hooks";
+import DashboardFilters from "../../components/dashboard/DashboardFilters";
+import KPICardRow from "../../components/dashboard/KPICardRow";
+import ChartRenderer from "../../components/dashboard/ChartRenderer";
+import DashboardMap from "../../components/dashboard/DashboardMap";
+import EscalationTable from "../../components/dashboard/EscalationTable";
 
-const { TabPane } = Tabs;
+const { Title, Paragraph } = Typography;
 
+/**
+ * Invisible per-parameter fetcher. One instance per non-hidden water-quality
+ * parameter — rules-of-hooks-compliant fan-out feeding the compliance
+ * stacked bar (compute=compliance in config.charts).
+ */
+const WqParamFetcher = ({
+  param,
+  filterState,
+  fiscalYearStartMonth,
+  customFilterDefs,
+  onData,
+}) => {
+  const { data } = useDashboardValues(param.api, filterState, {
+    fiscalYearStartMonth,
+    customFilterDefs,
+  });
+  React.useEffect(() => {
+    if (data) {
+      onData(param.key, data);
+    }
+  }, [data, param.key, onData]);
+  return null;
+};
+
+/**
+ * Invisible per-progress-block fetcher. Lets the dashboard run
+ * /progress for every entry in `config.progress` without hardcoding
+ * the keys here.
+ */
+const ProgressFetcher = ({ blockKey, block, filterState, onData }) => {
+  const { data, error } = useDashboardProgress(block, filterState);
+  React.useEffect(() => {
+    if (data || error) {
+      onData(blockKey, { data, error });
+    }
+  }, [blockKey, data, error, onData]);
+  return null;
+};
+
+/**
+ * Resolves one layout section to a node. Dispatches on `section.type`;
+ * skips sections with `hide: true`.
+ */
+const LayoutSection = ({ section, ctx }) => {
+  if (section.hide) {
+    return null;
+  }
+
+  const {
+    config,
+    filterState,
+    fiscalYearStartMonth,
+    customFilterDefs,
+    progressResponses,
+    complianceResponses,
+    wqParameters,
+  } = ctx;
+
+  switch (section.type) {
+    case "kpi_row":
+      return (
+        <div style={{ marginBottom: 24 }}>
+          <KPICardRow
+            kpiKeys={section.kpis || []}
+            kpisByKey={config.kpis}
+            filterState={filterState}
+            fiscalYearStartMonth={fiscalYearStartMonth}
+            customFilterDefs={customFilterDefs}
+          />
+        </div>
+      );
+
+    case "map":
+      return (
+        <Card size="small" style={{ marginBottom: 16 }}>
+          <DashboardMap
+            mapConfig={config.map}
+            filterState={filterState}
+            height={section.height || 400}
+          />
+        </Card>
+      );
+
+    case "section_title":
+      return (
+        <Title level={4} style={{ marginTop: 16 }}>
+          {section.text}
+        </Title>
+      );
+
+    case "chart": {
+      const chart = config.charts?.[section.chart_key];
+      if (!chart || chart.hide) {
+        return null;
+      }
+      return (
+        <Card title={chart.config?.title} style={{ marginBottom: 16 }}>
+          <ChartRenderer
+            chartKey={section.chart_key}
+            chart={chart}
+            filterState={filterState}
+            fiscalYearStartMonth={fiscalYearStartMonth}
+            customFilterDefs={customFilterDefs}
+            progressResponses={progressResponses}
+            complianceResponses={complianceResponses}
+            waterQualityParameters={wqParameters}
+          />
+        </Card>
+      );
+    }
+
+    case "chart_row":
+    case "chart_grid": {
+      const keys = (section.charts || []).filter(
+        (k) => config.charts?.[k] && !config.charts[k].hide
+      );
+      const cols = section.columns || keys.length || 1;
+      const span = Math.max(6, Math.floor(24 / cols));
+      return (
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          {keys.map((k) => (
+            <Col key={k} xs={24} md={span}>
+              <Card title={config.charts[k].config?.title}>
+                <ChartRenderer
+                  chartKey={k}
+                  chart={config.charts[k]}
+                  filterState={filterState}
+                  fiscalYearStartMonth={fiscalYearStartMonth}
+                  customFilterDefs={customFilterDefs}
+                  progressResponses={progressResponses}
+                  complianceResponses={complianceResponses}
+                  waterQualityParameters={wqParameters}
+                />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      );
+    }
+
+    case "parameter_grid": {
+      const params = (wqParameters || []).filter(
+        (p) => !p.hide && p.group === section.group
+      );
+      const cols = section.columns || 2;
+      const span = Math.max(6, Math.floor(24 / cols));
+      return (
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          {params.map((p) => (
+            <Col key={p.key} xs={24} md={span}>
+              <Card title={p.config?.title || p.label}>
+                <ChartRenderer
+                  chartKey={p.key}
+                  chart={p}
+                  filterState={filterState}
+                  fiscalYearStartMonth={fiscalYearStartMonth}
+                  customFilterDefs={customFilterDefs}
+                />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      );
+    }
+
+    case "escalation_table": {
+      const block = config.escalation?.[section.escalation_key];
+      if (!block || block.hide) {
+        return null;
+      }
+      return (
+        <Card
+          title={block.label || "Escalation list"}
+          size="small"
+          style={{ marginBottom: 16 }}
+        >
+          {block.description && (
+            <Paragraph type="secondary">{block.description}</Paragraph>
+          )}
+          <EscalationTable escalationBlock={block} filterState={filterState} />
+        </Card>
+      );
+    }
+
+    default:
+      return null;
+  }
+};
+
+/**
+ * Config-driven dashboard. Renders tabs from `config.tabs`; each tab body
+ * is an ordered list of sections from `config.layout[tabKey].sections`.
+ *
+ * Route: /dashboard/:formId
+ *
+ * Shared page-level fetches (dedup'd by the request cache):
+ *   - /progress for each entry in config.progress (construction, etc.)
+ *   - /values per non-hidden water-quality parameter (fan-out for compliance)
+ */
 const Dashboard = () => {
   const { formId } = useParams();
-  const selectedForm = window?.forms?.find((x) => String(x.id) === formId);
-  const current = window?.dashboard?.find((x) => String(x.form_id) === formId);
-  const { notify } = useNotification();
+  const { config } = useDashboardConfig(formId);
+  const filters = useDashboardFilters(config || { filters: { custom: [] } });
 
-  const [dataset, setDataset] = useState([]);
-  const [dataPeriod, setDataPeriod] = useState([]);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [loading, setLoading] = useState(false);
-  const [activeItem, setActiveItem] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
+  const fyStart = config?.filters?.date?.fiscal_year_start_month || 1;
+  const customDefs = useMemo(() => config?.filters?.custom || [], [config]);
 
-  const { active: activeLang } = store.useState((s) => s.language);
-  const advancedFilters = store.useState((s) => s.advancedFilters);
-  const administration = store.useState((s) => s.administration);
-  const [wait, setWait] = useState(true);
+  const wqParams = useMemo(
+    () => (config?.water_quality?.parameters || []).filter((p) => !p.hide),
+    [config]
+  );
 
-  const text = useMemo(() => {
-    return uiText[activeLang];
-  }, [activeLang]);
-
-  const currentAdministration = takeRight(administration)?.[0];
-  const prefixText =
-    currentAdministration?.level === 0
-      ? currentAdministration?.levelName
-      : currentAdministration?.name;
-  const admLevelName = useMemo(() => {
-    const { level } = currentAdministration;
-    let name = { plural: "Counties", singular: "County" };
-    if (level === 1) {
-      name = { plural: "Sub-Counties", singular: "Sub-County" };
-    }
-    if (level === 2) {
-      name = { plural: "Wards", singular: "Ward" };
-    }
-    if (level === 3) {
-      name = { plural: "Ward", singular: "Ward" };
-    }
-    return name;
-  }, [currentAdministration]);
-
-  const fetchUserAdmin = useCallback(async () => {
-    try {
-      const { data: countyAdm } = await api.get(`administration/${1}`);
-      store.update((s) => {
-        s.administration = [countyAdm];
-      });
-      setWait(false);
-    } catch (error) {
-      console.error(error);
-    }
+  const [complianceResponses, setComplianceResponses] = useState({});
+  const onParamData = useCallback((key, data) => {
+    setComplianceResponses((prev) =>
+      prev[key] === data ? prev : { ...prev, [key]: data }
+    );
   }, []);
 
-  useEffect(() => {
-    fetchUserAdmin();
-  }, [fetchUserAdmin]);
-
-  useEffect(() => {
-    if (selectedForm?.id) {
-      store.update((s) => {
-        s.questionGroups = selectedForm.content.question_group;
-      });
-      setActiveTab("overview");
-      setActiveItem(current?.tabs?.["overview"]);
-    }
-  }, [selectedForm, current]);
-
-  useEffect(() => {
-    if (formId && !lastUpdate) {
-      api
-        .get(`last_update/${formId}`)
-        .then((res) => setLastUpdate(res.data.last_update));
-    }
-  }, [formId, lastUpdate]);
-
-  useEffect(() => {
-    if (formId && !wait) {
-      setLoading(true);
-      setDataset([]);
-      setDataPeriod([]);
-      let url = `jmp/${formId}?administration=${currentAdministration?.id}`;
-      if (advancedFilters && advancedFilters.length) {
-        url = generateAdvanceFilterURL(advancedFilters, url);
+  const progressBlocks = useMemo(
+    () => Object.entries(config?.progress || {}),
+    [config]
+  );
+  const [progressByKey, setProgressByKey] = useState({});
+  const onProgressData = useCallback((key, payload) => {
+    setProgressByKey((prev) =>
+      prev[key]?.data === payload.data && prev[key]?.error === payload.error
+        ? prev
+        : { ...prev, [key]: payload }
+    );
+  }, []);
+  const progressResponses = useMemo(() => {
+    const out = {};
+    Object.entries(progressByKey).forEach(([k, v]) => {
+      if (v?.data) {
+        out[k] = v.data;
       }
-      if (current?.extra_params) {
-        const params = Object.keys(current.extra_params).reduce(
-          (prev, curr) => {
-            const ids = current.extra_params[curr].map((x) => `${curr}=${x}`);
-            return [...prev, ...ids];
-          },
-          []
-        );
-        url += `&${params.join("&")}`;
-      }
-      api
-        .get(url)
-        .then((res) => {
-          setDataset(res.data);
-          if (!current?.no_period) {
-            const url = `submission/period/${formId}?administration=${currentAdministration?.id}`;
-            api
-              .get(url)
-              .then((res) => {
-                setDataPeriod(res.data);
-              })
-              .catch(() => {
-                notify({
-                  type: "error",
-                  message: text.errorDataLoad,
-                });
-              });
-          }
-        })
-        .catch(() => {
-          notify({
-            type: "error",
-            message: text.errorDataLoad,
-          });
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [
-    formId,
-    current,
-    currentAdministration,
-    notify,
-    text,
-    advancedFilters,
-    wait,
-  ]);
+    });
+    return out;
+  }, [progressByKey]);
+  const progressErrors = useMemo(
+    () =>
+      Object.entries(progressByKey)
+        .filter(([, v]) => v?.error)
+        .map(([k, v]) => ({ key: k, error: v.error })),
+    [progressByKey]
+  );
 
-  const changeTab = (tabKey) => {
-    setActiveTab(tabKey);
-    setActiveItem(current.tabs[tabKey]);
-  };
+  const filterActions = useMemo(
+    () => ({
+      setDateRange: filters.setDateRange,
+      setAdministrationId: filters.setAdministrationId,
+      setCustomFilter: filters.setCustomFilter,
+    }),
+    [filters.setDateRange, filters.setAdministrationId, filters.setCustomFilter]
+  );
 
-  const renderColumn = (cfg, index) => {
-    // filter data by total > 0
-    const filteredDataByTotal = dataset.filter((d) => d.total > 0);
-    switch (cfg.type) {
-      case "maps":
-        return (
-          <Maps
-            key={index}
-            mapConfig={{
-              ...cfg,
-              data: filteredDataByTotal,
-              index: index,
-            }}
-            loading={loading}
-          />
-        );
-      case "chart":
-        return (
-          <ChartVisual
-            key={index}
-            chartConfig={{
-              ...cfg,
-              data: cfg.selector === "period" ? dataPeriod : dataset,
-              index: index,
-              admLevelName: admLevelName,
-            }}
-            loading={loading}
-          />
-        );
-      case "table":
-        return (
-          <TableVisual
-            key={index}
-            tableConfig={{
-              ...cfg,
-              data: filteredDataByTotal,
-              index: index,
-              admLevelName: admLevelName,
-            }}
-            loading={loading}
-          />
-        );
-      case "report":
-        return <ReportVisual key={index} selectedForm={selectedForm} />;
-      default:
-        return (
-          <CardVisual
-            key={index}
-            cardConfig={{
-              ...cfg,
-              data: dataset,
-              index: index,
-              lastUpdate: lastUpdate,
-              admLevelName: admLevelName,
-            }}
-            loading={loading}
-          />
-        );
-    }
-  };
+  const ctx = useMemo(
+    () => ({
+      config,
+      filterState: filters.queryParams,
+      fiscalYearStartMonth: fyStart,
+      customFilterDefs: customDefs,
+      progressResponses,
+      complianceResponses,
+      wqParameters: wqParams,
+    }),
+    [
+      config,
+      filters.queryParams,
+      fyStart,
+      customDefs,
+      progressResponses,
+      complianceResponses,
+      wqParams,
+    ]
+  );
+
+  if (!config) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `No dashboard config registered for formId=${formId}. Drop a JSON file in src/config/visualizations/ and register it in index.js.`
+    );
+    return (
+      <div style={{ padding: 24 }}>
+        <Empty description="This dashboard isn't available yet." />
+      </div>
+    );
+  }
+
+  const visibleTabs = (config.tabs || []).filter((t) => !t.hide);
 
   return (
-    <div id="dashboard">
-      <Affix className="sticky-wrapper">
-        <div>
-          <div className="page-title-wrapper">
-            <h1>{`${prefixText} ${selectedForm.name} Data`}</h1>
-          </div>
-          <VisualisationFilters showFormOptions={false} />
-          <div className="tab-wrapper">
-            {current?.tabs && (
-              <Tabs
-                activeKey={activeTab}
-                onChange={changeTab}
-                type="card"
-                tabBarGutter={10}
-              >
-                {/* TODO:: For now we will hide the report tab */}
-                {Object.keys(current.tabs)
-                  .filter((x) => x.toLowerCase() !== "report")
-                  .map((key) => {
-                    let tabName = key;
-                    if (
-                      !["jmp", "glaas", "rush"].includes(
-                        key.toLocaleLowerCase()
-                      )
-                    ) {
-                      tabName = key
-                        .split("_")
-                        .map((x) => capitalize(x))
-                        .join(" ");
-                    } else {
-                      tabName = key.toUpperCase();
-                    }
-                    return <TabPane tab={tabName} key={key}></TabPane>;
-                  })}
-              </Tabs>
-            )}
-          </div>
-        </div>
-      </Affix>
-      <Row className="main-wrapper" align="center">
-        <Col span={24} align="center">
-          {current?.tabs && activeItem?.rows ? (
-            activeItem.rows.map((row, index) => {
-              return (
-                <Row
-                  key={`row-${index}`}
-                  className="flexible-container row-wrapper"
-                  gutter={[10, 10]}
-                >
-                  {row.map((r, ri) => renderColumn(r, ri))}
-                </Row>
-              );
-            })
-          ) : (
-            <h4>No data</h4>
-          )}
-        </Col>
-      </Row>
+    <div style={{ padding: 24 }}>
+      {wqParams.map((p) => (
+        <WqParamFetcher
+          key={p.key}
+          param={p}
+          filterState={filters.queryParams}
+          fiscalYearStartMonth={fyStart}
+          customFilterDefs={customDefs}
+          onData={onParamData}
+        />
+      ))}
+
+      {progressBlocks.map(([k, block]) => (
+        <ProgressFetcher
+          key={k}
+          blockKey={k}
+          block={block}
+          filterState={filters.queryParams}
+          onData={onProgressData}
+        />
+      ))}
+
+      <Title level={2}>{config.name}</Title>
+      {config.description && (
+        <Paragraph type="secondary">{config.description}</Paragraph>
+      )}
+
+      {progressErrors.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Some dashboard data failed to load"
+          description={progressErrors
+            .map(({ key, error }) => `${key}: ${error?.message || "error"}`)
+            .join(" · ")}
+        />
+      )}
+
+      <Card size="small" style={{ marginBottom: 16 }}>
+        <DashboardFilters
+          config={config}
+          filters={filters}
+          onChange={filterActions}
+        />
+      </Card>
+
+      <Tabs
+        defaultActiveKey={visibleTabs[0]?.key}
+        destroyInactiveTabPane
+        items={visibleTabs.map((tab) => ({
+          key: tab.key,
+          label: tab.label,
+          children: (
+            <div>
+              {(config.layout?.[tab.key]?.sections || []).map((section, i) => (
+                <LayoutSection
+                  key={`${tab.key}-${i}`}
+                  section={section}
+                  ctx={ctx}
+                />
+              ))}
+            </div>
+          ),
+        }))}
+      />
     </div>
   );
 };
 
-export default React.memo(Dashboard);
+export default Dashboard;
