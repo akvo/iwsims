@@ -519,7 +519,6 @@ Computes multi-component progress per record using configurable formulas. All co
 | `components` | string | Yes | — | Comma-separated component defs. Format: `key:formula:qid1:qid2...` |
 | `filter_question_id` | integer | No | — | Filter to only parents where this option question matches `filter_option_value` |
 | `filter_option_value` | string | No | — | Option value to filter by (used with `filter_question_id`) |
-| `deadline_question_id` | integer | No | — | Date question for completion timeline |
 | `from_date` | YYYY-MM-DD | No | — | Date filter |
 | `to_date` | YYYY-MM-DD | No | — | Date filter |
 | `administration_id` | integer | No | — | Admin hierarchy filter |
@@ -581,11 +580,6 @@ GET /visualization/progress/6001
   &filter_question_id=600203
   &filter_option_value=active
 
-# With deadline timeline
-GET /visualization/progress/6001
-  ?monitoring_form_id=6002
-  &components=base:completed_binary:600203
-  &deadline_question_id=600201
 ```
 
 ---
