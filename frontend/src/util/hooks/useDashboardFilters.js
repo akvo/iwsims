@@ -1,0 +1,94 @@
+import { useCallback, useMemo, useState } from "react";
+
+/**
+ * @typedef {Object} DashboardFilterState
+ * @property {string|null} from_date       ISO YYYY-MM-DD, inclusive lower bound
+ * @property {string|null} to_date         ISO YYYY-MM-DD, inclusive upper bound
+ * @property {number|null} administration_id
+ * @property {Array<{ key: string, value: string|number|null }>} custom
+ */
+
+/**
+ * Initial state derived from the dashboard config. Defaults everything to
+ * null / empty so no filter params are emitted until the user selects one.
+ *
+ * @param {object} config
+ * @returns {DashboardFilterState}
+ */
+const buildInitialState = (config) => {
+  const customDefs = config?.filters?.custom || [];
+  return {
+    from_date: null,
+    to_date: null,
+    administration_id: null,
+    custom: customDefs.map((d) => ({ key: d.key, value: null })),
+  };
+};
+
+/**
+ * Manages filter state for one dashboard page. Filter mutations trigger
+ * identity changes on the returned `queryParams` object, which downstream
+ * useDashboardValues/Escalation/Progress hooks can depend on to re-fetch.
+ *
+ * @param {object} config
+ * @returns {{
+ *   state: DashboardFilterState,
+ *   setDateRange: (from: string|null, to: string|null) => void,
+ *   setAdministrationId: (id: number|null) => void,
+ *   setCustomFilter: (key: string, value: string|number|null) => void,
+ *   resetFilters: () => void,
+ *   queryParams: object,
+ * }}
+ */
+export const useDashboardFilters = (config) => {
+  const [state, setState] = useState(() => buildInitialState(config));
+
+  const setDateRange = useCallback((from, to) => {
+    setState((s) => ({ ...s, from_date: from, to_date: to }));
+  }, []);
+
+  const setAdministrationId = useCallback((id) => {
+    setState((s) =>
+      s.administration_id === id ? s : { ...s, administration_id: id }
+    );
+  }, []);
+
+  const setCustomFilter = useCallback((key, value) => {
+    setState((s) => ({
+      ...s,
+      custom: s.custom.map((entry) =>
+        entry.key === key ? { ...entry, value } : entry
+      ),
+    }));
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setState(buildInitialState(config));
+  }, [config]);
+
+  /**
+   * Snapshot of filter state as a plain object suitable for
+   * `applyDashboardFilters` in lib/dashboardFilterHints. Stable identity
+   * as long as state hasn't changed.
+   */
+  const queryParams = useMemo(
+    () => ({
+      from_date: state.from_date,
+      to_date: state.to_date,
+      administration_id: state.administration_id,
+      custom: state.custom,
+    }),
+    [state]
+  );
+
+  return {
+    state,
+    setDateRange,
+    setAdministrationId,
+    setCustomFilter,
+    resetFilters,
+    queryParams,
+  };
+};
+
+export default useDashboardFilters;
