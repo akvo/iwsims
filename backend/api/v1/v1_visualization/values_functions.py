@@ -1,4 +1,6 @@
-from django.db.models import Count, Avg, F
+from collections import defaultdict
+
+from django.db.models import Count, Avg, F, OuterRef, Subquery
 from django.db.models.functions import TruncMonth, Substr
 
 from api.v1.v1_data.models import FormData, Answers
@@ -629,25 +631,57 @@ def _number_group_by_date(question, data_ids, params):
 def _number_group_by_month(
     question, data_ids, agg_func, value_type, params
 ):
-    """Number question grouped by month."""
-    results = Answers.objects.filter(
+    """Number question grouped by month.
+
+    When date_question_id is provided, bucket by the month of that
+    date answer (via a Subquery) instead of FormData.created so the
+    x-axis aligns with the filter's date dimension.
+    """
+    date_qid = params.get("date_question_id")
+
+    base = Answers.objects.filter(
         data_id__in=data_ids,
         question_id=question.id,
         value__isnull=False,
-    ).annotate(
-        month=TruncMonth("data__created"),
-    ).values("month").annotate(
-        agg_value=agg_func("value"),
-    ).order_by("month")
+    )
 
-    data = [
-        {
-            "value": round(r["agg_value"], 2),
-            "label": format_month_label(r["month"]),
-            "group": format_month_group(r["month"]),
-        }
-        for r in results
-    ]
+    if date_qid:
+        date_sq = Answers.objects.filter(
+            data_id=OuterRef("data_id"),
+            question_id=date_qid,
+            name__isnull=False,
+        ).values("name")[:1]
+        results = base.annotate(
+            date_name=Subquery(date_sq),
+        ).filter(
+            date_name__isnull=False,
+        ).annotate(
+            month_key=Substr("date_name", 1, 7),
+        ).values("month_key").annotate(
+            agg_value=agg_func("value"),
+        ).order_by("month_key")
+        data = [
+            {
+                "value": round(r["agg_value"], 2),
+                "label": format_month_label(r["month_key"]),
+                "group": r["month_key"],
+            }
+            for r in results if r["agg_value"] is not None
+        ]
+    else:
+        results = base.annotate(
+            month=TruncMonth("data__created"),
+        ).values("month").annotate(
+            agg_value=agg_func("value"),
+        ).order_by("month")
+        data = [
+            {
+                "value": round(r["agg_value"], 2),
+                "label": format_month_label(r["month"]),
+                "group": format_month_group(r["month"]),
+            }
+            for r in results
+        ]
 
     if value_type == "percentage":
         total = sum(d["value"] for d in data)
@@ -682,7 +716,7 @@ def handle_stack_by_option(
     if group_by == "month":
         return _stack_option_by_month(
             question, options, data_ids,
-            opt_labels, opt_colors, value_type
+            opt_labels, opt_colors, value_type, params
         )
 
     if group_by == "parent_id":
@@ -699,50 +733,69 @@ def handle_stack_by_option(
 
 def _stack_option_by_month(
     question, options, data_ids,
-    opt_labels, opt_colors, value_type
+    opt_labels, opt_colors, value_type, params
 ):
-    """Stack by option, grouped by month."""
-    months = FormData.objects.filter(
-        id__in=data_ids,
-    ).annotate(
-        month=TruncMonth("created"),
-    ).values("month").distinct().order_by("month")
+    """Stack by option, grouped by month.
+
+    Fetches answers once and buckets in Python — O(N) instead of
+    O(months × options) queries. Honors date_question_id when
+    provided so the month bucket aligns with the filter dimension.
+    """
+    date_qid = params.get("date_question_id")
+    option_values = {o.value for o in options}
+
+    base = Answers.objects.filter(
+        data_id__in=data_ids,
+        question_id=question.id,
+    )
+
+    if date_qid:
+        date_sq = Answers.objects.filter(
+            data_id=OuterRef("data_id"),
+            question_id=date_qid,
+            name__isnull=False,
+        ).values("name")[:1]
+        rows = base.annotate(
+            date_name=Subquery(date_sq),
+        ).filter(
+            date_name__isnull=False,
+        ).annotate(
+            month_key=Substr("date_name", 1, 7),
+        ).values("month_key", "options")
+        get_key = lambda r: r["month_key"]  # noqa: E731
+        get_label = lambda k: format_month_label(k)  # noqa: E731
+    else:
+        rows = base.annotate(
+            month=TruncMonth("data__created"),
+        ).values("month", "options")
+        get_key = lambda r: format_month_group(r["month"])  # noqa: E731
+        get_label = lambda k: format_month_label(k)  # noqa: E731
+
+    buckets = defaultdict(lambda: defaultdict(int))
+    for r in rows:
+        key = get_key(r)
+        if not key:
+            continue
+        for v in (r["options"] or []):
+            if v in option_values:
+                buckets[key][v] += 1
 
     data = []
-    for month_row in months:
-        month = month_row["month"]
-        month_data_ids = FormData.objects.filter(
-            id__in=data_ids,
-            created__year=month.year,
-            created__month=month.month,
-        ).values_list("id", flat=True)
-
-        row = {
-            "group": format_month_group(month),
-            "label": format_month_label(month),
-        }
+    for key in sorted(buckets.keys()):
+        row = {"group": key, "label": get_label(key)}
         total_in_month = 0
         for opt in options:
-            count = Answers.objects.filter(
-                data_id__in=month_data_ids,
-                question_id=question.id,
-                options__contains=[opt.value],
-            ).count()
+            count = buckets[key].get(opt.value, 0)
             row[opt.label] = count
             total_in_month += count
-
         if value_type == "percentage" and total_in_month > 0:
             for opt in options:
                 row[opt.label] = round(
-                    row[opt.label] / total_in_month * 100,
-                    2,
+                    row[opt.label] / total_in_month * 100, 2,
                 )
-
         data.append(row)
 
-    labels = [
-        format_month_label(m["month"]) for m in months
-    ]
+    labels = [d["label"] for d in data]
     return {
         "data": data,
         "labels": labels,
@@ -847,7 +900,7 @@ def handle_stack_by_parent(
     if group_by == "month":
         return _stack_parent_by_month(
             question, parents, is_latest,
-            parent_names, agg_func
+            parent_names, agg_func, params
         )
 
     return {"data": [], "labels": [], "stack_labels": []}
@@ -857,57 +910,68 @@ def _stack_parent_by_date(
     question, parents, is_latest,
     parent_names, agg_func, params
 ):
-    """Stack by parent_id, grouped by date."""
-    all_rows = {}
+    """Stack by parent_id, grouped by date.
+
+    Prefetches date keys and aggregated values per data_id in two
+    bulk queries instead of N+1 per-point queries.
+    """
     date_qid = params.get("date_question_id")
 
+    all_data_ids = []
+    for p in parents:
+        if is_latest:
+            all_data_ids.append(p["latest_id"])
+        else:
+            all_data_ids.extend(p["data_ids"])
+
+    if date_qid:
+        date_rows = Answers.objects.filter(
+            data_id__in=all_data_ids,
+            question_id=date_qid,
+            name__isnull=False,
+        ).values("data_id", "name")
+        date_map = {
+            r["data_id"]: format_date_group(r["name"])
+            for r in date_rows
+        }
+    else:
+        fd_rows = FormData.objects.filter(
+            id__in=all_data_ids,
+        ).values("id", "created")
+        date_map = {
+            r["id"]: format_date_group(r["created"])
+            for r in fd_rows
+        }
+
+    val_rows = Answers.objects.filter(
+        data_id__in=all_data_ids,
+        question_id=question.id,
+        value__isnull=False,
+    ).values("data_id").annotate(
+        agg_value=agg_func("value"),
+    )
+    val_map = {
+        r["data_id"]: r["agg_value"]
+        for r in val_rows
+        if r["agg_value"] is not None
+    }
+
+    all_rows = {}
     for p in parents:
         p_ids = (
             [p["latest_id"]] if is_latest
             else p["data_ids"]
         )
-
         for data_id in p_ids:
-            if date_qid:
-                date_ans = Answers.objects.filter(
-                    data_id=data_id,
-                    question_id=date_qid,
-                ).first()
-                date_key = (
-                    format_date_group(date_ans.name)
-                    if date_ans and date_ans.name
-                    else None
-                )
-            else:
-                fd = FormData.objects.filter(
-                    id=data_id
-                ).values("created").first()
-                date_key = (
-                    format_date_group(fd["created"])
-                    if fd else None
-                )
-
-            if not date_key:
+            date_key = date_map.get(data_id)
+            agg_val = val_map.get(data_id)
+            if not date_key or agg_val is None:
                 continue
+            if date_key not in all_rows:
+                all_rows[date_key] = {"date": date_key}
+            all_rows[date_key][p["name"]] = round(agg_val, 2)
 
-            val_result = Answers.objects.filter(
-                data_id=data_id,
-                question_id=question.id,
-                value__isnull=False,
-            ).aggregate(agg_value=agg_func("value"))
-
-            if val_result["agg_value"] is not None:
-                if date_key not in all_rows:
-                    all_rows[date_key] = {
-                        "date": date_key,
-                    }
-                all_rows[date_key][p["name"]] = round(
-                    val_result["agg_value"], 2
-                )
-
-    data = [
-        all_rows[k] for k in sorted(all_rows.keys())
-    ]
+    data = [all_rows[k] for k in sorted(all_rows.keys())]
     labels = sorted(all_rows.keys())
     return {
         "data": data,
@@ -918,41 +982,73 @@ def _stack_parent_by_date(
 
 def _stack_parent_by_month(
     question, parents, is_latest,
-    parent_names, agg_func
+    parent_names, agg_func, params
 ):
-    """Stack by parent_id, grouped by month."""
+    """Stack by parent_id, grouped by month.
+
+    When date_question_id is provided, buckets by the month of that
+    date answer (via Subquery) instead of FormData.created.
+    """
+    date_qid = params.get("date_question_id")
     all_rows = {}
+
     for p in parents:
         p_ids = (
             [p["latest_id"]] if is_latest
             else p["data_ids"]
         )
 
-        results = Answers.objects.filter(
+        base = Answers.objects.filter(
             data_id__in=p_ids,
             question_id=question.id,
             value__isnull=False,
-        ).annotate(
-            month=TruncMonth("data__created"),
-        ).values("month").annotate(
-            agg_value=agg_func("value"),
-        ).order_by("month")
+        )
 
-        for r in results:
-            month_key = format_month_group(r["month"])
-            if month_key not in all_rows:
-                all_rows[month_key] = {
-                    "month": format_month_label(
-                        r["month"]
-                    ),
-                }
-            all_rows[month_key][p["name"]] = round(
-                r["agg_value"], 2
-            )
+        if date_qid:
+            date_sq = Answers.objects.filter(
+                data_id=OuterRef("data_id"),
+                question_id=date_qid,
+                name__isnull=False,
+            ).values("name")[:1]
+            results = base.annotate(
+                date_name=Subquery(date_sq),
+            ).filter(
+                date_name__isnull=False,
+            ).annotate(
+                month_key=Substr("date_name", 1, 7),
+            ).values("month_key").annotate(
+                agg_value=agg_func("value"),
+            ).order_by("month_key")
+            for r in results:
+                if r["agg_value"] is None:
+                    continue
+                month_key = r["month_key"]
+                if month_key not in all_rows:
+                    all_rows[month_key] = {
+                        "month": format_month_label(month_key),
+                    }
+                all_rows[month_key][p["name"]] = round(
+                    r["agg_value"], 2,
+                )
+        else:
+            results = base.annotate(
+                month=TruncMonth("data__created"),
+            ).values("month").annotate(
+                agg_value=agg_func("value"),
+            ).order_by("month")
+            for r in results:
+                month_key = format_month_group(r["month"])
+                if month_key not in all_rows:
+                    all_rows[month_key] = {
+                        "month": format_month_label(
+                            r["month"]
+                        ),
+                    }
+                all_rows[month_key][p["name"]] = round(
+                    r["agg_value"], 2,
+                )
 
-    data = [
-        all_rows[k] for k in sorted(all_rows.keys())
-    ]
+    data = [all_rows[k] for k in sorted(all_rows.keys())]
     labels = [d["month"] for d in data]
     return {
         "data": data,
