@@ -218,7 +218,7 @@ To bound the x-axis to a single fiscal year, pass `from_date` and `to_date` as t
 
 Server-side call surfaces overdue incomplete projects via the `overdue` criterion. Design intent is `overall_progress < expected_progress` — that comparison is computed client-side on `/progress` `response.details` and applied as a post-filter.
 
-The `/escalation` `columns` param only supports four source types (`parent_name`, `administration`, `answer:{qid}`, `latest_date:{qid}`). For the component columns shown in the design there are two patterns:
+The `/escalation` `columns` param supports five source types (`parent_name`, `parent_answer:{qid}`, `administration`, `answer:{qid}`, `latest_date:{qid}`). For the component columns shown in the design there are two patterns:
 
 #### Pattern A — raw answers (single call)
 
