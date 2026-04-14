@@ -3,6 +3,7 @@ from django.db.models import (
     Q, Subquery, OuterRef,
 )
 from datetime import datetime as dt_datetime, timedelta, date
+from rest_framework.exceptions import ValidationError
 
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_profile.models import Administration
@@ -48,6 +49,11 @@ def resolve_default_administration_id(administration_id):
     root = Administration.objects.filter(
         parent__isnull=True
     ).values_list("id", flat=True).first()
+    if root is None:
+        raise ValidationError(
+            "No root administration configured; "
+            "administration_id is required."
+        )
     return root
 
 
