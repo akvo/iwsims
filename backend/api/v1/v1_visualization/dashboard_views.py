@@ -223,6 +223,21 @@ def visualization_values(request, version):
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
+        OpenApiParameter(
+            name="from_date", required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="to_date", required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="date_question_id", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
     ],
 )
 @api_view(["GET"])
@@ -294,6 +309,21 @@ def visualization_escalation(request, form_id, version):
         ),
         OpenApiParameter(
             name="administration_id", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="from_date", required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="to_date", required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="date_question_id", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
