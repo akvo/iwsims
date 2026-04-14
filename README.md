@@ -177,6 +177,18 @@ docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 Network config: [nginx](https://github.com/akvo/akvo-mis/blob/main/frontend/nginx/conf.d/default.conf)
 
 
+## Dashboard Visualizations
+
+Dashboards at `/dashboard/:formId` are **config-driven** — a new form family
+can get a full dashboard without any component code changes. To add a new
+dashboard:
+
+1. Drop a `<parent_form_id>.json` file in [`frontend/src/config/visualizations/`](frontend/src/config/visualizations/)
+2. Register it in [`frontend/src/config/visualizations/index.js`](frontend/src/config/visualizations/index.js)
+3. Visit `/dashboard/<parent_form_id>`
+
+See [`frontend/src/config/visualizations/README.md`](frontend/src/config/visualizations/README.md) for the full schema, supported section/chart types, filter hints, and troubleshooting. The reference implementation is [`1749623934933.json`](frontend/src/config/visualizations/1749623934933.json) (EPS Overview).
+
 ## Data Seeder
 
 ### Akvo Flow
