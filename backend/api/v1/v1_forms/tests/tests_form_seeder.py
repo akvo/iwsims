@@ -9,6 +9,7 @@ from api.v1.v1_data.models import FormData, Answers, AnswerHistory
 from api.v1.v1_forms.models import Forms, Questions
 from api.v1.v1_users.models import SystemUser
 from django.test import TestCase
+from utils.functions import atomic_write, atomic_write_json
 
 
 def seed_administration_test():
@@ -329,10 +330,8 @@ class FormSeederTestCase(TestCase):
             ]
             mon_json["question_groups"][0]["questions"].append(q109)
 
-            with open(form1_path, "w") as f:
-                json.dump(form1_json, f, indent=2)
-            with open(mon_path, "w") as f:
-                json.dump(mon_json, f, indent=2)
+            atomic_write_json(form1_path, form1_json)
+            atomic_write_json(mon_path, mon_json)
 
             # Step 4: Re-run seeder with modified fixtures
             self.call_command("--test")
@@ -370,7 +369,5 @@ class FormSeederTestCase(TestCase):
 
         finally:
             # Restore original fixtures
-            with open(form1_path, "w") as f:
-                f.write(form1_orig)
-            with open(mon_path, "w") as f:
-                f.write(mon_orig)
+            atomic_write(form1_path, form1_orig)
+            atomic_write(mon_path, mon_orig)

@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import time
 import pandas as pd
 import logging
 from django.conf import settings
@@ -21,7 +22,10 @@ def generate_sqlite(model, test: bool = False):
         table_name,
     )
     if os.path.exists(file_name):
-        os.remove(file_name)
+        try:
+            os.remove(file_name)
+        except OSError:
+            pass
     data = pd.DataFrame(list(objects.values(*field_names)))
     no_rows = data.shape[0]
     if no_rows < 1:
@@ -47,10 +51,19 @@ def generate_sqlite(model, test: bool = False):
         )
     else:
         data["parent"] = 0
-    conn = sqlite3.connect(file_name)
-    data.to_sql("nodes", conn, if_exists="replace", index=False)
-    conn.close()
-    return file_name
+    last_err = None
+    for attempt in range(5):
+        try:
+            conn = sqlite3.connect(file_name, timeout=30)
+            try:
+                data.to_sql("nodes", conn, if_exists="replace", index=False)
+            finally:
+                conn.close()
+            return file_name
+        except sqlite3.OperationalError as err:
+            last_err = err
+            time.sleep(0.1 * (2 ** attempt))
+    raise last_err
 
 
 def update_sqlite(model, data, id=None):
@@ -68,7 +81,7 @@ def update_sqlite(model, data, id=None):
         "test_" if test else "",
         table_name,
     )
-    conn = sqlite3.connect(file_name)
+    conn = sqlite3.connect(file_name, timeout=30)
     try:
         with conn:
             c = conn.cursor()
