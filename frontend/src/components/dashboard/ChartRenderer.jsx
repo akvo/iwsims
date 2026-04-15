@@ -16,70 +16,122 @@ const COMPONENT_BY_TYPE = {
 };
 
 /**
- * Generic chart wrapper. Dispatches on `chart_type` and handles three
- * data-source modes defined by the config:
+ * Generic chart wrapper. Dispatches on `item.chart_type` and handles three
+ * data-source modes defined by the flat schema item:
  *
- *  - `api`       — hit /visualization/values with the chart's api block
- *  - `source: "progress"` — reuse a /progress response (histogram field)
+ *  - `api`                — hit /visualization/values with the item's api block
+ *  - `source: "progress"` — reuse a /progress response resolved via definitionsById
  *  - `compute: "compliance"` — frontend-compute drinking-water stacked bar
+ *
+ * Also handles `chart_type: "histogram"` which renders as <Bar> with
+ * binned data from a direct api call.
+ *
+ * @param {object} item           The config item (chart_type, api, config, ...)
+ * @param {object} filterState    useDashboardFilters.queryParams
+ * @param {number} [fiscalYearStartMonth]
+ * @param {Array}  [customFilterDefs]   flat list of filter items (for hint expansion)
+ * @param {Date}   [today]
+ * @param {Map}    [definitionsById]    id → item map for cross-ref resolution
+ * @param {object} [complianceResponses]  { [itemId]: /values response }
  */
 const ChartRenderer = ({
-  chartKey,
-  chart,
+  item,
   filterState,
   fiscalYearStartMonth,
   customFilterDefs,
   today,
-  // Shared refs used by cross-referenced / compute charts
-  progressResponses,
+  definitionsById,
   complianceResponses,
-  waterQualityParameters,
 }) => {
-  const Component = COMPONENT_BY_TYPE[chart.chart_type];
+  const chartType = item.chart_type === "histogram" ? "bar" : item.chart_type;
+  const Component = COMPONENT_BY_TYPE[chartType];
+
   const isApiDriven =
-    Boolean(Component) && Boolean(chart.api) && !chart.compute && !chart.source;
+    Boolean(Component) && Boolean(item.api) && !item.compute && !item.source;
 
   const {
     data: apiData,
     loading: apiLoading,
     error: apiError,
-  } = useDashboardValues(isApiDriven ? chart.api : null, filterState, {
+  } = useDashboardValues(isApiDriven ? item.api : null, filterState, {
     today,
     fiscalYearStartMonth,
     customFilterDefs,
     enabled: isApiDriven,
   });
 
+  // For progress-sourced charts, fetch the referenced progress definition.
+  const progressDef = useMemo(() => {
+    if (item.source !== "progress" || !item.progress_ref) {
+      return null;
+    }
+    return definitionsById?.get(item.progress_ref) || null;
+  }, [item, definitionsById]);
+
+  const { data: progressData } = useDashboardProgress(
+    progressDef,
+    filterState,
+    {
+      enabled: Boolean(progressDef),
+    }
+  );
+
+  // Resolve params for compliance chart.
+  const complianceParams = useMemo(() => {
+    if (item.compute !== "compliance") {
+      return [];
+    }
+    const paramsRef = item.params_ref || [];
+    return paramsRef.map((id) => definitionsById?.get(id)).filter(Boolean);
+  }, [item, definitionsById]);
+
   const data = useMemo(() => {
-    if (chart.compute === "compliance") {
-      return computeComplianceStackData(
-        waterQualityParameters || [],
-        complianceResponses || {}
-      ).data;
+    if (item.compute === "compliance") {
+      // complianceResponses is keyed by item id (not param.key).
+      // We pass params with their ids as keys into computeComplianceStackData
+      // which expects params with `.key` matching the responses keys.
+      // Build a normalised map: param.id → response for the compute helper,
+      // aliasing so that the helper can use param.key == param.id here.
+      const responsesByKey = {};
+      complianceParams.forEach((p) => {
+        // In the flat schema, param items use `id` as their unique key.
+        // complianceResponses is keyed by item id.
+        const resp = complianceResponses?.[p.id];
+        if (resp) {
+          responsesByKey[p.id] = resp;
+        }
+      });
+      // Normalise: computeComplianceStackData expects parameters with a `.key`
+      // field that matches the responsesByKey keys. In the new schema, id IS
+      // the key, so we pass params with key = id.
+      const normalised = complianceParams.map((p) => ({
+        ...p,
+        key: p.id,
+      }));
+      return computeComplianceStackData(normalised, responsesByKey).data;
     }
-    if (chart.source === "progress") {
-      const progressResp = progressResponses?.[chart.progress_ref];
-      return chart.field === "histogram"
-        ? toHistogramBarData(progressResp)
-        : progressResp?.details || [];
+
+    if (item.source === "progress" && progressData) {
+      return item.field === "histogram"
+        ? toHistogramBarData(progressData)
+        : progressData?.details || [];
     }
+
     if (isApiDriven) {
-      // Rotate on raw rows first (they still carry .group = YYYY-MM), then
-      // strip to {label, value} for akvo-charts dimension inference.
       let rows = apiData?.data || [];
-      if (chart.api?.group_by === "month" && chart.api?.fiscal_year) {
+      if (item.api?.group_by === "month" && item.api?.fiscal_year) {
         rows = rotateToFiscalOrder(rows, fiscalYearStartMonth);
       }
       return rows.map((r) => ({ label: r.label, value: r.value }));
     }
     return [];
   }, [
-    chart,
+    item,
     apiData,
     isApiDriven,
-    progressResponses,
+    progressData,
     complianceResponses,
-    waterQualityParameters,
+    complianceParams,
     fiscalYearStartMonth,
   ]);
 
@@ -87,7 +139,7 @@ const ChartRenderer = ({
     return (
       <Alert
         type="error"
-        message={`Unsupported chart_type: ${chart.chart_type} (${chartKey})`}
+        message={`Unsupported chart_type: ${item.chart_type} (${item.id})`}
       />
     );
   }
@@ -98,7 +150,7 @@ const ChartRenderer = ({
     return (
       <Alert
         type="error"
-        message={`Failed to load ${chartKey}: ${apiError.message || "error"}`}
+        message={`Failed to load ${item.id}: ${apiError.message || "error"}`}
       />
     );
   }
@@ -112,25 +164,23 @@ const ChartRenderer = ({
   }
 
   const commonProps = {
-    config: chart.config || {},
+    config: item.config || {},
     data,
-    rawConfig: chart.raw_config,
-    rawOverrides: chart.raw_overrides,
+    rawConfig: item.raw_config,
+    rawOverrides: item.raw_overrides,
   };
 
   return <Component {...commonProps} />;
 };
 
 ChartRenderer.propTypes = {
-  chartKey: PropTypes.string.isRequired,
-  chart: PropTypes.object.isRequired,
+  item: PropTypes.object.isRequired,
   filterState: PropTypes.object,
   fiscalYearStartMonth: PropTypes.number,
   customFilterDefs: PropTypes.array,
   today: PropTypes.instanceOf(Date),
-  progressResponses: PropTypes.object,
+  definitionsById: PropTypes.instanceOf(Map),
   complianceResponses: PropTypes.object,
-  waterQualityParameters: PropTypes.array,
 };
 
 export { useDashboardProgress };

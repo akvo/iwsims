@@ -27,17 +27,45 @@ const extractOptionsFromWindow = (formId, questionId) => {
 };
 
 /**
- * Filter bar for the config-driven dashboard. Renders the three built-in
- * filters (date range, administration, custom) based on the config's
- * `filters` block. Hidden filters (`hide: true`) are skipped.
+ * Filter bar for the config-driven dashboard. Renders filters from a flat
+ * array of filter items (the `items[]` contents of a `filter_bar` container).
+ *
+ * Recognises:
+ *   - `filter_date`           → <RangePicker>
+ *   - `filter_administration` → <AdministrationDropdown>
+ *   - `filter_option`         → <Select> (single)
+ *   - `filter_multi_option`   → <Select mode="multiple">
+ *
+ * Hidden items (`hide: true`) are skipped.
  *
  * The component is intentionally display-only: state and query-string
  * synthesis live in `useDashboardFilters` + `lib/dashboardFilterHints`.
+ *
+ * @param {Array}  filterItems   Flat list of filter items from the filter_bar container
+ * @param {object} filters       Return value of useDashboardFilters
+ * @param {object} onChange      { setDateRange, setAdministrationId, setCustomFilter }
  */
-const DashboardFilters = ({ config, filters, onChange }) => {
-  const dateCfg = config?.filters?.date;
-  const adminCfg = config?.filters?.administration;
-  const customDefs = useMemo(() => config?.filters?.custom || [], [config]);
+const DashboardFilters = ({ filterItems, filters, onChange }) => {
+  const dateCfg = useMemo(
+    () => filterItems.find((i) => i.chart_type === "filter_date"),
+    [filterItems]
+  );
+
+  const adminCfg = useMemo(
+    () => filterItems.find((i) => i.chart_type === "filter_administration"),
+    [filterItems]
+  );
+
+  const customDefs = useMemo(
+    () =>
+      filterItems.filter(
+        (i) =>
+          (i.chart_type === "filter_option" ||
+            i.chart_type === "filter_multi_option") &&
+          !i.hide
+      ),
+    [filterItems]
+  );
 
   // Resolve option lists for each custom filter from window.forms (populated
   // at app startup). No extra fetch required.
@@ -77,34 +105,34 @@ const DashboardFilters = ({ config, filters, onChange }) => {
 
   return (
     <Space wrap size="middle" align="center">
-      {!dateCfg?.hide && (
+      {dateCfg && !dateCfg.hide && (
         <RangePicker
           onChange={handleDateChange}
           allowEmpty={[true, true]}
-          aria-label={dateCfg?.label || "Date range"}
+          aria-label={dateCfg.label || "Date range"}
         />
       )}
-      {!adminCfg?.hide && <AdministrationDropdown withLabel />}
-      {customDefs
-        .filter((d) => !d.hide)
-        .map((d) => (
-          <Select
-            key={d.key}
-            allowClear
-            placeholder={d.label}
-            style={{ minWidth: 180 }}
-            value={customValue(d.key) || []}
-            onChange={handleCustomChange(d.key)}
-            {...(d.type === "multiple_option" ? { mode: "multiple" } : {})}
-            options={customOptions[d.key] || []}
-          />
-        ))}
+      {adminCfg && !adminCfg.hide && <AdministrationDropdown withLabel />}
+      {customDefs.map((d) => (
+        <Select
+          key={d.key}
+          allowClear
+          placeholder={d.label}
+          style={{ minWidth: 180 }}
+          value={customValue(d.key) || []}
+          onChange={handleCustomChange(d.key)}
+          {...(d.chart_type === "filter_multi_option"
+            ? { mode: "multiple" }
+            : {})}
+          options={customOptions[d.key] || []}
+        />
+      ))}
     </Space>
   );
 };
 
 DashboardFilters.propTypes = {
-  config: PropTypes.object.isRequired,
+  filterItems: PropTypes.arrayOf(PropTypes.object).isRequired,
   filters: PropTypes.object.isRequired,
   onChange: PropTypes.shape({
     setDateRange: PropTypes.func.isRequired,

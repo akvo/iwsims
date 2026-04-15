@@ -1,60 +1,63 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Alert, Table } from "antd";
 import { useDashboardEscalation } from "../../util/hooks";
 
 /**
- * Renders a paginated AntD Table from `config.escalation[key]` by wiring into
- * useDashboardEscalation (which hits /visualization/escalation/{parent_form_id}).
+ * Renders a paginated AntD Table from a flat-schema `table` item.
  *
- * Dynamic column definitions come from escalationBlock.columns. Computed
- * columns (source not present in the backend vocabulary — e.g. violations,
- * overall_progress) render a placeholder today; hooks for joining with
- * /progress or frontend-compute results can be wired per-column in the
- * future.
+ * Dynamic column definitions come from `item.columns`. Computed columns
+ * (where `computed: true` — no backend source) delegate to a per-column
+ * function in `cellComputers`, keyed by `column.key`.
+ *
+ * Columns with `progress_ref` and `component_key` are resolved client-side
+ * from the progress response data passed in via `cellComputers`.
  */
 const EscalationTable = ({
-  escalationBlock,
+  item,
   filterState,
   pageSize = 10,
   cellComputers = {},
 }) => {
   const [page, setPage] = useState(1);
-  const { data, loading, error } = useDashboardEscalation(
-    escalationBlock,
-    filterState,
-    { page, pageSize }
-  );
+  const { data, loading, error } = useDashboardEscalation(item, filterState, {
+    page,
+    pageSize,
+  });
 
-  const columns = (escalationBlock.columns || [])
-    .filter((c) => !c.hide)
-    .map((c) => ({
-      title: c.label,
-      dataIndex: c.key,
-      key: c.key,
-      render: (value, row) => {
-        // Computed columns (no backend source). If the page provided a
-        // computer for this column key, run it against the row; otherwise
-        // render a muted placeholder.
-        if (c.computed) {
-          const computer = cellComputers[c.key];
-          const computed = computer ? computer(row) : null;
-          if (computed === null || typeof computed === "undefined") {
-            return <span style={{ color: "#bbb" }}>—</span>;
-          }
-          return typeof computed === "object"
-            ? JSON.stringify(computed)
-            : String(computed);
-        }
-        if (value === null || typeof value === "undefined") {
-          return "—";
-        }
-        if (typeof value === "object") {
-          return JSON.stringify(value);
-        }
-        return String(value);
-      },
-    }));
+  const columns = useMemo(
+    () =>
+      (item.columns || [])
+        .filter((c) => !c.hide)
+        .map((c) => ({
+          title: c.label,
+          dataIndex: c.key,
+          key: c.key,
+          render: (value, row) => {
+            // Computed columns (no backend source). If the page provided a
+            // computer for this column key, run it against the row; otherwise
+            // render a muted placeholder.
+            if (c.computed) {
+              const computer = cellComputers[c.key];
+              const computed = computer ? computer(row) : null;
+              if (computed === null || typeof computed === "undefined") {
+                return <span style={{ color: "#bbb" }}>—</span>;
+              }
+              return typeof computed === "object"
+                ? JSON.stringify(computed)
+                : String(computed);
+            }
+            if (value === null || typeof value === "undefined") {
+              return "—";
+            }
+            if (typeof value === "object") {
+              return JSON.stringify(value);
+            }
+            return String(value);
+          },
+        })),
+    [item.columns, cellComputers]
+  );
 
   if (error) {
     return (
@@ -84,9 +87,10 @@ const EscalationTable = ({
 };
 
 EscalationTable.propTypes = {
-  escalationBlock: PropTypes.object.isRequired,
+  item: PropTypes.object.isRequired,
   filterState: PropTypes.object,
   pageSize: PropTypes.number,
+  cellComputers: PropTypes.object,
 };
 
 export default EscalationTable;

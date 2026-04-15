@@ -8,7 +8,7 @@ import { api, geo } from "../../lib";
 const DEFAULT_COLOR = "#1890ff";
 
 /**
- * Config-driven dashboard map.
+ * Config-driven dashboard map. Accepts a flat-schema `map` item directly.
  *
  * Endpoints:
  *   GET /api/v1/maps/geolocation/{source_form_id}[?administration=<id>]
@@ -17,21 +17,21 @@ const DEFAULT_COLOR = "#1890ff";
  *
  * The first call returns points ({ id, name, geo: [lat, lng], ... }); the
  * second optional call provides per-EPS status used to color markers via
- * config.map.status_colors. Marker click navigates through
- * config.map.click_url_template with {parent_form_id}/{data_id} substituted.
+ * `item.status_colors`. Marker click navigates through
+ * `item.click_url_template` with {parent_form_id}/{data_id} substituted.
  */
-const DashboardMap = ({ mapConfig, filterState, height = 400 }) => {
+const DashboardMap = ({ item, filterState, height = 400 }) => {
   const [points, setPoints] = useState([]);
   const [statusByParent, setStatusByParent] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const sourceFormId = mapConfig?.source_form_id;
-  const statusQid = mapConfig?.status_question_id;
-  const statusFormId = mapConfig?.status_monitoring_form_id;
-  const statusColors = mapConfig?.status_colors || {};
+  const sourceFormId = item?.source_form_id;
+  const statusQid = item?.status_question_id;
+  const statusFormId = item?.status_monitoring_form_id;
+  const statusColors = item?.status_colors || {};
   const urlTemplate =
-    mapConfig?.click_url_template ||
+    item?.click_url_template ||
     "/control-center/data/{parent_form_id}/monitoring/{data_id}";
 
   useEffect(() => {
@@ -162,7 +162,7 @@ const DashboardMap = ({ mapConfig, filterState, height = 400 }) => {
 };
 
 DashboardMap.propTypes = {
-  mapConfig: PropTypes.object.isRequired,
+  item: PropTypes.object.isRequired,
   filterState: PropTypes.object,
   height: PropTypes.number,
 };

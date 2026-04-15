@@ -1,282 +1,216 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Alert, Card, Col, Empty, Row, Tabs, Typography } from "antd";
+import { Alert, Col, Empty, Row, Typography } from "antd";
 import {
   useDashboardConfig,
   useDashboardFilters,
   useDashboardProgress,
   useDashboardValues,
 } from "../../util/hooks";
-import DashboardFilters from "../../components/dashboard/DashboardFilters";
-import KPICardRow from "../../components/dashboard/KPICardRow";
-import ChartRenderer from "../../components/dashboard/ChartRenderer";
-import DashboardMap from "../../components/dashboard/DashboardMap";
-import EscalationTable from "../../components/dashboard/EscalationTable";
+import DashboardRenderer from "../../components/dashboard/DashboardRenderer";
 import { fails } from "../../components/dashboard/compute/compliance";
 
 const { Title, Paragraph } = Typography;
 
 /**
- * Invisible per-parameter fetcher. One instance per non-hidden water-quality
- * parameter — rules-of-hooks-compliant fan-out feeding the compliance
- * stacked bar (compute=compliance in config.charts).
+ * Invisible per-parameter fetcher used for the compliance stacked-bar chart.
+ *
+ * One instance is rendered per non-hidden `histogram` item whose id appears
+ * in a `params_ref[]` of any compliance chart. It fires the /values call and
+ * reports back via `onData` keyed by item id.
+ *
+ * Rules-of-hooks-compliant fan-out: the hook call is unconditional inside
+ * this component; the parent decides how many instances to render.
  */
 const WqParamFetcher = ({
-  param,
+  paramItem,
   filterState,
   fiscalYearStartMonth,
   customFilterDefs,
   onData,
 }) => {
-  const { data } = useDashboardValues(param.api, filterState, {
+  const { data } = useDashboardValues(paramItem.api, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,
   });
   React.useEffect(() => {
     if (data) {
-      onData(param.key, data);
+      onData(paramItem.id, data);
     }
-  }, [data, param.key, onData]);
+  }, [data, paramItem.id, onData]);
   return null;
 };
 
 /**
- * Invisible per-progress-block fetcher. Lets the dashboard run
- * /progress for every entry in `config.progress` without hardcoding
- * the keys here.
+ * Invisible progress fetcher. One instance per `progress_definition` item
+ * in the config tree. Reports back via `onData` keyed by item id.
  */
-const ProgressFetcher = ({ blockKey, block, filterState, onData }) => {
-  const { data, error } = useDashboardProgress(block, filterState);
+const ProgressFetcher = ({ progressItem, filterState, onData }) => {
+  const { data, error } = useDashboardProgress(progressItem, filterState);
   React.useEffect(() => {
     if (data || error) {
-      onData(blockKey, { data, error });
+      onData(progressItem.id, { data, error });
     }
-  }, [blockKey, data, error, onData]);
+  }, [progressItem.id, data, error, onData]);
   return null;
 };
 
 /**
- * Resolves one layout section to a node. Dispatches on `section.type`;
- * skips sections with `hide: true`.
+ * Walk the flat item tree and collect all items of a given chart_type.
+ * Tab panes (no chart_type) are walked for their children transparently.
+ *
+ * @param {Array}  items
+ * @param {string} chartType
+ * @returns {Array}
  */
-const LayoutSection = ({ section, ctx }) => {
-  if (section.hide) {
-    return null;
-  }
-
-  const {
-    config,
-    filterState,
-    fiscalYearStartMonth,
-    customFilterDefs,
-    progressResponses,
-    complianceResponses,
-    wqParameters,
-  } = ctx;
-
-  switch (section.type) {
-    case "kpi_row":
-      return (
-        <div style={{ marginBottom: 24 }}>
-          <KPICardRow
-            kpiKeys={section.kpis || []}
-            kpisByKey={config.kpis}
-            filterState={filterState}
-            fiscalYearStartMonth={fiscalYearStartMonth}
-            customFilterDefs={customFilterDefs}
-          />
-        </div>
-      );
-
-    case "map":
-      return (
-        <Card size="small" style={{ marginBottom: 16 }}>
-          <DashboardMap
-            mapConfig={config.map}
-            filterState={filterState}
-            height={section.height || 400}
-          />
-        </Card>
-      );
-
-    case "section_title":
-      return (
-        <Title level={4} style={{ marginTop: 16 }}>
-          {section.text}
-        </Title>
-      );
-
-    case "chart": {
-      const chart = config.charts?.[section.chart_key];
-      if (!chart || chart.hide) {
-        return null;
-      }
-      return (
-        <Card title={chart.config?.title} style={{ marginBottom: 16 }}>
-          <ChartRenderer
-            chartKey={section.chart_key}
-            chart={chart}
-            filterState={filterState}
-            fiscalYearStartMonth={fiscalYearStartMonth}
-            customFilterDefs={customFilterDefs}
-            progressResponses={progressResponses}
-            complianceResponses={complianceResponses}
-            waterQualityParameters={wqParameters}
-          />
-        </Card>
-      );
+const collectByType = (items = [], chartType) => {
+  const result = [];
+  items.forEach((item) => {
+    if (!item.chart_type && Array.isArray(item.items)) {
+      result.push(...collectByType(item.items, chartType));
+      return;
     }
-
-    case "chart_row":
-    case "chart_grid": {
-      const keys = (section.charts || []).filter(
-        (k) => config.charts?.[k] && !config.charts[k].hide
-      );
-      const cols = section.columns || keys.length || 1;
-      const span = Math.max(6, Math.floor(24 / cols));
-      return (
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          {keys.map((k) => (
-            <Col key={k} xs={24} md={span}>
-              <Card title={config.charts[k].config?.title}>
-                <ChartRenderer
-                  chartKey={k}
-                  chart={config.charts[k]}
-                  filterState={filterState}
-                  fiscalYearStartMonth={fiscalYearStartMonth}
-                  customFilterDefs={customFilterDefs}
-                  progressResponses={progressResponses}
-                  complianceResponses={complianceResponses}
-                  waterQualityParameters={wqParameters}
-                />
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      );
+    if (item.chart_type === chartType) {
+      result.push(item);
     }
-
-    case "parameter_grid": {
-      const params = (wqParameters || []).filter(
-        (p) => !p.hide && p.group === section.group
-      );
-      const cols = section.columns || 2;
-      const span = Math.max(6, Math.floor(24 / cols));
-      return (
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          {params.map((p) => (
-            <Col key={p.key} xs={24} md={span}>
-              <Card title={p.config?.title || p.label}>
-                <ChartRenderer
-                  chartKey={p.key}
-                  chart={p}
-                  filterState={filterState}
-                  fiscalYearStartMonth={fiscalYearStartMonth}
-                  customFilterDefs={customFilterDefs}
-                />
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      );
+    if (Array.isArray(item.items)) {
+      result.push(...collectByType(item.items, chartType));
     }
-
-    case "escalation_table": {
-      const block = config.escalation?.[section.escalation_key];
-      if (!block || block.hide) {
-        return null;
-      }
-      return (
-        <Card
-          title={block.label || "Escalation list"}
-          size="small"
-          style={{ marginBottom: 16 }}
-        >
-          {block.description && (
-            <Paragraph type="secondary">{block.description}</Paragraph>
-          )}
-          <EscalationTable
-            escalationBlock={block}
-            filterState={filterState}
-            cellComputers={
-              ctx.escalationCellComputers?.[section.escalation_key] || {}
-            }
-          />
-        </Card>
-      );
-    }
-
-    default:
-      return null;
-  }
+  });
+  return result;
 };
 
 /**
- * Config-driven dashboard. Renders tabs from `config.tabs`; each tab body
- * is an ordered list of sections from `config.layout[tabKey].sections`.
+ * Walk items and collect all ids listed in any `params_ref[]` arrays found
+ * on compliance charts (`compute: "compliance"`).
+ *
+ * @param {Array} items
+ * @returns {Set<string>}
+ */
+const collectComplianceParamIds = (items = []) => {
+  const ids = new Set();
+  items.forEach((item) => {
+    if (!item.chart_type && Array.isArray(item.items)) {
+      collectComplianceParamIds(item.items).forEach((id) => ids.add(id));
+      return;
+    }
+    if (item.compute === "compliance" && Array.isArray(item.params_ref)) {
+      item.params_ref.forEach((id) => ids.add(id));
+    }
+    if (Array.isArray(item.items)) {
+      collectComplianceParamIds(item.items).forEach((id) => ids.add(id));
+    }
+  });
+  return ids;
+};
+
+/**
+ * Config-driven dashboard page.
+ *
+ * Renders the flat item tree from `config.items` via `<DashboardRenderer>`.
+ * Also runs invisible background fetchers for:
+ *   - Progress definitions  (`progress_definition` items)
+ *   - Water-quality parameters referenced by compliance charts (`params_ref[]`)
+ *
+ * These pre-fetched responses are assembled into `complianceResponses` (keyed
+ * by param item id) and `cellComputersById` (keyed by table item id) then
+ * injected into DashboardRenderer as context.
  *
  * Route: /dashboard/:formId
- *
- * Shared page-level fetches (dedup'd by the request cache):
- *   - /progress for each entry in config.progress (construction, etc.)
- *   - /values per non-hidden water-quality parameter (fan-out for compliance)
  */
 const Dashboard = () => {
   const { formId } = useParams();
-  const { config } = useDashboardConfig(formId);
-  const filters = useDashboardFilters(config || { filters: { custom: [] } });
+  const { config, definitionsById } = useDashboardConfig(formId);
 
-  const fyStart = config?.filters?.date?.fiscal_year_start_month || 1;
-  const customDefs = useMemo(() => config?.filters?.custom || [], [config]);
-
-  const wqParams = useMemo(
-    () => (config?.water_quality?.parameters || []).filter((p) => !p.hide),
+  // Build a minimal config shell for the filters hook when config is absent.
+  const filtersConfig = useMemo(
+    () => config || { parent_form_id: null, items: [] },
     [config]
   );
+  const filters = useDashboardFilters(filtersConfig);
+
+  const fyStart = config?.fiscal_year_start_month || 1;
+
+  // Flat list of custom filter items for hint expansion inside useDashboardValues.
+  const customFilterDefs = useMemo(() => {
+    if (!config) {
+      return [];
+    }
+    return collectByType(config.items, "filter_option").concat(
+      collectByType(config.items, "filter_multi_option")
+    );
+  }, [config]);
+
+  // ── Compliance fan-out ─────────────────────────────────────────────────────
+  // Collect param item ids referenced by any compliance chart, then derive
+  // the param items themselves from definitionsById.
+  const complianceParamItems = useMemo(() => {
+    if (!config) {
+      return [];
+    }
+    const ids = collectComplianceParamIds(config.items);
+    return Array.from(ids)
+      .map((id) => definitionsById.get(id))
+      .filter(Boolean);
+  }, [config, definitionsById]);
 
   const [complianceResponses, setComplianceResponses] = useState({});
-  const onParamData = useCallback((key, data) => {
+  const onParamData = useCallback((id, data) => {
     setComplianceResponses((prev) =>
-      prev[key] === data ? prev : { ...prev, [key]: data }
+      prev[id] === data ? prev : { ...prev, [id]: data }
     );
   }, []);
 
-  const progressBlocks = useMemo(
-    () => Object.entries(config?.progress || {}),
-    [config]
-  );
-  const [progressByKey, setProgressByKey] = useState({});
-  const onProgressData = useCallback((key, payload) => {
-    setProgressByKey((prev) =>
-      prev[key]?.data === payload.data && prev[key]?.error === payload.error
+  // ── Progress fetching ──────────────────────────────────────────────────────
+  const progressItems = useMemo(() => {
+    if (!config) {
+      return [];
+    }
+    return collectByType(config.items, "progress_definition");
+  }, [config]);
+
+  const [progressById, setProgressById] = useState({});
+  const onProgressData = useCallback((id, payload) => {
+    setProgressById((prev) =>
+      prev[id]?.data === payload.data && prev[id]?.error === payload.error
         ? prev
-        : { ...prev, [key]: payload }
+        : { ...prev, [id]: payload }
     );
   }, []);
+
   const progressResponses = useMemo(() => {
     const out = {};
-    Object.entries(progressByKey).forEach(([k, v]) => {
+    Object.entries(progressById).forEach(([id, v]) => {
       if (v?.data) {
-        out[k] = v.data;
+        out[id] = v.data;
       }
     });
     return out;
-  }, [progressByKey]);
+  }, [progressById]);
+
   const progressErrors = useMemo(
     () =>
-      Object.entries(progressByKey)
+      Object.entries(progressById)
         .filter(([, v]) => v?.error)
-        .map(([k, v]) => ({ key: k, error: v.error })),
-    [progressByKey]
+        .map(([id, v]) => ({ id, error: v.error })),
+    [progressById]
   );
 
-  // Per-EPS list of failing parameter labels, for the monitoring escalation
-  // table's `critical_issues` computed column. Reuses the same per-parameter
-  // /values fetches that drive the compliance stack bar.
+  // ── Cell computers for escalation tables ─────────────────────────────────
+  // Each `table` item that has computed columns with a `progress_ref` needs a
+  // per-column function that joins progress response data.
+  //
+  // `critical_issues` in the monitoring escalation table is special: it
+  // classifies an EPS by scanning compliance param responses.
+  //
+  // We build `cellComputersById` keyed by table item id.
+  //
+  // Per-EPS list of failing parameter labels. Uses complianceResponses (keyed
+  // by param item id) and the param items' threshold + label.
   const criticalIssuesByEps = useMemo(() => {
     const out = {};
-    wqParams.forEach((p) => {
-      const rows = complianceResponses[p.key]?.data || [];
+    complianceParamItems.forEach((p) => {
+      const rows = complianceResponses[p.id]?.data || [];
       rows.forEach((row) => {
         if (fails(p.threshold, row.value)) {
           const key = String(row.group);
@@ -288,16 +222,7 @@ const Dashboard = () => {
       });
     });
     return out;
-  }, [wqParams, complianceResponses]);
-
-  const constructionDetailsByEps = useMemo(() => {
-    const details = progressResponses?.construction?.details || [];
-    const out = {};
-    details.forEach((d) => {
-      out[String(d.group)] = d;
-    });
-    return out;
-  }, [progressResponses]);
+  }, [complianceParamItems, complianceResponses]);
 
   const formatPct = (n) => {
     if (n === null || typeof n === "undefined" || Number.isNaN(n)) {
@@ -322,55 +247,79 @@ const Dashboard = () => {
     return pct;
   };
 
-  const escalationCellComputers = useMemo(
-    () => ({
-      monitoring: {
-        critical_issues: (row) => {
-          const issues = criticalIssuesByEps[String(row.id)] || [];
-          return issues.length > 0 ? issues.join(", ") : null;
-        },
-      },
-      construction: {
-        concrete_base: (row) =>
-          formatPct(
-            constructionDetailsByEps[String(row.id)]?.components?.concrete_base
-          ),
-        urf_tank: (row) =>
-          formatPct(
-            constructionDetailsByEps[String(row.id)]?.components?.urf_tank
-          ),
-        eps_tank: (row) =>
-          formatPct(
-            constructionDetailsByEps[String(row.id)]?.components?.eps_tank
-          ),
-        balance_tank: (row) =>
-          formatPct(
-            constructionDetailsByEps[String(row.id)]?.components?.balance_tank
-          ),
-        storage_tank: (row) =>
-          formatPct(
-            constructionDetailsByEps[String(row.id)]?.components?.storage_tank
-          ),
-        standpipes: (row) =>
-          formatPct(
-            constructionDetailsByEps[String(row.id)]?.components?.standpipes
-          ),
-        drainage: (row) =>
-          formatPct(
-            constructionDetailsByEps[String(row.id)]?.components?.drainage
-          ),
-        site_security: (row) =>
-          formatPct(
-            constructionDetailsByEps[String(row.id)]?.components?.site_security
-          ),
-        overall_progress: (row) =>
-          formatPct(constructionDetailsByEps[String(row.id)]?.overall),
-        expected_progress: (row) =>
-          formatPct(computeExpectedProgress(row._start_date, row.deadline)),
-      },
-    }),
-    [criticalIssuesByEps, constructionDetailsByEps]
-  );
+  // Build construction detail lookup from progress response keyed by
+  // `progress_construction` item id.
+  const constructionItemId = useMemo(() => {
+    if (!config) {
+      return null;
+    }
+    const items = collectByType(config.items, "progress_definition");
+    // Find the construction progress definition (convention: key === "construction")
+    const found = items.find((i) => i.key === "construction");
+    return found?.id || null;
+  }, [config]);
+
+  const constructionDetailsByEps = useMemo(() => {
+    const details = constructionItemId
+      ? progressResponses[constructionItemId]?.details || []
+      : [];
+    const out = {};
+    details.forEach((d) => {
+      out[String(d.group)] = d;
+    });
+    return out;
+  }, [constructionItemId, progressResponses]);
+
+  // Build cellComputersById by scanning all table items for computed columns.
+  const cellComputersById = useMemo(() => {
+    if (!config) {
+      return {};
+    }
+    const tableItems = collectByType(config.items, "table");
+    const out = {};
+
+    tableItems.forEach((tableItem) => {
+      const computers = {};
+      (tableItem.columns || []).forEach((col) => {
+        if (!col.computed) {
+          return;
+        }
+        if (col.key === "critical_issues") {
+          computers.critical_issues = (row) => {
+            const issues = criticalIssuesByEps[String(row.id)] || [];
+            return issues.length > 0 ? issues.join(", ") : null;
+          };
+          return;
+        }
+        // Progress-ref computed columns: resolve via constructionDetailsByEps.
+        if (col.progress_ref && col.component_key) {
+          const compKey = col.component_key;
+          computers[col.key] = (row) =>
+            formatPct(
+              constructionDetailsByEps[String(row.id)]?.components?.[compKey]
+            );
+          return;
+        }
+        if (col.key === "overall_progress" && col.progress_ref) {
+          computers.overall_progress = (row) =>
+            formatPct(constructionDetailsByEps[String(row.id)]?.overall);
+          return;
+        }
+        if (col.key === "expected_progress" && col.progress_ref) {
+          computers.expected_progress = (row) =>
+            formatPct(computeExpectedProgress(row._start_date, row.deadline));
+          return;
+        }
+      });
+
+      if (Object.keys(computers).length > 0) {
+        out[tableItem.id] = computers;
+      }
+    });
+
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, criticalIssuesByEps, constructionDetailsByEps]);
 
   const filterActions = useMemo(
     () => ({
@@ -379,29 +328,6 @@ const Dashboard = () => {
       setCustomFilter: filters.setCustomFilter,
     }),
     [filters.setDateRange, filters.setAdministrationId, filters.setCustomFilter]
-  );
-
-  const ctx = useMemo(
-    () => ({
-      config,
-      filterState: filters.queryParams,
-      fiscalYearStartMonth: fyStart,
-      customFilterDefs: customDefs,
-      progressResponses,
-      complianceResponses,
-      wqParameters: wqParams,
-      escalationCellComputers,
-    }),
-    [
-      config,
-      filters.queryParams,
-      fyStart,
-      customDefs,
-      progressResponses,
-      complianceResponses,
-      wqParams,
-      escalationCellComputers,
-    ]
   );
 
   if (!config) {
@@ -416,35 +342,38 @@ const Dashboard = () => {
     );
   }
 
-  const visibleTabs = (config.tabs || []).filter((t) => !t.hide);
-
   return (
     <div style={{ padding: 24 }}>
-      {wqParams.map((p) => (
+      {/* Invisible compliance param fetchers */}
+      {complianceParamItems.map((paramItem) => (
         <WqParamFetcher
-          key={p.key}
-          param={p}
+          key={paramItem.id}
+          paramItem={paramItem}
           filterState={filters.queryParams}
           fiscalYearStartMonth={fyStart}
-          customFilterDefs={customDefs}
+          customFilterDefs={customFilterDefs}
           onData={onParamData}
         />
       ))}
 
-      {progressBlocks.map(([k, block]) => (
+      {/* Invisible progress fetchers */}
+      {progressItems.map((progressItem) => (
         <ProgressFetcher
-          key={k}
-          blockKey={k}
-          block={block}
+          key={progressItem.id}
+          progressItem={progressItem}
           filterState={filters.queryParams}
           onData={onProgressData}
         />
       ))}
 
-      <Title level={2}>{config.name}</Title>
-      {config.description && (
-        <Paragraph type="secondary">{config.description}</Paragraph>
-      )}
+      <Row gutter={[0, 0]}>
+        <Col span={24}>
+          <Title level={2}>{config.name}</Title>
+          {config.description && (
+            <Paragraph type="secondary">{config.description}</Paragraph>
+          )}
+        </Col>
+      </Row>
 
       {progressErrors.length > 0 && (
         <Alert
@@ -453,37 +382,21 @@ const Dashboard = () => {
           style={{ marginBottom: 16 }}
           message="Some dashboard data failed to load"
           description={progressErrors
-            .map(({ key, error }) => `${key}: ${error?.message || "error"}`)
+            .map(({ id, error }) => `${id}: ${error?.message || "error"}`)
             .join(" · ")}
         />
       )}
 
-      <Card size="small" style={{ marginBottom: 16 }}>
-        <DashboardFilters
-          config={config}
-          filters={filters}
-          onChange={filterActions}
-        />
-      </Card>
-
-      <Tabs
-        defaultActiveKey={visibleTabs[0]?.key}
-        destroyInactiveTabPane
-        items={visibleTabs.map((tab) => ({
-          key: tab.key,
-          label: tab.label,
-          children: (
-            <div>
-              {(config.layout?.[tab.key]?.sections || []).map((section, i) => (
-                <LayoutSection
-                  key={`${tab.key}-${i}`}
-                  section={section}
-                  ctx={ctx}
-                />
-              ))}
-            </div>
-          ),
-        }))}
+      <DashboardRenderer
+        items={config.items}
+        filterState={filters.queryParams}
+        filters={filters}
+        filterActions={filterActions}
+        definitionsById={definitionsById}
+        fiscalYearStartMonth={fyStart}
+        customFilterDefs={customFilterDefs}
+        complianceResponses={complianceResponses}
+        cellComputersById={cellComputersById}
       />
     </div>
   );
