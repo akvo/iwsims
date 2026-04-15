@@ -71,8 +71,9 @@ const DashboardFilters = ({ config, filters, onChange }) => {
     onChange.setCustomFilter(key, value ?? null);
   };
 
-  const customValue = (key) =>
-    filters?.state?.custom?.find((c) => c.key === key)?.value;
+  const customValue = (key) => {
+    return filters?.state?.custom?.find((c) => c.key === key)?.value;
+  };
 
   return (
     <Space wrap size="middle" align="center">
@@ -92,7 +93,7 @@ const DashboardFilters = ({ config, filters, onChange }) => {
             allowClear
             placeholder={d.label}
             style={{ minWidth: 180 }}
-            value={customValue(d.key)}
+            value={customValue(d.key) || []}
             onChange={handleCustomChange(d.key)}
             {...(d.type === "multiple_option" ? { mode: "multiple" } : {})}
             options={customOptions[d.key] || []}

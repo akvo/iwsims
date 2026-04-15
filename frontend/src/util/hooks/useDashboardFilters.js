@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * @typedef {Object} DashboardFilterState
@@ -42,6 +42,20 @@ const buildInitialState = (config) => {
  */
 export const useDashboardFilters = (config) => {
   const [state, setState] = useState(() => buildInitialState(config));
+
+  // Re-initialize when the dashboard config changes (e.g. route swap to a
+  // different formId). `useState` only runs its initializer on first mount,
+  // so without this effect the previous dashboard's custom filter shape
+  // and values would persist across formId transitions.
+  const lastInitKeyRef = useRef(null);
+  useEffect(() => {
+    const key = config?.parent_form_id ?? null;
+    if (key === lastInitKeyRef.current) {
+      return;
+    }
+    lastInitKeyRef.current = key;
+    setState(buildInitialState(config));
+  }, [config]);
 
   const setDateRange = useCallback((from, to) => {
     setState((s) => ({ ...s, from_date: from, to_date: to }));

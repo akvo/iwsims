@@ -11,22 +11,22 @@ const config = {
   },
 };
 
-const HookProbe = ({ onResult }) => {
-  const filters = useDashboardFilters(config);
+const HookProbe = ({ onResult, config: c = config }) => {
+  const filters = useDashboardFilters(c);
   onResult(filters);
   return null;
 };
 
 const mount = () => {
   let latest;
-  render(
+  const utils = render(
     <HookProbe
       onResult={(r) => {
         latest = r;
       }}
     />
   );
-  return () => latest;
+  return Object.assign(() => latest, utils);
 };
 
 describe("useDashboardFilters", () => {
@@ -96,5 +96,46 @@ describe("useDashboardFilters", () => {
     });
     expect(latest().queryParams).not.toBe(first);
     expect(latest().queryParams.administration_id).toBe(7);
+  });
+
+  test("re-initialises state when the config (formId) changes", () => {
+    const configA = {
+      parent_form_id: 100,
+      filters: { custom: [{ key: "alpha", form_id: 100, question_id: 1 }] },
+    };
+    const configB = {
+      parent_form_id: 200,
+      filters: { custom: [{ key: "beta", form_id: 200, question_id: 2 }] },
+    };
+    let latest;
+    const { rerender } = render(
+      <HookProbe
+        config={configA}
+        onResult={(r) => {
+          latest = r;
+        }}
+      />
+    );
+    act(() => {
+      latest.setDateRange("2026-01-01", "2026-03-31");
+      latest.setAdministrationId(42);
+      latest.setCustomFilter("alpha", "x");
+    });
+    expect(latest.state.from_date).toBe("2026-01-01");
+    expect(latest.state.custom).toEqual([{ key: "alpha", value: "x" }]);
+
+    rerender(
+      <HookProbe
+        config={configB}
+        onResult={(r) => {
+          latest = r;
+        }}
+      />
+    );
+    // State reset to configB's shape; previous values dropped.
+    expect(latest.state.from_date).toBeNull();
+    expect(latest.state.to_date).toBeNull();
+    expect(latest.state.administration_id).toBeNull();
+    expect(latest.state.custom).toEqual([{ key: "beta", value: null }]);
   });
 });
