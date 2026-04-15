@@ -11,7 +11,10 @@ import {
   serializeColumns,
 } from "../../util/hooks/useDashboardEscalation";
 import { serializeComponents } from "../../util/hooks/useDashboardProgress";
-import { __clearVisualizationCache } from "../../util/hooks/useVisualizationRequest";
+import {
+  __clearVisualizationCache,
+  __visualizationCacheStats,
+} from "../../util/hooks/useVisualizationRequest";
 
 jest.mock("axios");
 
@@ -237,5 +240,34 @@ describe("useDashboardProgress", () => {
     );
     expect(call.params.filter_option_value).toBe("no");
     expect(call.params.deadline_question_id).toBe(1749630516825);
+  });
+});
+
+describe("useVisualizationRequest cache (LRU)", () => {
+  test("evicts the oldest entry when the cache is full", async () => {
+    axios.mockResolvedValue({ data: { data: [{ value: 1 }] } });
+    const stats = __visualizationCacheStats();
+    const max = stats.max;
+
+    // Fill to capacity with `max` distinct param sets, each one becoming a
+    // unique cache key. Use direct fetches to bypass React lifecycle noise.
+    const fetchOnce = (i) =>
+      mount(() =>
+        useDashboardValues({ form_id: 1, question_id: i }, emptyFilters, {
+          today,
+        })
+      );
+
+    for (let i = 0; i < max; i += 1) {
+      fetchOnce(i);
+    }
+    await waitFor(() => expect(__visualizationCacheStats().size).toBe(max));
+
+    const oldestKey = __visualizationCacheStats().keys[0];
+
+    // Push one more entry over the cap → triggers eviction of the oldest.
+    fetchOnce(max);
+    await waitFor(() => expect(__visualizationCacheStats().size).toBe(max));
+    expect(__visualizationCacheStats().keys).not.toContain(oldestKey);
   });
 });

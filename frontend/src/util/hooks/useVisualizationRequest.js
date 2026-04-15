@@ -2,14 +2,45 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import api from "../../lib/api";
 
 /**
- * Module-level cache keyed by serialized request. Values are
- * `{ promise, data, error, timestamp }`. In-flight requests share the same
- * promise so multiple widgets hitting the same endpoint don't duplicate work.
+ * Module-level LRU cache keyed by serialized request. Values are
+ * `{ promise, data }`. In-flight requests share the same promise so multiple
+ * widgets hitting the same endpoint don't duplicate work.
  *
- * Cache is NOT time-bounded — filters change the cache key, so stale entries
- * are naturally ignored. refetch() bypasses the cache explicitly.
+ * Recency is tracked via Map insertion order: every cache hit re-inserts the
+ * key (moves it to the tail), and writes evict the oldest entry once we hit
+ * `CACHE_MAX_ENTRIES`. This keeps memory bounded in long-lived sessions where
+ * a user toggles through many filter combinations.
+ *
+ * The cap is generous (200 entries × ~modest payloads) — enough to cover a
+ * full dashboard's working set across several filter switches without
+ * thrashing, while still protecting against unbounded growth.
  */
+const CACHE_MAX_ENTRIES = 200;
 const cache = new Map();
+
+const cacheGet = (key) => {
+  const entry = cache.get(key);
+  if (!entry) {
+    return null;
+  }
+  // Mark as most-recently-used.
+  cache.delete(key);
+  cache.set(key, entry);
+  return entry;
+};
+
+const cacheSet = (key, entry) => {
+  if (cache.has(key)) {
+    cache.delete(key);
+  } else if (cache.size >= CACHE_MAX_ENTRIES) {
+    // Evict oldest (first inserted) entry.
+    const oldest = cache.keys().next().value;
+    if (typeof oldest !== "undefined") {
+      cache.delete(oldest);
+    }
+  }
+  cache.set(key, entry);
+};
 
 const buildKey = (endpoint, params) => `${endpoint}?${JSON.stringify(params)}`;
 
@@ -43,8 +74,8 @@ export const useVisualizationRequest = (endpoint, params) => {
       const cacheKey = buildKey(endpoint, params);
       keyRef.current = cacheKey;
 
-      const existing = cache.get(cacheKey);
-      if (!bypassCache && existing && typeof existing.data !== "undefined") {
+      const existing = bypassCache ? null : cacheGet(cacheKey);
+      if (existing && typeof existing.data !== "undefined") {
         setState({ data: existing.data, loading: false, error: null });
         return;
       }
@@ -52,16 +83,16 @@ export const useVisualizationRequest = (endpoint, params) => {
       setState((s) => ({ ...s, loading: true, error: null }));
 
       let promise;
-      if (!bypassCache && existing && existing.promise) {
+      if (existing && existing.promise) {
         promise = existing.promise;
       } else {
         promise = sendRequest(endpoint, params);
-        cache.set(cacheKey, { promise });
+        cacheSet(cacheKey, { promise });
       }
 
       promise
         .then((data) => {
-          cache.set(cacheKey, { data });
+          cacheSet(cacheKey, { data });
           if (mountedRef.current && keyRef.current === cacheKey) {
             setState({ data, loading: false, error: null });
           }
@@ -94,5 +125,14 @@ export const useVisualizationRequest = (endpoint, params) => {
  * Test hook: clears the module cache. Exposed for unit tests only.
  */
 export const __clearVisualizationCache = () => cache.clear();
+
+/**
+ * Test helper: introspect cache state. Exposed for unit tests only.
+ */
+export const __visualizationCacheStats = () => ({
+  size: cache.size,
+  max: CACHE_MAX_ENTRIES,
+  keys: Array.from(cache.keys()),
+});
 
 export default useVisualizationRequest;
