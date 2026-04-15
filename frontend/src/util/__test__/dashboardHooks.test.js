@@ -222,11 +222,11 @@ describe("useDashboardProgress", () => {
         monitoring_form_id: 1749624452908,
         filter_question_id: 1749630516826,
         filter_option_value: "no",
-        components: [
-          { key: "urf", formula: "completed_binary", question_ids: [1] },
-          { key: "pipes", formula: "ratio", question_ids: [2, 3] },
-        ],
       },
+      components: [
+        { key: "urf", formula: "completed_binary", question_ids: [1] },
+        { key: "pipes", formula: "ratio", question_ids: [2, 3] },
+      ],
     };
 
     const { latest } = mount(() => useDashboardProgress(block, emptyFilters));

@@ -27,17 +27,34 @@ describe("config/visualizations registry", () => {
     const config = getVisualizationConfig(1749623934933);
     expect(config).not.toBeNull();
     expect(config.name).toBe("EPS Overview");
-    expect(config.tabs).toHaveLength(3);
-    expect(Object.keys(config.kpis)).toEqual(
+    // Flat schema: top-level `items[]` with a `tabs` container holding 3 panes.
+    expect(Array.isArray(config.items)).toBe(true);
+    const tabsItem = config.items.find((it) => it.chart_type === "tabs");
+    expect(tabsItem).toBeDefined();
+    expect(tabsItem.items).toHaveLength(3);
+    // Collect every item id recursively, assert key KPI cards are present.
+    const allIds = [];
+    const walk = (items = []) => {
+      items.forEach((it) => {
+        if (it.id) {
+          allIds.push(it.id);
+        }
+        if (Array.isArray(it.items)) {
+          walk(it.items);
+        }
+      });
+    };
+    walk(config.items);
+    expect(allIds).toEqual(
       expect.arrayContaining([
-        "total_registered",
-        "under_construction",
-        "under_construction_pct",
-        "lab_tested",
-        "cbt_tested",
-        "monitored_last_12_months",
-        "water_sample_last_12_months",
-        "construction_past_due",
+        "kpi_total_registered",
+        "kpi_under_construction",
+        "kpi_under_construction_pct",
+        "kpi_lab_tested",
+        "kpi_cbt_tested",
+        "kpi_monitored_last_12_months",
+        "kpi_water_sample_last_12_months",
+        "kpi_construction_past_due",
       ])
     );
   });

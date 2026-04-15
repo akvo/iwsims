@@ -9,19 +9,45 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
  */
 
 /**
- * Initial state derived from the dashboard config. Defaults everything to
- * null / empty so no filter params are emitted until the user selects one.
+ * Extract the custom filter items from the flat items tree.
+ * A custom filter item has chart_type starting with "filter_" but is NOT
+ * filter_date or filter_administration.
+ *
+ * @param {Array} items  config.items (top-level flat array)
+ * @returns {Array}      flat list of filter_option / filter_multi_option items
+ */
+const extractCustomFilterItems = (items = []) => {
+  const result = [];
+  items.forEach((item) => {
+    if (
+      item.chart_type === "filter_option" ||
+      item.chart_type === "filter_multi_option"
+    ) {
+      result.push(item);
+    }
+    // Recurse into containers
+    if (Array.isArray(item.items)) {
+      result.push(...extractCustomFilterItems(item.items));
+    }
+  });
+  return result;
+};
+
+/**
+ * Initial state derived from the dashboard config's flat items array.
+ * Defaults everything to null / empty so no filter params are emitted
+ * until the user selects one.
  *
  * @param {object} config
  * @returns {DashboardFilterState}
  */
 const buildInitialState = (config) => {
-  const customDefs = config?.filters?.custom || [];
+  const customItems = extractCustomFilterItems(config?.items || []);
   return {
     from_date: null,
     to_date: null,
     administration_id: null,
-    custom: customDefs.map((d) => ({ key: d.key, value: null })),
+    custom: customItems.map((d) => ({ key: d.key, value: null })),
   };
 };
 

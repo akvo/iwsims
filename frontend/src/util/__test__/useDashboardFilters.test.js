@@ -3,12 +3,28 @@ import { act, render } from "@testing-library/react";
 import { useDashboardFilters } from "../hooks";
 
 const config = {
-  filters: {
-    custom: [
-      { key: "water_committee", form_id: 1, question_id: 10 },
-      { key: "implementing_agency", form_id: 1, question_id: 11 },
-    ],
-  },
+  items: [
+    {
+      id: "filters_main",
+      chart_type: "filter_bar",
+      items: [
+        {
+          id: "filter_water_committee",
+          chart_type: "filter_option",
+          key: "water_committee",
+          form_id: 1,
+          question_id: 10,
+        },
+        {
+          id: "filter_implementing_agency",
+          chart_type: "filter_multi_option",
+          key: "implementing_agency",
+          form_id: 1,
+          question_id: 11,
+        },
+      ],
+    },
+  ],
 };
 
 const HookProbe = ({ onResult, config: c = config }) => {
@@ -101,11 +117,39 @@ describe("useDashboardFilters", () => {
   test("re-initialises state when the config (formId) changes", () => {
     const configA = {
       parent_form_id: 100,
-      filters: { custom: [{ key: "alpha", form_id: 100, question_id: 1 }] },
+      items: [
+        {
+          id: "fb_a",
+          chart_type: "filter_bar",
+          items: [
+            {
+              id: "filter_alpha",
+              chart_type: "filter_option",
+              key: "alpha",
+              form_id: 100,
+              question_id: 1,
+            },
+          ],
+        },
+      ],
     };
     const configB = {
       parent_form_id: 200,
-      filters: { custom: [{ key: "beta", form_id: 200, question_id: 2 }] },
+      items: [
+        {
+          id: "fb_b",
+          chart_type: "filter_bar",
+          items: [
+            {
+              id: "filter_beta",
+              chart_type: "filter_option",
+              key: "beta",
+              form_id: 200,
+              question_id: 2,
+            },
+          ],
+        },
+      ],
     };
     let latest;
     const { rerender } = render(

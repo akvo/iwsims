@@ -43,18 +43,14 @@ export const useDashboardProgress = (
     if (!progressBlock || !enabled) {
       return null;
     }
-    const {
-      monitoring_form_id,
-      filter_question_id,
-      filter_option_value,
-      components = [],
-    } = progressBlock.api || {};
+    const { monitoring_form_id, filter_question_id, filter_option_value } =
+      progressBlock.api || {};
 
     const out = {
       monitoring_form_id,
       filter_question_id,
       filter_option_value,
-      components: serializeComponents(components),
+      components: serializeComponents(progressBlock.components || []),
     };
 
     if (progressBlock.deadline_question_id) {
