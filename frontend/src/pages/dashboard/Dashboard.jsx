@@ -290,6 +290,38 @@ const Dashboard = () => {
     return out;
   }, [wqParams, complianceResponses]);
 
+  const constructionDetailsByEps = useMemo(() => {
+    const details = progressResponses?.construction?.details || [];
+    const out = {};
+    details.forEach((d) => {
+      out[String(d.group)] = d;
+    });
+    return out;
+  }, [progressResponses]);
+
+  const formatPct = (n) => {
+    if (n === null || typeof n === "undefined" || Number.isNaN(n)) {
+      return null;
+    }
+    return `${Math.round(n)}%`;
+  };
+
+  const computeExpectedProgress = (startIso, deadlineIso) => {
+    if (!startIso || !deadlineIso) {
+      return null;
+    }
+    const start = new Date(startIso);
+    const deadline = new Date(deadlineIso);
+    const today = new Date();
+    const total = (deadline - start) / (1000 * 60 * 60 * 24);
+    const elapsed = (today - start) / (1000 * 60 * 60 * 24);
+    if (total <= 0) {
+      return null;
+    }
+    const pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
+    return pct;
+  };
+
   const escalationCellComputers = useMemo(
     () => ({
       monitoring: {
@@ -298,8 +330,46 @@ const Dashboard = () => {
           return issues.length > 0 ? issues.join(", ") : null;
         },
       },
+      construction: {
+        concrete_base: (row) =>
+          formatPct(
+            constructionDetailsByEps[String(row.id)]?.components?.concrete_base
+          ),
+        urf_tank: (row) =>
+          formatPct(
+            constructionDetailsByEps[String(row.id)]?.components?.urf_tank
+          ),
+        eps_tank: (row) =>
+          formatPct(
+            constructionDetailsByEps[String(row.id)]?.components?.eps_tank
+          ),
+        balance_tank: (row) =>
+          formatPct(
+            constructionDetailsByEps[String(row.id)]?.components?.balance_tank
+          ),
+        storage_tank: (row) =>
+          formatPct(
+            constructionDetailsByEps[String(row.id)]?.components?.storage_tank
+          ),
+        standpipes: (row) =>
+          formatPct(
+            constructionDetailsByEps[String(row.id)]?.components?.standpipes
+          ),
+        drainage: (row) =>
+          formatPct(
+            constructionDetailsByEps[String(row.id)]?.components?.drainage
+          ),
+        site_security: (row) =>
+          formatPct(
+            constructionDetailsByEps[String(row.id)]?.components?.site_security
+          ),
+        overall_progress: (row) =>
+          formatPct(constructionDetailsByEps[String(row.id)]?.overall),
+        expected_progress: (row) =>
+          formatPct(computeExpectedProgress(row._start_date, row.deadline)),
+      },
     }),
-    [criticalIssuesByEps]
+    [criticalIssuesByEps, constructionDetailsByEps]
   );
 
   const filterActions = useMemo(

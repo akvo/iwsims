@@ -722,6 +722,70 @@
           "hide": false
         },
         {
+          "key": "concrete_base",
+          "label": "Concrete base construction",
+          "computed": true,
+          "progress_ref": "construction",
+          "component_key": "concrete_base",
+          "hide": false
+        },
+        {
+          "key": "urf_tank",
+          "label": "URF tank implementation",
+          "computed": true,
+          "progress_ref": "construction",
+          "component_key": "urf_tank",
+          "hide": false
+        },
+        {
+          "key": "eps_tank",
+          "label": "EPS tank implementation",
+          "computed": true,
+          "progress_ref": "construction",
+          "component_key": "eps_tank",
+          "hide": false
+        },
+        {
+          "key": "balance_tank",
+          "label": "Balance tank implementation",
+          "computed": true,
+          "progress_ref": "construction",
+          "component_key": "balance_tank",
+          "hide": false
+        },
+        {
+          "key": "storage_tank",
+          "label": "Storage tank implementation",
+          "computed": true,
+          "progress_ref": "construction",
+          "component_key": "storage_tank",
+          "hide": false
+        },
+        {
+          "key": "standpipes",
+          "label": "Standpipes",
+          "computed": true,
+          "progress_ref": "construction",
+          "component_key": "standpipes",
+          "hide": false
+        },
+        {
+          "key": "drainage",
+          "label": "Drainage",
+          "computed": true,
+          "progress_ref": "construction",
+          "component_key": "drainage",
+          "hide": false
+        },
+        {
+          "key": "site_security",
+          "label": "Site security and perimeter",
+          "computed": true,
+          "progress_ref": "construction",
+          "component_key": "site_security",
+          "hide": false
+        },
+        {
           "key": "overall_progress",
           "label": "Progress",
           "computed": true,
@@ -734,6 +798,13 @@
           "computed": true,
           "progress_ref": "construction",
           "hide": false
+        },
+        {
+          "key": "_start_date",
+          "label": "Start date",
+          "source": "parent_answer",
+          "question_id": 1749624452910,
+          "hide": true
         },
         {
           "key": "deadline",

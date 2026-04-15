@@ -216,45 +216,45 @@ To bound the x-axis to a single fiscal year, pass `from_date` and `to_date` as t
 
 ### Escalation list (table)
 
-Server-side call surfaces overdue incomplete projects via the `overdue` criterion. Design intent is `overall_progress < expected_progress` — that comparison is computed client-side on `/progress` `response.details` and applied as a post-filter.
+Server-side call surfaces overdue incomplete projects via the `overdue` criterion. The design renders **per-component completion percentages** (e.g. `50%`, `33%`, `100%`), so the implementation joins `/escalation` (row set + identifier columns) with `/progress` (computed component scores) on `parent_id` client-side. This is the shipped pattern in [`Dashboard.jsx`](../../frontend/src/pages/dashboard/Dashboard.jsx) (`escalationCellComputers.construction`).
 
-The `/escalation` `columns` param supports five source types (`parent_name`, `parent_answer:{qid}`, `administration`, `answer:{qid}`, `latest_date:{qid}`). For the component columns shown in the design there are two patterns:
+`/escalation` is responsible for: overdue filter, EPS identity, dates. `/progress` is responsible for: per-component scores + overall. Expected progress is computed in the browser from start/deadline.
 
-#### Pattern A — raw answers (single call)
-
-One `answer:{qid}` column per component. Fast, one round trip. Cell renders the literal answer text ("Completed", "Ongoing", "Pending", selection array, etc.).
-
-Component → column mapping:
+#### Columns served by `/escalation`
 
 | Column | Source | Notes |
 |---|---|---|
-| EPS name | `parent_name` | |
+| EPS name | `parent_answer:1749624452994` | `parent_name` is also acceptable. |
 | Last monitoring | `latest_date:1749624452911` | |
-| Concrete base construction | `answer:1849633499999` | Base formula is `any_yes` across 3 QIDs (`1849633499999`, `1849633498888`, `1849633497777`). Pick one as representative, or render all three client-side. |
-| URF tank implementation | `answer:1849633720001` | |
-| EPS tank implementation | `answer:1849633900003` | |
-| Balance tank implementation | `answer:1849634300002` | |
-| Storage tank implementation | `answer:1849634690001` | |
-| Standpipes | `implemented:answer:1849635200001`, `planned:answer:1849634950001` | `ratio` formula needs both QIDs; compute `implemented ÷ planned` client-side, or join with `/progress` details to read the pre-computed score. |
-| Drainage | *(placeholder)* | QID pending definition. |
-| Site security and perimeter | `answer:1849635500001` | `multi_select_proportion` — raw selection array; compute `selected/3` client-side if the cell should show a percentage. |
-| Deadline | `answer:1749630516825` | |
+| Deadline | `latest_date:1749630516825` | Formatted `YYYY-MM-DD`; reused as ISO input for the expected-progress computation. |
+| `_start_date` (hidden) | `parent_answer:1749624452910` | Helper for the expected-progress computation; column is marked `hide: true` in the frontend config so it isn't rendered, but the row still carries the value. |
 
 ```bash
 curl -X GET \
-  'http://localhost:3000/api/v1/visualization/escalation/1749623934933?monitoring_form_id=1749624452908&criteria=overdue:1749630516826:1749630516825&columns=name:parent_name,last_monitoring:latest_date:1749624452911,concrete_base:answer:1849633499999,urf_tank:answer:1849633720001,eps_tank:answer:1849633900003,balance_tank:answer:1849634300002,storage_tank:answer:1849634690001,standpipes_implemented:answer:1849635200001,standpipes_planned:answer:1849634950001,site_security:answer:1849635500001,deadline:answer:1749630516825&page=1&page_size=20' \
+  'http://localhost:3000/api/v1/visualization/escalation/1749623934933?monitoring_form_id=1749624452908&criteria=overdue:1749630516826:1749630516825&columns=eps_name:parent_answer:1749624452994,last_monitoring:latest_date:1749624452911,_start_date:parent_answer:1749624452910,deadline:latest_date:1749630516825&page=1&page_size=20' \
   -H 'accept: */*'
 ```
 
-The `Progress` and `Expected progress` columns can't come from this call — `/escalation` has no formula engine. Either:
+#### Columns computed client-side from `/progress.details`
 
-- **Progress**: join with the `/progress` call above by `parent_id` → read `details[i].overall`.
-- **Expected progress**: compute client-side as `(TODAY - project_start) / (deadline - project_start) × 100%` using `answer:1749624452910` (start date) and `answer:1749630516825` (deadline). Add both as extra `answer:` columns if you prefer fetching the raw dates in one call:
-  `start_date:answer:1749624452910` (already have `deadline` above).
+Use the same `/progress` call from the **Percentage of projects completed** chart above — no extra round trip. Index `details` by `group` (parent EPS id) and read:
 
-#### Pattern B — join with `/progress` for computed component scores
+| Column | Computer |
+|---|---|
+| Concrete base construction | `details[parent_id].components.concrete_base` |
+| URF tank implementation | `details[parent_id].components.urf_tank` |
+| EPS tank installation | `details[parent_id].components.eps_tank` |
+| Balance tank implementation | `details[parent_id].components.balance_tank` |
+| Storage tank implementation | `details[parent_id].components.storage_tank` |
+| Standpipes | `details[parent_id].components.standpipes` (already `implemented ÷ planned × 100`) |
+| Drainage | `details[parent_id].components.drainage` (placeholder until QID resolved) |
+| Site security and perimeter | `details[parent_id].components.site_security` (already `selected/3 × 100`) |
+| Progress | `details[parent_id].overall` |
+| Expected progress | `(TODAY − row._start_date) / (row.deadline − row._start_date) × 100`, clamped to 0–100 |
 
-Use when cells must show computed percentages (e.g. `50%` for concrete base, `33%` for site security). Call `/escalation` for the row set and `/progress` for the component scores, then merge in the frontend by `parent_id`. This is also how the `overall < expected` post-filter is applied, so if you're already fetching `/progress` for that, the join is free.
+All values are rendered as rounded integer percent (`Math.round(n) + "%"`). Missing scores render as `—`.
+
+> Design intent of "overall_progress < expected_progress" as a stricter post-filter is **not** currently applied — the server-side `overdue` criterion (incomplete AND deadline < today) is the shipped filter. If the stricter filter is needed, drop rows in the frontend after the join.
 
 
 
