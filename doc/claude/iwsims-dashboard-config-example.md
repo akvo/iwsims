@@ -635,7 +635,6 @@ Every top-level config item (tabs, KPIs, charts, parameters, escalations, layout
       },
       "compute": "compliance",
       "compliance_params_ref": "water_quality.parameters",
-      "include_no_data": false
     },
     "water_committee": {
       "chart_type": "doughnut",
@@ -1469,7 +1468,7 @@ render:
   />
 ```
 
-`checkThreshold(value, { min, max })` returns `true` when `value` is within range. Missing values (EPS never reported that parameter) should return `true` — they are "no data", not a violation. If you want a third bar for "No data", set `include_no_data: true` in the chart config and add a matching branch here.
+`checkThreshold(value, { min, max })` returns `true` when `value` is within range. Missing values (EPS never reported that parameter) should return `true` — they are "no data", not a violation. To distinguish those EPS from compliant ones, extend `computeComplianceStackData` with a third row (e.g. `"No data"`) and add a corresponding key to `stackLabels`.
 
 ### 7. Expected Progress (frontend computed)
 

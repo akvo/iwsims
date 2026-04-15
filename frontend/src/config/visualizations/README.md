@@ -112,9 +112,60 @@ Custom filters in `filters.custom[]` drive `<Select>` dropdowns in the filter
 bar and write state, but they currently only narrow widgets whose `api.question_id`
 already matches the filter's `question_id`. Global multi-question AND
 filtering (e.g. "Rotary Pacific" + "Water Committee = Yes" as a cross-cut)
-requires backend work tracked in [beads epic `akvo-mis-2aj`](../../../../.beads/).
+requires backend work tracked in beads epic `akvo-mis-2aj`.
+
+The same limitation applies to `multiple_option` filters: the UI accepts
+multiple selections but `/visualization/values` only honours the first
+value (extra selections are silently dropped). Treat custom filters as
+single-value until the epic lands.
+
+### Escalation tables
+
+Each entry under `escalation` has two halves:
+
+**`api.criteria[]`** — list of `{ type, question_id, value }` rules. Rows
+are included when **any** criterion matches (OR semantics). Supported
+operator types:
+
+| `type` | Example | Semantics |
+|---|---|---|
+| `option_equals` | `option_equals:{qid}:{value}` | Latest answer equals the option value |
+| `threshold_gt` | `threshold_gt:{qid}:5` | Numeric answer `>` threshold |
+| `threshold_lt` | `threshold_lt:{qid}:6.5` | Numeric answer `<` threshold |
+| `overdue` | `overdue:{completion_qid}:{deadline_qid}` | Incomplete AND past deadline |
+
+A two-sided range (e.g. pH should be in `[6.5, 8.5]`) is expressed as two
+separate criteria — `threshold_lt:qid:6.5` and `threshold_gt:qid:8.5` —
+combined naturally by the OR.
+
+**`columns[]`** — what each cell renders. Backend-sourced column types:
+
+| `source` | Yields |
+|---|---|
+| `parent_name` | Auto-generated parent datapoint name |
+| `parent_answer` + `question_id` | Answer from the registration (parent) datapoint |
+| `administration` | Administration hierarchy path |
+| `answer` + `question_id` | Answer from the latest monitoring submission |
+| `latest_date` + `question_id` | Date from the latest monitoring submission |
+
+Mark a column with `"computed": true` (no `source`) when its value can't
+come from the backend — e.g. an aggregated "critical issues" string built
+from per-parameter compliance results. The page resolves these via a
+`cellComputers` map keyed by the column's `key`. See the EPS dashboard's
+`critical_issues` column for the reference wiring (joins
+`config.water_quality.parameters` thresholds against the per-parameter
+`/values` responses already fetched for the compliance chart).
 
 ---
+
+### Empty-data behaviour
+
+`<ChartRenderer>` renders a **"No data"** placeholder (instead of a broken
+chart) when the underlying response has zero rows. `<EscalationTable>`
+renders `"—"` for any cell whose value is `null` / missing, including
+`computed: true` cells that don't have a registered `cellComputers` entry.
+Both are intentional — they keep the dashboard usable while a form family
+is still being seeded.
 
 ## Testing a new config
 
@@ -124,6 +175,9 @@ requires backend work tracked in [beads epic `akvo-mis-2aj`](../../../../.beads/
 4. Click through the filter bar — KPIs and charts should re-fetch and redraw
 5. If a chart shows "No data", check that the corresponding backend response
    is non-empty (use the URLs in [`doc/claude/iwsims-dashboard-api-checklist.md`](../../../../doc/claude/iwsims-dashboard-api-checklist.md) as a reference)
+6. If you swap `formId` in the URL, filter state resets to the new
+   dashboard's shape — verified at the hook layer
+   ([`useDashboardFilters`](../../util/hooks/useDashboardFilters.js))
 
 ## Related components
 

@@ -215,8 +215,7 @@
         ]
       },
       "compute": "compliance",
-      "compliance_params_ref": "water_quality.parameters",
-      "include_no_data": false
+      "compliance_params_ref": "water_quality.parameters"
     },
     "water_committee": {
       "chart_type": "doughnut",
