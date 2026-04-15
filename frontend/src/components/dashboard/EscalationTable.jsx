@@ -13,7 +13,12 @@ import { useDashboardEscalation } from "../../util/hooks";
  * /progress or frontend-compute results can be wired per-column in the
  * future.
  */
-const EscalationTable = ({ escalationBlock, filterState, pageSize = 10 }) => {
+const EscalationTable = ({
+  escalationBlock,
+  filterState,
+  pageSize = 10,
+  cellComputers = {},
+}) => {
   const [page, setPage] = useState(1);
   const { data, loading, error } = useDashboardEscalation(
     escalationBlock,
@@ -27,8 +32,21 @@ const EscalationTable = ({ escalationBlock, filterState, pageSize = 10 }) => {
       title: c.label,
       dataIndex: c.key,
       key: c.key,
-      render: (value) => {
-        if (value === null) {
+      render: (value, row) => {
+        // Computed columns (no backend source). If the page provided a
+        // computer for this column key, run it against the row; otherwise
+        // render a muted placeholder.
+        if (c.computed) {
+          const computer = cellComputers[c.key];
+          const computed = computer ? computer(row) : null;
+          if (computed === null || typeof computed === "undefined") {
+            return <span style={{ color: "#bbb" }}>—</span>;
+          }
+          return typeof computed === "object"
+            ? JSON.stringify(computed)
+            : String(computed);
+        }
+        if (value === null || typeof value === "undefined") {
           return "—";
         }
         if (typeof value === "object") {

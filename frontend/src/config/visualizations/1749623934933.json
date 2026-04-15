@@ -618,6 +618,20 @@
             "hide": false
           },
           {
+            "type": "threshold_lt",
+            "question_id": 1797307852532,
+            "value": 6.5,
+            "label": "pH below acceptable range",
+            "hide": false
+          },
+          {
+            "type": "threshold_gt",
+            "question_id": 1797307852532,
+            "value": 8.5,
+            "label": "pH above acceptable range",
+            "hide": false
+          },
+          {
             "type": "threshold_gt",
             "question_id": 1797307852533,
             "value": 1000,

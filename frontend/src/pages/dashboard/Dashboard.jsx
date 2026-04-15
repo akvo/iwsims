@@ -12,6 +12,7 @@ import KPICardRow from "../../components/dashboard/KPICardRow";
 import ChartRenderer from "../../components/dashboard/ChartRenderer";
 import DashboardMap from "../../components/dashboard/DashboardMap";
 import EscalationTable from "../../components/dashboard/EscalationTable";
+import { fails } from "../../components/dashboard/compute/compliance";
 
 const { Title, Paragraph } = Typography;
 
@@ -194,7 +195,13 @@ const LayoutSection = ({ section, ctx }) => {
           {block.description && (
             <Paragraph type="secondary">{block.description}</Paragraph>
           )}
-          <EscalationTable escalationBlock={block} filterState={filterState} />
+          <EscalationTable
+            escalationBlock={block}
+            filterState={filterState}
+            cellComputers={
+              ctx.escalationCellComputers?.[section.escalation_key] || {}
+            }
+          />
         </Card>
       );
     }
@@ -263,6 +270,38 @@ const Dashboard = () => {
     [progressByKey]
   );
 
+  // Per-EPS list of failing parameter labels, for the monitoring escalation
+  // table's `critical_issues` computed column. Reuses the same per-parameter
+  // /values fetches that drive the compliance stack bar.
+  const criticalIssuesByEps = useMemo(() => {
+    const out = {};
+    wqParams.forEach((p) => {
+      const rows = complianceResponses[p.key]?.data || [];
+      rows.forEach((row) => {
+        if (fails(p.threshold, row.value)) {
+          const key = String(row.group);
+          if (!out[key]) {
+            out[key] = [];
+          }
+          out[key].push(p.label);
+        }
+      });
+    });
+    return out;
+  }, [wqParams, complianceResponses]);
+
+  const escalationCellComputers = useMemo(
+    () => ({
+      monitoring: {
+        critical_issues: (row) => {
+          const issues = criticalIssuesByEps[String(row.id)] || [];
+          return issues.length > 0 ? issues.join(", ") : null;
+        },
+      },
+    }),
+    [criticalIssuesByEps]
+  );
+
   const filterActions = useMemo(
     () => ({
       setDateRange: filters.setDateRange,
@@ -281,6 +320,7 @@ const Dashboard = () => {
       progressResponses,
       complianceResponses,
       wqParameters: wqParams,
+      escalationCellComputers,
     }),
     [
       config,
@@ -290,6 +330,7 @@ const Dashboard = () => {
       progressResponses,
       complianceResponses,
       wqParams,
+      escalationCellComputers,
     ]
   );
 
