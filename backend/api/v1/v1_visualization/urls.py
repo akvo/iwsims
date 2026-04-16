@@ -4,6 +4,11 @@ from api.v1.v1_visualization.views import (
     monitoring_stats,
     GeolocationListView,
 )
+from api.v1.v1_visualization.dashboard_views import (
+    visualization_values,
+    visualization_escalation,
+    visualization_progress,
+)
 
 urlpatterns = [
     re_path(
@@ -17,5 +22,17 @@ urlpatterns = [
     re_path(
         r"^(?P<version>(v1))/maps/geolocation/(?P<form_id>[0-9]+)",
         GeolocationListView.as_view(),
+    ),
+    re_path(
+        r"^(?P<version>(v1))/visualization/values",
+        visualization_values,
+    ),
+    re_path(
+        r"^(?P<version>(v1))/visualization/escalation/(?P<form_id>[0-9]+)",
+        visualization_escalation,
+    ),
+    re_path(
+        r"^(?P<version>(v1))/visualization/progress/(?P<form_id>[0-9]+)",
+        visualization_progress,
     ),
 ]

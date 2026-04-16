@@ -1,7 +1,26 @@
+import json
+import os
+
 from django.utils import timezone
 from api.v1.v1_data.models import Answers, AnswerHistory
 from api.v1.v1_forms.constants import QuestionTypes
 from api.v1.v1_profile.models import Administration
+
+
+def atomic_write(path: str, content: str) -> None:
+    """Write content to path atomically via tmp+rename.
+
+    Prevents concurrent readers from seeing a zero-byte file during the
+    truncate/write window of `open(path, "w")`.
+    """
+    tmp = f"{path}.tmp.{os.getpid()}"
+    with open(tmp, "w") as f:
+        f.write(content)
+    os.replace(tmp, path)
+
+
+def atomic_write_json(path: str, obj) -> None:
+    atomic_write(path, json.dumps(obj, indent=2))
 
 
 def update_date_time_format(date):

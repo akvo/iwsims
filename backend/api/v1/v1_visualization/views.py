@@ -14,11 +14,14 @@ from api.v1.v1_visualization.serializers import (
     FormDataStatsFilterSerializer,
 )
 from api.v1.v1_visualization.models import ViewDataOptions
+from api.v1.v1_visualization.functions import (
+    apply_criteria_to_monitoring_qs,
+)
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+# from rest_framework.permissions import IsAuthenticated
 from utils.custom_serializer_fields import validate_serializers_message
 
 
@@ -243,7 +246,7 @@ def monitoring_stats(request, version):
 
 
 class GeolocationListView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     @extend_schema(
         responses=GeoLocationListSerializer,
@@ -252,6 +255,28 @@ class GeolocationListView(APIView):
                 name="administration",
                 required=False,
                 type=OpenApiTypes.NUMBER,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="criteria",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description=(
+                    "AND-joined multi-criteria filter "
+                    "(same grammar as /values)."
+                ),
+            ),
+            OpenApiParameter(
+                name="from_date",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="to_date",
+                required=False,
+                type=OpenApiTypes.DATE,
                 location=OpenApiParameter.QUERY,
             ),
         ],
@@ -274,6 +299,19 @@ class GeolocationListView(APIView):
             is_draft=False,
             geo__isnull=False
         )
+        criteria = serializer.validated_data.get("criteria")
+        if criteria:
+            queryset = apply_criteria_to_monitoring_qs(
+                queryset, False, criteria,
+            )
+
+        from_date = serializer.validated_data.get("from_date")
+        to_date = serializer.validated_data.get("to_date")
+        if from_date:
+            queryset = queryset.filter(created__date__gte=from_date)
+        if to_date:
+            queryset = queryset.filter(created__date__lte=to_date)
+
         if serializer.validated_data.get("administration"):
             adm = serializer.validated_data.get("administration")
             adm_path = f"{adm.id}."
@@ -284,6 +322,7 @@ class GeolocationListView(APIView):
                 Q(administration__path__startswith=adm_path)
             )
         if (
+            request.user.is_authenticated and
             not request.user.is_superuser and
             not serializer.validated_data.get("administration")
         ):

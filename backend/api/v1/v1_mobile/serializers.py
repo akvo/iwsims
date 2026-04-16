@@ -70,10 +70,10 @@ class MobileAssignmentFormsSerializer(serializers.Serializer):
     @extend_schema_field(MobileFormSerializer(many=True))
     def get_formsUrl(self, obj):
         # get all forms and its children forms
-        base_forms = list(obj.forms.all())
+        base_forms = list(obj.forms.all().order_by("id"))
         child_forms = []
         for form in base_forms:
-            child_forms.extend(list(form.children.all()))
+            child_forms.extend(list(form.children.all().order_by("id")))
         forms = base_forms + child_forms
         return MobileFormSerializer(instance=forms, many=True).data
 

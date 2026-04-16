@@ -23,7 +23,9 @@ class MobileAssignmentApiTest(TestCase, ProfileTestHelperMixin):
             role_level=self.IS_ADMIN,
         )
 
-        self.forms = Forms.objects.filter(parent__isnull=True).all()
+        self.forms = Forms.objects.filter(
+            parent__isnull=True
+        ).order_by("id")
 
         for form in self.forms:
             self.user.user_form.create(

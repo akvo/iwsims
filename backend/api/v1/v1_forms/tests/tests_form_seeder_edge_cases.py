@@ -15,6 +15,7 @@ from api.v1.v1_forms.management.commands.form_seeder import (
     migrate_question_answers,
 )
 from api.v1.v1_users.models import SystemUser
+from utils.functions import atomic_write, atomic_write_json
 
 
 def seed_administration_test():
@@ -322,8 +323,7 @@ class MigrateQuestionAnswersEdgeCaseTests(TestCase):
                 for q in form1_json["question_groups"][0]["questions"]
                 if q["id"] != 111
             ]
-            with open(form1_path, "w") as f:
-                json.dump(form1_json, f, indent=2)
+            atomic_write_json(form1_path, form1_json)
 
             call_command(
                 "form_seeder", "--test",
@@ -331,8 +331,7 @@ class MigrateQuestionAnswersEdgeCaseTests(TestCase):
             )
             self.assertFalse(Questions.objects.filter(pk=111).exists())
         finally:
-            with open(form1_path, "w") as f:
-                f.write(form1_orig)
+            atomic_write(form1_path, form1_orig)
 
     def test_empty_question_group_cleaned_after_cross_form_move(self):
         """When all questions in a group move to another form,
@@ -367,8 +366,7 @@ class MigrateQuestionAnswersEdgeCaseTests(TestCase):
                     "required": False,
                 }],
             })
-            with open(form1_path, "w") as f:
-                json.dump(form1_json, f, indent=2)
+            atomic_write_json(form1_path, form1_json)
 
             # Seed so QG 12 with question 112 exists in DB
             call_command(
@@ -395,10 +393,8 @@ class MigrateQuestionAnswersEdgeCaseTests(TestCase):
             }
             mon_json["question_groups"][0]["questions"].append(q112)
 
-            with open(form1_path, "w") as f:
-                json.dump(form1_json, f, indent=2)
-            with open(mon_path, "w") as f:
-                json.dump(mon_json, f, indent=2)
+            atomic_write_json(form1_path, form1_json)
+            atomic_write_json(mon_path, mon_json)
 
             # Re-seed: question moves, group should be cleaned up
             call_command(
@@ -414,7 +410,5 @@ class MigrateQuestionAnswersEdgeCaseTests(TestCase):
             self.assertFalse(QG.objects.filter(pk=12).exists())
 
         finally:
-            with open(form1_path, "w") as f:
-                f.write(form1_orig)
-            with open(mon_path, "w") as f:
-                f.write(mon_orig)
+            atomic_write(form1_path, form1_orig)
+            atomic_write(mon_path, mon_orig)
