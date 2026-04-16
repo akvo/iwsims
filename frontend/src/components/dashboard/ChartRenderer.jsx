@@ -156,7 +156,12 @@ const ChartRenderer = ({
     );
   }
 
-  if (!data || data.length === 0) {
+  // Empty state: no rows, OR all-zero for pie/doughnut (the library
+  // would otherwise draw equal-sized slices, misleading the viewer).
+  const allZero =
+    (chartType === "doughnut" || chartType === "pie") &&
+    data.every((d) => !d.value);
+  if (!data || data.length === 0 || allZero) {
     return (
       <div style={{ padding: 16, color: "#999", textAlign: "center" }}>
         No data

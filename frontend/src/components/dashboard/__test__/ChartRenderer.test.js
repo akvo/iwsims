@@ -89,6 +89,35 @@ describe("ChartRenderer", () => {
     );
   });
 
+  test("donut with all-zero values renders No data (not equal slices)", async () => {
+    axios.mockResolvedValue({
+      data: {
+        data: [
+          { value: 0, label: "Operational", group: "operational" },
+          { value: 0, label: "Issue", group: "issue_with_system" },
+        ],
+      },
+    });
+
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_zero",
+          chart_type: "doughnut",
+          config: { title: "Zero" },
+          api: { form_id: 1, question_id: 2, group_by: "option" },
+        }}
+        filterState={emptyFilters}
+        today={today}
+      />
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("No data")).toBeInTheDocument()
+    );
+    expect(screen.queryByTestId("chart-doughnut")).toBeNull();
+  });
+
   test("source=progress reuses a progress definition resolved via definitionsById", async () => {
     // The progress hook will still fire a request for the definition's data;
     // stub it out so the inner .then() doesn't crash. The assertion below

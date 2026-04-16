@@ -57,6 +57,12 @@ const DashboardMap = ({
     if (criteriaParams.criteria) {
       query.set("criteria", criteriaParams.criteria);
     }
+    if (filterState?.from_date) {
+      query.set("from_date", filterState.from_date);
+    }
+    if (filterState?.to_date) {
+      query.set("to_date", filterState.to_date);
+    }
     const qs = query.toString();
     const path = qs
       ? `/maps/geolocation/${sourceFormId}?${qs}`
