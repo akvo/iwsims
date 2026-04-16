@@ -9,6 +9,7 @@ import {
 } from "../../util/hooks";
 import DashboardRenderer from "../../components/dashboard/DashboardRenderer";
 import { fails } from "../../components/dashboard/compute/compliance";
+import "./style.scss";
 
 const { Title, Paragraph } = Typography;
 
@@ -347,14 +348,14 @@ const Dashboard = () => {
       `No dashboard config registered for formId=${formId}. Drop a JSON file in src/config/visualizations/ and register it in index.js.`
     );
     return (
-      <div style={{ padding: 24 }}>
+      <div className="dashboard">
         <Empty description="This dashboard isn't available yet." />
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="dashboard">
       {/* Invisible compliance param fetchers */}
       {complianceParamItems.map((paramItem) => (
         <WqParamFetcher
@@ -380,9 +381,13 @@ const Dashboard = () => {
 
       <Row gutter={[0, 0]}>
         <Col span={24}>
-          <Title level={2}>{config.name}</Title>
+          <Title level={3} className="dashboard-title">
+            {config.name}
+          </Title>
           {config.description && (
-            <Paragraph type="secondary">{config.description}</Paragraph>
+            <Paragraph type="secondary" className="dashboard-subtitle">
+              {config.description}
+            </Paragraph>
           )}
         </Col>
       </Row>
