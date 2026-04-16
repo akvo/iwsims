@@ -31,10 +31,21 @@ const EscalationTable = ({
     () =>
       (item.columns || [])
         .filter((c) => !c.hide)
+        .map((c, colIndex) => {
+          if (colIndex === 0) {
+            return { ...c, fixed: "left", width: c.width || 200 };
+          }
+          // Non-first columns need an explicit width so scroll.x=max-content
+          // can let them keep their natural size instead of being crushed
+          // by AntD's default flex-shrink behaviour on narrow cards.
+          return { ...c, width: c.width || 140 };
+        })
         .map((c) => ({
           title: c.label,
           dataIndex: c.key,
           key: c.key,
+          fixed: c.fixed,
+          width: c.width,
           render: (value, row) => {
             // Computed columns (no backend source). If the page provided a
             // computer for this column key, run it against the row; otherwise
@@ -77,6 +88,7 @@ const EscalationTable = ({
       loading={loading}
       columns={columns}
       dataSource={data?.results || []}
+      scroll={{ x: "max-content" }}
       pagination={{
         current: page,
         pageSize,
