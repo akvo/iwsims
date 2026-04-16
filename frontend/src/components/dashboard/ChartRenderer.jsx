@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import PropTypes from "prop-types";
 import { Bar, Doughnut, Line, Pie, StackBar } from "akvo-charts";
 import { Alert, Skeleton } from "antd";
@@ -13,6 +13,35 @@ const COMPONENT_BY_TYPE = {
   line: Line,
   pie: Pie,
   stack_bar: StackBar,
+};
+
+/**
+ * Wrap a pie/doughnut Component so we can hide the outer slice callout
+ * labels after mount. akvo-charts doesn't expose a label-config prop
+ * and its internal setOption replaces rather than merges — so we grab
+ * the ECharts instance via ref and setOption with notMerge=false to
+ * layer label:{show:false} on top while preserving dataset + encode.
+ */
+const PieWithHiddenLabels = ({ Component, commonProps }) => {
+  const ref = useRef(null);
+  useEffect(() => {
+    const chart = ref.current;
+    if (!chart || typeof chart.setOption !== "function") {
+      return;
+    }
+    chart.setOption(
+      {
+        series: [{ label: { show: false }, labelLine: { show: false } }],
+      },
+      false
+    );
+  }, [commonProps.data, commonProps.config, commonProps.rawConfig]);
+  return <Component ref={ref} {...commonProps} />;
+};
+
+PieWithHiddenLabels.propTypes = {
+  Component: PropTypes.elementType.isRequired,
+  commonProps: PropTypes.object.isRequired,
 };
 
 /**
@@ -175,6 +204,18 @@ const ChartRenderer = ({
     rawConfig: item.raw_config,
     rawOverrides: item.raw_overrides,
   };
+
+  // Pie/doughnut slice callout labels overlap badly when options have
+  // long names on a cramped card. akvo-charts' Doughnut/Pie doesn't
+  // accept a label-config prop, but the underlying ECharts instance
+  // does — use a ref to setOption({series: [{label:{show:false}}]})
+  // after mount. notMerge=false preserves dataset + encode bindings.
+  const isPie = chartType === "doughnut" || chartType === "pie";
+  if (isPie) {
+    return (
+      <PieWithHiddenLabels commonProps={commonProps} Component={Component} />
+    );
+  }
 
   return <Component {...commonProps} />;
 };
