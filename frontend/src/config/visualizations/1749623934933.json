@@ -576,6 +576,7 @@
               "col_span": 12,
               "group": "microbial",
               "label": "E-coli presence",
+              "description": "Acceptance threshold 0 CFU/100 mL",
               "config": {
                 "title": "E-coli presence",
                 "xAxisLabel": "CFU/100mL",
@@ -603,6 +604,7 @@
               "col_span": 12,
               "group": "microbial",
               "label": "Total coliform presence",
+              "description": "Acceptance threshold 0 CFU/100 mL",
               "config": {
                 "title": "Total coliform presence",
                 "xAxisLabel": "CFU/100mL",
@@ -631,6 +633,7 @@
               "group": "microbial",
               "hide": true,
               "label": "Fecal coliform presence",
+              "description": "Acceptance threshold 0 CFU/100 mL",
               "config": {
                 "title": "Fecal coliform presence",
                 "xAxisLabel": "CFU/100mL",
@@ -665,6 +668,7 @@
               "col_span": 12,
               "group": "physical",
               "label": "Turbidity",
+              "description": "Acceptance threshold < 5 NTU",
               "config": {
                 "title": "Turbidity",
                 "xAxisLabel": "NTU",
@@ -692,6 +696,7 @@
               "col_span": 12,
               "group": "physical",
               "label": "Water Temperature",
+              "description": "Acceptance threshold < 30 °C",
               "config": {
                 "title": "Water Temperature",
                 "xAxisLabel": "°C",
@@ -726,6 +731,7 @@
               "col_span": 8,
               "group": "chemical",
               "label": "pH",
+              "description": "Acceptance threshold between 6.5 - 8.5",
               "config": {
                 "title": "pH",
                 "xAxisLabel": "pH",
@@ -754,6 +760,7 @@
               "col_span": 8,
               "group": "chemical",
               "label": "Conductivity",
+              "description": "Acceptance threshold < 1000 µS/cm",
               "config": {
                 "title": "Conductivity",
                 "xAxisLabel": "µS/cm",
@@ -781,6 +788,7 @@
               "col_span": 8,
               "group": "chemical",
               "label": "Salinity",
+              "description": "Acceptance threshold < 1 ppt",
               "config": {
                 "title": "Salinity",
                 "xAxisLabel": "ppt",
@@ -875,21 +883,16 @@
                 "monitoring": "latest",
                 "fiscal_year": true
               },
-              "raw_overrides": {
-                "markLine": {
-                  "silent": true,
-                  "data": [
-                    {
-                      "xAxis": "TODAY",
-                      "name": "Today"
-                    }
-                  ],
-                  "lineStyle": {
-                    "color": "#1890ff",
-                    "width": 2
-                  }
+              "mark_lines": [
+                {
+                  "axis": "x",
+                  "type": "today",
+                  "format": "month_year_short",
+                  "color": "#e74c3c",
+                  "width": 2,
+                  "label": "Today"
                 }
-              }
+              ]
             },
             {
               "id": "esc_construction",
