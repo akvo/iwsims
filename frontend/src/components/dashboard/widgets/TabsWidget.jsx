@@ -27,6 +27,7 @@ const TabsWidget = ({ item, renderItems }) => {
       defaultActiveKey={panes[0]?.id}
       destroyInactiveTabPane
       items={tabItems}
+      type="card"
     />
   );
 };
