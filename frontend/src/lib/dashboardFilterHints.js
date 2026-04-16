@@ -135,11 +135,13 @@ export const applyDashboardFilters = (
 ) => {
   const out = { ...params };
 
-  // Date range: only apply when the widget didn't already pin dates.
-  if (filterState?.from_date && !out.from_date) {
+  // Date range: dashboard filter always wins when provided. Widget
+  // hints (fiscal_year, rolling_months) act as defaults for the
+  // unfiltered state — once the user picks a range, it overrides.
+  if (filterState?.from_date) {
     out.from_date = filterState.from_date;
   }
-  if (filterState?.to_date && !out.to_date) {
+  if (filterState?.to_date) {
     out.to_date = filterState.to_date;
   }
 

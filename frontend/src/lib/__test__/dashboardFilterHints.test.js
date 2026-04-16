@@ -136,10 +136,21 @@ describe("applyDashboardFilters", () => {
     expect(out.to_date).toBe("2026-03-31");
   });
 
-  test("widget-pinned dates win over dashboard filter", () => {
+  test("dashboard filter overrides widget-expanded defaults (fiscal_year/rolling_months)", () => {
+    // A widget with fiscal_year:true hint would have expanded dates
+    // pinned by expandApiHints. The user's filter must still win.
     const out = applyDashboardFilters(
       { form_id: 1, from_date: "2025-07-01", to_date: "2026-06-30" },
       { from_date: "2026-01-01", to_date: "2026-03-31" }
+    );
+    expect(out.from_date).toBe("2026-01-01");
+    expect(out.to_date).toBe("2026-03-31");
+  });
+
+  test("widget-expanded defaults kept when no dashboard filter", () => {
+    const out = applyDashboardFilters(
+      { form_id: 1, from_date: "2025-07-01", to_date: "2026-06-30" },
+      {}
     );
     expect(out.from_date).toBe("2025-07-01");
     expect(out.to_date).toBe("2026-06-30");
