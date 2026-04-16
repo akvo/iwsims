@@ -756,6 +756,8 @@ Returns geo-coordinates for map markers. Accepts optional `administration` and `
 |-------|------|----------|---------|-------------|
 | `administration` | integer | No | — | Filter by administration hierarchy |
 | `criteria` | string | No | — | AND-joined multi-criteria filter (same grammar as `/values`). |
+| `from_date` | YYYY-MM-DD | No | — | Filter records by `FormData.created >=` this date |
+| `to_date` | YYYY-MM-DD | No | — | Filter records by `FormData.created <=` this date |
 
 #### Response Format
 

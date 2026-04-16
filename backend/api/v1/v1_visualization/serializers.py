@@ -93,6 +93,8 @@ class GeoLocationFilterSerializer(serializers.Serializer):
         queryset=Administration.objects.none(), required=False
     )
     criteria = serializers.CharField(required=False)
+    from_date = serializers.DateField(required=False)
+    to_date = serializers.DateField(required=False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -115,4 +117,7 @@ class GeoLocationFilterSerializer(serializers.Serializer):
             raise serializers.ValidationError(str(e))
 
     class Meta:
-        fields = ["administration", "criteria"]
+        fields = [
+            "administration", "criteria",
+            "from_date", "to_date",
+        ]

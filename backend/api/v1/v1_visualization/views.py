@@ -257,6 +257,28 @@ class GeolocationListView(APIView):
                 type=OpenApiTypes.NUMBER,
                 location=OpenApiParameter.QUERY,
             ),
+            OpenApiParameter(
+                name="criteria",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description=(
+                    "AND-joined multi-criteria filter "
+                    "(same grammar as /values)."
+                ),
+            ),
+            OpenApiParameter(
+                name="from_date",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="to_date",
+                required=False,
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+            ),
         ],
         tags=["Maps"],
         summary="To get list of geolocations for a form",
@@ -282,6 +304,14 @@ class GeolocationListView(APIView):
             queryset = apply_criteria_to_monitoring_qs(
                 queryset, False, criteria,
             )
+
+        from_date = serializer.validated_data.get("from_date")
+        to_date = serializer.validated_data.get("to_date")
+        if from_date:
+            queryset = queryset.filter(created__date__gte=from_date)
+        if to_date:
+            queryset = queryset.filter(created__date__lte=to_date)
+
         if serializer.validated_data.get("administration"):
             adm = serializer.validated_data.get("administration")
             adm_path = f"{adm.id}."

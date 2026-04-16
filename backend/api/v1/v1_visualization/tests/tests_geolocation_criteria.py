@@ -61,3 +61,41 @@ class GeolocationCriteriaTestCases(
         data = response.json()
         names = sorted(row["name"] for row in data)
         self.assertEqual(names, ["Site Alpha", "Site Beta"])
+
+    def test_from_date_filters_by_created(self):
+        """from_date filters registration records by FormData.created."""
+        from django.utils.timezone import make_aware
+        from datetime import datetime
+        FormData = type(self.reg1)
+        FormData.objects.filter(id=self.reg1.id).update(
+            created=make_aware(datetime(2025, 1, 10)),
+        )
+        FormData.objects.filter(id=self.reg2.id).update(
+            created=make_aware(datetime(2025, 6, 10)),
+        )
+        response = self.client.get(
+            f"{self.BASE_URL}/{self.registration.id}"
+            "?from_date=2025-05-01"
+        )
+        self.assertEqual(response.status_code, 200)
+        names = sorted(row["name"] for row in response.json())
+        self.assertEqual(names, ["Site Beta"])
+
+    def test_to_date_upper_bound(self):
+        """to_date bounds registration records."""
+        from django.utils.timezone import make_aware
+        from datetime import datetime
+        FormData = type(self.reg1)
+        FormData.objects.filter(id=self.reg1.id).update(
+            created=make_aware(datetime(2025, 1, 10)),
+        )
+        FormData.objects.filter(id=self.reg2.id).update(
+            created=make_aware(datetime(2025, 6, 10)),
+        )
+        response = self.client.get(
+            f"{self.BASE_URL}/{self.registration.id}"
+            "?to_date=2025-03-31"
+        )
+        self.assertEqual(response.status_code, 200)
+        names = sorted(row["name"] for row in response.json())
+        self.assertEqual(names, ["Site Alpha"])
