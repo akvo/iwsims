@@ -115,13 +115,15 @@ const DashboardRenderer = ({
     }
 
     if (CHART_TYPES.has(type)) {
+      const { title: cardTitle, ...restConfig } = item.config || {};
+      const itemForChart = { ...item, config: restConfig };
       return (
-        <Card title={item.config?.title} style={{ marginBottom: 0 }}>
+        <Card title={cardTitle} style={{ marginBottom: 0 }}>
           {item.description && (
             <Paragraph type="secondary">{item.description}</Paragraph>
           )}
           <ChartRenderer
-            item={item}
+            item={itemForChart}
             filterState={filterState}
             fiscalYearStartMonth={fiscalYearStartMonth}
             customFilterDefs={customFilterDefs}
@@ -155,14 +157,12 @@ const DashboardRenderer = ({
 
     if (type === "map") {
       return (
-        <Card size="small" style={{ marginBottom: 0 }}>
-          <DashboardMap
-            item={item}
-            filterState={filterState}
-            customFilterDefs={customFilterDefs}
-            height={item.height || 400}
-          />
-        </Card>
+        <DashboardMap
+          item={item}
+          filterState={filterState}
+          customFilterDefs={customFilterDefs}
+          height={item.height || 400}
+        />
       );
     }
 

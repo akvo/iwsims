@@ -17,7 +17,7 @@ const FilterBarWidget = ({ item, filters, onChange }) => {
   const filterItems = item.items || [];
 
   return (
-    <Card size="small" style={{ marginBottom: 16 }}>
+    <Card size="small" className="dashboard-filter-bar">
       <DashboardFilters
         filterItems={filterItems}
         filters={filters}

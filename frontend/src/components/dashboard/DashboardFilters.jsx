@@ -112,7 +112,7 @@ const DashboardFilters = ({ filterItems, filters, onChange }) => {
           aria-label={dateCfg.label || "Date range"}
         />
       )}
-      {adminCfg && !adminCfg.hide && <AdministrationDropdown withLabel />}
+      {adminCfg && !adminCfg.hide && <AdministrationDropdown />}
       {customDefs.map((d) => (
         <Select
           key={d.key}
