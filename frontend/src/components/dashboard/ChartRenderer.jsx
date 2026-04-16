@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import PropTypes from "prop-types";
 import { Bar, Doughnut, Line, Pie, StackBar } from "akvo-charts";
 import { Alert, Skeleton } from "antd";
@@ -6,6 +12,7 @@ import { useDashboardValues, useDashboardProgress } from "../../util/hooks";
 import { toHistogramBarData } from "./compute/progressHistogram";
 import { computeComplianceStackData } from "./compute/compliance";
 import { rotateToFiscalOrder } from "./compute/fiscalMonthRotation";
+import { toValueHistogramBins } from "./compute/valueHistogramBins";
 
 const COMPONENT_BY_TYPE = {
   bar: Bar,
@@ -42,6 +49,163 @@ const PieWithHiddenLabels = ({ Component, commonProps }) => {
 PieWithHiddenLabels.propTypes = {
   Component: PropTypes.elementType.isRequired,
   commonProps: PropTypes.object.isRequired,
+};
+
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/**
+ * Resolve a mark-line descriptor's on-axis position. Literal `value` wins;
+ * otherwise `type: "today"` is rendered against `today` using `format`:
+ *  - month_short     → "Apr"       (fiscal-year month axes)
+ *  - month_year_short→ "Apr 2026"  (backend "%b %Y" labels)
+ *  - iso_date        → "2026-04-16"
+ *  - year            → "2026"
+ */
+const resolveMarkValue = (mark, today) => {
+  if (mark.type === "today" && today instanceof Date) {
+    const fmt = mark.format || "month_short";
+    if (fmt === "month_short") {
+      return MONTHS_SHORT[today.getUTCMonth()];
+    }
+    if (fmt === "month_year_short") {
+      return `${MONTHS_SHORT[today.getUTCMonth()]} ${today.getUTCFullYear()}`;
+    }
+    if (fmt === "iso_date") {
+      return today.toISOString().slice(0, 10);
+    }
+    if (fmt === "year") {
+      return String(today.getUTCFullYear());
+    }
+  }
+  return mark.value;
+};
+
+const toEchartsMarkData = (marks, today) =>
+  marks
+    .map((m) => {
+      const v = resolveMarkValue(m, today);
+      if (typeof v === "undefined" || v === null) {
+        return null;
+      }
+      // Histograms use category axes with string labels — passing a number
+      // would be treated by ECharts as a category *index* (wrong). Coerce
+      // to string so threshold 6.5 lands on the "6.5" bin. For true value
+      // axes, ECharts parses the string back to a number transparently.
+      const axisValue = typeof v === "number" ? String(v) : v;
+      const point =
+        m.axis === "y" ? { yAxis: axisValue } : { xAxis: axisValue };
+      point.lineStyle = {
+        color: m.color || "#e74c3c",
+        width: m.width || 2,
+        type: m.dash ? "dashed" : "solid",
+      };
+      if (m.label) {
+        point.label = {
+          show: true,
+          formatter: m.label,
+          position: m.label_position || "end",
+          color: m.color || "#e74c3c",
+        };
+      } else {
+        point.label = { show: false };
+      }
+      return point;
+    })
+    .filter(Boolean);
+
+/**
+ * Wrap a non-pie Component so we can draw configurable reference lines
+ * (threshold, today, arbitrary values) on top. Uses ECharts' native
+ * `series.markLine` (https://echarts.apache.org/en/option.html#series-bar.markLine)
+ * via setOption({series:[{markLine:{...}}]}, notMerge=false) so the markLine
+ * is merged into the existing dataset/encode series.
+ *
+ * akvo-charts exposes the ECharts instance via useImperativeHandle but the
+ * instance only becomes non-null on its 2nd internal render (after init).
+ * A plain useRef + useEffect misses that transition because the parent
+ * doesn't re-render when the child updates its own state. A *callback ref*
+ * routes the imperative-handle value into our own state, forcing a parent
+ * re-render when the instance becomes available — so our effect runs with
+ * a valid chart, after akvo-charts' own setOption (child effects run first).
+ */
+const ChartWithMarkLines = ({ Component, commonProps, markLines, today }) => {
+  const [chart, setChart] = useState(null);
+  const setRef = useCallback((instance) => {
+    if (instance && typeof instance.setOption === "function") {
+      // useImperativeHandle re-invokes callback refs every child render;
+      // bail if we already captured the instance to avoid a state-update loop.
+      setChart((prev) => prev || instance);
+    }
+  }, []);
+  useEffect(() => {
+    if (!chart) {
+      return;
+    }
+    const data = toEchartsMarkData(markLines, today);
+    if (data.length === 0) {
+      return;
+    }
+    chart.setOption(
+      {
+        series: [
+          {
+            markLine: {
+              symbol: "none",
+              silent: true,
+              animation: false,
+              data,
+            },
+          },
+        ],
+      },
+      false
+    );
+  }); // No deps: re-apply after every render because akvo-charts' own
+  // setOption re-runs on each render (its getOptions dep is a fresh fn).
+  return <Component ref={setRef} {...commonProps} />;
+};
+
+ChartWithMarkLines.propTypes = {
+  Component: PropTypes.elementType.isRequired,
+  commonProps: PropTypes.object.isRequired,
+  markLines: PropTypes.array.isRequired,
+  today: PropTypes.instanceOf(Date),
+};
+
+/**
+ * Build the resolved mark-lines list for an item. Explicit `item.mark_lines`
+ * takes precedence; otherwise we auto-derive from the `threshold` block that
+ * histogram items already carry ({ max?: number, min?: number }) so existing
+ * configs get a threshold line for free.
+ */
+const deriveMarkLines = (item) => {
+  if (Array.isArray(item.mark_lines) && item.mark_lines.length > 0) {
+    return item.mark_lines;
+  }
+  if (item.chart_type === "histogram" && item.threshold) {
+    const result = [];
+    if (typeof item.threshold.max === "number") {
+      result.push({ axis: "x", value: item.threshold.max });
+    }
+    if (typeof item.threshold.min === "number") {
+      result.push({ axis: "x", value: item.threshold.min });
+    }
+    return result;
+  }
+  return [];
 };
 
 /**
@@ -152,6 +316,26 @@ const ChartRenderer = ({
       if (item.api?.group_by === "month" && item.api?.fiscal_year) {
         rows = rotateToFiscalOrder(rows, fiscalYearStartMonth);
       }
+      // Value-axis histograms (water-quality parameters): bin per-EPS
+      // numeric measurements into [binStart, binStart+binWidth) buckets.
+      // Thresholds are forced into the bin range so markLines anchor even
+      // when data is sparse (single-sample pH would otherwise hide the
+      // 6.5 / 8.5 reference lines).
+      if (
+        item.display?.mode === "histogram" &&
+        typeof item.display?.bin_width === "number"
+      ) {
+        const extendTo = [];
+        if (typeof item.threshold?.min === "number") {
+          extendTo.push(item.threshold.min);
+        }
+        if (typeof item.threshold?.max === "number") {
+          extendTo.push(item.threshold.max);
+        }
+        return toValueHistogramBins(rows, item.display.bin_width, {
+          extendTo,
+        });
+      }
       return rows.map((r) => ({ label: r.label, value: r.value }));
     }
     return [];
@@ -214,6 +398,18 @@ const ChartRenderer = ({
   if (isPie) {
     return (
       <PieWithHiddenLabels commonProps={commonProps} Component={Component} />
+    );
+  }
+
+  const markLines = deriveMarkLines(item);
+  if (markLines.length > 0) {
+    return (
+      <ChartWithMarkLines
+        commonProps={commonProps}
+        Component={Component}
+        markLines={markLines}
+        today={today}
+      />
     );
   }
 

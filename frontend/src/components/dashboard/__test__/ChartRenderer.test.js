@@ -8,23 +8,34 @@ jest.mock("axios");
 
 // Replace akvo-charts with lightweight stand-ins that expose the props they
 // were called with, so we can assert on what ChartRenderer passed through.
-jest.mock("akvo-charts", () => ({
-  Bar: (props) => (
-    <div data-testid="chart-bar" data-rows={props.data?.length ?? 0} />
-  ),
-  Doughnut: (props) => (
-    <div data-testid="chart-doughnut" data-rows={props.data?.length ?? 0} />
-  ),
-  Line: () => <div data-testid="chart-line" />,
-  Pie: () => <div data-testid="chart-pie" />,
-  StackBar: (props) => (
-    <div
-      data-testid="chart-stack"
-      data-rows={props.data?.length ?? 0}
-      data-has-raw={String(Boolean(props.rawConfig))}
-    />
-  ),
-}));
+// Bar is forwardRef so ChartWithMarkLines can call ref.current.setOption;
+// the mocked setOption stringifies its first arg onto a data attribute so
+// tests can assert on the markLine payload.
+jest.mock("akvo-charts", () => {
+  const ReactMock = jest.requireActual("react");
+  const makeRefChart = (testid) => {
+    const Component = ReactMock.forwardRef((props, ref) => {
+      const [opt, setOpt] = ReactMock.useState(null);
+      ReactMock.useImperativeHandle(ref, () => ({
+        setOption: (o) => setOpt(o),
+      }));
+      return ReactMock.createElement("div", {
+        "data-testid": testid,
+        "data-rows": props.data?.length ?? 0,
+        "data-has-raw": String(Boolean(props.rawConfig)),
+        "data-option": opt ? JSON.stringify(opt) : "",
+      });
+    });
+    return Component;
+  };
+  return {
+    Bar: makeRefChart("chart-bar"),
+    Doughnut: makeRefChart("chart-doughnut"),
+    Line: makeRefChart("chart-line"),
+    Pie: makeRefChart("chart-pie"),
+    StackBar: makeRefChart("chart-stack"),
+  };
+});
 
 const emptyFilters = {
   from_date: null,
@@ -207,6 +218,159 @@ describe("ChartRenderer", () => {
     const el = screen.getByTestId("chart-stack");
     expect(el).toHaveAttribute("data-rows", "2"); // Yes + No rows
     expect(axios).not.toHaveBeenCalled();
+  });
+
+  test("histogram threshold auto-renders a red xAxis markLine", async () => {
+    axios.mockResolvedValue({
+      data: {
+        data: [
+          { value: 49, label: "0", group: "0" },
+          { value: 12, label: "50", group: "50" },
+        ],
+      },
+    });
+    render(
+      <ChartRenderer
+        item={{
+          id: "param_e_coli",
+          chart_type: "histogram",
+          threshold: { max: 0 },
+          config: {},
+          api: { form_id: 1, question_id: 2 },
+        }}
+        filterState={emptyFilters}
+        today={today}
+      />
+    );
+    await waitFor(() => {
+      const el = screen.getByTestId("chart-bar");
+      expect(el.getAttribute("data-option")).toBeTruthy();
+    });
+    const opt = JSON.parse(
+      screen.getByTestId("chart-bar").getAttribute("data-option")
+    );
+    expect(opt.series[0].markLine.data).toHaveLength(1);
+    expect(opt.series[0].markLine.data[0].xAxis).toBe("0");
+    expect(opt.series[0].markLine.data[0].lineStyle.color).toBe("#e74c3c");
+  });
+
+  test("histogram bins per-EPS rows and renders pH threshold pair on binned axis", async () => {
+    axios.mockResolvedValue({
+      data: {
+        data: [
+          { label: "EPS A", value: 6.2 },
+          { label: "EPS B", value: 6.7 },
+          { label: "EPS C", value: 7.1 },
+          { label: "EPS D", value: 8.4 },
+          { label: "EPS E", value: 9.1 },
+        ],
+      },
+    });
+    render(
+      <ChartRenderer
+        item={{
+          id: "param_ph",
+          chart_type: "histogram",
+          display: { mode: "histogram", bin_width: 0.5 },
+          threshold: { min: 6.5, max: 8.5 },
+          config: {},
+          api: {
+            form_id: 1,
+            question_id: 2,
+            group_by: "parent_id",
+            monitoring: "latest",
+          },
+        }}
+        filterState={emptyFilters}
+        today={today}
+      />
+    );
+    await waitFor(() => {
+      const el = screen.getByTestId("chart-bar");
+      expect(el.getAttribute("data-option")).toBeTruthy();
+    });
+    const el = screen.getByTestId("chart-bar");
+    // Bins from 6.0 to 9.0 in 0.5 steps = 7 contiguous bins.
+    expect(el.getAttribute("data-rows")).toBe("7");
+    const opt = JSON.parse(el.getAttribute("data-option"));
+    const xs = opt.series[0].markLine.data.map((d) => d.xAxis).sort();
+    expect(xs).toEqual(["6.5", "8.5"]);
+  });
+
+  test("explicit mark_lines override threshold and resolve today to month_short", async () => {
+    axios.mockResolvedValue({
+      data: {
+        data: [
+          { value: 3, label: "Apr", group: "2026-04" },
+          { value: 5, label: "May", group: "2026-05" },
+        ],
+      },
+    });
+    render(
+      <ChartRenderer
+        item={{
+          id: "monthly_trend",
+          chart_type: "bar",
+          mark_lines: [
+            { axis: "x", type: "today", color: "#2980b9", label: "Today" },
+          ],
+          config: {},
+          api: { form_id: 1, group_by: "month" },
+        }}
+        filterState={emptyFilters}
+        today={today}
+      />
+    );
+    await waitFor(() => {
+      const el = screen.getByTestId("chart-bar");
+      expect(el.getAttribute("data-option")).toBeTruthy();
+    });
+    const opt = JSON.parse(
+      screen.getByTestId("chart-bar").getAttribute("data-option")
+    );
+    expect(opt.series[0].markLine.data[0].xAxis).toBe("Apr");
+    expect(opt.series[0].markLine.data[0].lineStyle.color).toBe("#2980b9");
+    expect(opt.series[0].markLine.data[0].label.formatter).toBe("Today");
+  });
+
+  test("mark_lines type=today format=month_year_short resolves to 'Apr 2026'", async () => {
+    axios.mockResolvedValue({
+      data: {
+        data: [
+          { value: 0, label: "Mar 2026", group: "2026-03" },
+          { value: 1, label: "Apr 2026", group: "2026-04" },
+        ],
+      },
+    });
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_proposed_completion_timeline",
+          chart_type: "bar",
+          mark_lines: [
+            {
+              axis: "x",
+              type: "today",
+              format: "month_year_short",
+              label: "Today",
+            },
+          ],
+          config: {},
+          api: { form_id: 1, group_by: "month" },
+        }}
+        filterState={emptyFilters}
+        today={today}
+      />
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("chart-bar").getAttribute("data-option")
+      ).toBeTruthy()
+    );
+    const opt = JSON.parse(
+      screen.getByTestId("chart-bar").getAttribute("data-option")
+    );
+    expect(opt.series[0].markLine.data[0].xAxis).toBe("Apr 2026");
   });
 
   test("passes raw_config through to the underlying component", async () => {
