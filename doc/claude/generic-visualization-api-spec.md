@@ -105,9 +105,27 @@ value          := string                         ; operator-specific, see below
 | `from_date` / `to_date` / `date_question_id` | Stays separate | Date ranges have a different grammar (YYYY-MM-DD, open-ended). Folding them into `criteria` would bloat the operator set without benefit. |
 | `option_value` | Kept for backward compatibility | Equivalent to a single `option_equals`. New callers should use `criteria`. |
 
-### Behavior When Criteria Target a Different Form
+### Cross-Form Criteria (Auto-Split)
 
-Criteria must reference `question_id` values that exist on the `form_id` of the request. A criterion whose `qid` belongs to a **different** form is a client error — widgets for other forms are expected to either (a) translate the filter to their own equivalent question or (b) ignore the filter. The `/values` endpoint itself does not resolve cross-form filters; that responsibility stays in the frontend's `applyDashboardFilters`.
+Criteria can reference `question_id` values on **either** the request's `form_id` or its **parent form**. The backend automatically splits them:
+
+- qids found on `form_id` → applied as `criteria` (narrows monitoring records by their own answers)
+- qids found on the parent form → applied as `parent_criteria` internally (narrows by parent registration records' answers)
+- qids not on either form → **400 Bad Request**
+
+This means the frontend can emit a single `criteria=` string mixing registration-form and monitoring-form question IDs. The backend resolves the routing transparently.
+
+**Example**: A monitoring-form widget (`form_id=1749632545233`) can be filtered by a registration-form question (`implementing_agency`, qid `1749624452993`). The backend detects that qid belongs to the parent form (`1749623934933`), narrows parent records to matching ones, then only returns monitoring data from those parents.
+
+### Donut Restricted Tally
+
+When `criteria` targets the **same question** as `group_by=option` on a `multiple_option` question, the donut tally is restricted to only count the filtered option values — not every value in the answer array.
+
+**Without restriction**: A record with `["water_authority_of_fiji", "rotary_pacific"]` filtered by `option_contains:qid:water_authority_of_fiji` would count for both "Water Authority of Fiji" AND "Rotary Pacific" in the donut.
+
+**With restriction**: Only "Water Authority of Fiji" is tallied. Other co-selected agencies show `0`.
+
+This applies automatically whenever a criterion's `qid` matches the `group_by=option` question's `question_id`.
 
 ### Error Handling
 
@@ -115,9 +133,7 @@ Malformed `criteria` values return **400 Bad Request** with a JSON body:
 
 ```json
 {
-  "error": "invalid_criteria",
-  "message": "Unknown criterion type 'option_matches'. Accepted: option_equals, option_contains, option_in, threshold_gt, threshold_lt.",
-  "criterion": "option_matches:1749624452993:akvo"
+  "message": "Invalid criteria type: 'option_matches'. Options: ['option_contains', 'option_equals', 'option_in', 'threshold_gt', 'threshold_lt']"
 }
 ```
 
@@ -127,7 +143,7 @@ Specific failure modes:
 |-----------|----------|
 | Unknown type token | 400 with list of accepted types |
 | Malformed criterion (missing `:` parts) | 400 naming the offending fragment |
-| `qid` not on `form_id` | 400 `"question_id X does not belong to form Y"` |
+| `qid` not on `form_id` or its parent | 400 `"question_id(s) not on form X or its parent: [...]"` |
 | `threshold_*` value not parseable as number | 400 `"threshold value must be numeric"` |
 | `option_in` value empty after split on `\|` | 400 `"option_in requires at least one value"` |
 
@@ -139,10 +155,18 @@ GET /visualization/values
   ?form_id=1749623934933
   &criteria=option_contains:1749624452993:akvo,option_equals:1749624452105:active
 
-# Donut: operational_status breakdown, filtered to two implementing agencies
+# Cross-form: monitoring-form donut narrowed by registration-form filter
+GET /visualization/values
+  ?form_id=1749632545233
+  &question_id=1749633373968
+  &group_by=option
+  &monitoring=latest
+  &criteria=option_contains:1749624452993:water_authority_of_fiji
+
+# Donut: implementing_authority filtered to two agencies (option_in OR)
 GET /visualization/values
   ?form_id=1749623934933
-  &question_id=1749624452800
+  &question_id=1749624452993
   &group_by=option
   &criteria=option_in:1749624452993:akvo|oxfam
 
@@ -154,16 +178,6 @@ GET /visualization/values
   &from_date=2025-01-01&to_date=2025-12-31
   &criteria=option_contains:1749624452993:akvo,option_equals:1749624452105:active
 ```
-
-### Frontend Migration Note
-
-`frontend/src/lib/dashboardFilterHints.js → applyDashboardFilters` currently folds a custom filter into a widget's query only when `widget.api.question_id === filter.question_id`. Once this param ships, that function should instead:
-
-1. Collect all active dashboard custom filters that target the widget's `form_id`.
-2. Emit them as a single `criteria=` string on the widget's `/values` call, regardless of the widget's own `question_id`.
-3. Leave `administration_id`, `from_date`, `to_date` untouched — they continue to flow through their dedicated params.
-
-See `akvo-mis-7xc` (Frontend) and `akvo-mis-hve` (Backend) for the implementation beads.
 
 ---
 
@@ -522,9 +536,11 @@ The generic `/values` endpoint handles ~80% of dashboard use cases. These 3 addi
 | `GET /visualization/values` | KPIs, donut charts, bar charts, parameter charts | `kpis[].api`, `charts[].api`, `water_quality.parameters[].api` |
 | `GET /visualization/escalation/{form_id}` | Paginated multi-criteria tables | `escalation` section |
 | `GET /visualization/progress/{form_id}` | Multi-component progress computation | `progress` section |
-| `GET /maps/geolocation/{form_id}` | Map data with status overlay (existing) | — |
+| `GET /maps/geolocation/{form_id}` | Map data with status overlay | `map` section |
 
 **Compliance (pass/fail)** is computed frontend-side from water quality `/values` calls + config thresholds.
+
+All four endpoints accept `criteria` for multi-criteria filtering (AND semantics). `/escalation` additionally accepts `filter_criteria` for AND-narrowing on top of its OR escalation `criteria`.
 
 ---
 
@@ -547,6 +563,7 @@ Returns paginated table of records matching **any** escalation criteria (OR logi
 | `to_date` | YYYY-MM-DD | No | — | Date filter |
 | `date_question_id` | integer | No | — | Which date question to filter against |
 | `administration_id` | integer | No | — | Admin hierarchy filter |
+| `filter_criteria` | string | No | — | AND-narrowing criteria layered on top of the OR escalation `criteria`. Same grammar as `/values` criteria. Used by the dashboard to scope escalated records by custom filters (e.g. implementing_agency). |
 
 #### Criteria Format
 
@@ -634,6 +651,7 @@ Computes multi-component progress per record using configurable formulas. All co
 | `from_date` | YYYY-MM-DD | No | — | Date filter |
 | `to_date` | YYYY-MM-DD | No | — | Date filter |
 | `administration_id` | integer | No | — | Admin hierarchy filter |
+| `criteria` | string | No | — | AND-joined multi-criteria filter. Same grammar as `/values`. Criteria qids on the monitoring form narrow monitoring records; qids on the parent (registration) form narrow parent records. Auto-split by the backend. |
 
 #### Components Format
 
@@ -696,363 +714,56 @@ GET /visualization/progress/6001
 
 ---
 
-## Updated Dashboard Config Format
+## Dashboard Config Format
 
-With the generic API, the dashboard config changes from specifying backend computation types to specifying API call parameters:
+The dashboard uses a **flat-schema** config format — a single `items[]` array where every widget is a self-describing entry. See these canonical references:
+
+- **Schema reference**: [`frontend/src/config/visualizations/README.md`](../../frontend/src/config/visualizations/README.md)
+- **Annotated example**: [`doc/claude/iwsims-dashboard-config-example.md`](iwsims-dashboard-config-example.md)
+- **Live config**: [`frontend/src/config/visualizations/1749623934933.json`](../../frontend/src/config/visualizations/1749623934933.json)
+
+Minimal top-level shape:
 
 ```json
 {
   "parent_form_id": 1749623934933,
   "name": "EPS Overview",
-  "description": "Overview of EPS sites monitoring, water quality and construction information.",
-  "tabs": [
-    {
-      "key": "monitoring_overview",
-      "label": "Monitoring overview"
-    },
-    {
-      "key": "water_quality",
-      "label": "Water quality"
-    },
-    {
-      "key": "construction_monitoring",
-      "label": "Construction monitoring"
-    }
-  ],
-  "filters": {
-    "date": {
-      "date_question_ids": [1749632545235, 1749624452911],
-      "label": "Monitoring Period"
-    },
-    "administration": {
-      "label": "Location"
-    },
-    "custom": [
-      {
-        "key": "implementing_agency",
-        "question_id": 1749624452993,
-        "form_id": 1749623934933,
-        "label": "Implementing Agency"
-      },
-      {
-        "key": "water_committee",
-        "question_id": 1749624452105,
-        "form_id": 1749623934933,
-        "label": "Water Committee"
-      }
-    ]
-  },
-  "kpis": {
-    "total_registered": {
-      "label": "Total EPS registered",
-      "api": {
-        "form_id": 1749623934933
-      }
-    },
-    "under_construction": {
-      "label": "Total EPS under construction",
-      "api": {
-        "form_id": 1749624452908,
-        "question_id": 1749630516826,
-        "option_value": "no",
-        "monitoring": "latest",
-        "sum_by": "parent_id"
-      }
-    },
-    "operational": {
-      "label": "Total EPS operational",
-      "api": {
-        "form_id": 1749632545233,
-        "question_id": 1749633373968,
-        "option_value": "operational",
-        "monitoring": "latest",
-        "sum_by": "parent_id"
-      }
-    },
-    "critical_issues": {
-      "label": "Total EPS with critical issues",
-      "api": {
-        "form_id": 1749632545233,
-        "question_id": 1749633373968,
-        "option_value": "issue_with_system",
-        "monitoring": "latest",
-        "sum_by": "parent_id"
-      }
-    }
-  },
-  "charts": {
-    "operational_status": {
-      "chart_type": "doughnut",
-      "api": {
-        "form_id": 1749632545233,
-        "question_id": 1749633373968,
-        "group_by": "option",
-        "monitoring": "latest"
-      }
-    },
-    "water_committee": {
-      "chart_type": "doughnut",
-      "api": {
-        "form_id": 1749623934933,
-        "question_id": 1749624452105,
-        "group_by": "option"
-      }
-    },
-    "implementing_authority": {
-      "chart_type": "doughnut",
-      "api": {
-        "form_id": 1749623934933,
-        "question_id": 1749624452993,
-        "group_by": "option"
-      }
-    },
-    "test_method": {
-      "chart_type": "doughnut",
-      "api": {
-        "form_id": 1749632545233,
-        "question_id": 1749633001462,
-        "group_by": "option",
-        "monitoring": "latest"
-      }
-    },
-    "inspections_per_month": {
-      "chart_type": "bar",
-      "config": {
-        "title": "Inspections per Month",
-        "xAxisLabel": "Month",
-        "yAxisLabel": "Count"
-      },
-      "api": {
-        "form_id": 1749632545233,
-        "group_by": "month",
-        "date_question_id": 1749632545235
-      }
-    }
-  },
-  "water_quality": {
-    "sample_question_id": 1749632647507,
-    "test_method_question_id": 1749633001462,
-    "monitoring_form_id": 1749632545233,
-    "parameters": [
-      {
-        "key": "e_coli",
-        "label": "E-coli presence",
-        "chart_type": "bar",
-        "config": {
-          "title": "E-coli presence",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "CFU/100ml"
-        },
-        "threshold": { "max": 0 },
-        "api": {
-          "form_id": 1749632545233,
-          "question_id": 1749633220746,
-          "group_by": "parent_id",
-          "monitoring": "latest",
-          "repeat_agg": "average"
-        }
-      },
-      {
-        "key": "total_coliform",
-        "label": "Total coliform presence",
-        "chart_type": "bar",
-        "config": {
-          "title": "Total coliform presence",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "CFU/100ml"
-        },
-        "threshold": { "max": 0 },
-        "api": {
-          "form_id": 1749632545233,
-          "question_id": 1749633259392,
-          "group_by": "parent_id",
-          "monitoring": "latest",
-          "repeat_agg": "average"
-        }
-      },
-      {
-        "key": "turbidity",
-        "label": "Turbidity",
-        "chart_type": "bar",
-        "config": {
-          "title": "Turbidity",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "NTU"
-        },
-        "threshold": { "max": 5 },
-        "api": {
-          "form_id": 1749632545233,
-          "question_id": 1749633220745,
-          "group_by": "parent_id",
-          "monitoring": "latest",
-          "repeat_agg": "average"
-        }
-      },
-      {
-        "key": "temperature",
-        "label": "Water Temperature",
-        "chart_type": "bar",
-        "config": {
-          "title": "Water Temperature",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "°C"
-        },
-        "threshold": { "max": 30 },
-        "api": {
-          "form_id": 1749632545233,
-          "question_id": 1797307852531,
-          "group_by": "parent_id",
-          "monitoring": "latest",
-          "repeat_agg": "average"
-        }
-      },
-      {
-        "key": "ph",
-        "label": "pH",
-        "chart_type": "bar",
-        "config": {
-          "title": "pH",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": ""
-        },
-        "threshold": { "min": 6.5, "max": 8.5 },
-        "api": {
-          "form_id": 1749632545233,
-          "question_id": 1797307852532,
-          "group_by": "parent_id",
-          "monitoring": "latest",
-          "repeat_agg": "average"
-        }
-      },
-      {
-        "key": "conductivity",
-        "label": "Conductivity",
-        "chart_type": "bar",
-        "config": {
-          "title": "Conductivity",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "µS/cm"
-        },
-        "threshold": { "max": 1000 },
-        "api": {
-          "form_id": 1749632545233,
-          "question_id": 1797307852533,
-          "group_by": "parent_id",
-          "monitoring": "latest",
-          "repeat_agg": "average"
-        }
-      },
-      {
-        "key": "salinity",
-        "label": "Salinity",
-        "chart_type": "bar",
-        "config": {
-          "title": "Salinity",
-          "xAxisLabel": "EPS",
-          "yAxisLabel": "PPT"
-        },
-        "threshold": { "max": 1 },
-        "api": {
-          "form_id": 1749632545233,
-          "question_id": 1797307852534,
-          "group_by": "parent_id",
-          "monitoring": "latest",
-          "repeat_agg": "average"
-        }
-      }
-    ]
-  },
-  "progress": {
-    "construction": {
-      "monitoring_form_id": 1749624452908,
-      "filter": {
-        "question_id": 1749630516826,
-        "option_value": "no",
-        "label": "Under construction"
-      },
-      "scope_question_id": 1749624505915,
-      "deadline_question_id": 1749630516825,
-      "components": [
-        {
-          "key": "concrete_base",
-          "label": "Concrete Base Construction",
-          "question_ids": [1849633499999, 1849633498888, 1849633497777],
-          "formula": "any_yes"
-        },
-        {
-          "key": "urf_tank",
-          "label": "URF Tank",
-          "question_ids": [1849633720001],
-          "formula": "completed_binary"
-        },
-        {
-          "key": "eps_tank",
-          "label": "EPS Tank Installation",
-          "question_ids": [1849633900003],
-          "formula": "completed_binary"
-        },
-        {
-          "key": "balance_tank",
-          "label": "Balance Tank",
-          "question_ids": [1849634300002],
-          "formula": "completed_binary"
-        },
-        {
-          "key": "storage_tank",
-          "label": "Storage Tank",
-          "question_ids": [1849634690001],
-          "formula": "completed_binary"
-        },
-        {
-          "key": "standpipes",
-          "label": "Standpipes",
-          "question_ids": [1849635200001, 1849634950001],
-          "formula": "ratio"
-        },
-        {
-          "key": "site_security",
-          "label": "Site Security & Perimeter",
-          "question_ids": [1849635500001],
-          "formula": "multi_select_proportion",
-          "total_items": 3
-        }
-      ]
-    }
-  },
-  "escalation": {
-    "monitoring": {
-      "monitoring_form_id": 1749632545233,
-      "date_question_id": 1749632545235,
-      "criteria": [
-        { "type": "option_equals", "question_id": 1749632647507, "value": "no", "label": "No water sample" },
-        { "type": "option_equals", "question_id": 1749633373968, "value": "issue_with_system", "label": "System issue" },
-        { "type": "threshold_violation", "parameters_ref": "water_quality", "label": "Water quality violation" }
-      ],
-      "columns": [
-        { "key": "eps_name", "source": "parent_name" },
-        { "key": "village_name", "source": "administration" },
-        { "key": "last_monitoring", "source": "latest_date", "date_question_id": 1749632545235 },
-        { "key": "operational_status", "source": "answer", "question_id": 1749633373968 },
-        { "key": "water_collection", "source": "answer", "question_id": 1749632647507 },
-        { "key": "critical_issues", "source": "violations" }
-      ]
-    },
-    "construction": {
-      "monitoring_form_id": 1749624452908,
-      "date_question_id": 1749624452911,
-      "criteria": [
-        { "type": "overdue", "completion_qid": 1749630516826, "deadline_qid": 1749630516825 }
-      ],
-      "columns": [
-        { "key": "eps_name", "source": "parent_name" },
-        { "key": "last_monitoring", "source": "latest_date", "date_question_id": 1749624452911 },
-        { "key": "overall_progress", "source": "computed_progress", "progress_ref": "construction" },
-        { "key": "expected_progress", "source": "expected_progress", "progress_ref": "construction" },
-        { "key": "deadline", "source": "answer_date", "question_id": 1749630516825 }
-      ]
-    }
-  }
+  "description": "...",
+  "fiscal_year_start_month": 1,
+  "items": [
+    { "id": "filters_main", "chart_type": "filter_bar", "order": 1, "items": [...] },
+    { "id": "kpi_total", "chart_type": "card", "order": 2, "col_span": 6, "api": {...} },
+    { "id": "main_tabs", "chart_type": "tabs", "order": 3, "items": [
+      { "id": "tab_monitoring", "label": "Monitoring", "items": [...] },
+      { "id": "tab_water_quality", "label": "Water quality", "items": [...] },
+      { "id": "tab_construction", "label": "Construction", "items": [...] }
+    ] }
+  ]
 }
+```
+
+---
+
+## Geolocation Endpoint
+
+### `GET /api/v1/maps/geolocation/{form_id}`
+
+Returns geo-coordinates for map markers. Accepts optional `administration` and `criteria` parameters.
+
+#### Query Parameters
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `administration` | integer | No | — | Filter by administration hierarchy |
+| `criteria` | string | No | — | AND-joined multi-criteria filter (same grammar as `/values`). |
+
+#### Response Format
+
+```json
+[
+  { "id": 7200, "name": "Site Alpha", "geo": [-18.12, 178.45], "administration_id": 42 },
+  { "id": 7201, "name": "Site Beta", "geo": [-18.11, 178.44], "administration_id": 43 }
+]
 ```
 
 ---

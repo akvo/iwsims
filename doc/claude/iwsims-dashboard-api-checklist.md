@@ -1,6 +1,15 @@
 # IWSIMS Dashboard API Checklist
 
-Reference list of every API call required by the EPS Overview dashboard, grouped by tab and chart. All calls hit `http://localhost:3000` in development. Common filters (date range, administration, implementing agency, water committee) are omitted for brevity — apply them as additional query params where relevant.
+Reference list of every API call required by the EPS Overview dashboard, grouped by tab and chart. All calls hit `http://localhost:3000` in development.
+
+**Common filters** (date range, administration, implementing agency, water committee) are omitted for brevity. When the user selects dashboard filters, they are applied as:
+
+- `administration_id=<id>` — on all endpoints
+- `from_date=<date>&to_date=<date>` — on all endpoints
+- `criteria=option_contains:<qid>:<value>` — on `/values`, `/progress`, `/maps/geolocation`. The backend **auto-splits** criteria: qids on the widget's `form_id` narrow monitoring records; qids on the parent (registration) form narrow parent records.
+- `filter_criteria=option_contains:<qid>:<value>` — on `/escalation` only (AND-narrowing on top of escalation OR criteria)
+
+**Donut restricted tally**: When a criteria filter targets the same question as a `group_by=option` donut on a `multiple_option` question, only the filtered option values are tallied (not all co-selected values in the answer array).
 
 ---
 
