@@ -129,6 +129,10 @@ const Dashboard = () => {
   const { formId } = useParams();
   const { config, definitionsById } = useDashboardConfig(formId);
 
+  // Component-scoped "now" anchor; threaded into DashboardRenderer so
+  // mark_lines with type="today" can resolve to an axis-matching label.
+  const today = useMemo(() => new Date(), []);
+
   // Build a minimal config shell for the filters hook when config is absent.
   const filtersConfig = useMemo(
     () => config || { parent_form_id: null, items: [] },
@@ -405,6 +409,7 @@ const Dashboard = () => {
         customFilterDefs={customFilterDefs}
         complianceResponses={complianceResponses}
         cellComputersById={cellComputersById}
+        today={today}
       />
     </div>
   );
