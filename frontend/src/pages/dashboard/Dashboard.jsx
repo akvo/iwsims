@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Alert, Col, Empty, Row, Typography } from "antd";
 import {
@@ -33,7 +33,7 @@ const WqParamFetcher = ({
     fiscalYearStartMonth,
     customFilterDefs,
   });
-  React.useEffect(() => {
+  useEffect(() => {
     if (data) {
       onData(paramItem.id, data);
     }
@@ -45,9 +45,16 @@ const WqParamFetcher = ({
  * Invisible progress fetcher. One instance per `progress_definition` item
  * in the config tree. Reports back via `onData` keyed by item id.
  */
-const ProgressFetcher = ({ progressItem, filterState, onData }) => {
-  const { data, error } = useDashboardProgress(progressItem, filterState);
-  React.useEffect(() => {
+const ProgressFetcher = ({
+  progressItem,
+  filterState,
+  customFilterDefs,
+  onData,
+}) => {
+  const { data, error } = useDashboardProgress(progressItem, filterState, {
+    customFilterDefs,
+  });
+  useEffect(() => {
     if (data || error) {
       onData(progressItem.id, { data, error });
     }
@@ -362,6 +369,7 @@ const Dashboard = () => {
           key={progressItem.id}
           progressItem={progressItem}
           filterState={filters.queryParams}
+          customFilterDefs={customFilterDefs}
           onData={onProgressData}
         />
       ))}

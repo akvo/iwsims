@@ -146,6 +146,7 @@ const DashboardRenderer = ({
           <EscalationTable
             item={item}
             filterState={filterState}
+            customFilterDefs={customFilterDefs}
             cellComputers={cellComputersById?.[item.id] || {}}
           />
         </Card>
@@ -158,6 +159,7 @@ const DashboardRenderer = ({
           <DashboardMap
             item={item}
             filterState={filterState}
+            customFilterDefs={customFilterDefs}
             height={item.height || 400}
           />
         </Card>

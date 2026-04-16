@@ -73,6 +73,7 @@ const ChartRenderer = ({
     filterState,
     {
       enabled: Boolean(progressDef),
+      customFilterDefs,
     }
   );
 

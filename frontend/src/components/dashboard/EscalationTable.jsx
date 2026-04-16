@@ -16,6 +16,7 @@ import { useDashboardEscalation } from "../../util/hooks";
 const EscalationTable = ({
   item,
   filterState,
+  customFilterDefs,
   pageSize = 10,
   cellComputers = {},
 }) => {
@@ -23,6 +24,7 @@ const EscalationTable = ({
   const { data, loading, error } = useDashboardEscalation(item, filterState, {
     page,
     pageSize,
+    customFilterDefs,
   });
 
   const columns = useMemo(
@@ -89,6 +91,7 @@ const EscalationTable = ({
 EscalationTable.propTypes = {
   item: PropTypes.object.isRequired,
   filterState: PropTypes.object,
+  customFilterDefs: PropTypes.array,
   pageSize: PropTypes.number,
   cellComputers: PropTypes.object,
 };

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { applyDashboardFilters } from "../../lib/dashboardFilterHints";
 import useVisualizationRequest from "./useVisualizationRequest";
 
 /**
@@ -29,7 +30,7 @@ export const useDashboardProgress = (
   filterState,
   options = {}
 ) => {
-  const { enabled = true } = options;
+  const { enabled = true, customFilterDefs = [] } = options;
 
   const endpoint = useMemo(() => {
     if (!progressBlock || !enabled) {
@@ -66,8 +67,18 @@ export const useDashboardProgress = (
     if (filterState?.administration_id) {
       out.administration_id = filterState.administration_id;
     }
+    // Fold in multi-criteria custom filters (applyDashboardFilters
+    // reads form_id from `out` to decide which defs to include).
+    const withCriteria = applyDashboardFilters(
+      { ...out, form_id: progressBlock.api?.form_id },
+      filterState,
+      customFilterDefs
+    );
+    if (withCriteria.criteria) {
+      out.criteria = withCriteria.criteria;
+    }
     return out;
-  }, [progressBlock, filterState, enabled]);
+  }, [progressBlock, filterState, enabled, customFilterDefs]);
 
   return useVisualizationRequest(endpoint, params);
 };

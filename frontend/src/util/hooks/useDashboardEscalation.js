@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { applyDashboardFilters } from "../../lib/dashboardFilterHints";
 import useVisualizationRequest from "./useVisualizationRequest";
 
 /**
@@ -55,7 +56,12 @@ export const useDashboardEscalation = (
   filterState,
   options = {}
 ) => {
-  const { page = 1, pageSize = 20, enabled = true } = options;
+  const {
+    page = 1,
+    pageSize = 20,
+    enabled = true,
+    customFilterDefs = [],
+  } = options;
 
   const endpoint = useMemo(() => {
     if (!escalationBlock || !enabled) {
@@ -88,8 +94,18 @@ export const useDashboardEscalation = (
     if (filterState?.administration_id) {
       out.administration_id = filterState.administration_id;
     }
+    // Fold in custom filters as AND-narrowing on top of the OR
+    // escalation `criteria`. Emitted as `filter_criteria`.
+    const withCriteria = applyDashboardFilters(
+      { form_id: escalationBlock.api?.form_id },
+      filterState,
+      customFilterDefs
+    );
+    if (withCriteria.criteria) {
+      out.filter_criteria = withCriteria.criteria;
+    }
     return out;
-  }, [escalationBlock, filterState, page, pageSize, enabled]);
+  }, [escalationBlock, filterState, page, pageSize, enabled, customFilterDefs]);
 
   return useVisualizationRequest(endpoint, params);
 };

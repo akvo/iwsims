@@ -148,36 +148,39 @@ export const applyDashboardFilters = (
     out.administration_id = filterState.administration_id;
   }
 
-  // Custom filters only apply when they target the SAME question that the
-  // widget is already querying. This avoids clobbering KPI/chart queries
-  // whose `api.question_id` has a specific semantic (e.g. operational_status,
-  // construction-complete), and sidesteps the single-option_value limitation
-  // of `/values` — which can't AND across multiple questions.
-  //
-  // Multi-question AND filtering + multi-value (multiple_option) filtering
-  // need backend support on `/values`; until then, selecting a custom filter
-  // only narrows charts whose own api.question_id matches it.
+  // Custom filters: emit as `criteria=type:qid:value,...` so /values
+  // narrows every widget on the dashboard, not just those whose own
+  // api.question_id happens to match. Criteria AND across questions
+  // server-side; option_in handles OR within a multiple_option.
+  const criteria = [];
   (filterState?.custom || []).forEach((entry) => {
     const def = customFilterDefs.find((d) => d.key === entry.key);
-    if (!def) {
+    if (!def || !def.question_id) {
       return;
     }
-    if (
-      typeof entry.value === "undefined" ||
-      entry.value === null ||
-      entry.value === ""
-    ) {
+    const raw = Array.isArray(entry.value) ? entry.value : [entry.value];
+    const values = raw.filter(
+      (v) => v !== null && v !== "" && typeof v !== "undefined"
+    );
+    if (values.length === 0) {
       return;
     }
-    if (Number(def.form_id) !== Number(out.form_id)) {
-      return;
-    }
-    if (def.question_id && def.question_id === out.question_id) {
-      out.option_value = Array.isArray(entry.value)
-        ? entry.value[0]
-        : entry.value;
+    const isMulti = def.chart_type === "filter_multi_option";
+    if (isMulti) {
+      if (values.length === 1) {
+        criteria.push(`option_contains:${def.question_id}:${values[0]}`);
+      } else {
+        criteria.push(`option_in:${def.question_id}:${values.join("|")}`);
+      }
+    } else if (values.length === 1) {
+      criteria.push(`option_equals:${def.question_id}:${values[0]}`);
+    } else {
+      criteria.push(`option_in:${def.question_id}:${values.join("|")}`);
     }
   });
+  if (criteria.length > 0) {
+    out.criteria = criteria.join(",");
+  }
 
   return out;
 };

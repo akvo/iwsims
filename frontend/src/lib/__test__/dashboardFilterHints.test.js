@@ -115,7 +115,14 @@ describe("applyDashboardFilters", () => {
   const customDefs = [
     {
       key: "water_committee",
+      chart_type: "filter_option",
       question_id: 1749624452105,
+      form_id: 1749623934933,
+    },
+    {
+      key: "implementing_agency",
+      chart_type: "filter_multi_option",
+      question_id: 1749624452993,
       form_id: 1749623934933,
     },
   ];
@@ -146,49 +153,73 @@ describe("applyDashboardFilters", () => {
     expect(out.administration_id).toBe(42);
   });
 
-  test("custom filter narrows option_value only when it targets the same question the widget already filters", () => {
-    // Widget targets water_committee (same question as the custom filter)
-    const narrowed = applyDashboardFilters(
-      { form_id: 1749623934933, question_id: 1749624452105 },
-      { custom: [{ key: "water_committee", value: "yes" }] },
-      customDefs
-    );
-    expect(narrowed.question_id).toBe(1749624452105);
-    expect(narrowed.option_value).toBe("yes");
-
-    // Widget has no question_id (e.g. total_registered KPI): custom filter
-    // does NOT fold in — would require backend multi-criteria support.
-    const unchanged = applyDashboardFilters(
+  test("option filter emits option_equals criterion regardless of widget question", () => {
+    // KPI widget (no question_id) now narrows via criteria.
+    const out = applyDashboardFilters(
       { form_id: 1749623934933 },
       { custom: [{ key: "water_committee", value: "yes" }] },
       customDefs
     );
-    expect(unchanged.question_id).toBeUndefined();
-    expect(unchanged.option_value).toBeUndefined();
+    expect(out.criteria).toBe("option_equals:1749624452105:yes");
+    expect(out.option_value).toBeUndefined();
+  });
 
-    // Widget targets a different question: custom filter ignored.
-    const different = applyDashboardFilters(
-      { form_id: 1749623934933, question_id: 9999 },
+  test("multi_option filter with single value uses option_contains", () => {
+    const out = applyDashboardFilters(
+      { form_id: 1749623934933 },
+      { custom: [{ key: "implementing_agency", value: ["akvo"] }] },
+      customDefs
+    );
+    expect(out.criteria).toBe("option_contains:1749624452993:akvo");
+  });
+
+  test("multi_option filter with multiple values uses option_in", () => {
+    const out = applyDashboardFilters(
+      { form_id: 1749623934933 },
+      {
+        custom: [{ key: "implementing_agency", value: ["akvo", "oxfam"] }],
+      },
+      customDefs
+    );
+    expect(out.criteria).toBe("option_in:1749624452993:akvo|oxfam");
+  });
+
+  test("multiple custom filters AND-join into single criteria param", () => {
+    const out = applyDashboardFilters(
+      { form_id: 1749623934933 },
+      {
+        custom: [
+          { key: "implementing_agency", value: ["akvo"] },
+          { key: "water_committee", value: "yes" },
+        ],
+      },
+      customDefs
+    );
+    expect(out.criteria).toBe(
+      "option_contains:1749624452993:akvo," + "option_equals:1749624452105:yes"
+    );
+  });
+
+  test("cross-form filter emits criteria (backend auto-splits)", () => {
+    const out = applyDashboardFilters(
+      { form_id: 9999 },
       { custom: [{ key: "water_committee", value: "yes" }] },
       customDefs
     );
-    expect(different.option_value).toBeUndefined();
-
-    // Cross-form custom filter: still ignored.
-    const crossForm = applyDashboardFilters(
-      { form_id: 9999, question_id: 1749624452105 },
-      { custom: [{ key: "water_committee", value: "yes" }] },
-      customDefs
-    );
-    expect(crossForm.option_value).toBeUndefined();
+    expect(out.criteria).toBe("option_equals:1749624452105:yes");
   });
 
   test("empty custom selection is ignored", () => {
     const out = applyDashboardFilters(
       { form_id: 1749623934933 },
-      { custom: [{ key: "water_committee", value: null }] },
+      {
+        custom: [
+          { key: "water_committee", value: null },
+          { key: "implementing_agency", value: [] },
+        ],
+      },
       customDefs
     );
-    expect(out.question_id).toBeUndefined();
+    expect(out.criteria).toBeUndefined();
   });
 });

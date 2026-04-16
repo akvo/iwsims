@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import { Alert, Skeleton } from "antd";
 import "leaflet/dist/leaflet.css";
 import { api, geo } from "../../lib";
+import { applyDashboardFilters } from "../../lib/dashboardFilterHints";
 
 const DEFAULT_COLOR = "#1890ff";
 
@@ -20,7 +21,12 @@ const DEFAULT_COLOR = "#1890ff";
  * `item.status_colors`. Marker click navigates through
  * `item.click_url_template` with {parent_form_id}/{data_id} substituted.
  */
-const DashboardMap = ({ item, filterState, height = 400 }) => {
+const DashboardMap = ({
+  item,
+  filterState,
+  customFilterDefs = [],
+  height = 400,
+}) => {
   const [points, setPoints] = useState([]);
   const [statusByParent, setStatusByParent] = useState({});
   const [loading, setLoading] = useState(true);
@@ -39,8 +45,21 @@ const DashboardMap = ({ item, filterState, height = 400 }) => {
     setLoading(true);
     setError(null);
     const adminId = filterState?.administration_id;
-    const path = adminId
-      ? `/maps/geolocation/${sourceFormId}?administration=${adminId}`
+    const criteriaParams = applyDashboardFilters(
+      { form_id: sourceFormId },
+      filterState,
+      customFilterDefs
+    );
+    const query = new URLSearchParams();
+    if (adminId) {
+      query.set("administration", adminId);
+    }
+    if (criteriaParams.criteria) {
+      query.set("criteria", criteriaParams.criteria);
+    }
+    const qs = query.toString();
+    const path = qs
+      ? `/maps/geolocation/${sourceFormId}?${qs}`
       : `/maps/geolocation/${sourceFormId}`;
     const tasks = [api.get(path)];
     if (statusQid && statusFormId) {
@@ -80,7 +99,7 @@ const DashboardMap = ({ item, filterState, height = 400 }) => {
     return () => {
       cancelled = true;
     };
-  }, [sourceFormId, statusQid, statusFormId, filterState?.administration_id]);
+  }, [sourceFormId, statusQid, statusFormId, filterState, customFilterDefs]);
 
   const center = useMemo(() => {
     const d = geo?.defaultPos?.();
@@ -164,6 +183,7 @@ const DashboardMap = ({ item, filterState, height = 400 }) => {
 DashboardMap.propTypes = {
   item: PropTypes.object.isRequired,
   filterState: PropTypes.object,
+  customFilterDefs: PropTypes.array,
   height: PropTypes.number,
 };
 
