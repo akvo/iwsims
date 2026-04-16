@@ -1,6 +1,8 @@
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_visualization.functions import (
     apply_administration_filter,
+    apply_criteria_to_monitoring_qs,
+    apply_parent_criteria_to_qs,
     build_date_filters,
     latest_monitoring_subquery,
 )
@@ -182,6 +184,14 @@ def handle_progress(
         parents = apply_administration_filter(
             parents, administration_id
         )
+
+    # Multi-criteria AND filter (shared grammar with /values).
+    parents = apply_criteria_to_monitoring_qs(
+        parents, True, params.get("criteria"),
+    )
+    parents = apply_parent_criteria_to_qs(
+        parents, True, params.get("parent_criteria"),
+    )
 
     # Optional filter by latest monitoring option value
     if filter_qid and filter_value:

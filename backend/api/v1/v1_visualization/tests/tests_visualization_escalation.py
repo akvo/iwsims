@@ -286,3 +286,34 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         data = response.json()
         self.assertEqual(data["count"], 1)
         self.assertEqual(data["results"][0]["name"], "Site Beta")
+
+    # -- filter_criteria (AND narrowing) --
+
+    def test_filter_criteria_narrows_escalation_results(self):
+        """filter_criteria ANDs on top of OR escalation criteria.
+
+        Criteria OR: op=active OR op=pending → both reg1 & reg2.
+        filter_criteria: op=active → only reg1.
+        """
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&criteria=option_equals:{self.Q_OPTION_ID}:active,"
+            f"option_equals:{self.Q_OPTION_ID}:pending"
+            "&columns=name:parent_name"
+            f"&filter_criteria=option_equals:{self.Q_OPTION_ID}:active"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Alpha")
+
+    def test_filter_criteria_malformed_returns_400(self):
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            "&columns=name:parent_name"
+            "&filter_criteria=bogus:1:2"
+        )
+        self.assertEqual(response.status_code, 400)

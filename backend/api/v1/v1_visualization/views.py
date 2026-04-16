@@ -14,6 +14,9 @@ from api.v1.v1_visualization.serializers import (
     FormDataStatsFilterSerializer,
 )
 from api.v1.v1_visualization.models import ViewDataOptions
+from api.v1.v1_visualization.functions import (
+    apply_criteria_to_monitoring_qs,
+)
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import get_object_or_404
@@ -274,6 +277,11 @@ class GeolocationListView(APIView):
             is_draft=False,
             geo__isnull=False
         )
+        criteria = serializer.validated_data.get("criteria")
+        if criteria:
+            queryset = apply_criteria_to_monitoring_qs(
+                queryset, False, criteria,
+            )
         if serializer.validated_data.get("administration"):
             adm = serializer.validated_data.get("administration")
             adm_path = f"{adm.id}."

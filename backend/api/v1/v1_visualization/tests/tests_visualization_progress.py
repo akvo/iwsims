@@ -254,3 +254,51 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
 
         self.assertEqual(len(data["details"]), 1)
         self.assertEqual(data["details"][0]["label"], "Site Beta")
+
+    # -- Criteria filter --
+
+    def test_criteria_narrows_progress(self):
+        """criteria=option_equals narrows latest monitoring records.
+
+        Latest per parent: mon1b (active), mon2b (pending).
+        option_equals:Q_OPTION_ID:active → only reg1.
+        """
+        response = self.client.get(
+            f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&components=quality:ratio"
+            f":{self.Q_NUMBER_ID}:{self.Q_NUMBER_ID}"
+            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["details"]), 1)
+        self.assertEqual(
+            data["details"][0]["label"], "Site Alpha"
+        )
+
+    def test_criteria_multiple_option_contains(self):
+        """option_contains on multiple_option (features)."""
+        response = self.client.get(
+            f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&components=features:multi_select_proportion"
+            f":{self.Q_MULTI_ID}:3"
+            f"&criteria=option_contains:{self.Q_MULTI_ID}"
+            ":feature_x"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        # mon2b has feature_x, mon1b does not
+        self.assertEqual(len(data["details"]), 1)
+        self.assertEqual(data["details"][0]["label"], "Site Beta")
+
+    def test_criteria_malformed_returns_400(self):
+        response = self.client.get(
+            f"{self.BASE_PROGRESS_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&components=quality:ratio"
+            f":{self.Q_NUMBER_ID}:{self.Q_NUMBER_ID}"
+            "&criteria=bogus_type:1:2"
+        )
+        self.assertEqual(response.status_code, 400)

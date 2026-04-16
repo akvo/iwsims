@@ -325,9 +325,12 @@ def handle_option_question(form, question, params):
         )
 
     if group_by == "option":
+        restricted = _extract_criteria_option_values(
+            params, question.id
+        )
         return _option_group_by_option(
             question, options, data_ids, qs,
-            is_latest, value_type
+            is_latest, value_type, restricted
         )
 
     return [], []
@@ -445,17 +448,49 @@ def _option_value_group_by_month(
     return data, labels
 
 
+def _extract_criteria_option_values(params, question_id):
+    """Extract option values that criteria restricts for a given qid.
+
+    When criteria includes option_equals/option_contains/option_in
+    targeting the same question_id as the donut chart, the tally
+    should only count those specific values — not every value in
+    a multiple_option answer array. Returns None if no restriction.
+    """
+    all_criteria = list(params.get("criteria") or [])
+    all_criteria.extend(params.get("parent_criteria") or [])
+    values = set()
+    for c in all_criteria:
+        ctype = c["type"]
+        parts = c["parts"]
+        if parts[0] != question_id:
+            continue
+        if ctype in ("option_equals", "option_contains"):
+            values.add(parts[1])
+        elif ctype == "option_in":
+            values.update(parts[1])
+    return values or None
+
+
 def _option_group_by_option(
     question, options, data_ids, qs,
-    is_latest, value_type
+    is_latest, value_type, restricted_values=None
 ):
     """Group by option values (donut chart).
 
     Returns a row for every defined option — including zero-count
     options — so pie/doughnut charts have stable legends and colors
     across refreshes and filter changes.
+
+    When `restricted_values` is set (from a criteria filter on the
+    same question), only those values are tallied — so a
+    multiple_option record ["a", "b"] filtered by "a" counts only
+    for "a", not "b".
     """
     option_values = {o.value for o in options}
+    tally_values = (
+        option_values & restricted_values
+        if restricted_values else option_values
+    )
     tallies = defaultdict(int)
     rows = Answers.objects.filter(
         data_id__in=data_ids,
@@ -464,7 +499,7 @@ def _option_group_by_option(
     ).values_list("options", flat=True)
     for opts in rows:
         for v in (opts or []):
-            if v in option_values:
+            if v in tally_values:
                 tallies[v] += 1
 
     counts = [tallies.get(opt.value, 0) for opt in options]

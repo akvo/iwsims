@@ -1,13 +1,23 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import (
+    extend_schema, OpenApiParameter, OpenApiResponse,
+)
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import get_object_or_404
 from api.v1.v1_forms.models import Forms
 from api.v1.v1_forms.constants import QuestionTypes
 from api.v1.v1_visualization.dashboard_serializers import (
     ValuesFilterSerializer,
+    ValuesResponseSerializer,
+    EscalationResponseSerializer,
+    ProgressResponseSerializer,
+)
+from api.v1.v1_visualization.dashboard_examples import (
+    VALUES_EXAMPLES,
+    ESCALATION_EXAMPLES,
+    PROGRESS_EXAMPLES,
 )
 from api.v1.v1_visualization.values_functions import (
     handle_count_mode,
@@ -27,14 +37,53 @@ from api.v1.v1_visualization.dashboard_serializers import (
     EscalationFilterSerializer,
     ProgressFilterSerializer,
 )
+from api.v1.v1_forms.models import Questions
 from utils.custom_serializer_fields import (
     validate_serializers_message,
 )
 
 
+def split_criteria_by_form(criteria, form_id, parent_form_id):
+    """Split parsed criteria list into same-form and parent-form."""
+    if not criteria:
+        return None, None
+    qids = {c["parts"][0] for c in criteria}
+    on_form = set(
+        Questions.objects.filter(
+            pk__in=qids, form_id=form_id,
+        ).values_list("pk", flat=True)
+    )
+    on_parent = set()
+    if parent_form_id:
+        remaining = qids - on_form
+        if remaining:
+            on_parent = set(
+                Questions.objects.filter(
+                    pk__in=remaining,
+                    form_id=parent_form_id,
+                ).values_list("pk", flat=True)
+            )
+    same = [c for c in criteria if c["parts"][0] in on_form]
+    parent = [c for c in criteria if c["parts"][0] in on_parent]
+    return same or None, parent or None
+
+
 @extend_schema(
     description="Generic visualization values endpoint",
     tags=["Visualization"],
+    responses={
+        200: OpenApiResponse(
+            response=ValuesResponseSerializer,
+            description=(
+                "Aggregated data shaped by group_by / stack_by."
+                " See examples for per-use-case shapes."
+            ),
+        ),
+        400: OpenApiResponse(
+            description="Invalid query parameters.",
+        ),
+    },
+    examples=VALUES_EXAMPLES,
     parameters=[
         OpenApiParameter(
             name="form_id", required=True,
@@ -112,6 +161,17 @@ from utils.custom_serializer_fields import (
             type=OpenApiTypes.STR,
             location=OpenApiParameter.QUERY,
         ),
+        OpenApiParameter(
+            name="criteria", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "AND-joined multi-criteria filter. Format: "
+                "'type:qid:value,...'. Types: option_equals, "
+                "option_contains, option_in (pipe-delimited "
+                "values), threshold_gt, threshold_lt."
+            ),
+        ),
     ],
 )
 @api_view(["GET"])
@@ -160,6 +220,8 @@ def visualization_values(request, version):
             validated.get("administration_id"),
         ),
         "option_value": validated.get("option_value"),
+        "criteria": validated.get("criteria"),
+        "parent_criteria": validated.get("parent_criteria"),
     }
 
     # Route to handler
@@ -192,6 +254,22 @@ def visualization_values(request, version):
 @extend_schema(
     description="Escalation table with dynamic criteria and columns",
     tags=["Visualization"],
+    responses={
+        200: OpenApiResponse(
+            response=EscalationResponseSerializer,
+            description=(
+                "Paginated escalation results. Column keys in"
+                " `results[]` follow the request's `columns=` spec."
+            ),
+        ),
+        400: OpenApiResponse(
+            description="Invalid query parameters.",
+        ),
+        404: OpenApiResponse(
+            description="form_id not found.",
+        ),
+    },
+    examples=ESCALATION_EXAMPLES,
     parameters=[
         OpenApiParameter(
             name="monitoring_form_id", required=True,
@@ -238,6 +316,16 @@ def visualization_values(request, version):
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
+        OpenApiParameter(
+            name="filter_criteria", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "Optional AND-narrowing criteria layered "
+                "on top of the OR escalation criteria "
+                "(shared grammar with /values)."
+            ),
+        ),
     ],
 )
 @api_view(["GET"])
@@ -273,6 +361,7 @@ def visualization_escalation(request, form_id, version):
             "date_question_id": validated.get(
                 "date_question_id"
             ),
+            "filter_criteria": validated.get("filter_criteria"),
             "query_string": [
                 (k, v)
                 for k, values in request.query_params.lists()
@@ -286,6 +375,22 @@ def visualization_escalation(request, form_id, version):
 @extend_schema(
     description="Progress computation with configurable formulas",
     tags=["Visualization"],
+    responses={
+        200: OpenApiResponse(
+            response=ProgressResponseSerializer,
+            description=(
+                "Progress computation result. Shape depends on "
+                "requested components and formula. See examples."
+            ),
+        ),
+        400: OpenApiResponse(
+            description="Invalid query parameters.",
+        ),
+        404: OpenApiResponse(
+            description="form_id not found.",
+        ),
+    },
+    examples=PROGRESS_EXAMPLES,
     parameters=[
         OpenApiParameter(
             name="monitoring_form_id", required=True,
@@ -327,6 +432,15 @@ def visualization_escalation(request, form_id, version):
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
+        OpenApiParameter(
+            name="criteria", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "AND-joined multi-criteria filter "
+                "(same grammar as /values)."
+            ),
+        ),
     ],
 )
 @api_view(["GET"])
@@ -346,6 +460,11 @@ def visualization_progress(request, form_id, version):
         )
 
     validated = serializer.validated_data
+    mon_criteria, parent_criteria = split_criteria_by_form(
+        validated.get("criteria"),
+        validated["monitoring_form_id"],
+        parent_form.id,
+    )
     result = handle_progress(
         parent_form=parent_form,
         monitoring_form_id=validated["monitoring_form_id"],
@@ -365,6 +484,8 @@ def visualization_progress(request, form_id, version):
             "date_question_id": validated.get(
                 "date_question_id"
             ),
+            "criteria": mon_criteria,
+            "parent_criteria": parent_criteria,
         },
     )
     return Response(result, status=status.HTTP_200_OK)

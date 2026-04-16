@@ -131,6 +131,166 @@ def latest_monitoring_subquery(form_id, date_filters=None):
     )
 
 
+def parse_criteria_string(value, allowed_types):
+    """Parse a `criteria=type:qid:value,...` query string.
+
+    Returns a list of {"type", "parts"} dicts. For option_in the
+    value is split on `|` into a list; for other option operators
+    the value is passed through as a string; thresholds are coerced
+    to float. Raises ValueError with a user-visible message on any
+    malformed fragment so callers can surface a 400.
+    """
+    parsed = []
+    for item in value.split(","):
+        parts = item.strip().split(":")
+        if len(parts) < 3:
+            raise ValueError(
+                f"Invalid criteria format: '{item}'."
+                " Expected type:qid:value"
+            )
+        ctype = parts[0]
+        if ctype not in allowed_types:
+            raise ValueError(
+                f"Invalid criteria type: '{ctype}'."
+                f" Options: {sorted(allowed_types)}"
+            )
+        try:
+            if ctype in ("option_equals", "option_contains"):
+                qid = int(parts[1])
+                normalized = [qid, parts[2]]
+            elif ctype == "option_in":
+                qid = int(parts[1])
+                values = [
+                    v for v in parts[2].split("|") if v
+                ]
+                if not values:
+                    raise ValueError(
+                        "option_in requires at least one value:"
+                        f" '{item}'"
+                    )
+                normalized = [qid, values]
+            elif ctype in ("threshold_gt", "threshold_lt"):
+                qid = int(parts[1])
+                threshold = float(parts[2])
+                normalized = [qid, threshold]
+            elif ctype == "overdue":
+                completion_qid = int(parts[1])
+                deadline_qid = int(parts[2])
+                normalized = [completion_qid, deadline_qid]
+            else:
+                normalized = parts[1:]
+        except ValueError as e:
+            # Re-raise our own messages; wrap numeric parse failures
+            if "criteria" in str(e) or "option_in" in str(e):
+                raise
+            raise ValueError(
+                f"Invalid numeric value in criteria: '{item}'."
+            )
+        parsed.append({"type": ctype, "parts": normalized})
+    return parsed
+
+
+def _criterion_matching_ids(data_ids, criterion):
+    """Return iterable of data_ids matching a single criterion."""
+    ctype = criterion["type"]
+    parts = criterion["parts"]
+    if ctype in ("option_equals", "option_contains"):
+        qid, value = parts
+        return Answers.objects.filter(
+            data_id__in=data_ids,
+            question_id=qid,
+            options__contains=[value],
+        ).values_list("data_id", flat=True)
+    if ctype == "option_in":
+        qid, values = parts
+        or_q = Q()
+        for v in values:
+            or_q |= Q(options__contains=[v])
+        return Answers.objects.filter(
+            or_q,
+            data_id__in=data_ids,
+            question_id=qid,
+        ).values_list("data_id", flat=True)
+    if ctype == "threshold_gt":
+        qid, threshold = parts
+        return Answers.objects.filter(
+            data_id__in=data_ids,
+            question_id=qid,
+            value__gt=threshold,
+        ).values_list("data_id", flat=True)
+    if ctype == "threshold_lt":
+        qid, threshold = parts
+        return Answers.objects.filter(
+            data_id__in=data_ids,
+            question_id=qid,
+            value__lt=threshold,
+        ).values_list("data_id", flat=True)
+    return []
+
+
+def narrow_data_ids_by_criteria(data_ids, criteria):
+    """Return subset of data_ids where ALL criteria match (AND).
+
+    Each criterion is evaluated as a separate Answers query over the
+    current candidate set; the intersection shrinks monotonically so
+    criteria that narrow heavily short-circuit the remaining work.
+    """
+    if not criteria:
+        return list(data_ids)
+    matching = set(data_ids)
+    for criterion in criteria:
+        if not matching:
+            break
+        ids = set(
+            _criterion_matching_ids(list(matching), criterion)
+        )
+        matching &= ids
+    return [i for i in data_ids if i in matching]
+
+
+def apply_parent_criteria_to_qs(qs, is_latest, parent_criteria):
+    """Narrow by criteria on the PARENT (registration) form's answers.
+
+    In latest mode `qs` rows are parent FormData (with `latest_id`),
+    so we match directly against `qs.id`. In non-latest mode `qs`
+    rows are monitoring FormData, so we match against `qs.parent_id`.
+    """
+    if not parent_criteria:
+        return qs
+    if is_latest:
+        parent_ids = list(qs.values_list("id", flat=True))
+        narrowed = narrow_data_ids_by_criteria(
+            parent_ids, parent_criteria,
+        )
+        return qs.filter(id__in=narrowed)
+    parent_ids = list(
+        qs.values_list("parent_id", flat=True).distinct()
+    )
+    narrowed = narrow_data_ids_by_criteria(
+        parent_ids, parent_criteria,
+    )
+    return qs.filter(parent_id__in=narrowed)
+
+
+def apply_criteria_to_monitoring_qs(qs, is_latest, criteria):
+    """Narrow a base monitoring queryset by multi-criteria filter.
+
+    Fetches the current data_ids from `qs` (either `latest_id` or
+    `id` depending on the mode), intersects them against each
+    criterion's matching set, then re-filters `qs` so downstream
+    callers see a consistent narrowed view.
+    """
+    if not criteria:
+        return qs
+    if is_latest:
+        ids = list(qs.values_list("latest_id", flat=True))
+        narrowed = narrow_data_ids_by_criteria(ids, criteria)
+        return qs.filter(latest_id__in=narrowed)
+    ids = list(qs.values_list("id", flat=True))
+    narrowed = narrow_data_ids_by_criteria(ids, criteria)
+    return qs.filter(id__in=narrowed)
+
+
 def get_base_monitoring_qs(form, monitoring_form_id, params):
     """Build base queryset for monitoring data.
 
@@ -167,6 +327,12 @@ def get_base_monitoring_qs(form, monitoring_form_id, params):
             qs = apply_administration_filter(
                 qs, administration_id
             )
+        qs = apply_criteria_to_monitoring_qs(
+            qs, True, params.get("criteria"),
+        )
+        qs = apply_parent_criteria_to_qs(
+            qs, True, params.get("parent_criteria"),
+        )
         return qs, True, date_filters
 
     qs = FormData.objects.filter(
@@ -207,6 +373,12 @@ def get_base_monitoring_qs(form, monitoring_form_id, params):
                     created__date__lte=to_date
                 )
 
+    qs = apply_criteria_to_monitoring_qs(
+        qs, False, params.get("criteria"),
+    )
+    qs = apply_parent_criteria_to_qs(
+        qs, False, params.get("parent_criteria"),
+    )
     return qs, False, date_filters
 
 

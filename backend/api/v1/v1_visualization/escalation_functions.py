@@ -5,6 +5,7 @@ from django.db.models import Q
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_visualization.functions import (
     apply_administration_filter,
+    apply_criteria_to_monitoring_qs,
     build_date_filters,
     latest_monitoring_subquery,
     format_date_group,
@@ -239,6 +240,14 @@ def handle_escalation(
         parents = apply_administration_filter(
             parents, administration_id
         )
+
+    # Optional AND-narrowing criteria (shared grammar with /values)
+    # applied on top of the OR-escalation criteria. Used by the
+    # dashboard to scope escalated records by implementing_agency /
+    # water_committee etc.
+    parents = apply_criteria_to_monitoring_qs(
+        parents, True, params.get("filter_criteria"),
+    )
 
     latest_ids = list(
         parents.values_list("latest_id", flat=True)

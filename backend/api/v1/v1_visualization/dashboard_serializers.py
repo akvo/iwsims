@@ -6,10 +6,12 @@ from api.v1.v1_visualization.constants import (
     VALID_REPEAT_AGG,
     VALID_STACK_BY,
     VALID_CRITERIA_TYPES,
+    VALID_VALUES_CRITERIA_TYPES,
     VALID_COLUMN_SOURCES,
     VALID_PROGRESS_FORMULAS,
     SUPPORTED_QUESTION_TYPES,
 )
+from api.v1.v1_visualization.functions import parse_criteria_string
 from api.v1.v1_forms.models import Forms, Questions
 
 
@@ -50,6 +52,15 @@ class ValuesFilterSerializer(serializers.Serializer):
     date_question_id = serializers.IntegerField(required=False)
     administration_id = serializers.IntegerField(required=False)
     option_value = serializers.CharField(required=False)
+    criteria = serializers.CharField(required=False)
+
+    def validate_criteria(self, value):
+        try:
+            return parse_criteria_string(
+                value, VALID_VALUES_CRITERIA_TYPES,
+            )
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
 
     def validate_form_id(self, value):
         if not Forms.objects.filter(pk=value).exists():
@@ -85,6 +96,46 @@ class ValuesFilterSerializer(serializers.Serializer):
                     ),
                 })
             data["question"] = question
+
+        # Split criteria into same-form and parent-form buckets.
+        # qids on form_id → criteria; qids on parent form → parent_criteria.
+        criteria = data.get("criteria") or []
+        if criteria:
+            qids = {c["parts"][0] for c in criteria}
+            on_form = set(
+                Questions.objects.filter(
+                    pk__in=qids, form_id=form_id,
+                ).values_list("pk", flat=True)
+            )
+            remaining = qids - on_form
+            parent_form = Forms.objects.filter(
+                pk=form_id,
+            ).values_list("parent_id", flat=True).first()
+            on_parent = set()
+            if remaining and parent_form:
+                on_parent = set(
+                    Questions.objects.filter(
+                        pk__in=remaining,
+                        form_id=parent_form,
+                    ).values_list("pk", flat=True)
+                )
+            unknown = remaining - on_parent
+            if unknown:
+                raise serializers.ValidationError({
+                    "criteria": (
+                        "question_id(s) not on form "
+                        f"{form_id} or its parent: "
+                        f"{sorted(unknown)}"
+                    ),
+                })
+            data["criteria"] = [
+                c for c in criteria
+                if c["parts"][0] in on_form
+            ] or None
+            data["parent_criteria"] = [
+                c for c in criteria
+                if c["parts"][0] in on_parent
+            ] or None
 
         # stack_by requires group_by and question_id
         if stack_by:
@@ -127,6 +178,15 @@ class EscalationFilterSerializer(serializers.Serializer):
     to_date = serializers.DateField(required=False)
     date_question_id = serializers.IntegerField(required=False)
     administration_id = serializers.IntegerField(required=False)
+    filter_criteria = serializers.CharField(required=False)
+
+    def validate_filter_criteria(self, value):
+        try:
+            return parse_criteria_string(
+                value, VALID_VALUES_CRITERIA_TYPES,
+            )
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
 
     def validate_criteria(self, value):
         """Parse and validate criteria string."""
@@ -234,6 +294,15 @@ class ProgressFilterSerializer(serializers.Serializer):
     administration_id = serializers.IntegerField(
         required=False
     )
+    criteria = serializers.CharField(required=False)
+
+    def validate_criteria(self, value):
+        try:
+            return parse_criteria_string(
+                value, VALID_VALUES_CRITERIA_TYPES,
+            )
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
 
     def validate_components(self, value):
         """Parse and validate components string."""
@@ -295,3 +364,131 @@ class ProgressFilterSerializer(serializers.Serializer):
 
             parsed.append(comp)
         return parsed
+
+
+# -- Response serializers (documentation only) --------------------
+#
+# These serializers describe the shape of JSON bodies returned by
+# the dashboard endpoints. They are referenced from @extend_schema
+# `responses=...` to replace Swagger's "No response body" with a
+# concrete schema, and live alongside the request serializers for
+# locality. None of them are used for actual DRF serialization —
+# the views build plain dicts — so they only need field + type
+# metadata that drf-spectacular can introspect.
+
+
+class ValuesDataItemSerializer(serializers.Serializer):
+    """One row in the /values `data` array.
+
+    Shape varies with `group_by`:
+    - none / stack_by: extra numeric columns are keyed dynamically,
+      so downstream readers should treat unknown keys as stack cells.
+    - option: `group` + `color` are populated.
+    - month / date: `group` is the machine-readable bucket key.
+    """
+
+    value = serializers.FloatField(
+        required=False, allow_null=True,
+        help_text="Numeric aggregate (or percentage when requested).",
+    )
+    label = serializers.CharField(
+        required=False,
+        help_text="Human-readable label for this row.",
+    )
+    group = serializers.CharField(
+        required=False,
+        help_text=(
+            "Machine-readable key (option value, YYYY-MM, parent id,"
+            " …). Stable across translations."
+        ),
+    )
+    color = serializers.CharField(
+        required=False,
+        help_text=(
+            "Hex color from QuestionOptions.color"
+            " (only when group_by=option)."
+        ),
+    )
+
+
+class ValuesResponseSerializer(serializers.Serializer):
+    """/visualization/values response envelope.
+
+    For stacked responses (`stack_by=option|parent_id`), each row in
+    `data` additionally carries one numeric column per stack — those
+    keys are dynamic and therefore not enumerable here. `stack_labels`
+    and `colors` are only present in that mode.
+    """
+
+    data = ValuesDataItemSerializer(many=True)
+    labels = serializers.ListField(
+        child=serializers.CharField(),
+        help_text=(
+            "Ordered axis / legend labels — parallel to `data[].label`."
+        ),
+    )
+    stack_labels = serializers.ListField(
+        child=serializers.CharField(), required=False,
+        help_text="Legend entries. Present only when stack_by is set.",
+    )
+    colors = serializers.ListField(
+        child=serializers.CharField(), required=False,
+        help_text="Per-stack colors when stack_by=option.",
+    )
+
+
+class EscalationResultItemSerializer(serializers.Serializer):
+    """One row from /escalation `results`.
+
+    Column keys are driven by the request's `columns=` param, so only
+    `id` is guaranteed. Other keys are documented per column in the
+    API spec; values are strings, numbers, or null.
+    """
+
+    id = serializers.IntegerField()
+
+
+class EscalationResponseSerializer(serializers.Serializer):
+    """/visualization/escalation paginated envelope."""
+
+    count = serializers.IntegerField()
+    next = serializers.CharField(
+        allow_null=True, required=False,
+    )
+    previous = serializers.CharField(
+        allow_null=True, required=False,
+    )
+    results = EscalationResultItemSerializer(many=True)
+
+
+class ProgressHistogramBucketSerializer(serializers.Serializer):
+    progress = serializers.CharField(
+        help_text="Bucket label, e.g. '0-10%', '11-20%'.",
+    )
+    count = serializers.IntegerField()
+
+
+class ProgressDetailItemSerializer(serializers.Serializer):
+    """One EPS / parent in the /progress `details` array."""
+
+    label = serializers.CharField()
+    group = serializers.CharField(
+        help_text="Parent FormData.id as string.",
+    )
+    components = serializers.DictField(
+        child=serializers.FloatField(),
+        help_text=(
+            "Per-component percent score, keyed by the component"
+            " `key` from the request."
+        ),
+    )
+    overall = serializers.FloatField(
+        help_text="Average across components, 0-100.",
+    )
+
+
+class ProgressResponseSerializer(serializers.Serializer):
+    """/visualization/progress response envelope."""
+
+    histogram = ProgressHistogramBucketSerializer(many=True)
+    details = ProgressDetailItemSerializer(many=True)

@@ -92,6 +92,7 @@ class GeoLocationFilterSerializer(serializers.Serializer):
     administration = CustomPrimaryKeyRelatedField(
         queryset=Administration.objects.none(), required=False
     )
+    criteria = serializers.CharField(required=False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -99,5 +100,19 @@ class GeoLocationFilterSerializer(serializers.Serializer):
             "administration"
         ).queryset = Administration.objects.all()
 
+    def validate_criteria(self, value):
+        from api.v1.v1_visualization.constants import (
+            VALID_VALUES_CRITERIA_TYPES,
+        )
+        from api.v1.v1_visualization.functions import (
+            parse_criteria_string,
+        )
+        try:
+            return parse_criteria_string(
+                value, VALID_VALUES_CRITERIA_TYPES,
+            )
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
+
     class Meta:
-        fields = ["administration"]
+        fields = ["administration", "criteria"]

@@ -51,7 +51,119 @@ A single generic endpoint that serves data for all chart types. The frontend com
 | `to_date` | YYYY-MM-DD | End date filter |
 | `date_question_id` | integer | Which date question to filter against. Omit to use `FormData.created`. |
 | `administration_id` | integer | Filter by administration hierarchy (includes descendants) |
-| `option_value` | string | Filter by specific option answer value (exact match) |
+| `option_value` | string | Filter by specific option answer value (exact match). **Deprecated** for new callers — prefer `criteria` below. Still honored for backward compatibility and equivalent to `criteria=option_equals:{question_id}:{option_value}`. |
+| `criteria` | string | N AND-joined criteria across **different** questions. See [Multi-Criteria Filter](#multi-criteria-filter) below. |
+
+---
+
+## Multi-Criteria Filter
+
+### Motivation
+
+The dashboard (`dashboard` preview page) lets the user combine multiple custom filters — e.g. *Implementing Agency = "Akvo" AND Water Committee = "Active"* — and expects every KPI, donut, and bar on the page to narrow accordingly. The original `option_value` / `question_id` pair only expresses **one** criterion, so widgets whose `api.question_id` does not match the filter's question_id were silently ignored. The `criteria` param lifts that limitation by letting a single `/values` call express N independent criteria evaluated with AND semantics.
+
+This mirrors the existing `criteria` grammar on `/visualization/escalation/{form_id}` (see [Escalation Endpoint](#escalation-endpoint)) so the frontend and backend share one parser. The only semantic difference is how criteria are combined:
+
+| Endpoint | Semantics across criteria |
+|----------|----------------------------|
+| `/visualization/escalation/{form_id}` | **OR** — "record is escalated if ANY criterion matches" |
+| `/visualization/values` | **AND** — "record is included if ALL criteria match" |
+
+### Param Grammar
+
+```
+criteria       := criterion ("," criterion)*
+criterion      := type ":" qid ":" value
+type           := "option_equals" | "option_contains" | "option_in"
+               |  "threshold_gt"  | "threshold_lt"
+qid            := integer                        ; question_id
+value          := string                         ; operator-specific, see below
+```
+
+- Commas separate criteria. Commas **inside** a value are not supported — use `option_in` with pipe-delimited values instead.
+- Criteria with the **same** `qid` are also AND-joined (a record must satisfy all of them). To express "qid is A OR B", use a single `option_in:qid:a|b` criterion.
+
+### Supported Operator Types
+
+| Type | Applies to question type | Server-side match | Example |
+|------|--------------------------|-------------------|---------|
+| `option_equals` | `option` (single-choice) and `multiple_option` | Single-choice: exact match on `Answers.options[0]`. Multi-choice: answer array **contains** the value (Postgres `@>`). | `option_equals:1749624452993:akvo` |
+| `option_contains` | `multiple_option` only | Alias for `option_equals` on `multiple_option`. Explicit form for readers who want the intent obvious. | `option_contains:1749624452993:akvo` |
+| `option_in` | `option`, `multiple_option` | Pipe-delimited OR within a single question. For `multiple_option`, record matches if its answer array contains **any** of the listed values. | `option_in:1749624452993:akvo\|oxfam` |
+| `threshold_gt` | `number` | Numeric answer strictly greater than value. | `threshold_gt:600202:25` |
+| `threshold_lt` | `number` | Numeric answer strictly less than value. | `threshold_lt:600202:5` |
+
+`threshold_gt` / `threshold_lt` are carried over from `/escalation` for symmetry; the dashboard filter UI currently only emits option-based criteria.
+
+### Relationship to Other Filters
+
+`criteria` composes with the other filter params — all are AND-joined into the final WHERE clause:
+
+| Param | Status | Rationale |
+|-------|--------|-----------|
+| `administration_id` | Stays separate | Already has path-based semantics distinct from option matching. |
+| `from_date` / `to_date` / `date_question_id` | Stays separate | Date ranges have a different grammar (YYYY-MM-DD, open-ended). Folding them into `criteria` would bloat the operator set without benefit. |
+| `option_value` | Kept for backward compatibility | Equivalent to a single `option_equals`. New callers should use `criteria`. |
+
+### Behavior When Criteria Target a Different Form
+
+Criteria must reference `question_id` values that exist on the `form_id` of the request. A criterion whose `qid` belongs to a **different** form is a client error — widgets for other forms are expected to either (a) translate the filter to their own equivalent question or (b) ignore the filter. The `/values` endpoint itself does not resolve cross-form filters; that responsibility stays in the frontend's `applyDashboardFilters`.
+
+### Error Handling
+
+Malformed `criteria` values return **400 Bad Request** with a JSON body:
+
+```json
+{
+  "error": "invalid_criteria",
+  "message": "Unknown criterion type 'option_matches'. Accepted: option_equals, option_contains, option_in, threshold_gt, threshold_lt.",
+  "criterion": "option_matches:1749624452993:akvo"
+}
+```
+
+Specific failure modes:
+
+| Condition | Response |
+|-----------|----------|
+| Unknown type token | 400 with list of accepted types |
+| Malformed criterion (missing `:` parts) | 400 naming the offending fragment |
+| `qid` not on `form_id` | 400 `"question_id X does not belong to form Y"` |
+| `threshold_*` value not parseable as number | 400 `"threshold value must be numeric"` |
+| `option_in` value empty after split on `\|` | 400 `"option_in requires at least one value"` |
+
+### Example Calls
+
+```
+# KPI: count of records where implementing_agency contains "akvo" AND water_committee == "active"
+GET /visualization/values
+  ?form_id=1749623934933
+  &criteria=option_contains:1749624452993:akvo,option_equals:1749624452105:active
+
+# Donut: operational_status breakdown, filtered to two implementing agencies
+GET /visualization/values
+  ?form_id=1749623934933
+  &question_id=1749624452800
+  &group_by=option
+  &criteria=option_in:1749624452993:akvo|oxfam
+
+# Bar: monthly submissions narrowed by admin, date range, and two option filters (all AND)
+GET /visualization/values
+  ?form_id=1749623934933
+  &group_by=month
+  &administration_id=42
+  &from_date=2025-01-01&to_date=2025-12-31
+  &criteria=option_contains:1749624452993:akvo,option_equals:1749624452105:active
+```
+
+### Frontend Migration Note
+
+`frontend/src/lib/dashboardFilterHints.js → applyDashboardFilters` currently folds a custom filter into a widget's query only when `widget.api.question_id === filter.question_id`. Once this param ships, that function should instead:
+
+1. Collect all active dashboard custom filters that target the widget's `form_id`.
+2. Emit them as a single `criteria=` string on the widget's `/values` call, regardless of the widget's own `question_id`.
+3. Leave `administration_id`, `from_date`, `to_date` untouched — they continue to flow through their dedicated params.
+
+See `akvo-mis-7xc` (Frontend) and `akvo-mis-hve` (Backend) for the implementation beads.
 
 ---
 

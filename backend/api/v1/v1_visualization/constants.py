@@ -45,6 +45,18 @@ VALID_CRITERIA_TYPES = {
     "overdue",
 }
 
+# /visualization/values multi-criteria filter types. Shares grammar
+# with escalation; `overdue` is excluded because it is table-specific,
+# and `option_contains` / `option_in` are added for multiple_option
+# filtering. Criteria combine with AND semantics.
+VALID_VALUES_CRITERIA_TYPES = {
+    "option_equals",
+    "option_contains",
+    "option_in",
+    "threshold_gt",
+    "threshold_lt",
+}
+
 # Escalation column source types
 VALID_COLUMN_SOURCES = {
     "parent_name",
