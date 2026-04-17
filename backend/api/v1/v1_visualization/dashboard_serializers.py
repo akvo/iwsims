@@ -286,6 +286,9 @@ class ProgressFilterSerializer(serializers.Serializer):
     filter_option_value = serializers.CharField(
         required=False
     )
+    scope_question_id = serializers.IntegerField(
+        required=False
+    )
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
     date_question_id = serializers.IntegerField(
@@ -305,10 +308,25 @@ class ProgressFilterSerializer(serializers.Serializer):
             raise serializers.ValidationError(str(e))
 
     def validate_components(self, value):
-        """Parse and validate components string."""
+        """Parse and validate components string.
+
+        Format: key:formula:qid[:qid...][@type1|type2|...]
+        The optional @-suffix lists applicable project types.
+        """
         parsed = []
         for item in value.split(","):
-            parts = item.strip().split(":")
+            raw = item.strip()
+
+            # Split off optional @applicable_types suffix
+            applicable_types = None
+            if "@" in raw:
+                raw, types_str = raw.split("@", 1)
+                applicable_types = [
+                    t.strip() for t in types_str.split("|")
+                    if t.strip()
+                ]
+
+            parts = raw.split(":")
             if len(parts) < 3:
                 raise serializers.ValidationError(
                     f"Invalid component format: '{item}'."
@@ -361,6 +379,9 @@ class ProgressFilterSerializer(serializers.Serializer):
                 comp["question_ids"] = [
                     int(q) for q in parts[2:]
                 ]
+
+            if applicable_types:
+                comp["applicable_types"] = applicable_types
 
             parsed.append(comp)
         return parsed
