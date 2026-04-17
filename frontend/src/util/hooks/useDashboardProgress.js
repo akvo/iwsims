@@ -3,7 +3,7 @@ import { applyDashboardFilters } from "../../lib/dashboardFilterHints";
 import useVisualizationRequest from "./useVisualizationRequest";
 
 /**
- * Serialize progress components into `{key}:{formula}:{qid1}:{qid2}...[:{total_items}]`,
+ * Serialize progress components into `{key}:{formula}:{qid1}:{qid2}...[:{total_items}][@type1|type2|...]`,
  * comma-separated. Hidden components are skipped.
  */
 export const serializeComponents = (components = []) =>
@@ -11,9 +11,13 @@ export const serializeComponents = (components = []) =>
     .filter((c) => !c.hide)
     .map((c) => {
       const base = `${c.key}:${c.formula}:${(c.question_ids || []).join(":")}`;
-      return c.formula === "multi_select_proportion" && c.total_items
-        ? `${base}:${c.total_items}`
-        : base;
+      const withExtra =
+        c.formula === "multi_select_proportion" && c.total_items
+          ? `${base}:${c.total_items}`
+          : base;
+      return c.applicable_types?.length
+        ? `${withExtra}@${c.applicable_types.join("|")}`
+        : withExtra;
     })
     .join(",");
 
@@ -58,6 +62,10 @@ export const useDashboardProgress = (
       out.deadline_question_id = progressBlock.deadline_question_id;
     }
 
+    if (progressBlock.scope_question_id) {
+      out.scope_question_id = progressBlock.scope_question_id;
+    }
+
     if (filterState?.from_date) {
       out.from_date = filterState.from_date;
     }
@@ -67,8 +75,8 @@ export const useDashboardProgress = (
     if (filterState?.administration_id) {
       out.administration_id = filterState.administration_id;
     }
-    // Fold in multi-criteria custom filters (applyDashboardFilters
-    // reads form_id from `out` to decide which defs to include).
+    // Fold in multi-criteria custom filters. All criteria are emitted
+    // regardless of form; the backend splits by form where supported.
     const withCriteria = applyDashboardFilters(
       { ...out, form_id: progressBlock.api?.form_id },
       filterState,
