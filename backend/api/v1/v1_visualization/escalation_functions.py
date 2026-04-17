@@ -6,9 +6,11 @@ from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_visualization.functions import (
     apply_administration_filter,
     apply_criteria_to_monitoring_qs,
+    apply_parent_criteria_to_qs,
     build_date_filters,
     latest_monitoring_subquery,
     format_date_group,
+    split_criteria_by_form,
 )
 
 
@@ -242,12 +244,21 @@ def handle_escalation(
         )
 
     # Optional AND-narrowing criteria (shared grammar with /values)
-    # applied on top of the OR-escalation criteria. Used by the
-    # dashboard to scope escalated records by implementing_agency /
-    # water_committee etc.
-    parents = apply_criteria_to_monitoring_qs(
-        parents, True, params.get("filter_criteria"),
-    )
+    # applied on top of the OR-escalation criteria. Split by form so
+    # parent-form filters (e.g. implementing_agency) go through
+    # apply_parent_criteria_to_qs while monitoring-form filters go
+    # through apply_criteria_to_monitoring_qs.
+    filter_criteria = params.get("filter_criteria")
+    if filter_criteria:
+        mon_criteria, parent_criteria = split_criteria_by_form(
+            filter_criteria, monitoring_form_id, parent_form.id,
+        )
+        parents = apply_criteria_to_monitoring_qs(
+            parents, True, mon_criteria,
+        )
+        parents = apply_parent_criteria_to_qs(
+            parents, True, parent_criteria,
+        )
 
     latest_ids = list(
         parents.values_list("latest_id", flat=True)

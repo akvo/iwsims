@@ -32,40 +32,15 @@ from api.v1.v1_visualization.progress_functions import (
 )
 from api.v1.v1_visualization.functions import (
     resolve_default_administration_id,
+    split_criteria_by_form,
 )
 from api.v1.v1_visualization.dashboard_serializers import (
     EscalationFilterSerializer,
     ProgressFilterSerializer,
 )
-from api.v1.v1_forms.models import Questions
 from utils.custom_serializer_fields import (
     validate_serializers_message,
 )
-
-
-def split_criteria_by_form(criteria, form_id, parent_form_id):
-    """Split parsed criteria list into same-form and parent-form."""
-    if not criteria:
-        return None, None
-    qids = {c["parts"][0] for c in criteria}
-    on_form = set(
-        Questions.objects.filter(
-            pk__in=qids, form_id=form_id,
-        ).values_list("pk", flat=True)
-    )
-    on_parent = set()
-    if parent_form_id:
-        remaining = qids - on_form
-        if remaining:
-            on_parent = set(
-                Questions.objects.filter(
-                    pk__in=remaining,
-                    form_id=parent_form_id,
-                ).values_list("pk", flat=True)
-            )
-    same = [c for c in criteria if c["parts"][0] in on_form]
-    parent = [c for c in criteria if c["parts"][0] in on_parent]
-    return same or None, parent or None
 
 
 @extend_schema(
@@ -413,6 +388,17 @@ def visualization_escalation(request, form_id, version):
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
+            name="scope_question_id", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "Question whose answer determines which "
+                "components apply per datapoint (e.g. "
+                "project type). Components with "
+                "applicable_types are filtered to match."
+            ),
+        ),
+        OpenApiParameter(
             name="administration_id", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
@@ -475,6 +461,9 @@ def visualization_progress(request, form_id, version):
             ),
             "filter_option_value": validated.get(
                 "filter_option_value"
+            ),
+            "scope_question_id": validated.get(
+                "scope_question_id"
             ),
             "administration_id": resolve_default_administration_id(
                 validated.get("administration_id"),

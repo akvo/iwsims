@@ -6,6 +6,7 @@ from datetime import datetime as dt_datetime, timedelta, date
 from rest_framework.exceptions import ValidationError
 
 from api.v1.v1_data.models import FormData, Answers
+from api.v1.v1_forms.models import Questions
 from api.v1.v1_profile.models import Administration
 
 
@@ -289,6 +290,31 @@ def apply_criteria_to_monitoring_qs(qs, is_latest, criteria):
     ids = list(qs.values_list("id", flat=True))
     narrowed = narrow_data_ids_by_criteria(ids, criteria)
     return qs.filter(id__in=narrowed)
+
+
+def split_criteria_by_form(criteria, form_id, parent_form_id):
+    """Split parsed criteria list into same-form and parent-form."""
+    if not criteria:
+        return None, None
+    qids = {c["parts"][0] for c in criteria}
+    on_form = set(
+        Questions.objects.filter(
+            pk__in=qids, form_id=form_id,
+        ).values_list("pk", flat=True)
+    )
+    on_parent = set()
+    if parent_form_id:
+        remaining = qids - on_form
+        if remaining:
+            on_parent = set(
+                Questions.objects.filter(
+                    pk__in=remaining,
+                    form_id=parent_form_id,
+                ).values_list("pk", flat=True)
+            )
+    same = [c for c in criteria if c["parts"][0] in on_form]
+    parent = [c for c in criteria if c["parts"][0] in on_parent]
+    return same or None, parent or None
 
 
 def get_base_monitoring_qs(form, monitoring_form_id, params):
