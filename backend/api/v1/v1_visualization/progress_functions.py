@@ -84,10 +84,28 @@ FORMULA_HANDLERS = {
 }
 
 
-def compute_component_scores(latest_id, components, answers_map):
-    """Compute progress scores for all components using a shared map."""
+def filter_components_by_scope(components, scope_value):
+    """Filter components to those applicable for a scope value.
+
+    If scope_value is None or a component has no applicable_types,
+    the component is always included.
+    """
+    if not scope_value:
+        return components
+    return [
+        c for c in components
+        if not c.get("applicable_types")
+        or scope_value in c["applicable_types"]
+    ]
+
+
+def compute_component_scores(
+    latest_id, components, answers_map, scope_value=None,
+):
+    """Compute progress scores for applicable components."""
+    active = filter_components_by_scope(components, scope_value)
     scores = {}
-    for comp in components:
+    for comp in active:
         handler = FORMULA_HANDLERS[comp["formula"]]
         kwargs = {}
         if comp.get("total_items"):
@@ -208,16 +226,31 @@ def handle_progress(
         )
 
     # Compute scores per parent
+    scope_qid = params.get("scope_question_id")
     parents = list(parents.only("id", "name"))
     latest_ids = [p.latest_id for p in parents]
     answers_map = build_progress_answers_map(
         latest_ids, components
     )
 
+    # Build scope lookup: latest_id -> scope option value
+    scope_map = {}
+    if scope_qid:
+        scope_rows = Answers.objects.filter(
+            data_id__in=latest_ids,
+            question_id=scope_qid,
+        ).values("data_id", "options")
+        for row in scope_rows:
+            opts = row.get("options") or []
+            if opts:
+                scope_map[row["data_id"]] = opts[0]
+
     eps_results = []
     for parent in parents:
+        scope_value = scope_map.get(parent.latest_id)
         scores = compute_component_scores(
             parent.latest_id, components, answers_map,
+            scope_value=scope_value,
         )
         overall = (
             round(sum(scores.values()) / len(scores), 2)
