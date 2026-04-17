@@ -178,10 +178,8 @@
     min-height: 320px;
   }
 
-  .ant-card:has(> .ant-card-body > div[role="figure"]) {
-    div[role="figure"] {
-      min-height: 360px;
-    }
+  .ant-card > .ant-card-body > div[role="figure"] {
+    min-height: 360px;
   }
 }
 
