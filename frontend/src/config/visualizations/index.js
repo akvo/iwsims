@@ -18,20 +18,31 @@ const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 const SLUG_INDEX = new Map();
 
-RAW_CONFIGS.forEach((config) => {
+RAW_CONFIGS.forEach((config, index) => {
   const slug = config?.slug;
   const parentFormId = config?.parent_form_id;
+  // Prefer slug in diagnostics when available; otherwise the array index
+  // so a misconfigured entry is still identifiable in the console.
+  const ref = slug ? `slug="${slug}"` : `entry #${index}`;
+
   if (!slug) {
     // eslint-disable-next-line no-console
     console.warn(
-      `[visualizations] parent_form_id=${parentFormId}: missing "slug", skipped`
+      `[visualizations] ${ref} (parent_form_id=${parentFormId}): missing "slug", skipped`
     );
     return;
   }
   if (typeof slug !== "string" || !SLUG_PATTERN.test(slug)) {
     // eslint-disable-next-line no-console
     console.warn(
-      `[visualizations] parent_form_id=${parentFormId}: invalid slug "${slug}" (must be kebab-case), skipped`
+      `[visualizations] ${ref}: invalid slug "${slug}" (must be kebab-case), skipped`
+    );
+    return;
+  }
+  if (typeof parentFormId !== "number" || !Number.isFinite(parentFormId)) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[visualizations] ${ref}: missing or invalid "parent_form_id" (must be a finite number), skipped`
     );
     return;
   }
