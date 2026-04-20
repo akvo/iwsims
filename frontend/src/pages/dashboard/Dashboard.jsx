@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { Alert, Col, Empty, Row, Typography } from "antd";
+import { Navigate, useParams } from "react-router-dom";
+import { Alert, Col, Row, Typography } from "antd";
 import {
   useDashboardConfig,
   useDashboardFilters,
@@ -124,11 +124,11 @@ const collectComplianceParamIds = (items = []) => {
  * by param item id) and `cellComputersById` (keyed by table item id) then
  * injected into DashboardRenderer as context.
  *
- * Route: /dashboard/:formId
+ * Route: /dashboard/:slug
  */
 const Dashboard = () => {
-  const { formId } = useParams();
-  const { config, definitionsById } = useDashboardConfig(formId);
+  const { slug } = useParams();
+  const { config, definitionsById } = useDashboardConfig(slug);
 
   // Component-scoped "now" anchor; threaded into DashboardRenderer so
   // mark_lines with type="today" can resolve to an axis-matching label.
@@ -345,13 +345,9 @@ const Dashboard = () => {
   if (!config) {
     // eslint-disable-next-line no-console
     console.warn(
-      `No dashboard config registered for formId=${formId}. Drop a JSON file in src/config/visualizations/ and register it in index.js.`
+      `No dashboard config registered for slug="${slug}". Drop a JSON file in src/config/visualizations/ with a matching "slug" field and register it in index.js.`
     );
-    return (
-      <div className="dashboard">
-        <Empty description="This dashboard isn't available yet." />
-      </div>
-    );
+    return <Navigate to="/control-center" replace />;
   }
 
   return (

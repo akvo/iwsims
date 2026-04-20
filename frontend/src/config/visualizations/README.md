@@ -1,10 +1,10 @@
 # Dashboard Visualization Configs
 
 JSON files in this directory drive the config-driven dashboards rendered at
-`/dashboard/:formId`. Each file is a single dashboard definition keyed by the
-parent form's ID. **No component code changes are required to add a new
+`/dashboard/:slug`. Each file is a single dashboard definition identified by a
+kebab-case `slug`. **No component code changes are required to add a new
 dashboard** — drop a JSON file here, register it in [`index.js`](./index.js),
-and visit `/dashboard/<formId>`.
+and visit `/dashboard/<slug>`.
 
 ## Quick start — add a new dashboard
 
@@ -24,6 +24,7 @@ Minimum required top-level keys:
 ```json
 {
   "parent_form_id": 123,
+  "slug": "my-dashboard",
   "name": "My Dashboard",
   "description": "Optional subtitle shown on the page.",
   "fiscal_year_start_month": 1,
@@ -31,8 +32,9 @@ Minimum required top-level keys:
 }
 ```
 
-Everything else — filters, KPIs, charts, tables, maps — is an **item** inside
-`items[]`.
+`slug` is the public route identifier. It must be unique across all
+dashboards and match `^[a-z0-9]+(-[a-z0-9]+)*$` (kebab-case). Everything else
+— filters, KPIs, charts, tables, maps — is an **item** inside `items[]`.
 
 ### 3. Register the config
 
@@ -41,16 +43,17 @@ Add the import + entry in [`index.js`](./index.js):
 ```js
 import myDashboard from "./123.json";
 
-const CONFIGS = {
-  [epsOverview.parent_form_id]: epsOverview,
-  [myDashboard.parent_form_id]: myDashboard,
-};
+const RAW_CONFIGS = [epsOverview, myDashboard];
 ```
+
+Configs with a missing, invalid, or duplicate slug are warned in the dev
+console and skipped; the app still boots. Navigation to an unresolved slug
+redirects to `/control-center`.
 
 ### 4. Visit the route
 
-`/dashboard/123` will render the new dashboard. No component or route code
-changes required.
+`/dashboard/my-dashboard` will render the new dashboard. No component or route
+code changes required.
 
 ---
 
@@ -61,6 +64,7 @@ changes required.
 ```json
 {
   "parent_form_id": 123,
+  "slug": "my-dashboard",
   "name": "My Dashboard",
   "description": "...",
   "fiscal_year_start_month": 1,
@@ -68,7 +72,7 @@ changes required.
 }
 ```
 
-Only these five keys at the top level. Everything else is an item.
+Only these six keys at the top level. Everything else is an item.
 
 ### Common item fields
 
@@ -259,7 +263,7 @@ columns resolved by the renderer:
 ## Testing a new config
 
 1. Start the stack: `./dc.sh up -d`
-2. Open `http://localhost:3000/dashboard/<parent_form_id>`
+2. Open `http://localhost:3000/dashboard/<slug>`
 3. Verify each tab renders without console errors
 4. Click through the filter bar — KPIs and charts should re-fetch and redraw
 5. If a chart shows "No data", check that the corresponding backend response
