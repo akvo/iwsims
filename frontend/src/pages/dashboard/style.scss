@@ -1,185 +1,361 @@
-.dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 12px 16px;
+@import "../../variables";
 
-  .ant-typography {
-    &.dashboard-title {
-      margin-bottom: 4px;
-      font-size: 22px;
-      line-height: 1.2;
-    }
-    &.dashboard-subtitle {
-      margin-bottom: 12px;
-      font-size: 13px;
+#root {
+  .layout {
+    .body {
+      padding-top: #{$header-height};
     }
   }
+  .dashboard {
+    .ant-table-measure-row {
+      display: none !important;
+    }
+    background: $bg-page;
+    min-height: calc(100vh - #{$header-height});
+    margin-left: -$layout-padding-small-screen;
+    margin-right: -$layout-padding-small-screen;
+    padding: 0 $layout-padding-small-screen $padding-default;
 
-  .ant-row {
-    row-gap: 8px !important;
-  }
-
-  .ant-card {
-    border: 1px solid #eef0f3;
-    border-radius: 6px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    transition: box-shadow 160ms ease, border-color 160ms ease;
-
-    &:hover {
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-      border-color: #dde1e7;
+    @media screen and (min-width: $screen-regular) {
+      margin-left: -$layout-padding;
+      margin-right: -$layout-padding;
+      padding: 0 $layout-padding $padding-default;
     }
 
-    .ant-card-head {
-      min-height: 36px;
-      padding: 0 14px;
-      border-bottom: 1px solid #f1f3f5;
+    .dashboard-header,
+    .dashboard-filter-full {
+      background: $white;
+      padding: 16px calc(#{$layout-padding-small-screen} + 8px);
+      margin-left: -$layout-padding-small-screen;
+      margin-right: -$layout-padding-small-screen;
 
-      .ant-card-head-title {
-        padding: 8px 0;
-        font-size: 13px;
-        font-weight: 600;
+      @media screen and (min-width: $screen-regular) {
+        padding: 16px $layout-padding;
+        margin-left: -$layout-padding;
+        margin-right: -$layout-padding;
       }
     }
 
-    .ant-card-body {
-      padding: 12px 14px;
-    }
-  }
+    .dashboard-header {
+      margin-bottom: 16px;
+      .dashboard-title {
+        margin-bottom: 4px;
+        font-size: $font-size-semi-large;
+        font-weight: $font-weight-semi-bold;
+        color: $blue-darker;
+      }
 
-  .ant-statistic {
-    .ant-statistic-title {
-      margin-bottom: 6px;
-      font-size: 12px;
-      color: #6b7280;
-      line-height: 1.5;
+      .dashboard-subtitle {
+        margin-bottom: 0;
+        font-size: $font-size-regular;
+        color: $color-default;
+      }
     }
-    .ant-statistic-content {
-      font-size: 22px;
-      line-height: 1.3;
 
-      .ant-statistic-content-value {
-        font-weight: 600;
+    .ant-row {
+      row-gap: 16px !important;
+    }
+
+    .ant-card {
+      border: none;
+      border-radius: 0;
+      box-shadow: $box-shadow;
+      padding: 0;
+      text-align: left;
+
+      &.tabs-card {
+        padding: 0;
+      }
+
+      .ant-card-head {
+        min-height: 40px;
+        padding: 0 16px;
+        border-bottom: 1px solid #f1f3f5;
+
+        .ant-card-head-title {
+          padding: 10px 0;
+          font-size: $font-size-regular;
+          font-weight: $font-weight-semi-bold;
+          color: $blue-darker;
+        }
+      }
+
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+
+    .ant-statistic {
+      .ant-statistic-title {
+        margin-bottom: 6px;
+        font-size: $font-size-small;
+        color: $color-default;
+        line-height: 1.5;
+      }
+      .ant-statistic-content {
+        font-size: 24px;
+        line-height: 1.3;
+        font-weight: $font-weight-semi-bold;
+      }
+    }
+
+    .ant-col:has(.dashboard-filter-bar) {
+      margin-top: -16px;
+      margin-left: -$layout-padding-small-screen;
+      margin-right: -$layout-padding-small-screen;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      max-width: none !important;
+      flex: 0 0 calc(100% + #{$layout-padding-small-screen * 2}) !important;
+      width: calc(100% + #{$layout-padding-small-screen * 2}) !important;
+
+      @media screen and (min-width: $screen-regular) {
+        margin-left: -$layout-padding;
+        margin-right: -$layout-padding;
+        flex: 0 0 calc(100% + #{$layout-padding * 2}) !important;
+        width: calc(100% + #{$layout-padding * 2}) !important;
+      }
+    }
+
+    .dashboard-filter-bar {
+      background: $white;
+      box-shadow: $box-shadow;
+      border-radius: 0;
+
+      .ant-card-body {
+        padding: 12px $layout-padding-small-screen;
+
+        @media screen and (min-width: $screen-regular) {
+          padding: 12px $layout-padding;
+        }
+      }
+      .ant-select-dropdown {
+        z-index: 2000;
+      }
+    }
+
+    .dashboard-filters-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      padding: 0 8px;
+    }
+
+    .dashboard-filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+
+      .filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .filter-group-dynamic {
+        justify-content: flex-end;
+      }
+    }
+
+    .dashboard-selected-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #eef0f3;
+
+      .selected-filters-label {
+        font-size: $font-size-small;
+        font-weight: $font-weight-semi-bold;
+        color: $blue-darker;
+        margin-right: 4px;
+      }
+
+      .ant-tag {
+        margin: 0;
+        border-radius: 12px;
+        padding: 2px 10px;
+        font-size: $font-size-small;
       }
     }
   }
 
-  [data-testid^="kpi-card-"] .ant-card .ant-card-body {
-    padding: 10px 14px;
-  }
-
-  .ant-card[data-filter-bar="true"],
-  .filter-bar .ant-card {
-    background: #fafbfc;
-    border-color: #e9edf2;
-    box-shadow: none;
-
-    .ant-card-body {
-      padding: 6px 12px;
+  .dashboard-filter-popover {
+    .ant-popover-inner {
+      border-radius: 8px;
     }
-    &:hover {
-      box-shadow: none;
-      transform: none;
+
+    .ant-popover-inner-content {
+      padding: 16px 18px;
+      min-width: 300px;
     }
-  }
 
-  h4.ant-typography,
-  h5.ant-typography {
-    margin: 6px 0 2px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-  }
+    .dashboard-filter-advanced {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
 
-  .ant-tabs {
-    margin: 16px 0;
-    .ant-tabs-nav {
-      margin-bottom: 12px;
-      &::before {
-        border-bottom-color: #e5e7eb;
-      }
-    }
-    .ant-tabs-tab {
-      padding: 10px 20px !important;
-      font-size: 15px;
-      font-weight: 600;
-      color: #6b7280;
-      background: #f5f7fa !important;
-      border: 1px solid #e5e7eb !important;
-      border-radius: 6px 6px 0 0 !important;
-      transition: background 160ms ease, color 160ms ease,
-        border-color 160ms ease;
-
-      &:hover {
-        color: #1f2937;
-        background: #eef1f5 !important;
+      .advanced-title {
+        font-size: $font-size-regular;
+        font-weight: $font-weight-semi-bold;
+        color: $blue-darker;
+        margin-bottom: 4px;
       }
 
-      .ant-tabs-tab-btn {
-        font-weight: 600;
-        transition: color 160ms ease;
-      }
+      .advanced-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
 
-      & + .ant-tabs-tab {
-        margin-left: 6px !important;
-      }
-    }
-    .ant-tabs-tab-active {
-      background: #1677ff !important;
-      border-color: #1677ff !important;
-
-      .ant-tabs-tab-btn {
-        color: #ffffff !important;
-        font-weight: 700;
-      }
-
-      &:hover {
-        background: #0f5fd9 !important;
-        border-color: #0f5fd9 !important;
-        .ant-tabs-tab-btn {
-          color: #ffffff !important;
+        label {
+          font-size: $font-size-small;
+          color: $color-default;
+          font-weight: $font-weight-medium;
         }
       }
     }
-    .ant-tabs-ink-bar {
-      display: none;
+  }
+
+  .dashboard {
+    .ant-badge-count {
+      box-shadow: 0 0 0 2px $white;
     }
-  }
 
-  .ant-typography + .ant-paragraph,
-  .ant-card .ant-typography {
-    margin-bottom: 4px;
-    font-size: 12px;
-  }
-
-  .ant-col {
-    animation: dashFadeUp 280ms ease-out both;
-  }
-
-  @for $i from 1 through 16 {
-    .ant-row > .ant-col:nth-child(#{$i}) {
-      animation-delay: #{$i * 35}ms;
+    h4.ant-typography,
+    h5.ant-typography {
+      margin: 8px 0 4px;
+      font-size: $font-size-regular;
+      font-weight: $font-weight-semi-bold;
+      color: $blue-darker;
     }
-  }
 
-  .ant-tabs-tabpane-active {
-    animation: dashFadeUp 220ms ease-out both;
-  }
+    .ant-tabs {
+      .ant-tabs-nav {
+        margin-bottom: 16px;
+      }
+      .ant-tabs-tab {
+        padding: 10px 16px;
+        font-size: $font-size-regular;
+        font-weight: $font-weight-medium;
+      }
+      .ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: $blue;
+        font-weight: $font-weight-semi-bold;
+      }
+      .ant-tabs-ink-bar {
+        background: $blue;
+      }
+    }
 
-  .ant-skeleton,
-  .ant-statistic {
-    transition: opacity 200ms ease;
-  }
-}
+    .ant-table-wrapper {
+      .ant-table-thead > tr > th {
+        background: #f2f2f3;
+        color: $blue-darker;
+        font-weight: $font-weight-medium;
+        font-size: $font-size-regular;
+        vertical-align: middle;
+      }
+      .ant-table-tbody > tr {
+        > td {
+          height: 48px;
+          padding: 8px 12px !important;
+          font-size: $font-size-regular;
+          vertical-align: middle;
+          max-width: 240px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
 
-.dashboard {
-  div[role="figure"] {
-    width: 100%;
-    min-height: 320px;
-  }
+          > span,
+          > a,
+          > div {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+      }
+      .ant-pagination {
+        margin: 16px 0 0;
+      }
+    }
 
-  .ant-card > .ant-card-body > div[role="figure"] {
-    min-height: 360px;
+    .pending-data-wrapper {
+      border: 1px solid #e9e9e9;
+      margin: 8px 16px 16px;
+
+      h3 {
+        padding: 12px 16px;
+        background: #eaeaed;
+        font-size: $font-size-regular;
+        font-weight: $font-weight-bold;
+        margin-bottom: 0;
+        color: $blue-darker;
+      }
+
+      .ant-table {
+        margin: 0;
+
+        .ant-table-thead > tr > th {
+          background: #f2f2f3;
+          color: $color-dark;
+          font-weight: $font-weight-medium;
+        }
+
+        .ant-table-tbody > tr > td {
+          height: auto;
+          padding: 10px 16px !important;
+          white-space: normal;
+          overflow: visible;
+          text-overflow: unset;
+          max-width: none;
+
+          > span,
+          > a,
+          > div {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+          }
+
+          &.table-col-question {
+            font-weight: $font-weight-medium;
+            color: $color-dark;
+          }
+        }
+      }
+    }
+
+    div[role="figure"] {
+      width: 100%;
+      min-height: 320px;
+    }
+
+    .ant-col {
+      animation: dashFadeUp 260ms ease-out both;
+    }
+
+    @for $i from 1 through 16 {
+      .ant-row > .ant-col:nth-child(#{$i}) {
+        animation-delay: #{$i * 30}ms;
+      }
+    }
+
+    .ant-tabs-tabpane-active {
+      animation: dashFadeUp 220ms ease-out both;
+    }
+
+    .ant-col:has(.dashboard-filter-bar) {
+      position: relative;
+      z-index: 50;
+    }
   }
 }
 
@@ -197,39 +373,11 @@
   z-index: 2000 !important;
 }
 
-.dashboard {
-  .ant-col:has(.dashboard-filter-bar) {
-    position: relative;
-    z-index: 50;
-  }
-
-  .dashboard-filter-bar {
-    position: relative;
-    z-index: 50;
-    overflow: visible;
-
-    .ant-card-body,
-    .ant-select,
-    .ant-select-selector {
-      overflow: visible;
-    }
-    .ant-select-dropdown {
-      z-index: 2000 !important;
-    }
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .dashboard {
     .ant-col,
     .ant-tabs-tabpane-active {
       animation: none;
-    }
-    .ant-card {
-      transition: none;
-      &:hover {
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-      }
     }
   }
 }

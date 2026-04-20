@@ -379,7 +379,7 @@ const Dashboard = () => {
         />
       ))}
 
-      <Row gutter={[0, 0]}>
+      <Row gutter={[0, 0]} className="dashboard-header">
         <Col span={24}>
           <Title level={3} className="dashboard-title">
             {config.name}
