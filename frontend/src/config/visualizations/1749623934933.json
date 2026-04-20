@@ -205,9 +205,108 @@
       "click_url_template": "/control-center/data/{parent_form_id}/monitoring/{data_id}"
     },
     {
+      "id": "title_status_compliance",
+      "chart_type": "section_title",
+      "order": 9,
+      "col_span": 24,
+      "text": "EPS at-a-glance: Status and Compliance"
+    },
+    {
+      "id": "chart_operational_status",
+      "chart_type": "doughnut",
+      "order": 10,
+      "col_span": 12,
+      "config": {
+        "title": "Operational Status"
+      },
+      "api": {
+        "form_id": 1749632545233,
+        "question_id": 1749633373968,
+        "group_by": "option",
+        "monitoring": "latest"
+      }
+    },
+    {
+      "id": "chart_drinking_water_compliance",
+      "chart_type": "stack_bar",
+      "order": 11,
+      "col_span": 12,
+      "config": {
+        "title": "Drinking Water Compliance",
+        "xAxisLabel": "Compliant",
+        "yAxisLabel": "EPS count",
+        "color": [
+          "#64A73B",
+          "#e41a1c",
+          "#ff7f00",
+          "#984ea3",
+          "#377eb8",
+          "#a65628",
+          "#f781bf",
+          "#999999",
+          "#cccccc"
+        ]
+      },
+      "compute": "compliance",
+      "params_ref": [
+        "param_e_coli",
+        "param_total_coliform",
+        "param_fecal_coliform",
+        "param_turbidity",
+        "param_temperature",
+        "param_ph",
+        "param_conductivity",
+        "param_salinity"
+      ],
+      "globals_ref": "wq_globals"
+    },
+    {
+      "id": "chart_water_committee",
+      "chart_type": "doughnut",
+      "order": 12,
+      "col_span": 8,
+      "config": {
+        "title": "Water Committee"
+      },
+      "api": {
+        "form_id": 1749623934933,
+        "question_id": 1749624452105,
+        "group_by": "option"
+      }
+    },
+    {
+      "id": "chart_implementing_authority",
+      "chart_type": "doughnut",
+      "order": 13,
+      "col_span": 8,
+      "config": {
+        "title": "Implementing Authority"
+      },
+      "api": {
+        "form_id": 1749623934933,
+        "question_id": 1749624452993,
+        "group_by": "option"
+      }
+    },
+    {
+      "id": "chart_test_method",
+      "chart_type": "doughnut",
+      "order": 14,
+      "col_span": 8,
+      "config": {
+        "title": "Lab tested vs CBT tested"
+      },
+      "api": {
+        "form_id": 1749632545233,
+        "question_id": 1749633001462,
+        "group_by": "option",
+        "monitoring": "latest"
+      }
+    },
+    {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 9,
+      "order": 15,
       "col_span": 24,
       "items": [
         {
@@ -215,108 +314,9 @@
           "label": "Monitoring overview",
           "items": [
             {
-              "id": "title_status_compliance",
-              "chart_type": "section_title",
-              "order": 6,
-              "col_span": 24,
-              "text": "EPS at-a-glance: Status and Compliance"
-            },
-            {
-              "id": "chart_operational_status",
-              "chart_type": "doughnut",
-              "order": 7,
-              "col_span": 8,
-              "config": {
-                "title": "Operational Status"
-              },
-              "api": {
-                "form_id": 1749632545233,
-                "question_id": 1749633373968,
-                "group_by": "option",
-                "monitoring": "latest"
-              }
-            },
-            {
-              "id": "chart_drinking_water_compliance",
-              "chart_type": "stack_bar",
-              "order": 8,
-              "col_span": 8,
-              "config": {
-                "title": "Drinking Water Compliance",
-                "xAxisLabel": "Compliant",
-                "yAxisLabel": "EPS count",
-                "color": [
-                  "#64A73B",
-                  "#e41a1c",
-                  "#ff7f00",
-                  "#984ea3",
-                  "#377eb8",
-                  "#a65628",
-                  "#f781bf",
-                  "#999999",
-                  "#cccccc"
-                ]
-              },
-              "compute": "compliance",
-              "params_ref": [
-                "param_e_coli",
-                "param_total_coliform",
-                "param_fecal_coliform",
-                "param_turbidity",
-                "param_temperature",
-                "param_ph",
-                "param_conductivity",
-                "param_salinity"
-              ],
-              "globals_ref": "wq_globals"
-            },
-            {
-              "id": "chart_water_committee",
-              "chart_type": "doughnut",
-              "order": 9,
-              "col_span": 8,
-              "config": {
-                "title": "Water Committee"
-              },
-              "api": {
-                "form_id": 1749623934933,
-                "question_id": 1749624452105,
-                "group_by": "option"
-              }
-            },
-            {
-              "id": "chart_implementing_authority",
-              "chart_type": "doughnut",
-              "order": 10,
-              "col_span": 8,
-              "config": {
-                "title": "Implementing Authority"
-              },
-              "api": {
-                "form_id": 1749623934933,
-                "question_id": 1749624452993,
-                "group_by": "option"
-              }
-            },
-            {
-              "id": "chart_test_method",
-              "chart_type": "doughnut",
-              "order": 11,
-              "col_span": 8,
-              "config": {
-                "title": "Lab tested vs CBT tested"
-              },
-              "api": {
-                "form_id": 1749632545233,
-                "question_id": 1749633001462,
-                "group_by": "option",
-                "monitoring": "latest"
-              }
-            },
-            {
               "id": "kpi_monitored_last_12_months",
               "chart_type": "card",
-              "order": 12,
+              "order": 3,
               "col_span": 8,
               "label": "EPS monitored last 12 months",
               "description": "Rolling 12-month window anchored at TODAY.",
@@ -332,7 +332,7 @@
             {
               "id": "kpi_critical_issues_2",
               "chart_type": "card",
-              "order": 13,
+              "order": 1,
               "col_span": 8,
               "label": "Total EPS with critical issues",
               "color": "#e41a1c",
@@ -347,7 +347,7 @@
             {
               "id": "kpi_no_water_sample",
               "chart_type": "card",
-              "order": 14,
+              "order": 2,
               "col_span": 8,
               "label": "EPS where water sample collection was not possible",
               "api": {
@@ -576,6 +576,7 @@
               "col_span": 12,
               "group": "microbial",
               "label": "E-coli presence",
+              "description": "Acceptance threshold 0 CFU/100 mL",
               "config": {
                 "title": "E-coli presence",
                 "xAxisLabel": "CFU/100mL",
@@ -603,6 +604,7 @@
               "col_span": 12,
               "group": "microbial",
               "label": "Total coliform presence",
+              "description": "Acceptance threshold 0 CFU/100 mL",
               "config": {
                 "title": "Total coliform presence",
                 "xAxisLabel": "CFU/100mL",
@@ -631,6 +633,7 @@
               "group": "microbial",
               "hide": true,
               "label": "Fecal coliform presence",
+              "description": "Acceptance threshold 0 CFU/100 mL",
               "config": {
                 "title": "Fecal coliform presence",
                 "xAxisLabel": "CFU/100mL",
@@ -665,6 +668,7 @@
               "col_span": 12,
               "group": "physical",
               "label": "Turbidity",
+              "description": "Acceptance threshold < 5 NTU",
               "config": {
                 "title": "Turbidity",
                 "xAxisLabel": "NTU",
@@ -692,6 +696,7 @@
               "col_span": 12,
               "group": "physical",
               "label": "Water Temperature",
+              "description": "Acceptance threshold < 30 °C",
               "config": {
                 "title": "Water Temperature",
                 "xAxisLabel": "°C",
@@ -726,6 +731,7 @@
               "col_span": 8,
               "group": "chemical",
               "label": "pH",
+              "description": "Acceptance threshold between 6.5 - 8.5",
               "config": {
                 "title": "pH",
                 "xAxisLabel": "pH",
@@ -754,6 +760,7 @@
               "col_span": 8,
               "group": "chemical",
               "label": "Conductivity",
+              "description": "Acceptance threshold < 1000 µS/cm",
               "config": {
                 "title": "Conductivity",
                 "xAxisLabel": "µS/cm",
@@ -781,6 +788,7 @@
               "col_span": 8,
               "group": "chemical",
               "label": "Salinity",
+              "description": "Acceptance threshold < 1 ppt",
               "config": {
                 "title": "Salinity",
                 "xAxisLabel": "ppt",
@@ -875,21 +883,16 @@
                 "monitoring": "latest",
                 "fiscal_year": true
               },
-              "raw_overrides": {
-                "markLine": {
-                  "silent": true,
-                  "data": [
-                    {
-                      "xAxis": "TODAY",
-                      "name": "Today"
-                    }
-                  ],
-                  "lineStyle": {
-                    "color": "#1890ff",
-                    "width": 2
-                  }
+              "mark_lines": [
+                {
+                  "axis": "x",
+                  "type": "today",
+                  "format": "month_year_short",
+                  "color": "#e74c3c",
+                  "width": 2,
+                  "label": "Today"
                 }
-              }
+              ]
             },
             {
               "id": "esc_construction",
