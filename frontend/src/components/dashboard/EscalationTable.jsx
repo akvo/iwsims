@@ -1,7 +1,26 @@
 import React, { useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Alert, Table } from "antd";
+import { DownCircleOutlined, LeftCircleOutlined } from "@ant-design/icons";
 import { useDashboardEscalation } from "../../util/hooks";
+
+const renderValue = (column, row, cellComputers) => {
+  if (column.computed) {
+    const computer = cellComputers[column.key];
+    const computed = computer ? computer(row) : null;
+    if (computed === null || typeof computed === "undefined") {
+      return null;
+    }
+    return typeof computed === "object"
+      ? JSON.stringify(computed)
+      : String(computed);
+  }
+  const value = row[column.key];
+  if (value === null || typeof value === "undefined") {
+    return null;
+  }
+  return typeof value === "object" ? JSON.stringify(value) : String(value);
+};
 
 /**
  * Renders a paginated AntD Table from a flat-schema `table` item.
@@ -27,50 +46,75 @@ const EscalationTable = ({
     customFilterDefs,
   });
 
-  const columns = useMemo(
-    () =>
-      (item.columns || [])
-        .filter((c) => !c.hide)
-        .map((c, colIndex) => {
-          if (colIndex === 0) {
-            return { ...c, fixed: "left", width: c.width || 200 };
-          }
-          // Non-first columns need an explicit width so scroll.x=max-content
-          // can let them keep their natural size instead of being crushed
-          // by AntD's default flex-shrink behaviour on narrow cards.
-          return { ...c, width: c.width || 140 };
-        })
-        .map((c) => ({
-          title: c.label,
-          dataIndex: c.key,
-          key: c.key,
-          fixed: c.fixed,
-          width: c.width,
-          render: (value, row) => {
-            // Computed columns (no backend source). If the page provided a
-            // computer for this column key, run it against the row; otherwise
-            // render a muted placeholder.
-            if (c.computed) {
-              const computer = cellComputers[c.key];
-              const computed = computer ? computer(row) : null;
-              if (computed === null || typeof computed === "undefined") {
-                return <span style={{ color: "#bbb" }}>—</span>;
-              }
-              return typeof computed === "object"
-                ? JSON.stringify(computed)
-                : String(computed);
-            }
-            if (value === null || typeof value === "undefined") {
-              return "—";
-            }
-            if (typeof value === "object") {
-              return JSON.stringify(value);
-            }
-            return String(value);
-          },
-        })),
-    [item.columns, cellComputers]
+  const visibleColumns = useMemo(
+    () => (item.columns || []).filter((c) => !c.hide),
+    [item.columns]
   );
+
+  const MAX_COLUMNS = 6;
+
+  const summaryColumns = useMemo(() => {
+    const priority = visibleColumns.filter((c) => c.priority);
+    return priority.length > 0
+      ? priority
+      : visibleColumns.slice(0, MAX_COLUMNS);
+  }, [visibleColumns]);
+
+  const columns = useMemo(
+    () => [
+      ...summaryColumns.map((c) => ({
+        title: c.label,
+        dataIndex: c.key,
+        key: c.key,
+        render: (_value, row) => {
+          const display = renderValue(c, row, cellComputers);
+          if (display === null) {
+            return <span style={{ color: "#bbb" }}>—</span>;
+          }
+          return <span>{display}</span>;
+        },
+      })),
+      Table.EXPAND_COLUMN,
+    ],
+    [summaryColumns, cellComputers]
+  );
+
+  const renderExpandedRow = (row) => {
+    const rows = visibleColumns.map((c) => ({
+      key: c.key,
+      label: c.label,
+      display: renderValue(c, row, cellComputers),
+    }));
+    return (
+      <div className="pending-data-wrapper">
+        <h3>{item.label || "Details"}</h3>
+        <Table
+          pagination={false}
+          dataSource={rows}
+          rowKey="key"
+          columns={[
+            {
+              title: "Question",
+              dataIndex: "label",
+              width: "50%",
+              className: "table-col-question",
+            },
+            {
+              title: "Response",
+              dataIndex: "display",
+              width: "50%",
+              render: (display) =>
+                display === null ? (
+                  <span style={{ color: "#bbb" }}>—</span>
+                ) : (
+                  display
+                ),
+            },
+          ]}
+        />
+      </div>
+    );
+  };
 
   if (error) {
     return (
@@ -84,11 +128,25 @@ const EscalationTable = ({
   return (
     <Table
       rowKey="id"
-      size="small"
       loading={loading}
       columns={columns}
       dataSource={data?.results || []}
-      scroll={{ x: "max-content" }}
+      expandable={{
+        expandedRowRender: renderExpandedRow,
+        expandRowByClick: true,
+        expandIcon: ({ expanded, onExpand, record }) =>
+          expanded ? (
+            <DownCircleOutlined
+              onClick={(e) => onExpand(record, e)}
+              style={{ color: "#1651B6", fontSize: "19px" }}
+            />
+          ) : (
+            <LeftCircleOutlined
+              onClick={(e) => onExpand(record, e)}
+              style={{ color: "#1651B6", fontSize: "19px" }}
+            />
+          ),
+      }}
       pagination={{
         current: page,
         pageSize,

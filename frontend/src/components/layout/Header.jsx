@@ -6,6 +6,8 @@ import { FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { config, store, uiText } from "../../lib";
 import { eraseCookieFromAllPaths } from "../../util/date";
+import { listVisualizationFormIds } from "../../config/visualizations";
+import CONFIGS from "../../config/visualizations";
 
 const Header = ({ className = "header", ...props }) => {
   const { isLoggedIn, user } = store.useState();
@@ -16,7 +18,17 @@ const Header = ({ className = "header", ...props }) => {
   const text = useMemo(() => {
     return uiText[activeLang];
   }, [activeLang]);
-  const parentForms = window?.forms?.filter((f) => !f?.content?.parent);
+  const dashboardFormIds = useMemo(() => listVisualizationFormIds(), []);
+  const dashboardForms = useMemo(
+    () =>
+      (window?.forms || [])
+        .filter((f) => dashboardFormIds.includes(f.id))
+        .map((f) => ({ id: f.id, name: CONFIGS[f.id]?.name || f.name })),
+    [dashboardFormIds]
+  );
+  const showDashboardsMenu =
+    location.pathname.startsWith("/control-center") ||
+    location.pathname.startsWith("/dashboard");
 
   const signOut = useCallback(async () => {
     eraseCookieFromAllPaths("AUTH_TOKEN");
@@ -73,7 +85,7 @@ const Header = ({ className = "header", ...props }) => {
   }, [text, signOut]);
 
   const DashboardMenu = useMemo(() => {
-    return parentForms?.map((d) => {
+    return dashboardForms?.map((d) => {
       return {
         key: d.id,
         label: (
@@ -87,7 +99,7 @@ const Header = ({ className = "header", ...props }) => {
         ),
       };
     });
-  }, [parentForms]);
+  }, [dashboardForms]);
 
   return (
     <Row
@@ -111,21 +123,23 @@ const Header = ({ className = "header", ...props }) => {
       </Col>
       {!location.pathname.includes("/report/") && (
         <Col>
-          <div className="navigation">
-            <Space>
-              <Dropdown menu={{ items: DashboardMenu }}>
-                <a
-                  className="ant-dropdown-link"
-                  onClick={(e) => {
-                    e.preventDefault();
-                  }}
-                >
-                  {text?.dashboards}
-                  <FaChevronDown />
-                </a>
-              </Dropdown>
-            </Space>
-          </div>
+          {showDashboardsMenu && dashboardForms.length > 0 && (
+            <div className="navigation">
+              <Space>
+                <Dropdown menu={{ items: DashboardMenu }}>
+                  <a
+                    className="ant-dropdown-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                    }}
+                  >
+                    {text?.dashboards}
+                    <FaChevronDown />
+                  </a>
+                </Dropdown>
+              </Space>
+            </div>
+          )}
           <div className="account">
             {isLoggedIn ? (
               <Dropdown menu={{ items: accessUserMenu }}>

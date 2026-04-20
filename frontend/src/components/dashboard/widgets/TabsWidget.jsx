@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Tabs } from "antd";
+import { Card, Tabs } from "antd";
 
 /**
  * Renders a `tabs` container item as an Ant Design <Tabs> component.
@@ -23,12 +23,13 @@ const TabsWidget = ({ item, renderItems }) => {
   }));
 
   return (
-    <Tabs
-      defaultActiveKey={panes[0]?.id}
-      destroyInactiveTabPane
-      items={tabItems}
-      type="card"
-    />
+    <Card className="tabs-card">
+      <Tabs
+        defaultActiveKey={panes[0]?.id}
+        destroyInactiveTabPane
+        items={tabItems}
+      />
+    </Card>
   );
 };
 

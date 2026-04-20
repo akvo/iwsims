@@ -382,11 +382,19 @@ const ChartRenderer = ({
     );
   }
 
+  const rawOverrides =
+    chartType === "bar" && item.chart_type !== "histogram"
+      ? {
+          xAxis: { axisTick: { alignWithLabel: true } },
+          ...(item.raw_overrides || {}),
+        }
+      : item.raw_overrides;
+
   const commonProps = {
     config: item.config || {},
     data,
     rawConfig: item.raw_config,
-    rawOverrides: item.raw_overrides,
+    rawOverrides,
   };
 
   // Pie/doughnut slice callout labels overlap badly when options have

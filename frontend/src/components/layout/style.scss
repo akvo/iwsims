@@ -20,7 +20,11 @@
       }
     }
 
-    .body,
+    .body {
+      padding-top: calc(#{$header-height} + #{$padding-default});
+      padding-bottom: $padding-default;
+    }
+
     .footer {
       padding-top: $padding-default;
       padding-bottom: $padding-default;
@@ -115,8 +119,10 @@
       padding-top: $padding-header;
       padding-bottom: $padding-header;
       border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 999;
 
       .logo {

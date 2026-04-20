@@ -142,7 +142,7 @@ const DashboardMap = ({
     <MapContainer
       center={center}
       zoom={7}
-      style={{ height, width: "100%", margin: "16px 0" }}
+      style={{ height, width: "100%" }}
       scrollWheelZoom={false}
     >
       <TileLayer
