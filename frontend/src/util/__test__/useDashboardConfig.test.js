@@ -3,30 +3,39 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { useDashboardConfig } from "../hooks";
 import {
-  getVisualizationConfig,
-  listVisualizationFormIds,
+  getVisualizationConfigBySlug,
+  listVisualizations,
 } from "../../config/visualizations";
 
 /**
  * Minimal harness that captures the hook's return value for each render.
  * Avoids @testing-library/react-hooks (not in deps; RTL v12).
  */
-const HookProbe = ({ formId, onResult }) => {
-  const result = useDashboardConfig(formId);
+const HookProbe = ({ slug, onResult }) => {
+  const result = useDashboardConfig(slug);
   onResult(result);
   return null;
 };
 
 describe("config/visualizations registry", () => {
-  test("registers the EPS Overview config under its parent_form_id", () => {
-    const ids = listVisualizationFormIds();
-    expect(ids).toContain(1749623934933);
+  test("registers the EPS Overview config under its slug", () => {
+    const entries = listVisualizations();
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          slug: "eps-overview",
+          name: "EPS Overview",
+          parent_form_id: 1749623934933,
+        }),
+      ])
+    );
   });
 
-  test("getVisualizationConfig returns the EPS config when passed the matching id", () => {
-    const config = getVisualizationConfig(1749623934933);
+  test("getVisualizationConfigBySlug returns the EPS config for the matching slug", () => {
+    const config = getVisualizationConfigBySlug("eps-overview");
     expect(config).not.toBeNull();
     expect(config.name).toBe("EPS Overview");
+    expect(config.parent_form_id).toBe(1749623934933);
     // Flat schema: top-level `items[]` with a `tabs` container holding 3 panes.
     expect(Array.isArray(config.items)).toBe(true);
     const tabsItem = config.items.find((it) => it.chart_type === "tabs");
@@ -59,14 +68,14 @@ describe("config/visualizations registry", () => {
     );
   });
 
-  test("getVisualizationConfig accepts numeric strings (route params)", () => {
-    const config = getVisualizationConfig("1749623934933");
-    expect(config).not.toBeNull();
-    expect(config.parent_form_id).toBe(1749623934933);
+  test("getVisualizationConfigBySlug returns null for unknown slugs", () => {
+    expect(getVisualizationConfigBySlug("does-not-exist")).toBeNull();
   });
 
-  test("getVisualizationConfig returns null for unknown ids", () => {
-    expect(getVisualizationConfig(99999)).toBeNull();
+  test("getVisualizationConfigBySlug returns null for falsy input", () => {
+    expect(getVisualizationConfigBySlug("")).toBeNull();
+    expect(getVisualizationConfigBySlug(undefined)).toBeNull();
+    expect(getVisualizationConfigBySlug(null)).toBeNull();
   });
 });
 
@@ -79,11 +88,11 @@ describe("useDashboardConfig", () => {
     console.warn = originalWarn;
   });
 
-  test("returns { config, loading: false, error: null } for a known formId", () => {
+  test("returns { config, loading: false, error: null } for a known slug", () => {
     let latest;
     render(
       <HookProbe
-        formId={1749623934933}
+        slug="eps-overview"
         onResult={(r) => {
           latest = r;
         }}
@@ -95,11 +104,11 @@ describe("useDashboardConfig", () => {
     expect(latest.config.name).toBe("EPS Overview");
   });
 
-  test("returns { config: null } and warns for an unknown formId", () => {
+  test("returns { config: null } and warns for an unknown slug", () => {
     let latest;
     render(
       <HookProbe
-        formId={42}
+        slug="does-not-exist"
         onResult={(r) => {
           latest = r;
         }}
@@ -109,11 +118,11 @@ describe("useDashboardConfig", () => {
     expect(console.warn).toHaveBeenCalled();
   });
 
-  test("returns { config: null } without warning when formId is falsy", () => {
+  test("returns { config: null } without warning when slug is falsy", () => {
     let latest;
     render(
       <HookProbe
-        formId={undefined}
+        slug={undefined}
         onResult={(r) => {
           latest = r;
         }}
@@ -123,12 +132,12 @@ describe("useDashboardConfig", () => {
     expect(console.warn).not.toHaveBeenCalled();
   });
 
-  test("memoizes across renders with the same formId", () => {
+  test("memoizes across renders with the same slug", () => {
     let first;
     let second;
     const { rerender } = render(
       <HookProbe
-        formId={1749623934933}
+        slug="eps-overview"
         onResult={(r) => {
           first = r;
         }}
@@ -136,7 +145,7 @@ describe("useDashboardConfig", () => {
     );
     rerender(
       <HookProbe
-        formId={1749623934933}
+        slug="eps-overview"
         onResult={(r) => {
           second = r;
         }}
