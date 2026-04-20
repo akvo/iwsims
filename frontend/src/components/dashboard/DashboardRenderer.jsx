@@ -27,6 +27,7 @@ const CHART_TYPES = new Set([
   "pie",
   "stack_bar",
   "histogram",
+  "dots",
 ]);
 
 /**
@@ -118,7 +119,11 @@ const DashboardRenderer = ({
       const { title: cardTitle, ...restConfig } = item.config || {};
       const itemForChart = { ...item, config: restConfig };
       return (
-        <Card title={cardTitle} style={{ marginBottom: 0 }}>
+        <Card
+          title={cardTitle}
+          style={{ marginBottom: 0 }}
+          className="chart-card"
+        >
           {item.description && (
             <Paragraph type="secondary">{item.description}</Paragraph>
           )}
@@ -141,6 +146,7 @@ const DashboardRenderer = ({
           title={item.label || "Escalation list"}
           size="small"
           style={{ marginBottom: 0 }}
+          className="escalation-table-card"
         >
           {item.description && (
             <Paragraph type="secondary">{item.description}</Paragraph>

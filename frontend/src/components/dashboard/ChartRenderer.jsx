@@ -13,6 +13,7 @@ import { toHistogramBarData } from "./compute/progressHistogram";
 import { computeComplianceStackData } from "./compute/compliance";
 import { rotateToFiscalOrder } from "./compute/fiscalMonthRotation";
 import { toValueHistogramBins } from "./compute/valueHistogramBins";
+import DotsChart from "./DotsChart";
 
 const COMPONENT_BY_TYPE = {
   bar: Bar,
@@ -160,6 +161,10 @@ const ChartWithMarkLines = ({ Component, commonProps, markLines, today }) => {
     }
     chart.setOption(
       {
+        // On narrow viewports (e.g. 1024×768) many-entry legends wrap onto
+        // multiple rows and collide with the y-axis title. Pagination via
+        // `type: "scroll"` keeps the legend on a single row.
+        legend: { type: "scroll" },
         series: [
           {
             markLine: {
@@ -183,6 +188,35 @@ ChartWithMarkLines.propTypes = {
   commonProps: PropTypes.object.isRequired,
   markLines: PropTypes.array.isRequired,
   today: PropTypes.instanceOf(Date),
+};
+
+/**
+ * Wrap a Cartesian akvo-chart (bar/line/stack_bar) so we can force the
+ * legend into pagination mode — otherwise many-entry legends wrap onto
+ * multiple rows on narrow viewports and collide with the y-axis title.
+ * Uses the same callback-ref + setOption(notMerge=false) trick as
+ * ChartWithMarkLines to layer the override on top of akvo-charts' own
+ * setOption (which runs first each render).
+ */
+const ChartWithScrollLegend = ({ Component, commonProps }) => {
+  const [chart, setChart] = useState(null);
+  const setRef = useCallback((instance) => {
+    if (instance && typeof instance.setOption === "function") {
+      setChart((prev) => prev || instance);
+    }
+  }, []);
+  useEffect(() => {
+    if (!chart) {
+      return;
+    }
+    chart.setOption({ legend: { type: "scroll" } }, false);
+  }); // No deps: see ChartWithMarkLines note.
+  return <Component ref={setRef} {...commonProps} />;
+};
+
+ChartWithScrollLegend.propTypes = {
+  Component: PropTypes.elementType.isRequired,
+  commonProps: PropTypes.object.isRequired,
 };
 
 /**
@@ -238,9 +272,13 @@ const ChartRenderer = ({
 }) => {
   const chartType = item.chart_type === "histogram" ? "bar" : item.chart_type;
   const Component = COMPONENT_BY_TYPE[chartType];
+  const isDots = item.chart_type === "dots";
 
   const isApiDriven =
-    Boolean(Component) && Boolean(item.api) && !item.compute && !item.source;
+    (Boolean(Component) || isDots) &&
+    Boolean(item.api) &&
+    !item.compute &&
+    !item.source;
 
   const {
     data: apiData,
@@ -349,7 +387,7 @@ const ChartRenderer = ({
     fiscalYearStartMonth,
   ]);
 
-  if (!Component) {
+  if (!Component && !isDots) {
     return (
       <Alert
         type="error"
@@ -369,10 +407,10 @@ const ChartRenderer = ({
     );
   }
 
-  // Empty state: no rows, OR all-zero for pie/doughnut (the library
-  // would otherwise draw equal-sized slices, misleading the viewer).
+  // Empty state: no rows, OR all-zero for pie/doughnut/dots (these
+  // render a blank canvas or equal-sized slices otherwise — misleading).
   const allZero =
-    (chartType === "doughnut" || chartType === "pie") &&
+    (chartType === "doughnut" || chartType === "pie" || isDots) &&
     data.every((d) => !d.value);
   if (!data || data.length === 0 || allZero) {
     return (
@@ -380,6 +418,10 @@ const ChartRenderer = ({
         No data
       </div>
     );
+  }
+
+  if (isDots) {
+    return <DotsChart data={data} colors={item.colors} height={item.height} />;
   }
 
   const rawOverrides =
@@ -421,7 +463,9 @@ const ChartRenderer = ({
     );
   }
 
-  return <Component {...commonProps} />;
+  return (
+    <ChartWithScrollLegend commonProps={commonProps} Component={Component} />
+  );
 };
 
 ChartRenderer.propTypes = {

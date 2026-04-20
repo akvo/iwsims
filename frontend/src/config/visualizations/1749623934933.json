@@ -276,7 +276,7 @@
     },
     {
       "id": "chart_implementing_authority",
-      "chart_type": "doughnut",
+      "chart_type": "dots",
       "order": 13,
       "col_span": 8,
       "config": {

@@ -340,6 +340,29 @@
 
     .ant-col {
       animation: dashFadeUp 260ms ease-out both;
+      .chart-card {
+        height: 480px; // Set a fixed height for charts to prevent layout shift during loading
+        display: flex;
+        flex-direction: column;
+
+        .ant-card-body {
+          flex: 1 1 auto;
+          min-height: 0; // allow flex children to shrink below their intrinsic size
+          overflow: hidden; // prevent chart canvas from bleeding outside the card
+          display: flex;
+          flex-direction: column;
+
+          > *:last-child {
+            flex: 1 1 auto;
+            min-height: 0;
+          }
+        }
+
+        .dots-chart-wrapper {
+          flex: 1 1 auto;
+          min-height: 0;
+        }
+      }
     }
 
     @for $i from 1 through 16 {
