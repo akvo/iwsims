@@ -24,6 +24,7 @@ const CHART_TYPES = new Set([
   "bar",
   "line",
   "doughnut",
+  "half_doughnut",
   "pie",
   "stack_bar",
   "histogram",

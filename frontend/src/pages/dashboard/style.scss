@@ -1,11 +1,6 @@
 @import "../../variables";
 
 #root {
-  .layout {
-    .body {
-      padding-top: #{$header-height};
-    }
-  }
   .dashboard {
     .ant-table-measure-row {
       display: none !important;
@@ -17,6 +12,7 @@
     padding: 0 $layout-padding-small-screen $padding-default;
 
     @media screen and (min-width: $screen-regular) {
+      margin-top: -28px; // pull up to cover header background
       margin-left: -$layout-padding;
       margin-right: -$layout-padding;
       padding: 0 $layout-padding $padding-default;

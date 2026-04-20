@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Bar, Doughnut, Line, Pie, StackBar } from "akvo-charts";
 import { Alert, Skeleton } from "antd";
@@ -18,6 +12,7 @@ import DotsChart from "./DotsChart";
 const COMPONENT_BY_TYPE = {
   bar: Bar,
   doughnut: Doughnut,
+  half_doughnut: Doughnut,
   line: Line,
   pie: Pie,
   stack_bar: StackBar,
@@ -29,12 +24,21 @@ const COMPONENT_BY_TYPE = {
  * and its internal setOption replaces rather than merges — so we grab
  * the ECharts instance via ref and setOption with notMerge=false to
  * layer label:{show:false} on top while preserving dataset + encode.
+ *
+ * Uses the same callback-ref + empty-deps pattern as ChartWithMarkLines
+ * (see long comment there): akvo-charts' useImperativeHandle only
+ * exposes a non-null instance on its 2nd internal render, so a plain
+ * useRef would never fire setOption against a real chart.
  */
 const PieWithHiddenLabels = ({ Component, commonProps }) => {
-  const ref = useRef(null);
+  const [chart, setChart] = useState(null);
+  const setRef = useCallback((instance) => {
+    if (instance && typeof instance.setOption === "function") {
+      setChart((prev) => prev || instance);
+    }
+  }, []);
   useEffect(() => {
-    const chart = ref.current;
-    if (!chart || typeof chart.setOption !== "function") {
+    if (!chart) {
       return;
     }
     chart.setOption(
@@ -43,11 +47,63 @@ const PieWithHiddenLabels = ({ Component, commonProps }) => {
       },
       false
     );
-  }, [commonProps.data, commonProps.config, commonProps.rawConfig]);
-  return <Component ref={ref} {...commonProps} />;
+  }); // No deps: re-apply after every render because akvo-charts' own
+  // setOption re-runs on each render (its getOptions dep is a fresh fn).
+  return <Component ref={setRef} {...commonProps} />;
 };
 
 PieWithHiddenLabels.propTypes = {
+  Component: PropTypes.elementType.isRequired,
+  commonProps: PropTypes.object.isRequired,
+};
+
+/**
+ * Render akvo-charts' <Doughnut> as an upper half-donut (arc from 180°
+ * to 360°, opening at the bottom — see
+ * https://echarts.apache.org/examples/en/editor.html?c=pie-half-donut).
+ *
+ * akvo-charts' Doughnut doesn't expose start/end-angle props, so we grab
+ * the ECharts instance and setOption(..., notMerge=false) which merges
+ * into the existing dataset + encode binding. Legend is pushed to the
+ * bottom so the two halves balance visually.
+ *
+ * Uses the callback-ref + empty-deps pattern (see ChartWithMarkLines
+ * comment) because akvo-charts' useImperativeHandle exposes the instance
+ * only on its 2nd render, and it re-runs its own setOption on every
+ * render — so our override has to re-apply on every render too.
+ */
+const HalfDoughnut = ({ Component, commonProps }) => {
+  const [chart, setChart] = useState(null);
+  const setRef = useCallback((instance) => {
+    if (instance && typeof instance.setOption === "function") {
+      setChart((prev) => prev || instance);
+    }
+  }, []);
+  useEffect(() => {
+    if (!chart) {
+      return;
+    }
+    chart.setOption(
+      {
+        legend: { bottom: 0, left: "center", type: "scroll" },
+        series: [
+          {
+            startAngle: 180,
+            endAngle: 360,
+            center: ["50%", "72%"],
+            radius: ["55%", "85%"],
+            label: { show: false },
+            labelLine: { show: false },
+          },
+        ],
+      },
+      false
+    );
+  }); // No deps: see ChartWithMarkLines note.
+  return <Component ref={setRef} {...commonProps} />;
+};
+
+HalfDoughnut.propTypes = {
   Component: PropTypes.elementType.isRequired,
   commonProps: PropTypes.object.isRequired,
 };
@@ -165,6 +221,11 @@ const ChartWithMarkLines = ({ Component, commonProps, markLines, today }) => {
         // multiple rows and collide with the y-axis title. Pagination via
         // `type: "scroll"` keeps the legend on a single row.
         legend: { type: "scroll" },
+        // Align x-axis ticks with labels (instead of between them) so each
+        // bar sits directly under its category — see
+        // https://echarts.apache.org/examples/en/editor.html?c=bar-tick-align.
+        // Harmless for line/stack_bar with category axes.
+        xAxis: { axisTick: { alignWithLabel: true } },
         series: [
           {
             markLine: {
@@ -209,7 +270,15 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
     if (!chart) {
       return;
     }
-    chart.setOption({ legend: { type: "scroll" } }, false);
+    chart.setOption(
+      {
+        legend: { type: "scroll" },
+        // Align x-axis ticks with labels (not between them) — see
+        // https://echarts.apache.org/examples/en/editor.html?c=bar-tick-align.
+        xAxis: { axisTick: { alignWithLabel: true } },
+      },
+      false
+    );
   }); // No deps: see ChartWithMarkLines note.
   return <Component ref={setRef} {...commonProps} />;
 };
@@ -407,10 +476,13 @@ const ChartRenderer = ({
     );
   }
 
-  // Empty state: no rows, OR all-zero for pie/doughnut/dots (these
-  // render a blank canvas or equal-sized slices otherwise — misleading).
+  // Empty state: no rows, OR all-zero for pie/doughnut/half-donut/dots
+  // (these render a blank canvas or equal-sized slices otherwise — misleading).
   const allZero =
-    (chartType === "doughnut" || chartType === "pie" || isDots) &&
+    (chartType === "doughnut" ||
+      chartType === "pie" ||
+      chartType === "half_doughnut" ||
+      isDots) &&
     data.every((d) => !d.value);
   if (!data || data.length === 0 || allZero) {
     return (
@@ -424,13 +496,10 @@ const ChartRenderer = ({
     return <DotsChart data={data} colors={item.colors} height={item.height} />;
   }
 
-  const rawOverrides =
-    chartType === "bar" && item.chart_type !== "histogram"
-      ? {
-          xAxis: { axisTick: { alignWithLabel: true } },
-          ...(item.raw_overrides || {}),
-        }
-      : item.raw_overrides;
+  // NB: akvo-charts spreads `rawOverrides` into each *series* object
+  // (not as top-level options), so axis/legend/grid overrides passed here
+  // are no-ops — those live in the setOption-after-mount wrappers above.
+  const rawOverrides = item.raw_overrides;
 
   const commonProps = {
     config: item.config || {},
@@ -438,6 +507,13 @@ const ChartRenderer = ({
     rawConfig: item.raw_config,
     rawOverrides,
   };
+
+  // Half-donut variant (see https://echarts.apache.org/examples/en/editor.html?c=pie-half-donut).
+  // Branches before the generic pie/doughnut path because it needs a
+  // different ECharts overlay (start/end-angle + re-centered geometry).
+  if (chartType === "half_doughnut") {
+    return <HalfDoughnut commonProps={commonProps} Component={Component} />;
+  }
 
   // Pie/doughnut slice callout labels overlap badly when options have
   // long names on a cramped card. akvo-charts' Doughnut/Pie doesn't

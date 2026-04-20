@@ -290,7 +290,7 @@
     },
     {
       "id": "chart_test_method",
-      "chart_type": "doughnut",
+      "chart_type": "half_doughnut",
       "order": 14,
       "col_span": 8,
       "config": {
