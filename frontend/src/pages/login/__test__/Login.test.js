@@ -10,7 +10,7 @@ jest.mock("axios");
 describe("Login and Registration", () => {
   test("test if the login form exists", () => {
     const { asFragment } = render(<TestApp />);
-    userEvent.click(screen.getByText(/Log In/i), { button: 0 });
+    userEvent.click(screen.getByText("Log in"), { button: 0 });
     expect(screen.getByText(/Welcome back/i)).toBeInTheDocument();
     expect(
       screen.getByText(/Please enter your account details/i)
