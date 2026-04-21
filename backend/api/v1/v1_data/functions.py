@@ -1,5 +1,6 @@
 import re
 import base64
+from django.conf import settings
 from django.core.cache import cache
 from datetime import datetime
 from datetime import timedelta
@@ -13,6 +14,11 @@ fake = Faker()
 
 
 def get_cache(name):
+    # Bypass cache under TEST_ENV. The production file-based cache lives at a
+    # single host-level path shared across all parallel test workers, which
+    # causes flaky failures when workers read stale entries written by peers.
+    if getattr(settings, "TEST_ENV", False):
+        return None
     name = re.sub(r"[\W_]+", "_", name)
     today = datetime.now().strftime("%Y%m%d")
     cache_name = f"{today}-{name}"
@@ -23,10 +29,12 @@ def get_cache(name):
 
 
 def create_cache(name, resp, timeout=None):
+    if getattr(settings, "TEST_ENV", False):
+        return
     name = re.sub(r"[\W_]+", "_", name)
     today = datetime.now().strftime("%Y%m%d")
     cache_name = f"{today}-{name}"
-    cache.add(cache_name, resp, timeout=timeout)
+    cache.set(cache_name, resp, timeout=timeout)
 
 
 def set_answer_data(

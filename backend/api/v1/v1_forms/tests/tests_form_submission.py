@@ -7,7 +7,7 @@ from api.v1.v1_users.models import Organisation
 from api.v1.v1_profile.models import Administration
 
 
-@override_settings(USE_TZ=False)
+@override_settings(USE_TZ=False, TEST_ENV=True)
 class FormSubmissionTestCase(TestCase):
     def setUp(self):
         call_command("administration_seeder", "--test")

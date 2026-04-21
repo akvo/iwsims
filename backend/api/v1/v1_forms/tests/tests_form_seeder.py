@@ -25,7 +25,7 @@ def seed_administration_test():
     administration.save()
 
 
-@override_settings(USE_TZ=False)
+@override_settings(USE_TZ=False, TEST_ENV=True)
 class FormSeederTestCase(TestCase):
     def call_command(self, *args, **kwargs):
         out = StringIO()
