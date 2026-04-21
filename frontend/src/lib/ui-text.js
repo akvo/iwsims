@@ -775,10 +775,16 @@ const uiText = {
     homeStructureText:
       "The Department is headed by the Director of Water and Sewerage with the Technical Unit responsible for monitoring and compliance and Policy Unit responsible for policy and regulatory matters, supported by common cadre support staff.",
     homeStructureImage: {
-      src: "https://images.unsplash.com/photo-1744157801849-5e090acbdf84?q=80&w=2089&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      alt: "Water resources",
+      src: "/assets/department-structure.jpg",
+      alt: "Department Structure",
     },
     homeKeyRolesTitle: "Key Roles and Responsibilities",
+    homeKeyRolesHeadline: (
+      <Fragment>
+        Policy, oversight and <span className="accent">compliance</span> across
+        Fiji&apos;s water sector.
+      </Fragment>
+    ),
     homeKeyRolesText:
       "The key roles and responsibilities of the Department include policy and legislation development, technical and policy advisory, compliance monitoring, and Water Authority of Fiji oversight.",
     homeKeyRolesItems: [
