@@ -140,7 +140,6 @@
 
     .dashboard-filters {
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
@@ -148,13 +147,17 @@
 
       .filter-group {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
         gap: 8px;
       }
 
       .filter-group-dynamic {
         justify-content: flex-end;
+      }
+
+      .filter-group-fixed {
+        display: flex;
+        width: 80%;
       }
     }
 
