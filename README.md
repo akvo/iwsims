@@ -177,6 +177,28 @@ docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 Network config: [nginx](https://github.com/akvo/akvo-mis/blob/main/frontend/nginx/conf.d/default.conf)
 
 
+## Dashboard Visualizations
+
+Dashboards at `/dashboard/:formId` are **config-driven** — a new form family
+can get a full dashboard without any component code changes. Each dashboard is
+a single JSON file whose top-level `items[]` is a flat array of self-describing
+widgets (cards, charts, tables, map, filters) dispatched by `chart_type`.
+Recursive containers (`tabs`, `filter_bar`) group widgets; layout emerges from
+per-item `order` + `col_span`. Cross-references between widgets resolve by
+globally-unique `id`.
+
+To add a new dashboard:
+
+1. Drop a `<parent_form_id>.json` file in [frontend/src/config/visualizations/](frontend/src/config/visualizations/)
+2. Register it in [frontend/src/config/visualizations/index.js](frontend/src/config/visualizations/index.js)
+3. Visit `/dashboard/<parent_form_id>`
+
+References:
+
+- Full schema, `chart_type` catalogue, filter hints, troubleshooting: [frontend/src/config/visualizations/README.md](frontend/src/config/visualizations/README.md)
+- Reference implementation (EPS Overview): [1749623934933.json](frontend/src/config/visualizations/1749623934933.json)
+- Extended example walkthrough + migration mapping from the legacy nested schema: [doc/claude/iwsims-dashboard-config-example.md](doc/claude/iwsims-dashboard-config-example.md)
+
 ## Data Seeder
 
 ### Akvo Flow

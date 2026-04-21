@@ -20,7 +20,11 @@
       }
     }
 
-    .body,
+    .body {
+      padding-top: calc(#{$header-height} + #{$padding-default});
+      padding-bottom: $padding-default;
+    }
+
     .footer {
       padding-top: $padding-default;
       padding-bottom: $padding-default;
@@ -115,8 +119,10 @@
       padding-top: $padding-header;
       padding-bottom: $padding-header;
       border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 999;
 
       .logo {
@@ -161,27 +167,27 @@
 
       .account,
       .navigation {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
         .ant-dropdown-link {
-          display: flex;
-          padding: 16px;
+          display: inline-flex;
+          padding: 12px 16px;
           justify-content: center;
           align-items: center;
           gap: 8px;
+          line-height: 1;
         }
       }
 
       .navigation {
         a {
           color: $color-dark;
-          padding: 16px;
+          padding: 12px 16px;
         }
       }
 
       .account {
-        vertical-align: middle;
-        padding-top: 4px;
-
         button {
           &.ant-btn {
             padding-left: 20px;
@@ -199,10 +205,15 @@
 
           .icon {
             margin-left: $margin-small;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
             border: 2px solid;
             border-radius: 100%;
-            font-size: 13.5px;
-            padding: 0px 4px;
+            font-size: 13px;
+            line-height: 1;
           }
         }
       }

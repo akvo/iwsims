@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
-import { Row, Col, Button, Dropdown, Menu } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Row, Col, Button } from "antd";
 import { Link, useLocation } from "react-router-dom";
 import ComingSoon from "./custom/ComingSoon";
 import Countdown from "react-countdown";
@@ -81,24 +80,6 @@ const Banner = () => {
   };
 
   const HomeBanner = () => {
-    /*
-    const scrollToView = () => {
-      const section = document.querySelector("#home-visualisation");
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-    */
-    const DashboardMenu = (
-      <Menu>
-        {window?.powerBIDashboard?.map((d) => (
-          <Menu.Item
-            key={`${d.name}`}
-            style={{ fontSize: 16, fontStyle: "italic", padding: 10 }}
-          >
-            <Link to={`/${d.page}/${d.path}`}>{d.name}</Link>
-          </Menu.Item>
-        ))}
-      </Menu>
-    );
     return (
       <>
         <h1 className="welcome">{text?.welcome}</h1>
@@ -106,28 +87,6 @@ const Banner = () => {
           <h4>{text?.countdownTitle}</h4>
           <Countdown date="2030-12-31T23:59:59" renderer={renderer} />
         </div>
-        <Row>
-          {/*
-          <Button
-            type="primary"
-            onClick={() => scrollToView()}
-            className="btn-explore-national-data"
-            shape="round"
-          >
-            {text?.welcomeCta}
-          </Button>
-          */}
-          <Dropdown overlay={DashboardMenu}>
-            <Button
-              shape="round"
-              icon={<PlusOutlined />}
-              onClick={(e) => e.preventDefault()}
-              className="btn-dashboard"
-            >
-              Comprehensive Dashboards
-            </Button>
-          </Dropdown>
-        </Row>
       </>
     );
   };

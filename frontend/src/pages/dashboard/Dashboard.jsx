@@ -1,284 +1,423 @@
-import React, { useState, useEffect, useMemo } from "react";
-import "./style.scss";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Row, Col, Tabs, Affix } from "antd";
-import { VisualisationFilters } from "../../components";
-import { useNotification } from "../../util/hooks";
-import { api, uiText, store } from "../../lib";
-import { capitalize, takeRight } from "lodash";
-import { Maps } from "../../components";
+import { Alert, Col, Empty, Row, Typography } from "antd";
 import {
-  CardVisual,
-  TableVisual,
-  ChartVisual,
-  ReportVisual,
-} from "./components";
-import { generateAdvanceFilterURL } from "../../util/filter";
-import { useCallback } from "react";
+  useDashboardConfig,
+  useDashboardFilters,
+  useDashboardProgress,
+  useDashboardValues,
+} from "../../util/hooks";
+import DashboardRenderer from "../../components/dashboard/DashboardRenderer";
+import { fails } from "../../components/dashboard/compute/compliance";
+import "./style.scss";
 
-const { TabPane } = Tabs;
+const { Title, Paragraph } = Typography;
 
+/**
+ * Invisible per-parameter fetcher used for the compliance stacked-bar chart.
+ *
+ * One instance is rendered per non-hidden `histogram` item whose id appears
+ * in a `params_ref[]` of any compliance chart. It fires the /values call and
+ * reports back via `onData` keyed by item id.
+ *
+ * Rules-of-hooks-compliant fan-out: the hook call is unconditional inside
+ * this component; the parent decides how many instances to render.
+ */
+const WqParamFetcher = ({
+  paramItem,
+  filterState,
+  fiscalYearStartMonth,
+  customFilterDefs,
+  onData,
+}) => {
+  const { data } = useDashboardValues(paramItem.api, filterState, {
+    fiscalYearStartMonth,
+    customFilterDefs,
+  });
+  useEffect(() => {
+    if (data) {
+      onData(paramItem.id, data);
+    }
+  }, [data, paramItem.id, onData]);
+  return null;
+};
+
+/**
+ * Invisible progress fetcher. One instance per `progress_definition` item
+ * in the config tree. Reports back via `onData` keyed by item id.
+ */
+const ProgressFetcher = ({
+  progressItem,
+  filterState,
+  customFilterDefs,
+  onData,
+}) => {
+  const { data, error } = useDashboardProgress(progressItem, filterState, {
+    customFilterDefs,
+  });
+  useEffect(() => {
+    if (data || error) {
+      onData(progressItem.id, { data, error });
+    }
+  }, [progressItem.id, data, error, onData]);
+  return null;
+};
+
+/**
+ * Walk the flat item tree and collect all items of a given chart_type.
+ * Tab panes (no chart_type) are walked for their children transparently.
+ *
+ * @param {Array}  items
+ * @param {string} chartType
+ * @returns {Array}
+ */
+const collectByType = (items = [], chartType) => {
+  const result = [];
+  items.forEach((item) => {
+    if (!item.chart_type && Array.isArray(item.items)) {
+      result.push(...collectByType(item.items, chartType));
+      return;
+    }
+    if (item.chart_type === chartType) {
+      result.push(item);
+    }
+    if (Array.isArray(item.items)) {
+      result.push(...collectByType(item.items, chartType));
+    }
+  });
+  return result;
+};
+
+/**
+ * Walk items and collect all ids listed in any `params_ref[]` arrays found
+ * on compliance charts (`compute: "compliance"`).
+ *
+ * @param {Array} items
+ * @returns {Set<string>}
+ */
+const collectComplianceParamIds = (items = []) => {
+  const ids = new Set();
+  items.forEach((item) => {
+    if (!item.chart_type && Array.isArray(item.items)) {
+      collectComplianceParamIds(item.items).forEach((id) => ids.add(id));
+      return;
+    }
+    if (item.compute === "compliance" && Array.isArray(item.params_ref)) {
+      item.params_ref.forEach((id) => ids.add(id));
+    }
+    if (Array.isArray(item.items)) {
+      collectComplianceParamIds(item.items).forEach((id) => ids.add(id));
+    }
+  });
+  return ids;
+};
+
+/**
+ * Config-driven dashboard page.
+ *
+ * Renders the flat item tree from `config.items` via `<DashboardRenderer>`.
+ * Also runs invisible background fetchers for:
+ *   - Progress definitions  (`progress_definition` items)
+ *   - Water-quality parameters referenced by compliance charts (`params_ref[]`)
+ *
+ * These pre-fetched responses are assembled into `complianceResponses` (keyed
+ * by param item id) and `cellComputersById` (keyed by table item id) then
+ * injected into DashboardRenderer as context.
+ *
+ * Route: /dashboard/:formId
+ */
 const Dashboard = () => {
   const { formId } = useParams();
-  const selectedForm = window?.forms?.find((x) => String(x.id) === formId);
-  const current = window?.dashboard?.find((x) => String(x.form_id) === formId);
-  const { notify } = useNotification();
+  const { config, definitionsById } = useDashboardConfig(formId);
 
-  const [dataset, setDataset] = useState([]);
-  const [dataPeriod, setDataPeriod] = useState([]);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [loading, setLoading] = useState(false);
-  const [activeItem, setActiveItem] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
+  // Component-scoped "now" anchor; threaded into DashboardRenderer so
+  // mark_lines with type="today" can resolve to an axis-matching label.
+  const today = useMemo(() => new Date(), []);
 
-  const { active: activeLang } = store.useState((s) => s.language);
-  const advancedFilters = store.useState((s) => s.advancedFilters);
-  const administration = store.useState((s) => s.administration);
-  const [wait, setWait] = useState(true);
+  // Build a minimal config shell for the filters hook when config is absent.
+  const filtersConfig = useMemo(
+    () => config || { parent_form_id: null, items: [] },
+    [config]
+  );
+  const filters = useDashboardFilters(filtersConfig);
 
-  const text = useMemo(() => {
-    return uiText[activeLang];
-  }, [activeLang]);
+  const fyStart = config?.fiscal_year_start_month || 1;
 
-  const currentAdministration = takeRight(administration)?.[0];
-  const prefixText =
-    currentAdministration?.level === 0
-      ? currentAdministration?.levelName
-      : currentAdministration?.name;
-  const admLevelName = useMemo(() => {
-    const { level } = currentAdministration;
-    let name = { plural: "Counties", singular: "County" };
-    if (level === 1) {
-      name = { plural: "Sub-Counties", singular: "Sub-County" };
+  // Flat list of custom filter items for hint expansion inside useDashboardValues.
+  const customFilterDefs = useMemo(() => {
+    if (!config) {
+      return [];
     }
-    if (level === 2) {
-      name = { plural: "Wards", singular: "Ward" };
-    }
-    if (level === 3) {
-      name = { plural: "Ward", singular: "Ward" };
-    }
-    return name;
-  }, [currentAdministration]);
+    return collectByType(config.items, "filter_option").concat(
+      collectByType(config.items, "filter_multi_option")
+    );
+  }, [config]);
 
-  const fetchUserAdmin = useCallback(async () => {
-    try {
-      const { data: countyAdm } = await api.get(`administration/${1}`);
-      store.update((s) => {
-        s.administration = [countyAdm];
-      });
-      setWait(false);
-    } catch (error) {
-      console.error(error);
+  // ── Compliance fan-out ─────────────────────────────────────────────────────
+  // Collect param item ids referenced by any compliance chart, then derive
+  // the param items themselves from definitionsById.
+  const complianceParamItems = useMemo(() => {
+    if (!config) {
+      return [];
     }
+    const ids = collectComplianceParamIds(config.items);
+    return Array.from(ids)
+      .map((id) => definitionsById.get(id))
+      .filter(Boolean);
+  }, [config, definitionsById]);
+
+  const [complianceResponses, setComplianceResponses] = useState({});
+  const onParamData = useCallback((id, data) => {
+    setComplianceResponses((prev) =>
+      prev[id] === data ? prev : { ...prev, [id]: data }
+    );
   }, []);
 
-  useEffect(() => {
-    fetchUserAdmin();
-  }, [fetchUserAdmin]);
-
-  useEffect(() => {
-    if (selectedForm?.id) {
-      store.update((s) => {
-        s.questionGroups = selectedForm.content.question_group;
-      });
-      setActiveTab("overview");
-      setActiveItem(current?.tabs?.["overview"]);
+  // ── Progress fetching ──────────────────────────────────────────────────────
+  const progressItems = useMemo(() => {
+    if (!config) {
+      return [];
     }
-  }, [selectedForm, current]);
+    return collectByType(config.items, "progress_definition");
+  }, [config]);
 
-  useEffect(() => {
-    if (formId && !lastUpdate) {
-      api
-        .get(`last_update/${formId}`)
-        .then((res) => setLastUpdate(res.data.last_update));
-    }
-  }, [formId, lastUpdate]);
+  const [progressById, setProgressById] = useState({});
+  const onProgressData = useCallback((id, payload) => {
+    setProgressById((prev) =>
+      prev[id]?.data === payload.data && prev[id]?.error === payload.error
+        ? prev
+        : { ...prev, [id]: payload }
+    );
+  }, []);
 
-  useEffect(() => {
-    if (formId && !wait) {
-      setLoading(true);
-      setDataset([]);
-      setDataPeriod([]);
-      let url = `jmp/${formId}?administration=${currentAdministration?.id}`;
-      if (advancedFilters && advancedFilters.length) {
-        url = generateAdvanceFilterURL(advancedFilters, url);
+  const progressResponses = useMemo(() => {
+    const out = {};
+    Object.entries(progressById).forEach(([id, v]) => {
+      if (v?.data) {
+        out[id] = v.data;
       }
-      if (current?.extra_params) {
-        const params = Object.keys(current.extra_params).reduce(
-          (prev, curr) => {
-            const ids = current.extra_params[curr].map((x) => `${curr}=${x}`);
-            return [...prev, ...ids];
-          },
-          []
-        );
-        url += `&${params.join("&")}`;
-      }
-      api
-        .get(url)
-        .then((res) => {
-          setDataset(res.data);
-          if (!current?.no_period) {
-            const url = `submission/period/${formId}?administration=${currentAdministration?.id}`;
-            api
-              .get(url)
-              .then((res) => {
-                setDataPeriod(res.data);
-              })
-              .catch(() => {
-                notify({
-                  type: "error",
-                  message: text.errorDataLoad,
-                });
-              });
+    });
+    return out;
+  }, [progressById]);
+
+  const progressErrors = useMemo(
+    () =>
+      Object.entries(progressById)
+        .filter(([, v]) => v?.error)
+        .map(([id, v]) => ({ id, error: v.error })),
+    [progressById]
+  );
+
+  // ── Cell computers for escalation tables ─────────────────────────────────
+  // Each `table` item that has computed columns with a `progress_ref` needs a
+  // per-column function that joins progress response data.
+  //
+  // `critical_issues` in the monitoring escalation table is special: it
+  // classifies an EPS by scanning compliance param responses.
+  //
+  // We build `cellComputersById` keyed by table item id.
+  //
+  // Per-EPS list of failing parameter labels. Uses complianceResponses (keyed
+  // by param item id) and the param items' threshold + label.
+  const criticalIssuesByEps = useMemo(() => {
+    const out = {};
+    complianceParamItems.forEach((p) => {
+      const rows = complianceResponses[p.id]?.data || [];
+      rows.forEach((row) => {
+        if (fails(p.threshold, row.value)) {
+          const key = String(row.group);
+          if (!out[key]) {
+            out[key] = [];
           }
-        })
-        .catch(() => {
-          notify({
-            type: "error",
-            message: text.errorDataLoad,
-          });
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [
-    formId,
-    current,
-    currentAdministration,
-    notify,
-    text,
-    advancedFilters,
-    wait,
-  ]);
+          out[key].push(p.label);
+        }
+      });
+    });
+    return out;
+  }, [complianceParamItems, complianceResponses]);
 
-  const changeTab = (tabKey) => {
-    setActiveTab(tabKey);
-    setActiveItem(current.tabs[tabKey]);
+  const formatPct = (n) => {
+    if (n === null || typeof n === "undefined" || Number.isNaN(n)) {
+      return null;
+    }
+    return `${Math.round(n)}%`;
   };
 
-  const renderColumn = (cfg, index) => {
-    // filter data by total > 0
-    const filteredDataByTotal = dataset.filter((d) => d.total > 0);
-    switch (cfg.type) {
-      case "maps":
-        return (
-          <Maps
-            key={index}
-            mapConfig={{
-              ...cfg,
-              data: filteredDataByTotal,
-              index: index,
-            }}
-            loading={loading}
-          />
-        );
-      case "chart":
-        return (
-          <ChartVisual
-            key={index}
-            chartConfig={{
-              ...cfg,
-              data: cfg.selector === "period" ? dataPeriod : dataset,
-              index: index,
-              admLevelName: admLevelName,
-            }}
-            loading={loading}
-          />
-        );
-      case "table":
-        return (
-          <TableVisual
-            key={index}
-            tableConfig={{
-              ...cfg,
-              data: filteredDataByTotal,
-              index: index,
-              admLevelName: admLevelName,
-            }}
-            loading={loading}
-          />
-        );
-      case "report":
-        return <ReportVisual key={index} selectedForm={selectedForm} />;
-      default:
-        return (
-          <CardVisual
-            key={index}
-            cardConfig={{
-              ...cfg,
-              data: dataset,
-              index: index,
-              lastUpdate: lastUpdate,
-              admLevelName: admLevelName,
-            }}
-            loading={loading}
-          />
-        );
+  const computeExpectedProgress = (startIso, deadlineIso) => {
+    if (!startIso || !deadlineIso) {
+      return null;
     }
+    const start = new Date(startIso);
+    const deadline = new Date(deadlineIso);
+    const today = new Date();
+    const total = (deadline - start) / (1000 * 60 * 60 * 24);
+    const elapsed = (today - start) / (1000 * 60 * 60 * 24);
+    if (total <= 0) {
+      return null;
+    }
+    const pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
+    return pct;
   };
+
+  // Build construction detail lookup from progress response keyed by
+  // `progress_construction` item id.
+  const constructionItemId = useMemo(() => {
+    if (!config) {
+      return null;
+    }
+    const items = collectByType(config.items, "progress_definition");
+    // Find the construction progress definition (convention: key === "construction")
+    const found = items.find((i) => i.key === "construction");
+    return found?.id || null;
+  }, [config]);
+
+  const constructionDetailsByEps = useMemo(() => {
+    const details = constructionItemId
+      ? progressResponses[constructionItemId]?.details || []
+      : [];
+    const out = {};
+    details.forEach((d) => {
+      out[String(d.group)] = d;
+    });
+    return out;
+  }, [constructionItemId, progressResponses]);
+
+  // Build cellComputersById by scanning all table items for computed columns.
+  const cellComputersById = useMemo(() => {
+    if (!config) {
+      return {};
+    }
+    const tableItems = collectByType(config.items, "table");
+    const out = {};
+
+    tableItems.forEach((tableItem) => {
+      const computers = {};
+      (tableItem.columns || []).forEach((col) => {
+        if (!col.computed) {
+          return;
+        }
+        if (col.key === "critical_issues") {
+          computers.critical_issues = (row) => {
+            const issues = criticalIssuesByEps[String(row.id)] || [];
+            return issues.length > 0 ? issues.join(", ") : null;
+          };
+          return;
+        }
+        // Progress-ref computed columns: resolve via constructionDetailsByEps.
+        if (col.progress_ref && col.component_key) {
+          const compKey = col.component_key;
+          computers[col.key] = (row) =>
+            formatPct(
+              constructionDetailsByEps[String(row.id)]?.components?.[compKey]
+            );
+          return;
+        }
+        if (col.key === "overall_progress" && col.progress_ref) {
+          computers.overall_progress = (row) =>
+            formatPct(constructionDetailsByEps[String(row.id)]?.overall);
+          return;
+        }
+        if (col.key === "expected_progress" && col.progress_ref) {
+          computers.expected_progress = (row) =>
+            formatPct(computeExpectedProgress(row._start_date, row.deadline));
+          return;
+        }
+      });
+
+      if (Object.keys(computers).length > 0) {
+        out[tableItem.id] = computers;
+      }
+    });
+
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, criticalIssuesByEps, constructionDetailsByEps]);
+
+  const filterActions = useMemo(
+    () => ({
+      setDateRange: filters.setDateRange,
+      setAdministrationId: filters.setAdministrationId,
+      setCustomFilter: filters.setCustomFilter,
+    }),
+    [filters.setDateRange, filters.setAdministrationId, filters.setCustomFilter]
+  );
+
+  if (!config) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `No dashboard config registered for formId=${formId}. Drop a JSON file in src/config/visualizations/ and register it in index.js.`
+    );
+    return (
+      <div className="dashboard">
+        <Empty description="This dashboard isn't available yet." />
+      </div>
+    );
+  }
 
   return (
-    <div id="dashboard">
-      <Affix className="sticky-wrapper">
-        <div>
-          <div className="page-title-wrapper">
-            <h1>{`${prefixText} ${selectedForm.name} Data`}</h1>
-          </div>
-          <VisualisationFilters showFormOptions={false} />
-          <div className="tab-wrapper">
-            {current?.tabs && (
-              <Tabs
-                activeKey={activeTab}
-                onChange={changeTab}
-                type="card"
-                tabBarGutter={10}
-              >
-                {/* TODO:: For now we will hide the report tab */}
-                {Object.keys(current.tabs)
-                  .filter((x) => x.toLowerCase() !== "report")
-                  .map((key) => {
-                    let tabName = key;
-                    if (
-                      !["jmp", "glaas", "rush"].includes(
-                        key.toLocaleLowerCase()
-                      )
-                    ) {
-                      tabName = key
-                        .split("_")
-                        .map((x) => capitalize(x))
-                        .join(" ");
-                    } else {
-                      tabName = key.toUpperCase();
-                    }
-                    return <TabPane tab={tabName} key={key}></TabPane>;
-                  })}
-              </Tabs>
-            )}
-          </div>
-        </div>
-      </Affix>
-      <Row className="main-wrapper" align="center">
-        <Col span={24} align="center">
-          {current?.tabs && activeItem?.rows ? (
-            activeItem.rows.map((row, index) => {
-              return (
-                <Row
-                  key={`row-${index}`}
-                  className="flexible-container row-wrapper"
-                  gutter={[10, 10]}
-                >
-                  {row.map((r, ri) => renderColumn(r, ri))}
-                </Row>
-              );
-            })
-          ) : (
-            <h4>No data</h4>
+    <div className="dashboard">
+      {/* Invisible compliance param fetchers */}
+      {complianceParamItems.map((paramItem) => (
+        <WqParamFetcher
+          key={paramItem.id}
+          paramItem={paramItem}
+          filterState={filters.queryParams}
+          fiscalYearStartMonth={fyStart}
+          customFilterDefs={customFilterDefs}
+          onData={onParamData}
+        />
+      ))}
+
+      {/* Invisible progress fetchers */}
+      {progressItems.map((progressItem) => (
+        <ProgressFetcher
+          key={progressItem.id}
+          progressItem={progressItem}
+          filterState={filters.queryParams}
+          customFilterDefs={customFilterDefs}
+          onData={onProgressData}
+        />
+      ))}
+
+      <Row gutter={[0, 0]} className="dashboard-header">
+        <Col span={24}>
+          <Title level={3} className="dashboard-title">
+            {config.name}
+          </Title>
+          {config.description && (
+            <Paragraph type="secondary" className="dashboard-subtitle">
+              {config.description}
+            </Paragraph>
           )}
         </Col>
       </Row>
+
+      {progressErrors.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Some dashboard data failed to load"
+          description={progressErrors
+            .map(({ id, error }) => `${id}: ${error?.message || "error"}`)
+            .join(" · ")}
+        />
+      )}
+
+      <DashboardRenderer
+        items={config.items}
+        filterState={filters.queryParams}
+        filters={filters}
+        filterActions={filterActions}
+        definitionsById={definitionsById}
+        fiscalYearStartMonth={fyStart}
+        customFilterDefs={customFilterDefs}
+        complianceResponses={complianceResponses}
+        cellComputersById={cellComputersById}
+        today={today}
+      />
     </div>
   );
 };
 
-export default React.memo(Dashboard);
+export default Dashboard;
