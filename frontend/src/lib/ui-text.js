@@ -764,11 +764,32 @@ const uiText = {
         enhance the management of water and sewerage services in Fiji.
       </Fragment>
     ),
+    homeHeroEyebrowLive: "Live",
+    homeHeroEyebrowOrg: "Government of Fiji",
+    homeHeroEyebrowDept: "Department of Water & Sewerage",
+    homeHeroTitlePrefix: "— a comprehensive platform for",
+    homeHeroTitleAccent: "water & sewerage",
+    homeHeroTitleSuffix: "services in Fiji.",
+    homeHeroCtaLearnMore: "Learn about our mandate",
+    homeHeroCaptionTitle: (
+      <Fragment>
+        Safe, reliable water
+        <br />
+        for every community in Fiji.
+      </Fragment>
+    ),
+    homeHeroCaptionEyebrowSuffix: "Platform",
     homeJumbotronImage: {
       src: "https://images.unsplash.com/photo-1642450909999-7106494ef779?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       alt: "Water landscape",
     },
     homeMandateTitle: "Our Mandate",
+    homeMandateHeadline: (
+      <Fragment>
+        Ensuring a <span className="accent">sustainable</span> water and
+        sewerage sector.
+      </Fragment>
+    ),
     homeMandateText:
       "The Department of Water and Sewerage is mandated with the responsibility of ensuring a sustainable water and sewerage sector through the development of innovative policies, efficient service delivery, and rigorous compliance monitoring.",
     homeStructureTitle: "Department Structure",

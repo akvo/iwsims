@@ -12,17 +12,17 @@ const HeroSection = ({ text, appName }) => (
         <div className="hero-left">
           <div className="eyebrow">
             <span className="dot" />
-            <span>Live · Government of Fiji</span>
-            <span className="sep" />
             <span>
-              Department of <em>Water &amp; Sewerage</em>
+              {text.homeHeroEyebrowLive} · {text.homeHeroEyebrowOrg}
             </span>
+            <span className="sep" />
+            <span>{text.homeHeroEyebrowDept}</span>
           </div>
 
           <h1 className="hero-title">
-            {text.homeJumbotronTitle} — a comprehensive platform for{" "}
-            <span className="accent">water &amp; sewerage</span> services in
-            Fiji.
+            {text.homeJumbotronTitle} {text.homeHeroTitlePrefix}{" "}
+            <span className="accent">{text.homeHeroTitleAccent}</span>{" "}
+            {text.homeHeroTitleSuffix}
           </h1>
 
           <p className="hero-sub">{text.homeJumbotronSubtitle}</p>
@@ -56,7 +56,7 @@ const HeroSection = ({ text, appName }) => (
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </span>
-                Learn about our mandate
+                {text.homeHeroCtaLearnMore}
               </button>
             </a>
           </div>
@@ -64,14 +64,8 @@ const HeroSection = ({ text, appName }) => (
 
         <HeroVisual
           image={text.homeJumbotronImage}
-          captionEyebrow={`${appName} Platform`}
-          captionTitle={
-            <>
-              Safe, reliable water
-              <br />
-              for every community in Fiji.
-            </>
-          }
+          captionEyebrow={`${appName} ${text.homeHeroCaptionEyebrowSuffix}`}
+          captionTitle={text.homeHeroCaptionTitle}
         />
       </div>
     </section>

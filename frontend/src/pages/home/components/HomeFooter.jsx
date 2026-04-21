@@ -14,7 +14,7 @@ const HomeFooter = ({ text }) => {
       <div className="footer-inner">
         <div className="footer-col">
           <Link to="/" className="footer-logo">
-            <img src={config.siteLogo} alt={config.siteLogo} />
+            <img src={config.siteLogo} alt="Footer Logo" />
           </Link>
         </div>
         <div className="footer-col">

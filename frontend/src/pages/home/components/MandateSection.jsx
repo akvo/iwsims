@@ -3,10 +3,7 @@ import React from "react";
 const MandateSection = ({ text }) => (
   <section className="page-section mandate-section" id="mandate">
     <div className="section-eyebrow reveal">{text.homeMandateTitle}</div>
-    <h2 className="section-title reveal d1">
-      Ensuring a <span className="accent">sustainable</span> water and sewerage
-      sector.
-    </h2>
+    <h2 className="section-title reveal d1">{text.homeMandateHeadline}</h2>
     <p className="section-caption reveal d2">{text.homeMandateText}</p>
 
     <div className="mandate-grid">

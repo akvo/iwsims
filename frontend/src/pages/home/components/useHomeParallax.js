@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 const useHomeParallax = (rootRef) => {
-  useEffect(() => {
+  const setupParallax = useCallback(() => {
     const root = rootRef.current;
     if (!root) {
-      return;
+      return () => {};
     }
 
     const reducedMotion =
@@ -167,6 +167,8 @@ const useHomeParallax = (rootRef) => {
       }
     };
   }, [rootRef]);
+
+  useEffect(setupParallax, [setupParallax]);
 };
 
 export default useHomeParallax;
