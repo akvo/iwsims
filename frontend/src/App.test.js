@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 describe("App", () => {
   test("test if the login button exists", () => {
     render(<TestApp />);
-    const linkElement = screen.getByText(/Log In/i);
+    const linkElement = screen.getByText("Log in");
     expect(linkElement).toBeInTheDocument();
   });
 });

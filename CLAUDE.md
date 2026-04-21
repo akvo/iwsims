@@ -89,6 +89,18 @@ Pages in `src/pages/`:
 - Development uses `setupProxy.js` to proxy `/api/*` to backend:8000
 - Production uses Nginx configuration in `frontend/nginx/conf.d/default.conf`
 
+#### Frontend ESLint Rules
+Config in `frontend/.eslintrc.json` — key rules to respect when writing JS/JSX in `frontend/src/`:
+- **`"curly": "error"`**: every `if/else/for/while` body MUST use braces, even for single statements. `if (!x) return;` ❌ → `if (!x) { return; }` ✅
+- **`"no-undefined": "warn"`**: do not reference the `undefined` identifier. Use bare `return;` instead of `return undefined;`. Do not use `void 0` or explicit `x === undefined` (use `typeof` or falsy checks)
+- **`"prefer-arrow-callback": "error"`**: callbacks passed to functions must be arrow functions
+- **`"prefer-const": "warn"`**: use `const` for variables that are not reassigned
+- **`"no-console": "warn"`** with `allow: ["error", "info"]`: avoid `console.log`/`console.warn` in committed code
+- **`eslint:recommended` + `plugin:react/recommended` + `plugin:prettier/recommended`**: all defaults apply — prettier formatting is enforced
+- When an early-return inside a function that also returns a cleanup/value, either return a no-op of the same shape (e.g., `return () => {};` in `useEffect`) or restructure so the function only returns one kind of value. Do not disable lint rules with `// eslint-disable-next-line` — fix the code to satisfy the rule
+
+Do not produce code that trips any of the above. Run `./dc.sh exec -T frontend npx eslint <path>` in the frontend container (NOT host) to verify.
+
 #### Form System (akvo-react-form)
 
 The frontend uses `akvo-react-form` (v2.7.0) - a custom Akvo library for building dynamic webforms.

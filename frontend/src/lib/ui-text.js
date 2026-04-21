@@ -764,21 +764,48 @@ const uiText = {
         enhance the management of water and sewerage services in Fiji.
       </Fragment>
     ),
+    homeHeroEyebrowLive: "Live",
+    homeHeroEyebrowOrg: "Government of Fiji",
+    homeHeroEyebrowDept: "Department of Water & Sewerage",
+    homeHeroTitlePrefix: "— a comprehensive platform for",
+    homeHeroTitleAccent: "water & sewerage",
+    homeHeroTitleSuffix: "services in Fiji.",
+    homeHeroCtaLearnMore: "Learn about our mandate",
+    homeHeroCaptionTitle: (
+      <Fragment>
+        Safe, reliable water
+        <br />
+        for every community in Fiji.
+      </Fragment>
+    ),
+    homeHeroCaptionEyebrowSuffix: "Platform",
     homeJumbotronImage: {
       src: "https://images.unsplash.com/photo-1642450909999-7106494ef779?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       alt: "Water landscape",
     },
     homeMandateTitle: "Our Mandate",
+    homeMandateHeadline: (
+      <Fragment>
+        Ensuring a <span className="accent">sustainable</span> water and
+        sewerage sector.
+      </Fragment>
+    ),
     homeMandateText:
       "The Department of Water and Sewerage is mandated with the responsibility of ensuring a sustainable water and sewerage sector through the development of innovative policies, efficient service delivery, and rigorous compliance monitoring.",
     homeStructureTitle: "Department Structure",
     homeStructureText:
       "The Department is headed by the Director of Water and Sewerage with the Technical Unit responsible for monitoring and compliance and Policy Unit responsible for policy and regulatory matters, supported by common cadre support staff.",
     homeStructureImage: {
-      src: "https://images.unsplash.com/photo-1744157801849-5e090acbdf84?q=80&w=2089&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      alt: "Water resources",
+      src: "/assets/department-structure.jpg",
+      alt: "Department Structure",
     },
     homeKeyRolesTitle: "Key Roles and Responsibilities",
+    homeKeyRolesHeadline: (
+      <Fragment>
+        Policy, oversight and <span className="accent">compliance</span> across
+        Fiji&apos;s water sector.
+      </Fragment>
+    ),
     homeKeyRolesText:
       "The key roles and responsibilities of the Department include policy and legislation development, technical and policy advisory, compliance monitoring, and Water Authority of Fiji oversight.",
     homeKeyRolesItems: [

@@ -401,6 +401,19 @@ Object {
     "homeFooterCopyrightText": "© 2025 Department of Water and Sewerage",
     "homeFooterPoweredByText": "Powered by",
     "homeFooterQuickLinksTitle": "Quick Links",
+    "homeHeroCaptionEyebrowSuffix": "Platform",
+    "homeHeroCaptionTitle": <React.Fragment>
+      Safe, reliable water
+      <br />
+      for every community in Fiji.
+    </React.Fragment>,
+    "homeHeroCtaLearnMore": "Learn about our mandate",
+    "homeHeroEyebrowDept": "Department of Water & Sewerage",
+    "homeHeroEyebrowLive": "Live",
+    "homeHeroEyebrowOrg": "Government of Fiji",
+    "homeHeroTitleAccent": "water & sewerage",
+    "homeHeroTitlePrefix": "— a comprehensive platform for",
+    "homeHeroTitleSuffix": "services in Fiji.",
     "homeJumbotronImage": Object {
       "alt": "Water landscape",
       "src": "https://images.unsplash.com/photo-1642450909999-7106494ef779?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -412,6 +425,15 @@ Object {
     </React.Fragment>,
     "homeJumbotronTitle": <React.Fragment>
       Test App
+    </React.Fragment>,
+    "homeKeyRolesHeadline": <React.Fragment>
+      Policy, oversight and 
+      <span
+        className="accent"
+      >
+        compliance
+      </span>
+       across Fiji's water sector.
     </React.Fragment>,
     "homeKeyRolesItems": Array [
       Object {
@@ -445,6 +467,15 @@ Object {
     ],
     "homeKeyRolesText": "The key roles and responsibilities of the Department include policy and legislation development, technical and policy advisory, compliance monitoring, and Water Authority of Fiji oversight.",
     "homeKeyRolesTitle": "Key Roles and Responsibilities",
+    "homeMandateHeadline": <React.Fragment>
+      Ensuring a 
+      <span
+        className="accent"
+      >
+        sustainable
+      </span>
+       water and sewerage sector.
+    </React.Fragment>,
     "homeMandateText": "The Department of Water and Sewerage is mandated with the responsibility of ensuring a sustainable water and sewerage sector through the development of innovative policies, efficient service delivery, and rigorous compliance monitoring.",
     "homeMandateTitle": "Our Mandate",
     "homeQuickLinks": Array [
@@ -473,8 +504,8 @@ Object {
       },
     ],
     "homeStructureImage": Object {
-      "alt": "Water resources",
-      "src": "https://images.unsplash.com/photo-1744157801849-5e090acbdf84?q=80&w=2089&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "alt": "Department Structure",
+      "src": "/assets/department-structure.jpg",
     },
     "homeStructureText": "The Department is headed by the Director of Water and Sewerage with the Technical Unit responsible for monitoring and compliance and Policy Unit responsible for policy and regulatory matters, supported by common cadre support staff.",
     "homeStructureTitle": "Department Structure",
