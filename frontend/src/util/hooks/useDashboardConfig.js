@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { getVisualizationConfig } from "../../config/visualizations";
+import { getVisualizationConfigBySlug } from "../../config/visualizations";
 
 /**
  * Walk the item tree and collect every item into a flat Map keyed by id.
@@ -35,17 +35,17 @@ const collectDefinitions = (items = [], acc = new Map()) => {
 };
 
 /**
- * Loads the dashboard config for a given form id and enriches it with:
+ * Loads the dashboard config for a given slug and enriches it with:
  *   - `definitionsById`: Map<id, item> covering every item in the tree
  *
  * Configs are bundled at build time from `src/config/visualizations/`.
  *
- * @param {number|string} formId
+ * @param {string} slug
  * @returns {{ config: object|null, definitionsById: Map<string, object>, loading: boolean, error: Error|null }}
  */
-export const useDashboardConfig = (formId) => {
+export const useDashboardConfig = (slug) => {
   return useMemo(() => {
-    if (!formId) {
+    if (!slug) {
       return {
         config: null,
         definitionsById: new Map(),
@@ -54,11 +54,11 @@ export const useDashboardConfig = (formId) => {
       };
     }
 
-    const config = getVisualizationConfig(formId);
+    const config = getVisualizationConfigBySlug(slug);
     if (!config) {
       // eslint-disable-next-line no-console
       console.warn(
-        `[useDashboardConfig] no config registered for formId=${formId}`
+        `[useDashboardConfig] no config registered for slug="${slug}"`
       );
       return {
         config: null,
@@ -83,7 +83,7 @@ export const useDashboardConfig = (formId) => {
     }
 
     return { config, definitionsById, loading: false, error: null };
-  }, [formId]);
+  }, [slug]);
 };
 
 export default useDashboardConfig;

@@ -107,7 +107,7 @@ const RouteList = () => {
       <Route exact path="/login/:invitationId" element={<Login />} />
       <Route exact path="/forgot-password" element={<Login />} />
       <Route exact path="/data" element={<Home />} />
-      <Route exact path="/dashboard/:formId" element={<Dashboard />} />
+      <Route exact path="/dashboard/:slug" element={<Dashboard />} />
       <Route
         path="/control-center"
         element={

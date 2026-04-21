@@ -6,8 +6,7 @@ import { FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { config, store, uiText } from "../../lib";
 import { eraseCookieFromAllPaths } from "../../util/date";
-import { listVisualizationFormIds } from "../../config/visualizations";
-import CONFIGS from "../../config/visualizations";
+import { listVisualizations } from "../../config/visualizations";
 
 const Header = ({ className = "header", ...props }) => {
   const { isLoggedIn, user } = store.useState();
@@ -18,14 +17,11 @@ const Header = ({ className = "header", ...props }) => {
   const text = useMemo(() => {
     return uiText[activeLang];
   }, [activeLang]);
-  const dashboardFormIds = useMemo(() => listVisualizationFormIds(), []);
-  const dashboardForms = useMemo(
-    () =>
-      (window?.forms || [])
-        .filter((f) => dashboardFormIds.includes(f.id))
-        .map((f) => ({ id: f.id, name: CONFIGS[f.id]?.name || f.name })),
-    [dashboardFormIds]
-  );
+  const dashboardForms = useMemo(() => {
+    const registered = listVisualizations();
+    const availableFormIds = new Set((window?.forms || []).map((f) => f.id));
+    return registered.filter((d) => availableFormIds.has(d.parent_form_id));
+  }, []);
   const showDashboardsMenu =
     location.pathname.startsWith("/control-center") ||
     location.pathname.startsWith("/dashboard");
@@ -87,11 +83,11 @@ const Header = ({ className = "header", ...props }) => {
   const DashboardMenu = useMemo(() => {
     return dashboardForms?.map((d) => {
       return {
-        key: d.id,
+        key: d.slug,
         label: (
           <Link
-            key={`${d.id}`}
-            to={`/dashboard/${d.id}`}
+            key={d.slug}
+            to={`/dashboard/${d.slug}`}
             className="dropdown-menu-item"
           >
             {d.name}
