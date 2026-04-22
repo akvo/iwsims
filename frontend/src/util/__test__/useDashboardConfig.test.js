@@ -36,11 +36,18 @@ describe("config/visualizations registry", () => {
     expect(config).not.toBeNull();
     expect(config.name).toBe("EPS Overview");
     expect(config.parent_form_id).toBe(1749623934933);
-    // Flat schema: top-level `items[]` with a `tabs` container holding 3 panes.
+    // Flat schema: top-level `items[]` with a `tabs` container holding 4 panes
+    // (Monitoring overview, Water quality, Construction monitoring,
+    // Individual Overview — the latter is gated by `is_public: false`).
     expect(Array.isArray(config.items)).toBe(true);
     const tabsItem = config.items.find((it) => it.chart_type === "tabs");
     expect(tabsItem).toBeDefined();
-    expect(tabsItem.items).toHaveLength(3);
+    expect(tabsItem.items).toHaveLength(4);
+    const individualTab = tabsItem.items.find(
+      (pane) => pane.id === "tab_individual_overview"
+    );
+    expect(individualTab).toBeDefined();
+    expect(individualTab.is_public).toBe(false);
     // Collect every item id recursively, assert key KPI cards are present.
     const allIds = [];
     const walk = (items = []) => {
