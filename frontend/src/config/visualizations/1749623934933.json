@@ -1024,6 +1024,19 @@
               ]
             }
           ]
+        },
+        {
+          "id": "tab_individual_overview",
+          "is_public": false,
+          "label": "Individual Overview",
+          "items": [
+            {
+              "id": "individual_overview_component",
+              "chart_type": "custom_component",
+              "order": 1,
+              "component": "IndividualEPSOverview"
+            }
+          ]
         }
       ]
     }
