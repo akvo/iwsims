@@ -105,6 +105,7 @@ Only these six keys at the top level. Everything else is an item.
 | `filter_multi_option` | Multi-select dropdown | `key`, `question_id`, `form_id` |
 | `progress_definition` | Hidden definition | `key`, `components[]`, `api`, `start_date_question_id`, `deadline_question_id`, `scope_question_id` |
 | `water_quality_globals` | Hidden definition | `sample_question_id`, `test_method_question_id`, `monitoring_form_id` |
+| `custom_component` | Arbitrary React component from the custom-components registry | `component` (string, registry key) — see "Custom component escape hatch" below |
 
 `progress_definition` and `water_quality_globals` items must have `"hide": true`.
 The renderer always skips them; they exist solely to be resolved by id via
@@ -117,6 +118,21 @@ Tab panes are plain objects inside a `tabs` item's `items[]`. They have no
 
 ```json
 { "id": "tab_monitoring", "label": "Monitoring overview", "items": [ /* items */ ] }
+```
+
+**`is_public`** (optional, defaults to `true`) — when set to `false`, the tab
+is rendered **disabled** for anonymous viewers and only becomes clickable
+when `UIState.isLoggedIn` is `true`. Use this for tabs whose children fetch
+authenticated endpoints. Combined with `destroyInactiveTabPane`, the disabled
+tab's children never mount — no requests fire from anonymous sessions.
+
+```json
+{
+  "id": "tab_individual_overview",
+  "is_public": false,
+  "label": "Individual Overview",
+  "items": [ /* items */ ]
+}
 ```
 
 ### `col_span` semantics
@@ -203,6 +219,64 @@ and builds a stacked-bar chart client-side.
 
 ---
 
+## Custom component escape hatch
+
+Some dashboard tabs follow a **record-centric** pattern that does not fit the
+aggregate chart paradigm — the user picks one record and downstream widgets
+render details for that single record. Rather than extending the JSON schema
+with primitives that only make sense for these tabs (token templates,
+component dependencies, custom endpoints, named render registries), use the
+`custom_component` chart_type to delegate rendering to a freely authored React
+component.
+
+### When to reach for it
+
+- The interaction model is **record-centric**, not aggregate.
+- The tab needs internal state that is not expressible as a global filter.
+- The behavior is unique enough that no other dashboard would reuse it today.
+
+### When NOT to reach for it
+
+- The widget can be expressed as `card` / `bar` / `doughnut` / `table` etc.
+  with an `api` block — extend the existing schema instead.
+- Two or three other dashboards would benefit from the same widget — promote
+  it to a first-class `chart_type` rather than copying components.
+
+### Adding a custom component
+
+1. Create `frontend/src/components/dashboard/custom-components/<Name>.jsx`.
+2. Add a named export in [`custom-components/index.js`](../../components/dashboard/custom-components/index.js).
+3. Reference it from JSON:
+
+```json
+{
+  "id": "individual_overview_component",
+  "chart_type": "custom_component",
+  "order": 1,
+  "component": "<Name>"
+}
+```
+
+Unknown component names are not fatal — the renderer logs `console.error` and
+displays an `<Alert>` placeholder, so the rest of the dashboard keeps working.
+
+### What the component owns
+
+- Data fetching, including auth-aware error handling.
+- Loading, empty, and error UI states.
+- Internal selection state, drill-downs, sub-tabs.
+- Any internal filters (the dashboard's global filter bar is **not** piped in).
+
+### Stay specific until rule-of-three
+
+Do not generalize prematurely. The first per-dashboard custom component is
+fine as a one-off. When a third dashboard needs a similar pattern, refactor
+the common pieces into shared building-block components
+(`<RecordSelectorBar>`, `<RegistrationDetailTable>`, etc.) — not into a single
+mega-component driven by yet another schema.
+
+---
+
 ## Filter hints (frontend-expanded)
 
 These keys on an `api` block are expanded by the frontend before the request is
@@ -281,6 +355,7 @@ columns resolved by the renderer:
 - [`widgets/TabsWidget`](../../components/dashboard/widgets/TabsWidget.jsx) — tabs container
 - [`widgets/FilterBarWidget`](../../components/dashboard/widgets/FilterBarWidget.jsx) — filter bar container
 - [`widgets/SectionTitleWidget`](../../components/dashboard/widgets/SectionTitleWidget.jsx) — section heading
+- [`widgets/CustomComponentWidget`](../../components/dashboard/widgets/CustomComponentWidget.jsx) — registry-backed escape hatch (see "Custom component escape hatch")
 - [`DashboardFilters`](../../components/dashboard/DashboardFilters.jsx) — individual filter controls
 - [`DashboardMap`](../../components/dashboard/DashboardMap.jsx) — map widget
 - [`EscalationTable`](../../components/dashboard/EscalationTable.jsx) — escalation table
