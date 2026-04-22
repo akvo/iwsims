@@ -8,6 +8,7 @@ import KPICard from "./widgets/KPICard";
 import SectionTitleWidget from "./widgets/SectionTitleWidget";
 import FilterBarWidget from "./widgets/FilterBarWidget";
 import TabsWidget from "./widgets/TabsWidget";
+import CustomComponentWidget from "./widgets/CustomComponentWidget";
 
 const { Paragraph } = Typography;
 
@@ -189,6 +190,10 @@ const DashboardRenderer = ({
 
     if (type === "tabs") {
       return <TabsWidget item={item} renderItems={renderItems} />;
+    }
+
+    if (type === "custom_component") {
+      return <CustomComponentWidget item={item} />;
     }
 
     // Unknown type — silently skip in production.
