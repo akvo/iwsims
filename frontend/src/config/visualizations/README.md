@@ -275,6 +275,25 @@ the common pieces into shared building-block components
 (`<RecordSelectorBar>`, `<RegistrationDetailTable>`, etc.) — not into a single
 mega-component driven by yet another schema.
 
+### Worked example: the individual-overview pattern
+
+The record-centric "Individual Overview" tab on the EPS dashboard is the
+reference implementation of this escape hatch. It composes six reusable
+primitives out of
+[`custom-components/individual-overview/shared/`](../../components/dashboard/custom-components/individual-overview/shared/)
+(helpers, `<PhotoCaptionCard>`, `<CharacteristicsTable>`,
+`<HistoricalLineChart>`, `useIndividualOverviewData`, and
+`useMonitoringHistory`) plus per-dashboard constants in
+[`individual-overview/config/eps.js`](../../components/dashboard/custom-components/individual-overview/config/eps.js),
+so the shell itself stays a ~180-line orchestrator.
+
+Note the rule-of-three deviation: those primitives were extracted before
+three working consumers existed. The justification is that each primitive was
+designed against **two** concrete shell designs in hand (EPS and a planned
+RWS sibling) and appears ≥4× across them — past the rule-of-two threshold
+with concrete designs to validate against. For the full design rationale, see
+[`doc/claude/dashboard-individual-overview/`](../../../../doc/claude/dashboard-individual-overview/).
+
 ---
 
 ## Filter hints (frontend-expanded)
