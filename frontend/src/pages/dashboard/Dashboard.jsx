@@ -64,6 +64,96 @@ const ProgressFetcher = ({
 };
 
 /**
+ * Invisible fetcher for a cross_tab widget. Fires both category_api and
+ * series_api, then reports {category, series} via onData once both have
+ * resolved.
+ *
+ * Rules-of-hooks-compliant: hook count is fixed at 2 per instance.
+ */
+const CrossTabFetcher = ({
+  item,
+  filterState,
+  fiscalYearStartMonth,
+  customFilterDefs,
+  onData,
+}) => {
+  const opts = { fiscalYearStartMonth, customFilterDefs };
+  const { data: category } = useDashboardValues(
+    item.category_api,
+    filterState,
+    opts
+  );
+  const { data: series } = useDashboardValues(
+    item.series_api,
+    filterState,
+    opts
+  );
+  useEffect(() => {
+    if (category && series) {
+      onData(item.id, { category, series });
+    }
+  }, [item.id, category, series, onData]);
+  return null;
+};
+
+/**
+ * Invisible fetcher for items whose per-parent derivation takes two
+ * option-question /values responses (sample + issues). Used by both
+ * compute=accessibility_bucket (chart) and compute=accessibility_no_issues_kpi
+ * (KPI card) — identical fetch shape, different storage slot.
+ */
+const SampleIssuesFetcher = ({
+  item,
+  filterState,
+  fiscalYearStartMonth,
+  customFilterDefs,
+  onData,
+}) => {
+  const opts = { fiscalYearStartMonth, customFilterDefs };
+  const { data: sample } = useDashboardValues(
+    item.sample_api,
+    filterState,
+    opts
+  );
+  const { data: issues } = useDashboardValues(
+    item.issues_api,
+    filterState,
+    opts
+  );
+  useEffect(() => {
+    if (sample && issues) {
+      onData(item.id, { sample, issues });
+    }
+  }, [item.id, sample, issues, onData]);
+  return null;
+};
+
+/**
+ * Invisible fetcher for a single kpi_stack segment. Parent renders one
+ * instance per item × segment so the hook count per instance stays at 1.
+ * Reports (itemId, segmentKey, data) via onSegmentData.
+ */
+const KpiSegmentFetcher = ({
+  itemId,
+  segment,
+  filterState,
+  fiscalYearStartMonth,
+  customFilterDefs,
+  onSegmentData,
+}) => {
+  const { data } = useDashboardValues(segment.api, filterState, {
+    fiscalYearStartMonth,
+    customFilterDefs,
+  });
+  useEffect(() => {
+    if (data) {
+      onSegmentData(itemId, segment.key, data);
+    }
+  }, [itemId, segment.key, data, onSegmentData]);
+  return null;
+};
+
+/**
  * Walk the flat item tree and collect all items of a given chart_type.
  * Tab panes (no chart_type) are walked for their children transparently.
  *
@@ -83,6 +173,31 @@ const collectByType = (items = [], chartType) => {
     }
     if (Array.isArray(item.items)) {
       result.push(...collectByType(item.items, chartType));
+    }
+  });
+  return result;
+};
+
+/**
+ * Walk the flat item tree and collect all items matching a compute mode.
+ * Tab panes (no chart_type) are walked transparently.
+ *
+ * @param {Array}  items
+ * @param {string} computeMode
+ * @returns {Array}
+ */
+const collectByCompute = (items = [], computeMode) => {
+  const result = [];
+  items.forEach((item) => {
+    if (!item.chart_type && Array.isArray(item.items)) {
+      result.push(...collectByCompute(item.items, computeMode));
+      return;
+    }
+    if (item.compute === computeMode) {
+      result.push(item);
+    }
+    if (Array.isArray(item.items)) {
+      result.push(...collectByCompute(item.items, computeMode));
     }
   });
   return result;
@@ -172,6 +287,84 @@ const Dashboard = () => {
       prev[id] === data ? prev : { ...prev, [id]: data }
     );
   }, []);
+
+  // ── Cross-form & derived-compute fan-out ──────────────────────────────────
+  // Items with compute=cross_tab / accessibility_bucket / kpi_stack /
+  // accessibility_no_issues_kpi each need pre-fetched /values responses
+  // combined into a single `computeResponses` tree keyed by
+  // {[mode]: {[itemId]: payload}}. This mirrors the compliance fan-out but
+  // supports 2-call cross-form joins and N-call segment fetches.
+  const crossTabItems = useMemo(
+    () => (config ? collectByCompute(config.items, "cross_tab") : []),
+    [config]
+  );
+  const accessibilityBucketItems = useMemo(
+    () =>
+      config ? collectByCompute(config.items, "accessibility_bucket") : [],
+    [config]
+  );
+  const kpiStackItems = useMemo(
+    () => (config ? collectByCompute(config.items, "kpi_stack") : []),
+    [config]
+  );
+  const accessibilityNoIssuesKpiItems = useMemo(
+    () =>
+      config
+        ? collectByCompute(config.items, "accessibility_no_issues_kpi")
+        : [],
+    [config]
+  );
+
+  const [crossTabByItem, setCrossTabByItem] = useState({});
+  const [accessibilityBucketByItem, setAccessibilityBucketByItem] = useState(
+    {}
+  );
+  const [kpiStackByItem, setKpiStackByItem] = useState({});
+  const [accessibilityNoIssuesKpiByItem, setAccessibilityNoIssuesKpiByItem] =
+    useState({});
+
+  const onCrossTabData = useCallback((id, payload) => {
+    setCrossTabByItem((prev) =>
+      prev[id] === payload ? prev : { ...prev, [id]: payload }
+    );
+  }, []);
+  const onAccessibilityBucketData = useCallback((id, payload) => {
+    setAccessibilityBucketByItem((prev) =>
+      prev[id] === payload ? prev : { ...prev, [id]: payload }
+    );
+  }, []);
+  const onAccessibilityNoIssuesKpiData = useCallback((id, payload) => {
+    setAccessibilityNoIssuesKpiByItem((prev) =>
+      prev[id] === payload ? prev : { ...prev, [id]: payload }
+    );
+  }, []);
+  const onKpiStackSegmentData = useCallback((itemId, segmentKey, data) => {
+    setKpiStackByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+
+  // Merge into one tree, with legacy complianceResponses under `compliance`.
+  const computeResponses = useMemo(
+    () => ({
+      compliance: complianceResponses,
+      cross_tab: crossTabByItem,
+      accessibility_bucket: accessibilityBucketByItem,
+      kpi_stack: kpiStackByItem,
+      accessibility_no_issues_kpi: accessibilityNoIssuesKpiByItem,
+    }),
+    [
+      complianceResponses,
+      crossTabByItem,
+      accessibilityBucketByItem,
+      kpiStackByItem,
+      accessibilityNoIssuesKpiByItem,
+    ]
+  );
 
   // ── Progress fetching ──────────────────────────────────────────────────────
   const progressItems = useMemo(() => {
@@ -375,6 +568,57 @@ const Dashboard = () => {
         />
       ))}
 
+      {/* Invisible cross_tab fetchers */}
+      {crossTabItems.map((item) => (
+        <CrossTabFetcher
+          key={item.id}
+          item={item}
+          filterState={filters.queryParams}
+          fiscalYearStartMonth={fyStart}
+          customFilterDefs={customFilterDefs}
+          onData={onCrossTabData}
+        />
+      ))}
+
+      {/* Invisible accessibility_bucket fetchers */}
+      {accessibilityBucketItems.map((item) => (
+        <SampleIssuesFetcher
+          key={item.id}
+          item={item}
+          filterState={filters.queryParams}
+          fiscalYearStartMonth={fyStart}
+          customFilterDefs={customFilterDefs}
+          onData={onAccessibilityBucketData}
+        />
+      ))}
+
+      {/* Invisible accessibility_no_issues_kpi fetchers (same shape, distinct slot) */}
+      {accessibilityNoIssuesKpiItems.map((item) => (
+        <SampleIssuesFetcher
+          key={item.id}
+          item={item}
+          filterState={filters.queryParams}
+          fiscalYearStartMonth={fyStart}
+          customFilterDefs={customFilterDefs}
+          onData={onAccessibilityNoIssuesKpiData}
+        />
+      ))}
+
+      {/* Invisible kpi_stack segment fetchers — one per (item, segment) pair */}
+      {kpiStackItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <KpiSegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onKpiStackSegmentData}
+          />
+        ))
+      )}
+
       <Row gutter={[0, 0]} className="dashboard-header">
         <Col span={24}>
           <Title level={3} className="dashboard-title">
@@ -408,7 +652,7 @@ const Dashboard = () => {
         definitionsById={definitionsById}
         fiscalYearStartMonth={fyStart}
         customFilterDefs={customFilterDefs}
-        complianceResponses={complianceResponses}
+        computeResponses={computeResponses}
         cellComputersById={cellComputersById}
         today={today}
       />
