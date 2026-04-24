@@ -30,6 +30,59 @@ export const fails = (threshold = {}, value) => {
 };
 
 /**
+ * Merge per-parameter /values responses into a per-EPS lookup keyed by
+ * parent_id (data[].group). Shared by computeComplianceStackData and
+ * getCompliantCount so the two stay in lock-step.
+ *
+ * @param {Array<object>} activeParams          parameters with `.hide !== true`
+ * @param {Object.<string,object>} responsesByKey { [param.key]: /values response }
+ * @returns {Object.<string,object>} { [parent_id]: { _label, [param.key]: value } }
+ */
+const buildByEps = (activeParams, responsesByKey) => {
+  const byEps = {};
+  activeParams.forEach((p) => {
+    const rows = responsesByKey?.[p.key]?.data || [];
+    rows.forEach((row) => {
+      if (!byEps[row.group]) {
+        byEps[row.group] = { _label: row.label };
+      }
+      byEps[row.group][p.key] = row.value;
+    });
+  });
+  return byEps;
+};
+
+/**
+ * Count parents whose measurements are all within their parameter
+ * thresholds. Missing values for a parameter are treated as "no data"
+ * (not a violation) — matches the existing computeComplianceStackData
+ * semantics. Parents that don't appear in any response are not counted.
+ *
+ * Exposed separately from computeComplianceStackData so the compliance
+ * KPI card can reuse the same classification without running the full
+ * stacked-bar transform. Single source of truth for compliance counts.
+ *
+ * @param {Array<object>} parameters       water-quality params (with threshold, key, hide?)
+ * @param {Object.<string,object>} responsesByKey  { [param.key]: /values response }
+ * @returns {number} count of compliant parents
+ */
+export const getCompliantCount = (parameters, responsesByKey) => {
+  const activeParams = (parameters || []).filter((p) => !p.hide);
+  if (activeParams.length === 0) {
+    return 0;
+  }
+  const byEps = buildByEps(activeParams, responsesByKey);
+  let count = 0;
+  Object.values(byEps).forEach((eps) => {
+    const failed = activeParams.filter((p) => fails(p.threshold, eps[p.key]));
+    if (failed.length === 0) {
+      count += 1;
+    }
+  });
+  return count;
+};
+
+/**
  * Compute the Yes/No stacked-bar data for the drinking-water compliance chart.
  *
  * @param {Array<object>} parameters       config.water_quality.parameters (with threshold + label + key)
@@ -43,20 +96,8 @@ export const fails = (threshold = {}, value) => {
  */
 export const computeComplianceStackData = (parameters, responsesByKey) => {
   const activeParams = (parameters || []).filter((p) => !p.hide);
+  const byEps = buildByEps(activeParams, responsesByKey);
 
-  // Merge per-parameter rows into a per-EPS lookup keyed by data[].group (parent_id).
-  const byEps = {};
-  activeParams.forEach((p) => {
-    const rows = responsesByKey?.[p.key]?.data || [];
-    rows.forEach((row) => {
-      if (!byEps[row.group]) {
-        byEps[row.group] = { _label: row.label };
-      }
-      byEps[row.group][p.key] = row.value;
-    });
-  });
-
-  // Classify each EPS and tally per-parameter failure segments for the "No" bar.
   const yesRow = { compliance: "Yes", Compliant: 0 };
   const noRow = { compliance: "No" };
   activeParams.forEach((p) => {
