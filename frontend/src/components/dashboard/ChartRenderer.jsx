@@ -7,6 +7,9 @@ import { toHistogramBarData } from "./compute/progressHistogram";
 import { computeComplianceStackData } from "./compute/compliance";
 import { rotateToFiscalOrder } from "./compute/fiscalMonthRotation";
 import { toValueHistogramBins } from "./compute/valueHistogramBins";
+import { computeCrossTab } from "./compute/crossTab";
+import { computeAccessibilityBucket } from "./compute/accessibility";
+import { computeKpiStack } from "./compute/kpiStack";
 import DotsChart from "./DotsChart";
 
 const COMPONENT_BY_TYPE = {
@@ -275,7 +278,15 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
         legend: { type: "scroll" },
         // Align x-axis ticks with labels (not between them) — see
         // https://echarts.apache.org/examples/en/editor.html?c=bar-tick-align.
-        xAxis: { axisTick: { alignWithLabel: true } },
+        // Force interval=0 so every category label renders; ECharts'
+        // default "auto" silently drops labels it judges overlapping —
+        // which hid Settlements / Government Stations / Healthcare Facility
+        // on the RWS Beneficiaries bar (akvo-mis-db9). Modest rotate keeps
+        // long multi-word labels from colliding horizontally.
+        xAxis: {
+          axisTick: { alignWithLabel: true },
+          axisLabel: { interval: 0, rotate: 20 },
+        },
       },
       false
     );
@@ -328,7 +339,10 @@ const deriveMarkLines = (item) => {
  * @param {Array}  [customFilterDefs]   flat list of filter items (for hint expansion)
  * @param {Date}   [today]
  * @param {Map}    [definitionsById]    id → item map for cross-ref resolution
- * @param {object} [complianceResponses]  { [itemId]: /values response }
+ * @param {object} [complianceResponses]  DEPRECATED — use computeResponses.compliance.
+ * @param {object} [computeResponses]     { [mode]: { [itemId]: /values response } }
+ *                                         Unified prefetch map (mode ∈ {compliance,
+ *                                         cross_tab, accessibility_bucket, kpi_stack}).
  */
 const ChartRenderer = ({
   item,
@@ -338,6 +352,7 @@ const ChartRenderer = ({
   today,
   definitionsById,
   complianceResponses,
+  computeResponses,
 }) => {
   const chartType = item.chart_type === "histogram" ? "bar" : item.chart_type;
   const Component = COMPONENT_BY_TYPE[chartType];
@@ -387,6 +402,25 @@ const ChartRenderer = ({
   }, [item, definitionsById]);
 
   const data = useMemo(() => {
+    if (item.compute === "cross_tab") {
+      const responses = computeResponses?.cross_tab?.[item.id];
+      return computeCrossTab(responses);
+    }
+
+    if (item.compute === "accessibility_bucket") {
+      const responses = computeResponses?.accessibility_bucket?.[item.id];
+      return computeAccessibilityBucket(responses, item.labels || {});
+    }
+
+    if (item.compute === "kpi_stack") {
+      const responses = computeResponses?.kpi_stack?.[item.id];
+      return computeKpiStack(
+        item.segments,
+        responses,
+        item.config?.title || "Total"
+      );
+    }
+
     if (item.compute === "compliance") {
       // complianceResponses is keyed by item id (not param.key).
       // We pass params with their ids as keys into computeComplianceStackData
@@ -453,6 +487,7 @@ const ChartRenderer = ({
     progressData,
     complianceResponses,
     complianceParams,
+    computeResponses,
     fiscalYearStartMonth,
   ]);
 
@@ -552,6 +587,7 @@ ChartRenderer.propTypes = {
   today: PropTypes.instanceOf(Date),
   definitionsById: PropTypes.instanceOf(Map),
   complianceResponses: PropTypes.object,
+  computeResponses: PropTypes.object,
 };
 
 export { useDashboardProgress };

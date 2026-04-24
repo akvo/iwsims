@@ -91,8 +91,8 @@ Only these six keys at the top level. Everything else is an item.
 
 | `chart_type` | Renders | Key extra fields |
 |---|---|---|
-| `card` | KPI tile | `color`, `api`, `api.value_type` |
-| `bar`, `line`, `doughnut`, `pie`, `stack_bar` | akvo-charts component | `config`, and one of: `api` / (`source`+`progress_ref`+`field`) / (`compute`+`params_ref`+`globals_ref`) |
+| `card` | KPI tile | `color`, `api`, `api.value_type` (including `"ratio_percentage"` + sibling `denominator_api`), or `compute` ∈ {`compliance_kpi`, `accessibility_no_issues_kpi`} |
+| `bar`, `line`, `doughnut`, `half_doughnut`, `pie`, `stack_bar` | akvo-charts component | `config`, and one of: `api` / (`source`+`progress_ref`+`field`) / (`compute`+`params_ref`+`globals_ref`) / (`compute`+`category_api`+`series_api`) / (`compute`+`sample_api`+`issues_api`) / (`compute`+`segments[]`) |
 | `histogram` | Bar chart with binned water-quality data | `group`, `threshold`, `display`, `api` |
 | `table` | Escalation / data table | `api` (with `criteria[]`), `columns[]` |
 | `map` | Leaflet map | `source_form_id`, `status_question_id`, `status_monitoring_form_id`, `status_colors`, `click_url_template` |
@@ -214,6 +214,153 @@ and builds a stacked-bar chart client-side.
   "compute": "compliance",
   "params_ref": ["param_e_coli", "param_turbidity"],
   "globals_ref": "wq_globals"
+}
+```
+
+### 4. Frontend-computed cross-form join (`compute: "cross_tab"`)
+
+Fires two per-parent option-question `/values` calls and joins the rows by
+`parent_id` (`row.group`) client-side. Each parent's category column (option
+with `count > 0` in `category_api` response) plus every series option column
+with `count > 0` in `series_api` contributes to one cell of the resulting
+stacked bar.
+
+Both `category_api` and `series_api` MUST use `group_by: "parent_id"` +
+`stack_by: "option"` so the backend returns per-parent rows with option
+columns (shape: `{label, group, [option_label]: count, …}`).
+
+```json
+{
+  "id": "chart_implementation_at_scale",
+  "chart_type": "stack_bar",
+  "compute": "cross_tab",
+  "orientation": "horizontal",
+  "category_api": {
+    "form_id": 1749621962296,
+    "question_id": 1749621851234,
+    "monitoring": "latest",
+    "group_by": "parent_id",
+    "stack_by": "option"
+  },
+  "series_api": {
+    "form_id": 1749621221728,
+    "question_id": 1749622571775,
+    "group_by": "parent_id",
+    "stack_by": "option"
+  }
+}
+```
+
+### 5. Frontend-derived accessibility bucket (`compute: "accessibility_bucket"`)
+
+Joins two per-parent option-question responses (sample + issues) by
+`parent_id` and emits a single-column stacked bar with three buckets per the
+A.2 rule: `sample=yes ∧ issues≠yes → easily_accessible`; `sample=yes ∧
+issues=yes → accessible_with_issues`; `sample=no → not_accessible`; parents
+with no sample record are EXCLUDED.
+
+```json
+{
+  "id": "chart_accessibility_bucket",
+  "chart_type": "stack_bar",
+  "compute": "accessibility_bucket",
+  "sample_api": {
+    "form_id": 1749621962296,
+    "question_id": 1749622785185,
+    "monitoring": "latest",
+    "group_by": "parent_id",
+    "stack_by": "option"
+  },
+  "issues_api": {
+    "form_id": 1749631041125,
+    "question_id": 1749631041156,
+    "monitoring": "latest",
+    "group_by": "parent_id",
+    "stack_by": "option"
+  },
+  "labels": {
+    "easily_accessible": "Easily accessible",
+    "accessible_with_issues": "Accessible with issues",
+    "not_accessible": "Not accessible"
+  }
+}
+```
+
+### 6. Independent-metrics KPI stack (`compute: "kpi_stack"`)
+
+Assembles a single-column stacked bar from N independent KPI fetches, each
+identified by a `segment.key`. Segment values are **independent measures** —
+stack height may exceed 100%. Each segment's `api` is a standard `/values`
+KPI invocation (scalar count via `sum_by: parent_id` + `option_value`).
+
+```json
+{
+  "id": "chart_operational_status_stack",
+  "chart_type": "stack_bar",
+  "compute": "kpi_stack",
+  "segments": [
+    {
+      "key": "operational",
+      "label": "Operational",
+      "color": "#3C3CFF",
+      "api": {
+        "form_id": 1749631041125,
+        "question_id": 1749631041155,
+        "option_value": "operational",
+        "monitoring": "latest",
+        "sum_by": "parent_id"
+      }
+    },
+    {
+      "key": "issues",
+      "label": "Issues with the system",
+      "color": "#1AB99F",
+      "api": {
+        "form_id": 1749631041125,
+        "question_id": 1749631041156,
+        "option_value": "yes",
+        "monitoring": "latest",
+        "sum_by": "parent_id"
+      }
+    }
+  ]
+}
+```
+
+### 7. Ratio KPI cards (`card` + `denominator_api`)
+
+Ratio KPIs render the value as `"N/M (P%)"`; `M === 0` renders `"—"` (no
+div-by-zero). The **presence of `denominator_api`** is the signal — no extra
+marker required. Three flavours:
+
+- **api-driven ratio** — item has both `api` (numerator) and `denominator_api`.
+  Both fetches run in parallel. The legacy marker
+  `api.value_type: "ratio_percentage"` is accepted in older configs but
+  stripped before the backend call (it's not a valid enum value on
+  `/visualization/values`).
+- **compliance KPI** — `compute: "compliance_kpi"` reuses the dashboard's
+  pre-fetched `complianceResponses` via the shared `getCompliantCount`
+  helper, so the card and the FR-2c compliance column always agree. Requires
+  `params_ref[]`, `globals_ref`, and `denominator_api`.
+- **accessibility "no issues" KPI** — `compute: "accessibility_no_issues_kpi"`
+  with `sample_api` + `issues_api` (same shape as `accessibility_bucket`
+  above) + `denominator_api`. Numerator = count of parents in the
+  `easily_accessible` bucket.
+
+```json
+{
+  "id": "kpi_operational_systems",
+  "chart_type": "card",
+  "label": "Operational Systems",
+  "color": "#1890ff",
+  "api": {
+    "form_id": 1749631041125,
+    "question_id": 1749631041155,
+    "option_value": "operational",
+    "monitoring": "latest",
+    "sum_by": "parent_id"
+  },
+  "denominator_api": { "form_id": 1749621221728 }
 }
 ```
 
