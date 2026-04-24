@@ -45,8 +45,10 @@ frontend/src/components/dashboard/custom-components/
 ├── IndividualRWSOverview.jsx                 # RWS shell (~220 lines)
 └── individual-overview/                      # pieces specific to this pattern
     ├── shared/                               # primitives reusable across both shells
-    │   ├── helpers.js                        # findQuestion, findAnswer, formatAnswerValue,
-    │   │                                     #   extractPhotoUrl, sortByDateAscending
+    │   ├── helpers.js                        # findQuestion, findQuestionGroup, findAnswer,
+    │   │                                     #   formatAnswerValue, extractPhotoUrl,
+    │   │                                     #   resolveAnswerLabel, collectGroupAnswers,
+    │   │                                     #   sortByDateAscending
     │   ├── CharacteristicsTable.jsx          # Question/Answer table
     │   ├── PhotoCaptionCard.jsx              # photo + caption + empty state
     │   ├── HistoricalLineChart.jsx           # Line chart + threshold band
@@ -155,6 +157,31 @@ resolveAnswerLabel(values, questionId)
  * @returns {Array<{date: string, value: number}>}
  */
 sortByDateAscending(rows)
+
+/**
+ * Find a question_group definition by id across every form in
+ * window.forms. Returns null when not found. Mirrors findQuestion's
+ * shape but at the group level.
+ *
+ * @param {number|string} groupId
+ * @returns {object|null} The group with { id, name, label, question[], ... }
+ */
+findQuestionGroup(groupId)
+
+/**
+ * Walk every question in a group, drop type=photo questions and any
+ * whose formatAnswerValue resolves to null/empty, then join the
+ * surviving formatted answers. Used for the EPS Construction
+ * Information "Implementation / Construction" cell where each row
+ * displays a comma-joined summary of one question group.
+ *
+ * @param {number|string} groupId
+ * @param {Array} values                    /data/<id> answer payload
+ * @param {object} [options]
+ * @param {string} [options.separator=", "]
+ * @returns {string}                         "" when group is unknown or every answer is empty
+ */
+collectGroupAnswers(groupId, values, options)
 ```
 
 ### `individual-overview/shared/PhotoCaptionCard.jsx`

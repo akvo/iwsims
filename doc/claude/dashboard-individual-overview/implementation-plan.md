@@ -381,6 +381,153 @@ Create `IndividualRWSOverview.jsx` (~220 lines):
   6. `docs(dashboard): document individual-overview reusability strategy`
 - [ ] Wait for explicit user go-ahead before push.
 
+### Phase 8 — Scope-row refactor (group-walk + generator script)
+
+Follow-up after the first six phases ship. Replaces the per-row
+`impl_qid` single-qid lookup with a per-row **question-group walk**, so
+the Implementation / Construction cell combines every non-photo answer
+in the scope's question group (matching the design mockup), and
+exposes a Python generator so the row list stays in sync with the
+authoritative form JSON.
+
+#### Row shape change
+
+`PROJECT_SCOPE_ROWS` supports two row variants — pick whichever fits
+the source data:
+
+**Scope row** (one per project component the user can opt into):
+
+```js
+{
+  key: "concrete_base",
+  label: "Concrete Base Construction",
+  scope_value: "concrete_base_construction",  // Matches a project_scope option value
+  impl_group_id: 1749624600001,                // Question group walked for the Implementation cell
+  photo_qid: 1849633500001,                    // Photo question (type: "photo")
+  photo_caption_qid: 1849633600001,            // Text description accompanying the photo
+}
+```
+
+**Metadata row** (one per single-answer project field that belongs in
+the Construction Information table but is not scope-gated — e.g.
+Inspection Date, Construction Start Date, Weather Condition):
+
+```js
+{
+  key: "inspection_date",
+  label: "Inspection Date",
+  scope_value: null,                           // null -> "In Scope?" cell renders blank
+  impl_group_id: null,                         // null -> Implementation cell falls back to question_id
+  photo_qid: null,                             // null -> Photo cell renders blank
+  photo_caption_qid: null,
+  question_id: 1749624452911,                  // Single-qid lookup via resolveAnswerLabel
+}
+```
+
+Shell render rules (`scopeRows` useMemo + `SCOPE_COLUMNS` render):
+
+| Cell | When `scope_value` / `impl_group_id` / `photo_qid` is set | When it is null |
+|---|---|---|
+| In Scope? | `Yes`/`No` tag from `projectScopeSelections.has(scope_value)` | Cell renders blank |
+| Implementation | `collectGroupAnswers(impl_group_id, constructionValues)` | Falls back to `resolveAnswerLabel(constructionValues, question_id)`, then `null → —` |
+| Photo | Thumbnail from `extractPhotoUrl(photo_qid)` + caption | Cell renders blank |
+
+Removed from earlier shape: `status_qid` (replaced by `scope_value` +
+`PROJECT_SCOPE_QUESTION_ID`), `impl_qid` (replaced by
+`impl_group_id` for scope rows or `question_id` for metadata rows).
+
+The previous wiring had two latent bugs it fixes at the same time:
+`impl_qid` pointed at the group's photo question (type=photo, so
+`formatAnswerValue` returned the raw URL as text), and `photo_qid`
+pointed at the photo's description text (so `extractPhotoUrl` always
+returned null and no thumbnail rendered).
+
+#### New helper
+
+- [ ] `individual-overview/shared/helpers.js` — add
+  `collectGroupAnswers(groupId, values, { separator = ", " })`:
+  finds the group in `window.forms`, iterates its questions, skips
+  `type === "photo"` and any question whose
+  `formatAnswerValue(findAnswer(values, q.id), q)` resolves to `null`,
+  and joins the surviving formatted answers with `separator`.
+  Returns `""` when the group is unknown or all answers are null so
+  the shell can render `—` via the existing fallback.
+
+#### Shell changes (`IndividualEPSOverview.jsx`)
+
+- [ ] `projectScopeSelections` useMemo reads `PROJECT_SCOPE_QUESTION_ID`
+  from `constructionValues` (note: this question lives on the
+  monitoring form, not the registration form) into a `Set` of selected
+  option values.
+- [ ] "In Scope?" cell: `null` → render nothing; `true` →
+  `<Tag color="green">Yes</Tag>`; `false` → `<Tag color="red">No</Tag>`.
+- [ ] "Implementation / Construction" cell: `impl_group_id` →
+  `collectGroupAnswers(impl_group_id, constructionValues)`; otherwise
+  `question_id` → `resolveAnswerLabel(constructionValues, question_id)`;
+  otherwise `null` → `—` placeholder.
+- [ ] "Photo" cell: when both `photo_qid`'s URL and the caption are
+  empty, render nothing; otherwise render the thumbnail +
+  `<Text type="secondary">` caption stacked vertically.
+
+#### Generator script
+
+- [ ] `scripts/visualization/gen_individual_overview_scope_rows.py`:
+  - CLI: `--form <path-to-monitoring-form.json>` (required),
+    `--registration <path-to-registration-form.json>` (required),
+    `--project-scope-qid <qid>` (optional override; falls back to the
+    registration form's `project_scope` multiple_option question when
+    there is exactly one).
+  - Walks the monitoring form's `question_groups`. A group is treated
+    as a scope group when its `name` ends with `_group` AND it is
+    neither the top-level project-info group nor the general-remarks
+    group (allowlist rather than blocklist; skip list includes
+    `project_info`, `project_details`, `general_remarks_group`,
+    `water_quality_testing`, `photo_of_eps_group`, `contact_details`).
+  - Per group, emits one row:
+    - `key` = `group.name` with trailing `_group` stripped
+    - `label` = `group.label`
+    - `scope_value` = option value from `project_scope` whose `label`
+      matches `group.label` case-insensitively; logs a `// TODO`
+      comment when no match is found so humans can hand-edit
+    - `impl_group_id` = `group.id`
+    - `photo_qid` = first question with `type: "photo"` inside the
+      group
+    - `photo_caption_qid` = the `text` question immediately after the
+      photo question in `order`, or the first `_desc`/`_description`
+      text question in the group as a fallback
+  - Output: prints only the `PROJECT_SCOPE_ROWS = [ ... ]` JS array
+    (no surrounding imports, no comments except TODO annotations) to
+    stdout for manual paste. Does **not** auto-edit
+    `individual-overview/config/eps.js`.
+  - The script emits **scope rows only** (one per matching question
+    group). Metadata rows (Inspection Date, Construction Start Date,
+    etc.) are stable across forms and are hand-added to the top of the
+    config — the script does not try to enumerate them.
+  - Caller workflow: paste the script's output over the existing
+    scope-row block in `individual-overview/config/eps.js`, leaving
+    any hand-added metadata rows above untouched.
+
+#### Verification
+
+- [ ] Regenerate the EPS scope rows with the script, diff against the
+  hand-edited config, paste the generator output over the old block
+  (preserving hand-added metadata rows above)
+- [ ] `npm run lint` + `npm run prettier` + targeted Jest suites green
+- [ ] Manual smoke:
+  - Metadata rows (Inspection Date, Construction Start Date, Proposed
+    Completion Date, Weather Conditions) render their single answer in
+    the Implementation column with blank In Scope? and Photo cells.
+  - Each scope row's Implementation cell shows the combined answer
+    text, Photo cell shows a thumbnail + caption, In Scope? cell
+    reflects the project_scope answer.
+- [ ] Update `helpers.test.js` to cover `collectGroupAnswers`
+  (missing group → `""`, empty values → `""`, photos excluded,
+  multiple types joined)
+- [ ] Commit plan (sequential on `feature/196`):
+  1. `feat(dashboard): add collectGroupAnswers helper + test`
+  2. `feat(dashboard): rewrite EPS scope rows on question-group walk + project_scope gating`
+  3. `chore(scripts): add scope-row generator for individual-overview configs`
+
 ---
 
 ## Risk register
