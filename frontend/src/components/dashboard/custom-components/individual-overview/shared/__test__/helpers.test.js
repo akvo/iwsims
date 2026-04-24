@@ -1,6 +1,8 @@
 import {
-  findQuestion,
+  collectGroupAnswers,
   findAnswer,
+  findQuestion,
+  findQuestionGroup,
   formatAnswerValue,
   extractPhotoUrl,
   resolveAnswerLabel,
@@ -15,6 +17,8 @@ const FORMS_FIXTURE = [
     content: {
       question_group: [
         {
+          id: 1001,
+          name: "basic_group",
           question: [
             { id: 101, label: "Free text", type: "input" },
             {
@@ -37,6 +41,24 @@ const FORMS_FIXTURE = [
             },
             { id: 104, label: "Coords", type: "geo" },
             { id: 105, label: "Photo", type: "photo" },
+          ],
+        },
+        {
+          id: 2001,
+          name: "scope_group",
+          question: [
+            {
+              id: 201,
+              label: "Current status",
+              type: "option",
+              option: [
+                { value: "ongoing", label: "Ongoing" },
+                { value: "completed", label: "Completed" },
+              ],
+            },
+            { id: 202, label: "Tank size", type: "input" },
+            { id: 203, label: "Scope photo", type: "photo" },
+            { id: 204, label: "Scope notes", type: "input" },
           ],
         },
       ],
@@ -155,6 +177,73 @@ describe("resolveAnswerLabel", () => {
 
   test("returns null when no answer", () => {
     expect(resolveAnswerLabel([], 101)).toBeNull();
+  });
+});
+
+describe("findQuestionGroup", () => {
+  test("returns the matching group by id", () => {
+    expect(findQuestionGroup(2001)).toMatchObject({
+      id: 2001,
+      name: "scope_group",
+    });
+  });
+
+  test("accepts string ids", () => {
+    expect(findQuestionGroup("2001")).toMatchObject({ id: 2001 });
+  });
+
+  test("returns null when not found", () => {
+    expect(findQuestionGroup(9999)).toBeNull();
+  });
+
+  test("returns null for null/undefined id", () => {
+    expect(findQuestionGroup(null)).toBeNull();
+  });
+
+  test("returns null when window.forms is missing", () => {
+    delete window.forms;
+    expect(findQuestionGroup(2001)).toBeNull();
+  });
+});
+
+describe("collectGroupAnswers", () => {
+  test("joins formatted non-photo answers from the group", () => {
+    const values = [
+      { question: 201, value: "ongoing" }, // option -> "Ongoing"
+      { question: 202, value: "2700L" }, // input
+      { question: 203, value: "http://x/y.jpg" }, // photo -> SKIPPED
+      { question: 204, value: "notes here" }, // input
+    ];
+    expect(collectGroupAnswers(2001, values)).toBe(
+      "Ongoing, 2700L, notes here"
+    );
+  });
+
+  test("skips answers that resolve to null/empty", () => {
+    const values = [
+      { question: 201, value: "completed" },
+      { question: 202, value: "" },
+      { question: 204, value: null },
+    ];
+    expect(collectGroupAnswers(2001, values)).toBe("Completed");
+  });
+
+  test("returns empty string when group is not found", () => {
+    expect(collectGroupAnswers(9999, [])).toBe("");
+  });
+
+  test("returns empty string when values is empty", () => {
+    expect(collectGroupAnswers(2001, [])).toBe("");
+  });
+
+  test("honours custom separator", () => {
+    const values = [
+      { question: 201, value: "ongoing" },
+      { question: 202, value: "2700L" },
+    ];
+    expect(collectGroupAnswers(2001, values, { separator: " | " })).toBe(
+      "Ongoing | 2700L"
+    );
   });
 });
 

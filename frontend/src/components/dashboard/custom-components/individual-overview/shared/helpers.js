@@ -138,6 +138,65 @@ export const extractPhotoUrl = (values, questionId) => {
 };
 
 /**
+ * Find a question group definition by its id across every form in
+ * `window.forms`. Returns null when not found.
+ *
+ * @param {number|string} groupId
+ * @returns {object|null}
+ */
+export const findQuestionGroup = (groupId) => {
+  if (groupId === null || typeof groupId === "undefined") {
+    return null;
+  }
+  const target = toNumericId(groupId);
+  const forms = window.forms || [];
+  for (let i = 0; i < forms.length; i += 1) {
+    const groups = forms[i]?.content?.question_group || [];
+    const found = groups.find((g) => g?.id === target);
+    if (found) {
+      return found;
+    }
+  }
+  return null;
+};
+
+/**
+ * Walk every question in a question group, drop `type: "photo"`
+ * questions and any whose answer resolves to null/empty, then join the
+ * surviving formatted answers with `separator`. Used to combine all
+ * answers inside a scope question group into a single cell (e.g. the
+ * EPS Construction Information "Implementation / Construction" column).
+ *
+ * @param {number|string} groupId
+ * @param {Array} values
+ * @param {object} [options]
+ * @param {string} [options.separator=", "]
+ * @returns {string}            Empty string when the group is unknown
+ *                               or every answer is empty.
+ */
+export const collectGroupAnswers = (groupId, values, options) => {
+  const separator = options?.separator || ", ";
+  const group = findQuestionGroup(groupId);
+  if (!group) {
+    return "";
+  }
+  const questions = group.question || [];
+  const parts = [];
+  for (let i = 0; i < questions.length; i += 1) {
+    const q = questions[i];
+    if (!q || q.type === "photo") {
+      continue;
+    }
+    const answer = findAnswer(values, q.id);
+    const formatted = formatAnswerValue(answer, q);
+    if (formatted !== null && formatted !== "") {
+      parts.push(formatted);
+    }
+  }
+  return parts.join(separator);
+};
+
+/**
  * Convenience: findAnswer + findQuestion + formatAnswerValue.
  *
  * @param {Array} values
