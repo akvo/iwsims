@@ -35,68 +35,130 @@ export const CONSTRUCTION_PHOTO_QID = 1749624521442;
 export const CONSTRUCTION_PHOTO_CAPTION_QID = 1749631662652;
 
 /**
+ * Registration `project_scope` multiple_option question. Its answer
+ * lists the component keys that belong to the current EPS project;
+ * the shell shows a green "Yes" tag in the "In Scope?" column when
+ * PROJECT_SCOPE_ROWS[i].scope_value appears in this answer, red "No"
+ * otherwise.
+ */
+export const PROJECT_SCOPE_QUESTION_ID = 1749624505915;
+
+/**
  * Project scope rows for the Construction Information table.
- * Columns: Scope | In scope? | Implementation/Construction | Photo
- *   - status_qid     → "In scope?" / completion status answer
- *   - impl_qid       → "Implementation" cell answer (date or note)
- *   - photo_qid      → "Photo" thumbnail
+ * Columns: Project Scope | In scope? | Implementation/Construction | Photo
+ *   - scope_value         → option value checked against PROJECT_SCOPE_QUESTION_ID
+ *                           answer for the "In scope?" tag
+ *   - impl_group_id       → question group walked by collectGroupAnswers to
+ *                           combine every non-photo answer into the
+ *                           Implementation / Construction cell
+ *   - photo_qid           → actual photo question (type: "photo") for the
+ *                           Photo column thumbnail
+ *   - photo_caption_qid   → text description shown under the thumbnail
+ *
+ * See scripts/visualization/gen_individual_overview_scope_rows.py for
+ * a generator that emits this array from the construction monitoring
+ * form JSON.
  */
 export const PROJECT_SCOPE_ROWS = [
   {
+    key: "inspection_date",
+    label: "Inspection Date",
+    scope_value: null,
+    impl_group_id: null,
+    photo_qid: null,
+    photo_caption_qid: null,
+    question_id: 1749624452911,
+  },
+  {
+    key: "construction_start_date",
+    label: "Construction Start Date",
+    scope_value: null,
+    impl_group_id: null,
+    photo_qid: null,
+    photo_caption_qid: null,
+    question_id: 1749624452910,
+  },
+  {
+    key: "proposed_completion_date",
+    label: "Proposed Completion Date",
+    scope_value: null,
+    impl_group_id: null,
+    photo_qid: null,
+    photo_caption_qid: null,
+    question_id: 1749630516825,
+  },
+  {
+    key: "weather_conditions",
+    label: "Weather Conditions",
+    scope_value: null,
+    impl_group_id: null,
+    photo_qid: null,
+    photo_caption_qid: null,
+    question_id: 1749630701234,
+  },
+  {
     key: "concrete_base",
-    label: "Concrete Base",
-    status_qid: 1849633499999,
-    impl_qid: 1849633500001,
-    photo_qid: 1849633600001,
+    label: "Concrete Base Construction",
+    scope_value: "concrete_base_construction",
+    impl_group_id: 1749624600001,
+    photo_qid: 1849633500001,
+    photo_caption_qid: 1849633600001,
   },
   {
     key: "urf_tank",
-    label: "URF Tank",
-    status_qid: 1849633720001,
-    impl_qid: 1849633800001,
-    photo_qid: 1849633900001,
+    label: "URF Tank Implementation",
+    scope_value: "urf_tank_implementation",
+    impl_group_id: 1749624700001,
+    photo_qid: 1849633800001,
+    photo_caption_qid: 1849633900001,
   },
   {
     key: "eps_tank",
-    label: "EPS Tank",
-    status_qid: 1849633900003,
-    impl_qid: 1849634100001,
-    photo_qid: 1849634200001,
+    label: "EPS Tank Implementation",
+    scope_value: "eps_tank_implementation",
+    impl_group_id: 1749624800001,
+    photo_qid: 1849634100001,
+    photo_caption_qid: 1849634200001,
   },
   {
     key: "balance_tank",
-    label: "Balance Tank",
-    status_qid: 1849634300002,
-    impl_qid: 1849634400001,
-    photo_qid: 1849634500001,
+    label: "Balance Tank Implementation",
+    scope_value: "balance_tank_implementation",
+    impl_group_id: 1749624900001,
+    photo_qid: 1849634400001,
+    photo_caption_qid: 1849634500001,
   },
   {
     key: "storage_tank",
-    label: "Storage Tank",
-    status_qid: 1849634690001,
-    impl_qid: 1849634700001,
-    photo_qid: 1849634800001,
+    label: "Storage Tank Implementation",
+    scope_value: "storage_tank_implementation",
+    impl_group_id: 1749625000001,
+    photo_qid: 1849634700001,
+    photo_caption_qid: 1849634800001,
   },
   {
     key: "standpipes",
     label: "Standpipes",
-    status_qid: 1849635200001,
-    impl_qid: 1849635000001,
-    photo_qid: 1849635100001,
+    scope_value: "standpipes",
+    impl_group_id: 1749625100001,
+    photo_qid: 1849635000001,
+    photo_caption_qid: 1849635100001,
   },
   {
     key: "drainage",
     label: "Drainage",
-    status_qid: null,
-    impl_qid: 1849635300001,
-    photo_qid: 1849635400001,
+    scope_value: "drainage",
+    impl_group_id: 1749625200001,
+    photo_qid: 1849635300001,
+    photo_caption_qid: 1849635400001,
   },
   {
     key: "site_security",
-    label: "Site Security & Perimeter",
-    status_qid: 1849635500001,
-    impl_qid: 1849635600001,
-    photo_qid: 1849635700001,
+    label: "Site Security and Perimeter",
+    scope_value: "site_security_and_perimeter",
+    impl_group_id: 1749625300001,
+    photo_qid: 1849635600001,
+    photo_caption_qid: 1849635700001,
   },
 ];
 

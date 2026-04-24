@@ -20,6 +20,7 @@ import HistoricalLineChart from "./individual-overview/shared/HistoricalLineChar
 import useIndividualOverviewData from "./individual-overview/shared/useIndividualOverviewData";
 import useMonitoringHistory from "./individual-overview/shared/useMonitoringHistory";
 import {
+  collectGroupAnswers,
   extractPhotoUrl,
   findAnswer,
   resolveAnswerLabel,
@@ -30,6 +31,7 @@ import {
   CONSTRUCTION_PHOTO_QID,
   CONSTRUCTION_PROGRESS_QID,
   CONSTRUCTION_REMARKS_QID,
+  PROJECT_SCOPE_QUESTION_ID,
   PROJECT_SCOPE_ROWS,
   REGISTRATION_CHARACTERISTICS_QIDS,
   REGISTRATION_FORM_ID,
@@ -48,38 +50,53 @@ import {
 const { Title, Text } = Typography;
 
 const SCOPE_COLUMNS = [
-  { title: "Project Scope", dataIndex: "label", key: "label", width: "30%" },
+  { title: "Project Scope", dataIndex: "label", key: "label", width: "25%" },
   {
     title: "In Scope?",
     dataIndex: "inScope",
     key: "inScope",
-    width: "15%",
-    render: (text) =>
-      text ? <Tag color="green">{text}</Tag> : <Text type="secondary">—</Text>,
+    width: "10%",
+    render: (inScope) =>
+      inScope === null ? null : inScope ? (
+        <Tag color="green">Yes</Tag>
+      ) : (
+        <Tag color="red">No</Tag>
+      ),
   },
   {
     title: "Implementation / Construction",
     dataIndex: "implementation",
     key: "implementation",
-    width: "35%",
-    render: (text) => text || <Text type="secondary">—</Text>,
+    width: "45%",
+    render: (text) => (text ? text : <Text type="secondary">—</Text>),
   },
   {
     title: "Photo",
-    dataIndex: "photoUrl",
-    key: "photoUrl",
+    dataIndex: "photo",
+    key: "photo",
     width: "20%",
-    render: (url) =>
-      url ? (
-        <Image
-          src={url}
-          width={80}
-          height={60}
-          style={{ objectFit: "cover" }}
-        />
-      ) : (
-        <Text type="secondary">—</Text>
-      ),
+    render: (photo) => {
+      if (!photo?.url && !photo?.caption) {
+        return null;
+      }
+      return (
+        <div>
+          {photo.url ? (
+            <Image
+              src={photo.url}
+              width={80}
+              height={60}
+              style={{ objectFit: "cover" }}
+            />
+          ) : null}
+          {photo.caption ? (
+            <div style={{ marginTop: 4 }}>
+              <Text type="secondary">{photo.caption}</Text>
+            </div>
+          ) : null}
+        </div>
+      );
+    },
   },
 ];
 
@@ -165,21 +182,43 @@ const IndividualEPSOverview = () => {
     CONSTRUCTION_REMARKS_QID
   );
 
+  const projectScopeSelections = useMemo(() => {
+    // PROJECT_SCOPE_QUESTION_ID lives on the construction monitoring form,
+    // not the registration form, so we read from constructionValues.
+    const answer = findAnswer(constructionValues, PROJECT_SCOPE_QUESTION_ID);
+    const value = answer?.value;
+    if (Array.isArray(value)) {
+      return new Set(value);
+    }
+    if (typeof value === "string" && value.length > 0) {
+      return new Set([value]);
+    }
+    return new Set();
+  }, [constructionValues]);
+
   const scopeRows = useMemo(() => {
     return PROJECT_SCOPE_ROWS.map((row) => ({
       key: row.key,
       label: row.label,
-      inScope: row.status_qid
-        ? resolveAnswerLabel(constructionValues, row.status_qid)
+      inScope:
+        row.scope_value === null
+          ? null
+          : projectScopeSelections.has(row.scope_value),
+      implementation: row.impl_group_id
+        ? collectGroupAnswers(row.impl_group_id, constructionValues)
+        : row.question_id
+        ? resolveAnswerLabel(constructionValues, row.question_id)
         : null,
-      implementation: row.impl_qid
-        ? resolveAnswerLabel(constructionValues, row.impl_qid)
-        : null,
-      photoUrl: row.photo_qid
-        ? extractPhotoUrl(constructionValues, row.photo_qid)
-        : null,
+      photo: {
+        url: row.photo_qid
+          ? extractPhotoUrl(constructionValues, row.photo_qid)
+          : null,
+        caption: row.photo_caption_qid
+          ? resolveAnswerLabel(constructionValues, row.photo_caption_qid)
+          : null,
+      },
     }));
-  }, [constructionValues]);
+  }, [constructionValues, projectScopeSelections]);
 
   const wqPhotoUrl = extractPhotoUrl(wqValues, WQ_PHOTO_QID);
   const wqPhotoCaption = resolveAnswerLabel(wqValues, WQ_PHOTO_CAPTION_QID);
