@@ -68,7 +68,14 @@ const SCOPE_COLUMNS = [
     dataIndex: "implementation",
     key: "implementation",
     width: "45%",
-    render: (text) => (text ? text : <Text type="secondary">—</Text>),
+    // Explicit emptiness check — `text ? text : —` would render the
+    // placeholder for legitimate falsy values like 0 or "0".
+    render: (text) =>
+      text === null || typeof text === "undefined" || text === "" ? (
+        <Text type="secondary">—</Text>
+      ) : (
+        text
+      ),
   },
   {
     title: "Photo",
@@ -124,7 +131,18 @@ const buildSeries = (history, qid) => {
       if (!answer) {
         return null;
       }
-      const numeric = Number(answer.value);
+      const raw = answer.value;
+      // Treat null / undefined / "" / whitespace-only as missing before
+      // numeric conversion — Number("") and Number("   ") both yield 0,
+      // which would chart spurious zero-value datapoints.
+      if (
+        raw === null ||
+        typeof raw === "undefined" ||
+        (typeof raw === "string" && raw.trim() === "")
+      ) {
+        return null;
+      }
+      const numeric = Number(raw);
       if (Number.isNaN(numeric)) {
         return null;
       }
@@ -170,7 +188,18 @@ const IndividualEPSOverview = () => {
     if (!answer) {
       return null;
     }
-    const n = Number(answer.value);
+    const raw = answer.value;
+    // Treat null / undefined / "" / whitespace-only as missing before
+    // numeric conversion — Number("") yields 0, which would render a
+    // legitimate-looking 0% progress bar instead of the empty state.
+    if (
+      raw === null ||
+      typeof raw === "undefined" ||
+      (typeof raw === "string" && raw.trim() === "")
+    ) {
+      return null;
+    }
+    const n = Number(raw);
     if (Number.isNaN(n)) {
       return null;
     }
