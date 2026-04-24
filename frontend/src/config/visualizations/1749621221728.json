@@ -190,59 +190,87 @@
       ]
     },
     {
-      "id": "kpi_total_registered",
+      "id": "kpi_operational_systems",
       "chart_type": "card",
       "order": 4,
       "col_span": 6,
-      "label": "Total RWS registered",
+      "label": "Operational Systems",
       "color": "#1890ff",
-      "api": {
-        "form_id": 1749621221728
-      }
-    },
-    {
-      "id": "kpi_under_construction",
-      "chart_type": "card",
-      "order": 5,
-      "col_span": 6,
-      "label": "Total RWS under construction",
-      "color": "#fa8c16",
-      "api": {
-        "form_id": 1749631041125,
-        "question_id": 1749631041155,
-        "option_value": "non_operational",
-        "monitoring": "latest",
-        "sum_by": "parent_id"
-      }
-    },
-    {
-      "id": "kpi_operational",
-      "chart_type": "card",
-      "order": 6,
-      "col_span": 6,
-      "label": "Total RWS operational",
-      "color": "#64A73B",
       "api": {
         "form_id": 1749631041125,
         "question_id": 1749631041155,
         "option_value": "operational",
         "monitoring": "latest",
         "sum_by": "parent_id"
+      },
+      "denominator_api": {
+        "form_id": 1749621221728
       }
     },
     {
-      "id": "kpi_critical_issues",
+      "id": "kpi_drinking_water_compliance",
+      "chart_type": "card",
+      "order": 5,
+      "col_span": 6,
+      "label": "Drinking Water Compliance",
+      "color": "#64A73B",
+      "compute": "compliance_kpi",
+      "params_ref": [
+        "param_e_coli",
+        "param_total_coliform",
+        "param_fecal_coliform",
+        "param_turbidity",
+        "param_temperature",
+        "param_ph",
+        "param_conductivity",
+        "param_salinity"
+      ],
+      "globals_ref": "wq_globals",
+      "denominator_api": {
+        "form_id": 1749621221728
+      }
+    },
+    {
+      "id": "kpi_active_water_committees",
+      "chart_type": "card",
+      "order": 6,
+      "col_span": 6,
+      "label": "Active Water Committees",
+      "color": "#fa8c16",
+      "api": {
+        "form_id": 1749621221728,
+        "question_id": 1749622715678,
+        "option_value": "yes",
+        "sum_by": "parent_id"
+      },
+      "denominator_api": {
+        "form_id": 1749621221728
+      }
+    },
+    {
+      "id": "kpi_accessibility_no_issues",
       "chart_type": "card",
       "order": 7,
       "col_span": 6,
-      "label": "Total RWS with critical issues",
-      "color": "#e41a1c",
-      "api": {
+      "label": "Accessibility Issues — No Issues",
+      "color": "#13c2c2",
+      "compute": "accessibility_no_issues_kpi",
+      "sample_api": {
+        "form_id": 1749621962296,
+        "question_id": 1749622785185,
+        "monitoring": "latest",
+        "group_by": "parent_id",
+        "stack_by": "option"
+      },
+      "issues_api": {
         "form_id": 1749631041125,
         "question_id": 1749631041156,
-        "option_value": "yes",
         "monitoring": "latest",
-        "sum_by": "parent_id"
+        "group_by": "parent_id",
+        "stack_by": "option"
+      },
+      "denominator_api": {
+        "form_id": 1749621221728
       }
     },
     {
@@ -269,28 +297,136 @@
       "text": "RWS at-a-glance: Status and Compliance"
     },
     {
-      "id": "chart_operational_status",
-      "chart_type": "doughnut",
+      "id": "chart_implementation_at_scale",
+      "chart_type": "stack_bar",
       "order": 10,
+      "col_span": 24,
+      "config": {
+        "title": "Implementation at Scale",
+        "xAxisLabel": "Number of RWS",
+        "yAxisLabel": "Project type"
+      },
+      "compute": "cross_tab",
+      "orientation": "horizontal",
+      "category_api": {
+        "form_id": 1749621962296,
+        "question_id": 1749621851234,
+        "monitoring": "latest",
+        "group_by": "parent_id",
+        "stack_by": "option"
+      },
+      "series_api": {
+        "form_id": 1749621221728,
+        "question_id": 1749622571775,
+        "group_by": "parent_id",
+        "stack_by": "option"
+      }
+    },
+    {
+      "id": "chart_test_method_half",
+      "chart_type": "half_doughnut",
+      "order": 11,
       "col_span": 12,
       "config": {
-        "title": "Operational Status"
+        "title": "Lab tested vs CBT tested"
       },
       "api": {
         "form_id": 1749631041125,
-        "question_id": 1749631041155,
+        "question_id": 1749631041138,
         "group_by": "option",
         "monitoring": "latest"
       }
     },
     {
-      "id": "chart_drinking_water_compliance",
-      "chart_type": "stack_bar",
-      "order": 11,
+      "id": "chart_beneficiaries",
+      "chart_type": "bar",
+      "order": 12,
       "col_span": 12,
       "config": {
+        "title": "Beneficiaries",
+        "xAxisLabel": "Target group",
+        "yAxisLabel": "Number of RWS"
+      },
+      "api": {
+        "form_id": 1749621221728,
+        "question_id": 1749622291234,
+        "group_by": "option"
+      }
+    },
+    {
+      "id": "chart_operational_status_stack",
+      "chart_type": "stack_bar",
+      "order": 13,
+      "col_span": 8,
+      "config": {
+        "title": "Operational Status",
+        "yAxisLabel": "RWS count"
+      },
+      "compute": "kpi_stack",
+      "segments": [
+        {
+          "key": "operational",
+          "label": "Operational",
+          "color": "#3C3CFF",
+          "api": {
+            "form_id": 1749631041125,
+            "question_id": 1749631041155,
+            "option_value": "operational",
+            "monitoring": "latest",
+            "sum_by": "parent_id"
+          }
+        },
+        {
+          "key": "issues",
+          "label": "Issues with the system",
+          "color": "#1AB99F",
+          "api": {
+            "form_id": 1749631041125,
+            "question_id": 1749631041156,
+            "option_value": "yes",
+            "monitoring": "latest",
+            "sum_by": "parent_id"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chart_accessibility_bucket",
+      "chart_type": "stack_bar",
+      "order": 14,
+      "col_span": 8,
+      "config": {
+        "title": "Accessibility",
+        "yAxisLabel": "RWS count"
+      },
+      "compute": "accessibility_bucket",
+      "sample_api": {
+        "form_id": 1749621962296,
+        "question_id": 1749622785185,
+        "monitoring": "latest",
+        "group_by": "parent_id",
+        "stack_by": "option"
+      },
+      "issues_api": {
+        "form_id": 1749631041125,
+        "question_id": 1749631041156,
+        "monitoring": "latest",
+        "group_by": "parent_id",
+        "stack_by": "option"
+      },
+      "labels": {
+        "easily_accessible": "Easily accessible",
+        "accessible_with_issues": "Accessible with issues",
+        "not_accessible": "Not accessible"
+      }
+    },
+    {
+      "id": "chart_drinking_water_compliance",
+      "chart_type": "stack_bar",
+      "order": 15,
+      "col_span": 8,
+      "config": {
         "title": "Drinking Water Compliance",
-        "xAxisLabel": "Compliant",
         "yAxisLabel": "RWS count",
         "color": [
           "#64A73B",
@@ -318,52 +454,9 @@
       "globals_ref": "wq_globals"
     },
     {
-      "id": "chart_water_committee",
-      "chart_type": "doughnut",
-      "order": 12,
-      "col_span": 8,
-      "config": {
-        "title": "Water Committee"
-      },
-      "api": {
-        "form_id": 1749621221728,
-        "question_id": 1749622715678,
-        "group_by": "option"
-      }
-    },
-    {
-      "id": "chart_implementing_authority",
-      "chart_type": "doughnut",
-      "order": 13,
-      "col_span": 8,
-      "config": {
-        "title": "Implementing Authority"
-      },
-      "api": {
-        "form_id": 1749621221728,
-        "question_id": 1749622571775,
-        "group_by": "option"
-      }
-    },
-    {
-      "id": "chart_test_method",
-      "chart_type": "doughnut",
-      "order": 14,
-      "col_span": 8,
-      "config": {
-        "title": "Lab tested vs CBT tested"
-      },
-      "api": {
-        "form_id": 1749631041125,
-        "question_id": 1749631041138,
-        "group_by": "option",
-        "monitoring": "latest"
-      }
-    },
-    {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 15,
+      "order": 20,
       "col_span": 24,
       "items": [
         {
@@ -869,19 +962,6 @@
           ]
         },
         {
-          "id": "tab_individual_overview",
-          "is_public": false,
-          "label": "Individual Overview",
-          "items": [
-            {
-              "id": "individual_overview_component",
-              "chart_type": "custom_component",
-              "order": 1,
-              "component": "IndividualRWSOverview"
-            }
-          ]
-        },
-        {
           "id": "tab_construction_monitoring",
           "label": "Construction monitoring",
           "items": [
@@ -1034,6 +1114,19 @@
                   "hide": false
                 }
               ]
+            }
+          ]
+        },
+        {
+          "id": "tab_individual_overview",
+          "is_public": false,
+          "label": "Individual Overview",
+          "items": [
+            {
+              "id": "individual_overview_component",
+              "chart_type": "custom_component",
+              "order": 1,
+              "component": "IndividualRWSOverview"
             }
           ]
         }
