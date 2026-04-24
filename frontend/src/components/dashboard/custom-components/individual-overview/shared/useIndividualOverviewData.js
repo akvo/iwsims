@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api, store } from "../../../../../lib";
-
-const deepestSelectedAdmin = (admins) => {
-  if (!Array.isArray(admins) || admins.length < 2) {
-    return null;
-  }
-  return admins[admins.length - 1] || null;
-};
+import { api } from "../../../../../lib";
 
 /**
  * Hook that drives the admin → datapoints → values fetch chain shared by
  * every Individual Overview shell.
  *
+ * The `selectedLocation` is supplied by the caller (typically the parent
+ * component's local `useState` fed by an embedded admin dropdown), so
+ * this hook is location-agnostic and never reads the global Pullstate
+ * `store.administration`. That keeps the embedded selection from
+ * leaking into the dashboard-wide filter state.
+ *
  * @param {object} options
  * @param {number} options.regFormId
  * @param {Array<number>} options.monitoringFormIds
+ * @param {{ id: number } | null} [options.selectedLocation]
+ *   Deepest admin level the caller wants to scope to. `null` (or missing
+ *   `id`) clears the data-point list and selection.
  *
  * @returns {{
  *   loadingDataPoints: boolean,
@@ -27,13 +29,11 @@ const deepestSelectedAdmin = (admins) => {
  *   refetch: () => void,
  * }}
  */
-const useIndividualOverviewData = ({ regFormId, monitoringFormIds }) => {
-  const administration = store.useState((s) => s.administration);
-  const selectedLocation = useMemo(
-    () => deepestSelectedAdmin(administration),
-    [administration]
-  );
-
+const useIndividualOverviewData = ({
+  regFormId,
+  monitoringFormIds,
+  selectedLocation,
+}) => {
   const [dataPoints, setDataPoints] = useState([]);
   const [loadingDataPoints, setLoadingDataPoints] = useState(false);
   const [selectedDataPoint, setSelectedDataPointState] = useState(null);

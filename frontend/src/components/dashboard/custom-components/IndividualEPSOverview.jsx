@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Card,
   Col,
@@ -13,7 +13,7 @@ import {
   Tag,
   Typography,
 } from "antd";
-import AdministrationDropdown from "../../filters/AdministrationDropdown";
+import AdministrationDropdownLocal from "../../filters/AdministrationDropdownLocal";
 import CharacteristicsTable from "./individual-overview/shared/CharacteristicsTable";
 import PhotoCaptionCard from "./individual-overview/shared/PhotoCaptionCard";
 import HistoricalLineChart from "./individual-overview/shared/HistoricalLineChart";
@@ -152,6 +152,11 @@ const buildSeries = (history, qid) => {
 };
 
 const IndividualEPSOverview = () => {
+  // Component-local admin selection. Lives in React state instead of
+  // store.administration so picking a location here does NOT trigger a
+  // dashboard-wide refetch of every chart, table, and KPI on the page.
+  const [embeddedAdmin, setEmbeddedAdmin] = useState(null);
+
   const {
     dataPoints,
     selectedDataPoint,
@@ -161,6 +166,7 @@ const IndividualEPSOverview = () => {
   } = useIndividualOverviewData({
     regFormId: REGISTRATION_FORM_ID,
     monitoringFormIds: [CONSTRUCTION_FORM_ID, WATER_QUALITY_FORM_ID],
+    selectedLocation: embeddedAdmin,
   });
 
   const constructionValues = useMemo(
@@ -264,7 +270,7 @@ const IndividualEPSOverview = () => {
   return (
     <div className="individual-overview">
       <Space style={{ marginBottom: 16 }} wrap>
-        <AdministrationDropdown />
+        <AdministrationDropdownLocal onChange={setEmbeddedAdmin} />
         <Select
           placeholder="Select an EPS"
           style={{ minWidth: 240 }}
