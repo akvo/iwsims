@@ -12,12 +12,13 @@ import store from "../../../lib/store";
  * pane's children.
  *
  * Panes carrying `is_public: false` are rendered as disabled tabs when the
- * viewer is anonymous (`UIState.isLoggedIn === false`). The default-active
- * tab falls through to the first non-disabled pane so anonymous viewers do
- * not land on a disabled tab on first paint. Combined with
- * `destroyInactiveTabPane`, this guarantees the pane's children never mount
- * (and so never fetch authenticated APIs) until the user is signed in and
- * activates the tab.
+ * viewer is anonymous (`isLoggedIn === false` in the Pullstate store at
+ * `lib/store.js`, read here via `store.useState((s) => s.isLoggedIn)`). The
+ * default-active tab falls through to the first non-disabled pane so
+ * anonymous viewers do not land on a disabled tab on first paint. Combined
+ * with `destroyInactiveTabPane`, this guarantees the pane's children never
+ * mount (and so never fetch authenticated APIs) until the user is signed in
+ * and activates the tab.
  *
  * @param {object}   item         A config item with chart_type "tabs" and items[]
  * @param {Function} renderItems  (items: Array) => ReactNode — provided by DashboardRenderer
