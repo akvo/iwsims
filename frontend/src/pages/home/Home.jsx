@@ -4,6 +4,7 @@ import { store, uiText } from "../../lib";
 import {
   HeroSection,
   MandateSection,
+  VideoSection,
   RolesSection,
   HomeFooter,
   useHomeParallax,
@@ -23,6 +24,7 @@ const Home = () => {
     <main className="home-content" ref={rootRef}>
       <HeroSection text={text} appName={appName} />
       <MandateSection text={text} />
+      <VideoSection text={text} />
       <RolesSection text={text} />
       <HomeFooter text={text} />
     </main>

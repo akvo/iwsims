@@ -509,6 +509,18 @@ Object {
     },
     "homeStructureText": "The Department is headed by the Director of Water and Sewerage with the Technical Unit responsible for monitoring and compliance and Policy Unit responsible for policy and regulatory matters, supported by common cadre support staff.",
     "homeStructureTitle": "Department Structure",
+    "homeVideoHeadline": <React.Fragment>
+      See 
+      <span
+        className="accent"
+      >
+        Test App
+      </span>
+       in action.
+    </React.Fragment>,
+    "homeVideoIframeTitle": "Test App introduction video\\"",
+    "homeVideoText": "A short walkthrough of how the platform supports water and sewerage service delivery, monitoring, and decision-making across Fiji.",
+    "homeVideoTitle": "Watch & Learn",
     "informUser": "Inform User for Changes",
     "initialRegistration": "Initial Registration",
     "instructionsMailed": "Instructions mailed successfully",

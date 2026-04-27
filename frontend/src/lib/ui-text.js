@@ -799,6 +799,15 @@ const uiText = {
       src: "/assets/department-structure.jpg",
       alt: "Department Structure",
     },
+    homeVideoTitle: "Watch & Learn",
+    homeVideoHeadline: (
+      <Fragment>
+        See <span className="accent">{window.appConfig.name}</span> in action.
+      </Fragment>
+    ),
+    homeVideoText:
+      "A short walkthrough of how the platform supports water and sewerage service delivery, monitoring, and decision-making across Fiji.",
+    homeVideoIframeTitle: `${window.appConfig.name} introduction video"`,
     homeKeyRolesTitle: "Key Roles and Responsibilities",
     homeKeyRolesHeadline: (
       <Fragment>
