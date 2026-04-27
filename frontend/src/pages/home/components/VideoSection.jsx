@@ -5,9 +5,11 @@ import React from "react";
 export const VIDEO_URL = "https://www.youtube.com/watch?v=kuM2l717A0w";
 
 const YOUTUBE_ID_PATTERNS = [
-  /(?:youtube\.com\/watch\?v=)([\w-]{11})/,
+  /(?:youtube(?:-nocookie)?\.com\/watch\?v=)([\w-]{11})/,
   /(?:youtu\.be\/)([\w-]{11})/,
-  /(?:youtube\.com\/embed\/)([\w-]{11})/,
+  /(?:youtube(?:-nocookie)?\.com\/embed\/)([\w-]{11})/,
+  /(?:youtube(?:-nocookie)?\.com\/shorts\/)([\w-]{11})/,
+  /(?:youtube(?:-nocookie)?\.com\/v\/)([\w-]{11})/,
 ];
 
 const extractYouTubeId = (url) => {
