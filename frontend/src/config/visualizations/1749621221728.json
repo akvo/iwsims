@@ -190,9 +190,66 @@
       ]
     },
     {
-      "id": "kpi_operational_systems",
+      "id": "kpi_total_rws",
       "chart_type": "card",
       "order": 4,
+      "col_span": 6,
+      "label": "Total RWS registered",
+      "color": "#3C3CFF",
+      "api": {
+        "form_id": 1749621221728,
+        "monitoring": "latest"
+      }
+    },
+    {
+      "id": "kpi_under_construction",
+      "chart_type": "card",
+      "order": 5,
+      "col_span": 6,
+      "label": "RWS under construction",
+      "color": "#fa8c16",
+      "api": {
+        "form_id": 1749631041125,
+        "question_id": 1749631041155,
+        "option_value": "non_operational",
+        "monitoring": "latest",
+        "sum_by": "parent_id"
+      }
+    },
+    {
+      "id": "kpi_operational_rws",
+      "chart_type": "card",
+      "order": 6,
+      "col_span": 6,
+      "label": "Operational RWS",
+      "color": "#64A73B",
+      "api": {
+        "form_id": 1749631041125,
+        "question_id": 1749631041155,
+        "option_value": "operational",
+        "monitoring": "latest",
+        "sum_by": "parent_id"
+      }
+    },
+    {
+      "id": "kpi_critical_issues",
+      "chart_type": "card",
+      "order": 7,
+      "col_span": 6,
+      "label": "RWS with critical issues",
+      "color": "#e41a1c",
+      "api": {
+        "form_id": 1749631041125,
+        "question_id": 1749631041156,
+        "option_value": "yes",
+        "monitoring": "latest",
+        "sum_by": "parent_id"
+      }
+    },
+    {
+      "id": "kpi_operational_systems",
+      "chart_type": "card",
+      "order": 9,
       "col_span": 6,
       "label": "Operational Systems",
       "color": "#1890ff",
@@ -210,7 +267,7 @@
     {
       "id": "kpi_drinking_water_compliance",
       "chart_type": "card",
-      "order": 5,
+      "order": 10,
       "col_span": 6,
       "label": "Drinking Water Compliance",
       "color": "#64A73B",
@@ -233,7 +290,7 @@
     {
       "id": "kpi_active_water_committees",
       "chart_type": "card",
-      "order": 6,
+      "order": 11,
       "col_span": 6,
       "label": "Active Water Committees",
       "color": "#fa8c16",
@@ -250,7 +307,7 @@
     {
       "id": "kpi_accessibility_no_issues",
       "chart_type": "card",
-      "order": 7,
+      "order": 12,
       "col_span": 6,
       "label": "Accessibility Issues — No Issues",
       "color": "#13c2c2",
@@ -292,14 +349,14 @@
     {
       "id": "title_status_compliance",
       "chart_type": "section_title",
-      "order": 9,
+      "order": 13,
       "col_span": 24,
       "text": "RWS at-a-glance: Status and Compliance"
     },
     {
       "id": "chart_implementation_at_scale",
       "chart_type": "stack_bar",
-      "order": 10,
+      "order": 14,
       "col_span": 24,
       "config": {
         "title": "Implementation at Scale",
@@ -325,14 +382,14 @@
     {
       "id": "chart_test_method_half",
       "chart_type": "half_doughnut",
-      "order": 11,
+      "order": 15,
       "col_span": 12,
       "config": {
         "title": "Lab tested vs CBT tested"
       },
       "api": {
-        "form_id": 1749631041125,
-        "question_id": 1749631041138,
+        "form_id": 1749621962296,
+        "question_id": 1749622849604,
         "group_by": "option",
         "monitoring": "latest"
       }
@@ -340,7 +397,7 @@
     {
       "id": "chart_beneficiaries",
       "chart_type": "bar",
-      "order": 12,
+      "order": 16,
       "col_span": 12,
       "config": {
         "title": "Beneficiaries",
@@ -356,7 +413,7 @@
     {
       "id": "chart_operational_status_stack",
       "chart_type": "stack_bar",
-      "order": 13,
+      "order": 17,
       "col_span": 8,
       "config": {
         "title": "Operational Status",
@@ -393,7 +450,7 @@
     {
       "id": "chart_accessibility_bucket",
       "chart_type": "stack_bar",
-      "order": 14,
+      "order": 18,
       "col_span": 8,
       "config": {
         "title": "Accessibility",
@@ -423,7 +480,7 @@
     {
       "id": "chart_drinking_water_compliance",
       "chart_type": "stack_bar",
-      "order": 15,
+      "order": 19,
       "col_span": 8,
       "config": {
         "title": "Drinking Water Compliance",
