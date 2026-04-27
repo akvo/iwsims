@@ -323,8 +323,8 @@ Use historical data for each parameter:
 
 #### Surface Water Project
 
-| Project Scope | Status | Implementation | Notes / Issues | Photo |
-|---|---|---|---|---|
+| Project Scope | Implementation | Notes / Issues | Photo |
+|---|---|---|---|
 | Dam | `1723459210015` | `1723459220018` | `1723459200011` | — |
 | Raw water main | `1723459310020` | `1723459220020` | `1723459210016` | — |
 | Reservoir | `1723459310033` | `1723459220024` | `1723459200020` | — |
@@ -335,8 +335,8 @@ Use historical data for each parameter:
 
 #### Borehole
 
-| Project Scope | Status | Implementation | Notes / Issues | Photo |
-|---|---|---|---|---|
+| Project Scope | Implementation | Notes / Issues | Photo |
+|---|---|---|---|
 | Borehole | `1749622111239` | `1749622111240` | `1749622117890` | — |
 | Raw water main | `1723459310020` | `1723459220020` | `1723459210016` | — |
 | Reservoir | `1723459310033` | `1723459220024` | `1723459200020` | — |
@@ -348,8 +348,8 @@ Use historical data for each parameter:
 
 #### Desalination
 
-| Project Scope | Status | Implementation | Notes / Issues | Photo |
-|---|---|---|---|---|
+| Project Scope | Implementation | Notes / Issues | Photo |
+|---|---|---|---|
 | Desalination unit | `1749622163234` | `1749622063234` | `1749622077890` | — |
 | Raw water main | `1723459310020` | `1723459220020` | `1723459210016` | — |
 | Reservoir | `1723459310033` | `1723459220024` | `1723459200020` | — |
@@ -361,8 +361,8 @@ Use historical data for each parameter:
 
 #### Rainwater Harvesting
 
-| Project Scope | Status | Implementation | Notes / Issues | Photo |
-|---|---|---|---|---|
+| Project Scope | Implementation | Notes / Issues | Photo |
+|---|---|---|---|
 | Rainwater tanks | `1723459250020` / `1723459240022` | `1723459250021` | `1723459250023` | — |
 | Gutters | `1749622229234` | `1749622230234` | `1749622237890` | — |
 | Base construction | `1749622301234` | `1749622303234` | `1749622317890` | — |

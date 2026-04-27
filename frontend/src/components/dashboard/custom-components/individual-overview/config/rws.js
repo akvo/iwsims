@@ -82,39 +82,112 @@ export const WATER_QUALITY_DETAIL_QIDS = [
 
 /**
  * Project-type-aware project-scope rows for the Construction Information
- * table. Each entry: { key, label, status_qid }.
+ * table. Each entry: { key, label, status_qid, issues_qid, photo_qid }.
  *
- * Sourced from `progress_construction.components[]` in
- * frontend/src/config/visualizations/1749621221728.json — the canonical
- * per-component qid registry. The implementation/issues/photo qid columns
- * in the design are not yet present in the form; rendered cells fall back
- * to "—" until those qids are added in a follow-up.
+ * Sourced from doc/claude/dashboard-visualization-rws-plan.md §4.D
+ * Construction Monitoring tables. Per-row column mapping:
+ *
+ *   plan column      → field        → JSX cell
+ *   ───────────────────────────────────────────────────
+ *   Implementation   → status_qid   → "Implementation"
+ *   Notes / Issues   → issues_qid   → "Notes / issues"
+ *   Photo            → photo_qid    → "Photo"  (thumbnail via extractPhotoUrl)
  */
 const surfaceWaterRows = [
-  { key: "dam", label: "Dam", status_qid: 1723459210015 },
-  { key: "raw_water_main", label: "Raw water main", status_qid: 1723459310020 },
-  { key: "reservoir", label: "Reservoir", status_qid: 1723459310033 },
+  {
+    key: "dam",
+    label: "Dam",
+    status_qid: 1723459210015,
+    issues_qid: 1723459220018,
+    photo_qid: 1723459200011,
+  },
+  {
+    key: "raw_water_main",
+    label: "Raw water main",
+    status_qid: 1723459310020,
+    issues_qid: 1723459220020,
+    photo_qid: 1723459210016,
+  },
+  {
+    key: "reservoir",
+    label: "Reservoir",
+    status_qid: 1723459310033,
+    issues_qid: 1723459220024,
+    photo_qid: 1723459200020,
+  },
   {
     key: "distribution_main",
     label: "Distribution main",
     status_qid: 1723459310036,
+    issues_qid: 1723459220028,
+    photo_qid: 1723459200028,
   },
-  { key: "reticulation", label: "Reticulation", status_qid: 1723459310040 },
-  { key: "pump", label: "Pump", status_qid: 1749622191234 },
+  {
+    key: "reticulation",
+    label: "Reticulation",
+    status_qid: 1723459310040,
+    issues_qid: 1723459220030,
+    photo_qid: 1723459211032,
+  },
+  {
+    key: "pump",
+    label: "Pump",
+    status_qid: 1749622191234,
+    issues_qid: 1749622206234,
+    photo_qid: 1749622197890,
+  },
 ];
 
 const boreholeRows = [
-  { key: "borehole", label: "Borehole", status_qid: 1749622111239 },
-  { key: "raw_water_main", label: "Raw water main", status_qid: 1723459310020 },
-  { key: "reservoir", label: "Reservoir", status_qid: 1723459310033 },
+  {
+    key: "borehole",
+    label: "Borehole",
+    status_qid: 1749622111239,
+    issues_qid: 1749622111240,
+    photo_qid: 1749622117890,
+  },
+  {
+    key: "raw_water_main",
+    label: "Raw water main",
+    status_qid: 1723459310020,
+    issues_qid: 1723459220020,
+    photo_qid: 1723459210016,
+  },
+  {
+    key: "reservoir",
+    label: "Reservoir",
+    status_qid: 1723459310033,
+    issues_qid: 1723459220024,
+    photo_qid: 1723459200020,
+  },
   {
     key: "distribution_main",
     label: "Distribution main",
     status_qid: 1723459310036,
+    issues_qid: 1723459220028,
+    photo_qid: 1723459200028,
   },
-  { key: "reticulation", label: "Reticulation", status_qid: 1723459310040 },
-  { key: "pump", label: "Pump", status_qid: 1749622191234 },
-  { key: "tanks", label: "Tanks", status_qid: 1749622266234 },
+  {
+    key: "reticulation",
+    label: "Reticulation",
+    status_qid: 1723459310040,
+    issues_qid: 1723459220030,
+    photo_qid: 1723459211032,
+  },
+  {
+    key: "pump",
+    label: "Pump",
+    status_qid: 1749622191234,
+    issues_qid: 1749622206234,
+    photo_qid: 1749622197890,
+  },
+  {
+    key: "tanks",
+    label: "Tanks",
+    status_qid: 1749622266234,
+    issues_qid: 1749622264234,
+    photo_qid: 1749622277890,
+  },
 ];
 
 const desalinationRows = [
@@ -122,17 +195,51 @@ const desalinationRows = [
     key: "desalination_unit",
     label: "Desalination unit",
     status_qid: 1749622163234,
+    issues_qid: 1749622063234,
+    photo_qid: 1749622077890,
   },
-  { key: "raw_water_main", label: "Raw water main", status_qid: 1723459310020 },
-  { key: "reservoir", label: "Reservoir", status_qid: 1723459310033 },
+  {
+    key: "raw_water_main",
+    label: "Raw water main",
+    status_qid: 1723459310020,
+    issues_qid: 1723459220020,
+    photo_qid: 1723459210016,
+  },
+  {
+    key: "reservoir",
+    label: "Reservoir",
+    status_qid: 1723459310033,
+    issues_qid: 1723459220024,
+    photo_qid: 1723459200020,
+  },
   {
     key: "distribution_main",
     label: "Distribution main",
     status_qid: 1723459310036,
+    issues_qid: 1723459220028,
+    photo_qid: 1723459200028,
   },
-  { key: "reticulation", label: "Reticulation", status_qid: 1723459310040 },
-  { key: "pump", label: "Pump", status_qid: 1749622191234 },
-  { key: "tanks", label: "Tanks", status_qid: 1749622266234 },
+  {
+    key: "reticulation",
+    label: "Reticulation",
+    status_qid: 1723459310040,
+    issues_qid: 1723459220030,
+    photo_qid: 1723459211032,
+  },
+  {
+    key: "pump",
+    label: "Pump",
+    status_qid: 1749622191234,
+    issues_qid: 1749622206234,
+    photo_qid: 1749622197890,
+  },
+  {
+    key: "tanks",
+    label: "Tanks",
+    status_qid: 1749622266234,
+    issues_qid: 1749622264234,
+    photo_qid: 1749622277890,
+  },
 ];
 
 const rainwaterRows = [
@@ -140,12 +247,22 @@ const rainwaterRows = [
     key: "rainwater_tanks",
     label: "Rainwater tanks",
     status_qid: 1723459250020,
+    issues_qid: 1723459250021,
+    photo_qid: 1723459250023,
   },
-  { key: "gutters", label: "Gutters", status_qid: 1749622229234 },
+  {
+    key: "gutters",
+    label: "Gutters",
+    status_qid: 1749622229234,
+    issues_qid: 1749622230234,
+    photo_qid: 1749622237890,
+  },
   {
     key: "base_construction",
     label: "Base construction",
     status_qid: 1749622301234,
+    issues_qid: 1749622303234,
+    photo_qid: 1749622317890,
   },
 ];
 

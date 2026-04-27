@@ -4,6 +4,7 @@ import {
   Col,
   Empty,
   Image,
+  Progress,
   Row,
   Select,
   Space,
@@ -120,6 +121,37 @@ const buildSeries = (history, qid) => {
     .filter(Boolean);
 };
 
+// Per dashboard-visualization-rws-plan.md §3 Project Progress Calculation:
+// each scope row scores 1/N when its status_qid answer reads "Completed".
+// We treat the answer as "completed" when the resolved label matches a small
+// known set (case-insensitive) so option keys like "completed" / "complete" /
+// "done" / "yes" all count — option vocabulary varies between project types
+// in the comprehensive form.
+const COMPLETED_LABELS = new Set(["completed", "complete", "done", "yes"]);
+
+const isCompletedStatus = (label) => {
+  if (!label) {
+    return false;
+  }
+  return COMPLETED_LABELS.has(String(label).trim().toLowerCase());
+};
+
+const computeCompletionProgress = (rows, compValues) => {
+  if (!rows || rows.length === 0) {
+    return { completed: 0, total: 0, percent: 0 };
+  }
+  const total = rows.length;
+  const completed = rows.reduce((acc, row) => {
+    if (!row.status_qid) {
+      return acc;
+    }
+    const label = resolveAnswerLabel(compValues, row.status_qid);
+    return isCompletedStatus(label) ? acc + 1 : acc;
+  }, 0);
+  const percent = Math.round((completed / total) * 100);
+  return { completed, total, percent };
+};
+
 const StatsCard = ({ regValues }) => {
   const households = findAnswer(regValues, STATS_CARD_QIDS.households)?.value;
   const population = findAnswer(regValues, STATS_CARD_QIDS.population)?.value;
@@ -234,22 +266,33 @@ const IndividualRWSOverview = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [compValues, quickValues]);
 
-  const scopeRows = useMemo(() => {
-    const rows = PROJECT_SCOPE_ROWS_BY_TYPE.get(projectTypeRaw) || [];
-    return rows.map((row) => ({
-      key: row.key,
-      label: row.label,
-      implementation: row.status_qid
-        ? resolveAnswerLabel(compValues, row.status_qid)
-        : null,
-      notes: row.issues_qid
-        ? resolveAnswerLabel(compValues, row.issues_qid)
-        : null,
-      photoUrl: row.photo_qid
-        ? extractPhotoUrl(compValues, row.photo_qid)
-        : null,
-    }));
-  }, [compValues, projectTypeRaw]);
+  const scopeDefinitionRows = useMemo(
+    () => PROJECT_SCOPE_ROWS_BY_TYPE.get(projectTypeRaw) || [],
+    [projectTypeRaw]
+  );
+
+  const scopeRows = useMemo(
+    () =>
+      scopeDefinitionRows.map((row) => ({
+        key: row.key,
+        label: row.label,
+        implementation: row.status_qid
+          ? resolveAnswerLabel(compValues, row.status_qid)
+          : null,
+        notes: row.issues_qid
+          ? resolveAnswerLabel(compValues, row.issues_qid)
+          : null,
+        photoUrl: row.photo_qid
+          ? extractPhotoUrl(compValues, row.photo_qid)
+          : null,
+      })),
+    [scopeDefinitionRows, compValues]
+  );
+
+  const completion = useMemo(
+    () => computeCompletionProgress(scopeDefinitionRows, compValues),
+    [scopeDefinitionRows, compValues]
+  );
 
   const methods = toMethodList(findAnswer(compValues, WQ_TEST_METHOD_QID));
   const showLabCharts = methods.includes(TEST_METHOD_LAB);
@@ -320,7 +363,30 @@ const IndividualRWSOverview = () => {
                 size="small"
                 style={{ marginBottom: 16 }}
               >
-                <Empty description="Project-type-aware progress formula not yet implemented (deferred to follow-up)" />
+                {completion.total === 0 ? (
+                  <Empty
+                    description={
+                      projectTypeRaw
+                        ? `No scorable components defined for project type "${projectTypeRaw}"`
+                        : "Project type unknown"
+                    }
+                  />
+                ) : (
+                  <Space
+                    direction="vertical"
+                    size="small"
+                    style={{ width: "100%" }}
+                  >
+                    <Progress
+                      percent={completion.percent}
+                      status={completion.percent === 100 ? "success" : "active"}
+                    />
+                    <Text type="secondary">
+                      {completion.completed} of {completion.total} components
+                      completed
+                    </Text>
+                  </Space>
+                )}
               </Card>
               <Card
                 title="Construction Information"
