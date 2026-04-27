@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Card,
   Col,
@@ -14,7 +14,7 @@ import {
   Typography,
 } from "antd";
 import { HomeOutlined, TeamOutlined, DollarOutlined } from "@ant-design/icons";
-import AdministrationDropdown from "../../filters/AdministrationDropdown";
+import AdministrationDropdownLocal from "../../filters/AdministrationDropdownLocal";
 import CharacteristicsTable from "./individual-overview/shared/CharacteristicsTable";
 import PhotoCaptionCard from "./individual-overview/shared/PhotoCaptionCard";
 import HistoricalLineChart from "./individual-overview/shared/HistoricalLineChart";
@@ -79,6 +79,7 @@ const SCOPE_COLUMNS = [
           width={80}
           height={60}
           style={{ objectFit: "cover" }}
+          alt="Inspection photo"
         />
       ) : (
         <Text type="secondary">—</Text>
@@ -170,6 +171,8 @@ const renderParamSection = (title, params, history) => {
 };
 
 const IndividualRWSOverview = () => {
+  const [embeddedAdmin, setEmbeddedAdmin] = useState(null);
+
   const {
     dataPoints,
     selectedDataPoint,
@@ -179,6 +182,7 @@ const IndividualRWSOverview = () => {
   } = useIndividualOverviewData({
     regFormId: REGISTRATION_FORM_ID,
     monitoringFormIds: [COMPREHENSIVE_FORM_ID, QUICK_FORM_ID],
+    selectedLocation: embeddedAdmin,
   });
 
   const compValues = useMemo(
@@ -260,7 +264,7 @@ const IndividualRWSOverview = () => {
   return (
     <div className="individual-overview">
       <Space style={{ marginBottom: 16 }} wrap>
-        <AdministrationDropdown />
+        <AdministrationDropdownLocal onChange={setEmbeddedAdmin} />
         <Select
           placeholder="Select an RWS"
           style={{ minWidth: 240 }}
