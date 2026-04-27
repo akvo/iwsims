@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Empty, Table } from "antd";
 import { findAnswer, findQuestion, formatAnswerValue } from "./helpers";
+import useAdministrationNames from "./useAdministrationNames";
 
 /**
  * Two-column AntD <Table> rendering Question (window.forms label) /
@@ -16,12 +17,14 @@ const CharacteristicsTable = ({
   size,
   emptyText,
 }) => {
+  const administrationLookup = useAdministrationNames(values);
   const rows = useMemo(() => {
+    const lookups = { administration: administrationLookup };
     return (qids || [])
       .map((qid) => {
         const question = findQuestion(qid);
         const answer = findAnswer(values, qid);
-        const display = formatAnswerValue(answer, question);
+        const display = formatAnswerValue(answer, question, lookups);
         if (!question || display === null) {
           return null;
         }
@@ -32,7 +35,7 @@ const CharacteristicsTable = ({
         };
       })
       .filter(Boolean);
-  }, [qids, values]);
+  }, [qids, values, administrationLookup]);
 
   const columns = [
     {
