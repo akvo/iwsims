@@ -282,10 +282,15 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
         // default "auto" silently drops labels it judges overlapping —
         // which hid Settlements / Government Stations / Healthcare Facility
         // on the RWS Beneficiaries bar (akvo-mis-db9). Modest rotate keeps
-        // long multi-word labels from colliding horizontally.
+        // long multi-word labels from colliding horizontally. nameGap=64
+        // pushes the axis name (e.g. "Target group") below the rotated
+        // labels — default nameGap=15 lands right on top of them
+        // (akvo-mis-c01).
         xAxis: {
           axisTick: { alignWithLabel: true },
           axisLabel: { interval: 0, rotate: 20 },
+          nameGap: 64,
+          nameLocation: "middle",
         },
       },
       false
