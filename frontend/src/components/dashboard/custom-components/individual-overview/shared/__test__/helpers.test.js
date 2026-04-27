@@ -1,5 +1,7 @@
 import {
+  collectAdministrationIds,
   collectGroupAnswers,
+  fetchAdministrationNames,
   findAnswer,
   findQuestion,
   findQuestionGroup,
@@ -7,7 +9,14 @@ import {
   extractPhotoUrl,
   resolveAnswerLabel,
   sortByDateAscending,
+  __resetAdministrationNameCache,
 } from "../helpers";
+import { api } from "../../../../../../lib";
+
+jest.mock("../../../../../../lib", () => ({
+  __esModule: true,
+  api: { get: jest.fn() },
+}));
 
 const originalForms = window.forms;
 
@@ -41,6 +50,7 @@ const FORMS_FIXTURE = [
             },
             { id: 104, label: "Coords", type: "geo" },
             { id: 105, label: "Photo", type: "photo" },
+            { id: 106, label: "Where", type: "administration" },
           ],
         },
         {
@@ -146,6 +156,39 @@ describe("formatAnswerValue", () => {
 
   test("falls back to String() for primitives", () => {
     expect(formatAnswerValue({ value: 42 }, { type: "number" })).toBe("42");
+  });
+
+  test("administration falls back to id when no lookup is provided", () => {
+    expect(formatAnswerValue({ value: 78 }, findQuestion(106))).toBe("78");
+  });
+
+  test("administration uses lookup map when entry exists", () => {
+    const lookups = {
+      administration: new Map([[78, "Fiji - Western - Ra - Saivou"]]),
+    };
+    expect(formatAnswerValue({ value: 78 }, findQuestion(106), lookups)).toBe(
+      "Fiji - Western - Ra - Saivou"
+    );
+  });
+
+  test("administration accepts numeric-string ids", () => {
+    const lookups = { administration: new Map([[78, "Saivou"]]) };
+    expect(formatAnswerValue({ value: "78" }, findQuestion(106), lookups)).toBe(
+      "Saivou"
+    );
+  });
+
+  test("administration joins resolved path entries with ' - '", () => {
+    const lookups = {
+      administration: new Map([
+        [1, "Fiji"],
+        [2, "Western"],
+        [78, "Saivou"],
+      ]),
+    };
+    expect(
+      formatAnswerValue({ value: [1, 2, 78] }, findQuestion(106), lookups)
+    ).toBe("Fiji - Western - Saivou");
   });
 });
 
@@ -268,5 +311,88 @@ describe("sortByDateAscending", () => {
 
   test("returns [] for non-array input", () => {
     expect(sortByDateAscending(null)).toEqual([]);
+  });
+});
+
+describe("collectAdministrationIds", () => {
+  test("returns numeric ids for administration-typed answers only", () => {
+    const values = [
+      { question: 101, value: "free text" },
+      { question: 106, value: 78 },
+      { question: 102, value: "yes" },
+    ];
+    expect(collectAdministrationIds(values)).toEqual([78]);
+  });
+
+  test("dedupes and accepts string ids and arrays", () => {
+    const values = [
+      { question: 106, value: "78" },
+      { question: 106, value: 78 },
+      { question: 106, value: [1, "2", 78] },
+    ];
+    const ids = collectAdministrationIds(values).sort((a, b) => a - b);
+    expect(ids).toEqual([1, 2, 78]);
+  });
+
+  test("ignores null/undefined entries and non-numeric values", () => {
+    const values = [
+      null,
+      { question: 106, value: null },
+      { question: 106, value: "not-a-number" },
+      { question: 106, value: 5 },
+    ];
+    expect(collectAdministrationIds(values)).toEqual([5]);
+  });
+
+  test("returns [] when values is not an array", () => {
+    expect(collectAdministrationIds(null)).toEqual([]);
+  });
+});
+
+describe("fetchAdministrationNames", () => {
+  beforeEach(() => {
+    __resetAdministrationNameCache();
+    api.get.mockReset();
+  });
+
+  test("returns Map of resolved names from /administration/<id>", async () => {
+    api.get.mockResolvedValueOnce({
+      data: {
+        id: 78,
+        full_name: "Fiji|Western|Ra|Saivou",
+        name: "Saivou",
+      },
+    });
+    const map = await fetchAdministrationNames([78]);
+    expect(api.get).toHaveBeenCalledWith("administration/78");
+    expect(map.get(78)).toBe("Fiji - Western - Ra - Saivou");
+  });
+
+  test("falls back to data.name when full_name is missing", async () => {
+    api.get.mockResolvedValueOnce({ data: { id: 5, name: "Fiji" } });
+    const map = await fetchAdministrationNames([5]);
+    expect(map.get(5)).toBe("Fiji");
+  });
+
+  test("caches resolved ids so a second fetch hits the network once", async () => {
+    api.get.mockResolvedValueOnce({
+      data: { id: 78, full_name: "Fiji|Saivou", name: "Saivou" },
+    });
+    await fetchAdministrationNames([78]);
+    await fetchAdministrationNames([78]);
+    expect(api.get).toHaveBeenCalledTimes(1);
+  });
+
+  test("omits ids that fail to resolve", async () => {
+    api.get.mockRejectedValueOnce(new Error("boom"));
+    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    const map = await fetchAdministrationNames([99]);
+    expect(map.size).toBe(0);
+    consoleSpy.mockRestore();
+  });
+
+  test("returns empty Map for empty/missing input", async () => {
+    expect((await fetchAdministrationNames([])).size).toBe(0);
+    expect((await fetchAdministrationNames(null)).size).toBe(0);
   });
 });

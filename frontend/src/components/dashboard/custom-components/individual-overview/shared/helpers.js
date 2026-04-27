@@ -6,6 +6,8 @@
  * form-walking code.
  */
 
+import { api } from "../../../../../lib";
+
 const toNumericId = (id) => {
   if (typeof id === "number") {
     return id;
@@ -81,15 +83,41 @@ const formatGeoAnswer = (value) => {
   return null;
 };
 
+const formatAdministrationAnswer = (value, lookups) => {
+  const map = lookups?.administration;
+  const list = Array.isArray(value) ? value : [value];
+  const items = list
+    .map((v) => {
+      if (v === null || typeof v === "undefined" || v === "") {
+        return null;
+      }
+      const id = toNumericId(v);
+      if (map && map.get(id)) {
+        return map.get(id);
+      }
+      return String(v);
+    })
+    .filter((s) => s !== null);
+  if (!items.length) {
+    return null;
+  }
+  return items.join(" - ");
+};
+
 /**
  * Pretty-print an answer value for display in tables. Returns null for
  * empty/missing values so callers can skip rendering.
  *
  * @param {object|null} answer
  * @param {object|null} question
+ * @param {object} [lookups]
+ * @param {Map<number,string>} [lookups.administration]
+ *   Resolved administration id → display name. When missing the helper
+ *   falls back to the raw id so callers that have not pre-fetched names
+ *   still render something.
  * @returns {string|null}
  */
-export const formatAnswerValue = (answer, question) => {
+export const formatAnswerValue = (answer, question, lookups) => {
   if (!answer) {
     return null;
   }
@@ -105,6 +133,9 @@ export const formatAnswerValue = (answer, question) => {
   if (type === "geo") {
     return formatGeoAnswer(value);
   }
+  if (["cascade", "administration"].includes(type)) {
+    return formatAdministrationAnswer(value, lookups);
+  }
   if (Array.isArray(value)) {
     const items = value.filter(
       (v) => v !== null && typeof v !== "undefined" && v !== ""
@@ -115,6 +146,103 @@ export const formatAnswerValue = (answer, question) => {
     return items.join(", ");
   }
   return String(value);
+};
+
+const administrationNameCache = new Map();
+const administrationInflight = new Map();
+
+const buildAdministrationDisplayName = (data) => {
+  if (!data) {
+    return null;
+  }
+  if (typeof data.full_name === "string" && data.full_name.length > 0) {
+    return data.full_name.split("|").join(" - ");
+  }
+  return data.name || null;
+};
+
+const fetchAdministrationName = (id) => {
+  if (administrationNameCache.has(id)) {
+    return Promise.resolve(administrationNameCache.get(id));
+  }
+  if (administrationInflight.has(id)) {
+    return administrationInflight.get(id);
+  }
+  const promise = api
+    .get(`administration/${id}`)
+    .then(({ data }) => {
+      const name = buildAdministrationDisplayName(data);
+      if (name) {
+        administrationNameCache.set(id, name);
+      }
+      administrationInflight.delete(id);
+      return name;
+    })
+    .catch((error) => {
+      administrationInflight.delete(id);
+      console.error(`fetchAdministrationName(${id}) failed`, error);
+      return null;
+    });
+  administrationInflight.set(id, promise);
+  return promise;
+};
+
+/**
+ * Walk a /data/<id> answer payload and collect every administration id
+ * that needs name resolution. IDs are returned as numbers; duplicates and
+ * non-numeric values are dropped.
+ *
+ * @param {Array} values
+ * @returns {Array<number>}
+ */
+export const collectAdministrationIds = (values) => {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+  const ids = new Set();
+  values.forEach((entry) => {
+    if (!entry || entry.value === null || typeof entry.value === "undefined") {
+      return;
+    }
+    const question = findQuestion(entry.question);
+    if (!question || !["cascade", "administration"].includes(question.type)) {
+      return;
+    }
+    const list = Array.isArray(entry.value) ? entry.value : [entry.value];
+    list.forEach((v) => {
+      const num = toNumericId(v);
+      if (typeof num === "number" && Number.isFinite(num)) {
+        ids.add(num);
+      }
+    });
+  });
+  return Array.from(ids);
+};
+
+/**
+ * Resolve a list of administration ids to display names via the
+ * `/administration/<id>` API. Successful lookups are cached process-wide
+ * so subsequent calls for the same id are free.
+ *
+ * @param {Array<number>} ids
+ * @returns {Promise<Map<number,string>>}
+ */
+export const fetchAdministrationNames = async (ids) => {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return new Map();
+  }
+  const entries = await Promise.all(
+    ids.map(async (id) => {
+      const name = await fetchAdministrationName(id);
+      return [id, name];
+    })
+  );
+  return new Map(entries.filter(([, name]) => Boolean(name)));
+};
+
+export const __resetAdministrationNameCache = () => {
+  administrationNameCache.clear();
+  administrationInflight.clear();
 };
 
 /**
