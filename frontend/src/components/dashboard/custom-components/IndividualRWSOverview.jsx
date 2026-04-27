@@ -336,7 +336,7 @@ const IndividualRWSOverview = () => {
       ) : (
         <>
           <Row gutter={16} style={{ marginBottom: 16 }}>
-            <Col span={8}>
+            <Col xl={8} md={24} sm={24}>
               <PhotoCaptionCard
                 title="Photo from last monitoring"
                 photoUrl={photoUrl}
@@ -344,14 +344,14 @@ const IndividualRWSOverview = () => {
                 alt="Sampling point photo"
               />
             </Col>
-            <Col span={8}>
+            <Col xl={12} md={16} sm={24}>
               <CharacteristicsTable
                 title="RWS Characteristics"
                 qids={REGISTRATION_CHARACTERISTICS_QIDS}
                 values={regValues}
               />
             </Col>
-            <Col span={8}>
+            <Col xl={4} md={8} sm={24}>
               <StatsCard regValues={regValues} />
             </Col>
           </Row>
