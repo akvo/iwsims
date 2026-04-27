@@ -807,7 +807,7 @@ const uiText = {
     ),
     homeVideoText:
       "A short walkthrough of how the platform supports water and sewerage service delivery, monitoring, and decision-making across Fiji.",
-    homeVideoIframeTitle: "IWSIMS introduction video",
+    homeVideoIframeTitle: `${window.appConfig.name} introduction video"`,
     homeKeyRolesTitle: "Key Roles and Responsibilities",
     homeKeyRolesHeadline: (
       <Fragment>
