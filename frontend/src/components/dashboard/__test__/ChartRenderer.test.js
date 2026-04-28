@@ -220,6 +220,115 @@ describe("ChartRenderer", () => {
     expect(axios).not.toHaveBeenCalled();
   });
 
+  test("compute=cross_tab reads from computeResponses.cross_tab and does not fetch", () => {
+    // Backend shape per akvo-mis-bvt: {label, group, [opt_col]: count, ...}
+    const computeResponses = {
+      cross_tab: {
+        chart_xtab: {
+          category: {
+            data: [
+              { label: "A", group: 1, Borehole: 1, Desalination: 0 },
+              { label: "B", group: 2, Borehole: 0, Desalination: 1 },
+            ],
+          },
+          series: {
+            data: [
+              { label: "A", group: 1, WAF: 1, Rotary: 0 },
+              { label: "B", group: 2, WAF: 0, Rotary: 1 },
+            ],
+          },
+        },
+      },
+    };
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_xtab",
+          chart_type: "stack_bar",
+          compute: "cross_tab",
+          category_api: { form_id: 1, question_id: 2 },
+          series_api: { form_id: 3, question_id: 4 },
+          config: { title: "Implementation at Scale" },
+        }}
+        filterState={emptyFilters}
+        today={today}
+        computeResponses={computeResponses}
+      />
+    );
+    expect(screen.getByTestId("chart-stack")).toHaveAttribute("data-rows", "2");
+    expect(axios).not.toHaveBeenCalled();
+  });
+
+  test("compute=accessibility_bucket emits a single-row stack", () => {
+    const computeResponses = {
+      accessibility_bucket: {
+        chart_acc: {
+          sample: {
+            data: [
+              { label: "A", group: 1, Yes: 1, No: 0 },
+              { label: "B", group: 2, Yes: 0, No: 1 },
+            ],
+          },
+          issues: {
+            data: [{ label: "A", group: 1, Yes: 0, No: 1 }],
+          },
+        },
+      },
+    };
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_acc",
+          chart_type: "stack_bar",
+          compute: "accessibility_bucket",
+          sample_api: { form_id: 1, question_id: 2 },
+          issues_api: { form_id: 3, question_id: 4 },
+          labels: {
+            easily_accessible: "Easily accessible",
+            accessible_with_issues: "Accessible with issues",
+            not_accessible: "Not accessible",
+          },
+          config: { title: "Accessibility" },
+        }}
+        filterState={emptyFilters}
+        today={today}
+        computeResponses={computeResponses}
+      />
+    );
+    expect(screen.getByTestId("chart-stack")).toHaveAttribute("data-rows", "1");
+    expect(axios).not.toHaveBeenCalled();
+  });
+
+  test("compute=kpi_stack assembles a single-row stack from segment responses", () => {
+    const computeResponses = {
+      kpi_stack: {
+        chart_op: {
+          operational: { data: [{ value: 85 }] },
+          issues: { data: [{ value: 16 }] },
+        },
+      },
+    };
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_op",
+          chart_type: "stack_bar",
+          compute: "kpi_stack",
+          segments: [
+            { key: "operational", label: "Operational" },
+            { key: "issues", label: "Issues with the system" },
+          ],
+          config: { title: "Operational Status" },
+        }}
+        filterState={emptyFilters}
+        today={today}
+        computeResponses={computeResponses}
+      />
+    );
+    expect(screen.getByTestId("chart-stack")).toHaveAttribute("data-rows", "1");
+    expect(axios).not.toHaveBeenCalled();
+  });
+
   test("histogram threshold auto-renders a red xAxis markLine", async () => {
     axios.mockResolvedValue({
       data: {

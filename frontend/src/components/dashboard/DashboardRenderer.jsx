@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Col, Row, Typography } from "antd";
 import ChartRenderer from "./ChartRenderer";
@@ -53,7 +53,12 @@ const CHART_TYPES = new Set([
  * @param {number} [fiscalYearStartMonth]
  * @param {Array}  [customFilterDefs]  flat list of filter items for hint expansion
  * @param {Date}   [today]
- * @param {object} [complianceResponses]  { [itemId]: /values response }
+ * @param {object} [complianceResponses]  DEPRECATED — use computeResponses.compliance.
+ *                                         Kept for one release as a back-compat alias.
+ * @param {object} [computeResponses]     { [computeMode]: { [itemId]: /values response } }
+ *                                         Unified map for all compute-mode pre-fetches
+ *                                         (compliance, cross_tab, accessibility_bucket,
+ *                                         kpi_stack, compliance_kpi, accessibility_no_issues_kpi).
  * @param {object} [cellComputersById]    { [itemId]: { [columnKey]: fn(row) => value } }
  */
 const DashboardRenderer = ({
@@ -66,8 +71,21 @@ const DashboardRenderer = ({
   customFilterDefs,
   today,
   complianceResponses,
+  computeResponses,
   cellComputersById,
 }) => {
+  // Back-compat: fold legacy `complianceResponses` into the unified map under
+  // `compliance`. New consumers should read `computeResponses.compliance`.
+  // Precedence: if a caller supplies both, `computeResponses.compliance` wins.
+  const resolvedComputeResponses = useMemo(() => {
+    if (!computeResponses && !complianceResponses) {
+      return null;
+    }
+    const legacy = complianceResponses
+      ? { compliance: complianceResponses }
+      : {};
+    return { ...legacy, ...(computeResponses || {}) };
+  }, [computeResponses, complianceResponses]);
   // Sort by order ascending, then filter out hidden / definition-only items.
   const visible = [...(items || [])]
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -85,7 +103,7 @@ const DashboardRenderer = ({
         fiscalYearStartMonth={fiscalYearStartMonth}
         customFilterDefs={customFilterDefs}
         today={today}
-        complianceResponses={complianceResponses}
+        computeResponses={resolvedComputeResponses}
         cellComputersById={cellComputersById}
       />
     ),
@@ -97,7 +115,7 @@ const DashboardRenderer = ({
       fiscalYearStartMonth,
       customFilterDefs,
       today,
-      complianceResponses,
+      resolvedComputeResponses,
       cellComputersById,
     ]
   );
@@ -113,6 +131,8 @@ const DashboardRenderer = ({
           fiscalYearStartMonth={fiscalYearStartMonth}
           customFilterDefs={customFilterDefs}
           today={today}
+          definitionsById={definitionsById}
+          computeResponses={resolvedComputeResponses}
         />
       );
     }
@@ -136,7 +156,8 @@ const DashboardRenderer = ({
             customFilterDefs={customFilterDefs}
             today={today}
             definitionsById={definitionsById}
-            complianceResponses={complianceResponses}
+            complianceResponses={resolvedComputeResponses?.compliance}
+            computeResponses={resolvedComputeResponses}
           />
         </Card>
       );
@@ -241,6 +262,7 @@ DashboardRenderer.propTypes = {
   customFilterDefs: PropTypes.array,
   today: PropTypes.instanceOf(Date),
   complianceResponses: PropTypes.object,
+  computeResponses: PropTypes.object,
   cellComputersById: PropTypes.object,
 };
 

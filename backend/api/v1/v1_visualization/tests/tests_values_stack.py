@@ -101,6 +101,66 @@ class ValuesStackTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(beta["Inactive"], 1)
         self.assertEqual(beta["Pending"], 1)
 
+        # Per akvo-mis-bvt: cross-form joins need parent_id on each row;
+        # parent_name alone is not guaranteed unique across registration
+        # submissions and would silently merge distinct datapoints.
+        self.assertEqual(alpha["group"], self.reg1.id)
+        self.assertEqual(beta["group"], self.reg2.id)
+
+    def test_stack_by_option_group_by_parent_id_on_registration_form(self):
+        """Per-parent option query on a REGISTRATION form (akvo-mis-9d8).
+
+        The RWS dashboard's cross_tab widget queries implementing_agencies
+        on the registration form with group_by=parent_id + stack_by=option
+        so the client can join by parent_id against a categories query on
+        the companion monitoring form. Before the fix, this path returned
+        zero rows because _stack_option_by_parent assumed data_ids were
+        monitoring records (parent__isnull=False), which is never true for
+        registration submissions.
+
+        Given two registrations with site_type answers, the response must
+        carry one row per registration with option columns populated and
+        the parent_id exposed as `group`.
+        """
+        from api.v1.v1_data.models import Answers
+
+        Answers.objects.create(
+            data=self.reg1,
+            question=self.q_reg_option,
+            options=["urban"],
+            created_by=self.user,
+        )
+        Answers.objects.create(
+            data=self.reg2,
+            question=self.q_reg_option,
+            options=["rural"],
+            created_by=self.user,
+        )
+
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.registration.id}"
+            f"&question_id={self.Q_REG_OPTION_ID}"
+            "&group_by=parent_id&stack_by=option"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertEqual(len(data["data"]), 2)
+        rows_by_group = {d["group"]: d for d in data["data"]}
+
+        self.assertIn(self.reg1.id, rows_by_group)
+        self.assertIn(self.reg2.id, rows_by_group)
+
+        r1 = rows_by_group[self.reg1.id]
+        r2 = rows_by_group[self.reg2.id]
+
+        self.assertEqual(r1["Urban"], 1)
+        self.assertEqual(r1["Rural"], 0)
+        self.assertEqual(r1["Peri-urban"], 0)
+        self.assertEqual(r2["Urban"], 0)
+        self.assertEqual(r2["Rural"], 1)
+        self.assertEqual(r2["Peri-urban"], 0)
+
     def test_stack_by_option_group_by_month_latest(self):
         """Stacked chart with monitoring=latest.
 

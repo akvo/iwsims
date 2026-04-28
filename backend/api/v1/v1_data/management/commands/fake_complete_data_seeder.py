@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+import time as time_module
 from datetime import datetime, timedelta, time
 
 from django.core.management import BaseCommand
@@ -221,9 +222,15 @@ class Command(BaseCommand):
                         .exclude(password__exact="") \
                         .order_by("?").first()
                     if not user:
-                        # create a new user
+                        # create a new user. Append a nanosecond timestamp so
+                        # repeated calls within the same seeder run never
+                        # collide on Faker's finite user_name() pool.
+                        email = (
+                            f"user.{time_module.time_ns()}"
+                            "@test.com"
+                        )
                         user = SystemUser.objects.create_user(
-                            email=f"{fake.user_name()}@test.com",
+                            email=email,
                             first_name=fake.first_name(),
                             last_name=fake.last_name(),
                             phone_number=fake.phone_number()[:15],

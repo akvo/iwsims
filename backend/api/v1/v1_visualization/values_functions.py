@@ -847,24 +847,42 @@ def _stack_option_by_parent(
     question, options, data_ids,
     qs, is_latest, opt_labels, opt_colors
 ):
-    """Stack by option, grouped by parent_id."""
+    """Stack by option, grouped by parent_id.
+
+    Handles three data shapes:
+      - is_latest=True: qs rows are parent FormData with a `latest_id`
+        annotation pointing to each parent's most-recent monitoring
+        submission. Answer counts are read from that single submission.
+      - is_latest=False, monitoring-form query: data_ids reference
+        monitoring submissions; parents are derived via their parent_id.
+        Answer counts aggregate all matching submissions per parent.
+      - is_latest=False, REGISTRATION-form query (akvo-mis-9d8): data_ids
+        ARE registration submissions themselves (parent__isnull=True).
+        Parents = qs directly; p_data_ids = [parent.id].
+    """
+    # Distinguish monitoring vs registration by probing for a parent_id.
+    is_registration_form = False
     if is_latest:
         parents = qs
     else:
-        parent_ids = FormData.objects.filter(
+        parent_ids = list(FormData.objects.filter(
             id__in=data_ids,
             parent__isnull=False,
-        ).values_list(
-            "parent_id", flat=True
-        ).distinct()
-        parents = FormData.objects.filter(
-            id__in=parent_ids,
-        )
+        ).values_list("parent_id", flat=True).distinct())
+        if parent_ids:
+            parents = FormData.objects.filter(id__in=parent_ids)
+        else:
+            # Registration-form path: qs IS the list of registrations.
+            parents = qs
+            is_registration_form = True
 
     data = []
     for parent in parents:
         if is_latest:
             p_data_ids = [parent.latest_id]
+            p_name = parent.name
+        elif is_registration_form:
+            p_data_ids = [parent.id]
             p_name = parent.name
         else:
             p_data_ids = list(FormData.objects.filter(
@@ -873,7 +891,7 @@ def _stack_option_by_parent(
             ).values_list("id", flat=True))
             p_name = parent.name
 
-        row = {"label": p_name}
+        row = {"label": p_name, "group": parent.id}
         for opt in options:
             count = Answers.objects.filter(
                 data_id__in=p_data_ids,

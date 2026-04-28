@@ -75,6 +75,33 @@ describe("config/visualizations registry", () => {
     );
   });
 
+  test("registers the RWS Overview config under its slug with 4 tab panes including Individual Overview", () => {
+    const entries = listVisualizations();
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          slug: "rws-overview",
+          name: "Rural Water Projects Overview",
+          parent_form_id: 1749621221728,
+        }),
+      ])
+    );
+    const config = getVisualizationConfigBySlug("rws-overview");
+    expect(config).not.toBeNull();
+    const tabsItem = config.items.find((it) => it.chart_type === "tabs");
+    expect(tabsItem).toBeDefined();
+    expect(tabsItem.items).toHaveLength(4);
+    const individualTab = tabsItem.items.find(
+      (pane) => pane.id === "tab_individual_overview"
+    );
+    expect(individualTab).toBeDefined();
+    expect(individualTab.is_public).toBe(false);
+    expect(individualTab.items[0]).toMatchObject({
+      chart_type: "custom_component",
+      component: "IndividualRWSOverview",
+    });
+  });
+
   test("getVisualizationConfigBySlug returns null for unknown slugs", () => {
     expect(getVisualizationConfigBySlug("does-not-exist")).toBeNull();
   });
