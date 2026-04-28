@@ -402,7 +402,13 @@
       "config": {
         "title": "Beneficiaries",
         "xAxisLabel": "Target group",
-        "yAxisLabel": "Number of RWS"
+        "yAxisLabel": "Number of RWS",
+        "xAxis": {
+          "axisLabel": {
+            "rotate": 20
+          },
+          "nameGap": 64
+        }
       },
       "api": {
         "form_id": 1749621221728,

@@ -269,6 +269,10 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       setChart((prev) => prev || instance);
     }
   }, []);
+  // Per-item overrides via config.xAxis: { rotate, interval, nameGap }.
+  // Lets horizontal bar charts (numeric x-axis) opt out of the default
+  // 20° rotation that exists for long category labels.
+  const xAxisOverride = commonProps.config?.xAxis || {};
   useEffect(() => {
     if (!chart) {
       return;
@@ -288,8 +292,11 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
         // (akvo-mis-c01).
         xAxis: {
           axisTick: { alignWithLabel: true },
-          axisLabel: { interval: 0, rotate: 20 },
-          nameGap: 64,
+          axisLabel: {
+            interval: xAxisOverride?.axisLabel?.interval ?? 0,
+            rotate: xAxisOverride?.axisLabel?.rotate ?? 0,
+          },
+          nameGap: xAxisOverride?.nameGap ?? 48,
           nameLocation: "middle",
         },
       },
