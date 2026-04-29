@@ -95,7 +95,7 @@
               "label": "Bad odor",
               "id": 1748919411642,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#e41a1c"
             },
             {
               "value": "low_dissolved_oxygen_content",
@@ -116,7 +116,7 @@
               "label": "Excessive suspended solids,turbidity,foam,grease,scum and colour",
               "id": 1748919445619,
               "order": 4,
-              "color": "#e41a1c"
+              "color": "#003f5c"
             },
             {
               "value": "normal",
@@ -173,8 +173,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748919489322, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748919489323, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748919489322,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748919489323,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null,
           "rule": null
@@ -254,7 +266,13 @@
               "order": 1,
               "color": "#1b9e77"
             },
-            {  "value": "ph", "label": "pH", "id": 1789193153537, "order": 2, "color": "#d95f02" },
+            {
+              "value": "ph",
+              "label": "pH",
+              "id": 1789193153537,
+              "order": 2,
+              "color": "#d95f02"
+            },
             {
               "value": "conductivity",
               "label": "Conductivity",
@@ -722,8 +740,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748919376458, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748919376459, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748919376458,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748919376459,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null,
           "short_label": null
@@ -749,8 +779,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748919969100, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748919969102, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748919969100,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748919969102,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null,
           "short_label": null

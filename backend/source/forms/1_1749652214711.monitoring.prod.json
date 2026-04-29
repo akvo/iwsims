@@ -53,8 +53,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749635382011, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749635382012, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749635382011,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749635382012,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -66,8 +78,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749652526456, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749652526457, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749652526456,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749652526457,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749635348201, "options": ["yes"] }]
         },
@@ -85,7 +109,7 @@
               "label": "Chemical Mixing",
               "id": 1749652576217,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "water_quality_testing",
@@ -206,8 +230,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749692626740, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749692626741, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749692626740,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749692626741,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -219,8 +255,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749692667384, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749692667385, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749692667384,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749692667385,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749692619340, "options": ["yes"] }]
         },
@@ -233,8 +281,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749692710341, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749692710342, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749692710341,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749692710342,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749692619340, "options": ["yes"] }]
         }
@@ -263,9 +323,15 @@
               "label": "Turbidity",
               "id": 1749692790607,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
-            {  "value": "ph", "label": "pH", "id": 1749692790608, "order": 2, "color": "#d95f02" },
+            {
+              "value": "ph",
+              "label": "pH",
+              "id": 1749692790608,
+              "order": 2,
+              "color": "#d95f02"
+            },
             {
               "value": "residual_chlorine",
               "label": "Residual Chlorine",
@@ -322,8 +388,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749692863217, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749692863218, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749692863217,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749692863218,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -449,7 +527,7 @@
               "label": "Turbidity in NTU",
               "id": 1749693098231,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "residual_chlorine_mg_l",
@@ -465,7 +543,13 @@
               "order": 3,
               "color": "#7570b3"
             },
-            {  "value": "ph", "label": "pH", "id": 1754995300105, "order": 4, "color": "#e7298a" },
+            {
+              "value": "ph",
+              "label": "pH",
+              "id": 1754995300105,
+              "order": 4,
+              "color": "#e7298a"
+            },
             {
               "value": "conductivity",
               "label": "Conductivity \u00b5S/cm",
@@ -639,8 +723,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749693391123, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749693391124, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749693391123,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749693391124,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749692895121, "options": ["lab_test"] }]
         },
@@ -699,8 +795,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749693495308, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749693495309, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749693495308,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749693495309,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             {
@@ -750,8 +858,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749693559580, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749693559581, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749693559580,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749693559581,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             { "id": 1749693489743, "options": ["yes"] },
@@ -862,8 +982,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749694960123, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749694960124, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749694960123,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749694960124,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             {
@@ -1006,7 +1138,7 @@
               "label": "Gravity",
               "id": 1749693828860,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "pumps_rising_main",
@@ -1087,8 +1219,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1754995400014, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1754995400015, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1754995400014,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1754995400015,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             { "id": 1749693821961, "options": ["pumps_rising_main"] }
@@ -1153,8 +1297,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1754995400023, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1754995400024, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1754995400023,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1754995400024,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1754995400013, "options": ["yes"] }]
         },
@@ -1198,8 +1354,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1754995400029, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1754995400030, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1754995400029,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1754995400030,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749693821961, "options": ["borehole_pump"] }]
         },
@@ -1262,8 +1430,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1754995400038, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1754995400039, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1754995400038,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1754995400039,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1754995400028, "options": ["yes"] }]
         },
@@ -1311,8 +1491,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1754995400044, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1754995400045, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1754995400044,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1754995400045,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             { "id": 1749693821961, "options": ["borehole_gallery_pumps"] }
@@ -1377,8 +1569,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1754995400053, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1754995400054, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1754995400053,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1754995400054,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1754995400043, "options": ["yes"] }]
         },
@@ -1402,8 +1606,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749694268797, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749694268798, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749694268797,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749694268798,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749693821961, "options": ["gravity"] }]
         },
@@ -1466,8 +1682,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749694433849, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749694433850, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749694433849,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749694433850,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749693821961, "options": ["gravity"] }]
         },
@@ -1507,7 +1735,7 @@
               "label": "Chlorine",
               "id": 1749695586582,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "potassium_aluminium_sulphate",
@@ -1548,8 +1776,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749695656061, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749695656062, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749695656061,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749695656062,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -1599,8 +1839,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749695823155, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749695823156, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749695823155,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749695823156,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749695649473, "options": ["yes"] }]
         },
@@ -1807,8 +2059,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749696140067, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749696140068, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749696140067,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749696140068,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             { "id": 1749652997590, "options": ["potassium_aluminium_sulphate"] }
@@ -1926,8 +2190,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749696435528, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749696435529, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749696435528,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749696435529,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             { "id": 1749652997590, "options": ["sodium_carbonate"] }
@@ -2041,8 +2317,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749696650863, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749696650864, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749696650863,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749696650864,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749652997590, "options": ["polymer"] }]
         },
@@ -2154,8 +2442,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749696963245, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749696963246, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749696963245,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749696963246,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749652997590, "options": ["lime"] }]
         },
@@ -2240,8 +2540,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749697113161, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749697113162, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749697113161,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749697113162,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -2263,8 +2575,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749697168235, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749697168236, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749697168235,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749697168236,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749653030359, "options": ["yes"] }]
         },
@@ -2282,7 +2606,7 @@
               "label": "Overloading",
               "id": 1749697227453,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "high_turbidity",
@@ -2366,8 +2690,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749697381841, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749697381842, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749697381841,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749697381842,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -2429,8 +2765,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749697508869, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749697508870, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749697508869,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749697508870,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749697374360, "options": ["yes"] }]
         },
@@ -2448,7 +2796,7 @@
               "label": "Overloading",
               "id": 1749697583321,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "high_turbidity",
@@ -2532,8 +2880,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749697723494, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749697723495, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749697723494,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749697723495,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -2595,8 +2955,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749697821842, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749697821843, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749697821842,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749697821843,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749697716330, "options": ["yes"] }]
         },
@@ -2684,8 +3056,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749698051046, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749698051047, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749698051046,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749698051047,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -2754,8 +3138,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749698203253, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749698203254, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749698203253,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749698203254,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749698044673, "options": ["yes"] }]
         },
@@ -2773,7 +3169,7 @@
               "label": "No disposal facility",
               "id": 1749698248893,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "clogged_filter",
@@ -2900,8 +3296,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749698539293, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749698539294, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749698539293,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749698539294,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -2961,8 +3369,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749698721339, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749698721340, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749698721339,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749698721340,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749653091407, "options": ["chlorine_gas"] }]
         },
@@ -3164,8 +3584,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749704854004, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749704854005, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749704854004,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749704854005,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749653091407, "options": ["hth_powder"] }]
         },
@@ -3384,8 +3816,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749705122753, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749705122754, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749705122753,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749705122754,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             { "id": 1749653091407, "options": ["sodium_hypochlorite"] }
@@ -3600,8 +4044,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749705455546, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749705455547, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749705455546,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749705455547,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749653091407, "options": ["dpd_tablets"] }]
         },
@@ -3777,8 +4233,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749699084499, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749699084500, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749699084499,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749699084500,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -3816,8 +4284,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749699160011, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749699160012, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749699160011,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749699160012,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749653112804, "options": ["yes"] }]
         },
@@ -3842,7 +4322,7 @@
               "label": "No Flow Meter",
               "id": 1749699206068,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "uncalibrated_meter",
@@ -3912,8 +4392,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749699352714, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749699352715, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749699352714,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749699352715,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -3935,8 +4427,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749699420725, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749699420726, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749699420725,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749699420726,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749699346821, "options": ["yes"] }]
         },
@@ -4030,8 +4534,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749699633911, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749699633912, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749699633911,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749699633912,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -4063,8 +4579,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749699761023, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749699761024, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749699761023,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749699761024,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -4098,8 +4626,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749699859678, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749699859679, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749699859678,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749699859679,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -4111,8 +4651,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749699894200, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749699894201, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749699894200,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749699894201,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749653134928, "options": ["yes"] }]
         },
@@ -4157,8 +4709,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749700227471, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749700227472, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749700227471,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749700227472,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -4180,8 +4744,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749700300218, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749700300219, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749700300218,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749700300219,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -4198,7 +4774,7 @@
               "label": "Increase in budget",
               "id": 1749700333236,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "capacity_building",

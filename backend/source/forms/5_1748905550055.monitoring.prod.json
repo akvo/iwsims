@@ -59,7 +59,7 @@
               "label": "Activated Sludge System",
               "id": 1748913863866,
               "order": 5,
-              "color": "#66a61e"
+              "color": "#003f5c"
             },
             {
               "value": "stabilization_lagoons",
@@ -101,7 +101,7 @@
               "label": "Polishing Ponds",
               "id": 1748913919805,
               "order": 11,
-              "color": "#4daf4a"
+              "color": "#17becf"
             },
             {
               "value": "aerobic_lagoons",
@@ -143,7 +143,7 @@
               "label": "Sludge Digester",
               "id": 1748913979374,
               "order": 17,
-              "color": "#66c2a5"
+              "color": "#fdc086"
             },
             {
               "value": "imhoff",
@@ -164,7 +164,7 @@
               "label": "Facultative Ponds",
               "id": 1748914038956,
               "order": 20,
-              "color": "#a6d854"
+              "color": "#8c564b"
             }
           ],
           "required_double_entry": false
@@ -190,8 +190,20 @@
           "meta": false,
           "rule": null,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748904066576, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748904066578, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748904066576,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748904066578,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null
         },
@@ -250,7 +262,7 @@
               "label": "Influent Pump Station",
               "id": 1748904395053,
               "order": 5,
-              "color": "#66a61e"
+              "color": "#003f5c"
             },
             {
               "value": "effluent_pump_station",
@@ -397,8 +409,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748910199905, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748910199906, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748910199905,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748910199906,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -410,8 +434,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748910229123, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748910229124, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748910229123,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748910229124,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -423,8 +459,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748910286351, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748910286352, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748910286351,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748910286352,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         }
       ],
@@ -637,7 +685,7 @@
               "label": "No Security Lights",
               "id": 1748910676403,
               "order": 5,
-              "color": "#1b9e77"
+              "color": "#666666"
             }
           ],
           "dependency": null
@@ -691,8 +739,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748910784910, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748910784911, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748910784910,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748910784911,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null
         },
@@ -705,8 +765,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748910836260, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748910836261, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748910836260,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748910836261,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null
         },
@@ -719,8 +791,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748910872640, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748910872641, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748910872640,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748910872641,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null
         },
@@ -744,8 +828,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748910987339, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748910987340, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748910987339,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748910987340,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -768,8 +864,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748911121191, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748911121192, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748911121191,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748911121192,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -804,8 +912,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748911273988, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748911273989, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748911273988,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748911273989,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null,
           "rule": null
@@ -831,7 +951,7 @@
               "label": "Surcharging of influent line",
               "id": 1748911353283,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "overflow_wiers",
@@ -929,8 +1049,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748914782031, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748914782032, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748914782031,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748914782032,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null
         },
@@ -962,7 +1094,7 @@
               "label": "Screens overloaded",
               "id": 1748914831627,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "poor_ventilation",
@@ -990,7 +1122,7 @@
               "label": "Pump house in good condition",
               "id": 1748914873210,
               "order": 7,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "no_influent_pump_station_in_the_plant",
@@ -1029,8 +1161,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748914945664, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748914945665, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748914945664,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748914945665,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1748906592858, "options": ["yes"] }]
         },
@@ -1087,7 +1231,7 @@
               "label": "Excessive buildup of debris",
               "id": 1748913649146,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "oil_and_grease_buildup",
@@ -1171,7 +1315,7 @@
               "label": "Less than normal grit accumulation",
               "id": 1748914629750,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "oil_and_grease_buildup",
@@ -1199,7 +1343,7 @@
               "label": "Excessive odor in grit removal system",
               "id": 1748914676093,
               "order": 7,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "other",
@@ -1269,7 +1413,7 @@
               "label": "Black and odorous wastewater",
               "id": 1748915229405,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "poor_removal_of_suspended_solids",
@@ -1297,7 +1441,7 @@
               "label": "Fouling of overflow weirs",
               "id": 1748915277042,
               "order": 6,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "evidence_of_short_circuit",
@@ -1332,21 +1476,21 @@
               "label": "Noisy Sludge Scraper Drive",
               "id": 1748915317991,
               "order": 11,
-              "color": "#4daf4a"
+              "color": "#17becf"
             },
             {
               "value": "half_bridge_in_operation",
               "label": "Half bridge in operation",
               "id": 1748915326462,
               "order": 12,
-              "color": "#64A73B"
+              "color": "#fdc086"
             },
             {
               "value": "normal",
               "label": "Normal",
               "id": 1748915335780,
               "order": 13,
-              "color": "#984ea3"
+              "color": "#64A73B"
             },
             {
               "value": "other",
@@ -1418,7 +1562,7 @@
               "label": "Aerator in operation",
               "id": 1748915408888,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "shaft,bearing,drive_gear,or_motor_failure",
@@ -1453,7 +1597,7 @@
               "label": "Bad Odor",
               "id": 1748915466990,
               "order": 7,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "clogging_of_trickling_filter's_distribution_arm_orifices",
@@ -1546,7 +1690,7 @@
               "label": "Excessive air leaks in compressed air piping",
               "id": 1748915737887,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "dark_mixed_liquor_in_aeration_tank",
@@ -1574,7 +1718,7 @@
               "label": "Low Dissolved Oxygen (DO <1.0mg/L)",
               "id": 1748915782836,
               "order": 7,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "inadequate_amount_of_return_activated_sludge_rates",
@@ -1660,7 +1804,7 @@
               "label": "Trees or shrubs growing on the bank",
               "id": 1748915876002,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "erosion_of_the_stabilization_pond_bank_or_dike",
@@ -1695,7 +1839,7 @@
               "label": "Excessive scum on the surface",
               "id": 1748915927678,
               "order": 7,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "bad_odor",
@@ -1774,7 +1918,7 @@
               "label": "Damage to dikes around laggons",
               "id": 1748916081096,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "new_option",
@@ -1809,7 +1953,7 @@
               "label": "Industrial Waste Visible",
               "id": 1748916140594,
               "order": 7,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "supernatant_removal",
@@ -1962,7 +2106,7 @@
               "label": "Fouling of overflow weirs",
               "id": 1748916481908,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "uneven_overflow_weirs",
@@ -1990,7 +2134,7 @@
               "label": "De-flocculating in clarifier",
               "id": 1748916535583,
               "order": 6,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "ineffective_scum_raking",
@@ -2018,7 +2162,7 @@
               "label": "Recirculation pump in operation",
               "id": 1748916569947,
               "order": 10,
-              "color": "#64A73B"
+              "color": "#fdc086"
             },
             {
               "value": "clogged_sludge_withdrawal_ports",
@@ -2032,7 +2176,7 @@
               "label": "Normal Operation",
               "id": 1748916585705,
               "order": 12,
-              "color": "#4daf4a"
+              "color": "#64A73B"
             },
             {
               "value": "other",
@@ -2474,7 +2618,7 @@
               "label": "Bad odor",
               "id": 1748917060776,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "insufficient_dissolved_oxygen_in_digester",
@@ -2502,7 +2646,7 @@
               "label": "Inadequate supernatant removal",
               "id": 1748917100884,
               "order": 7,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "other",
@@ -2581,7 +2725,7 @@
               "label": "Fouling of overflow weirs on gravity thickeners",
               "id": 1748917194184,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "sludge_disposal_inadequate_to_keep_treatment_system_in_balance",
@@ -2609,7 +2753,7 @@
               "label": "Excessive suspended solids in supernatant",
               "id": 1748917253445,
               "order": 7,
-              "color": "#66a61e"
+              "color": "#a65628"
             },
             {
               "value": "recirculation_pump_operations",
@@ -2686,7 +2830,7 @@
               "label": "Poor sludge distribution on drying beds",
               "id": 1748917348159,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "dry_sludge_not_removed_on_time",
@@ -2769,8 +2913,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748917481483, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748917481484, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748917481483,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748917481484,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null
         },
@@ -2794,8 +2950,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748917556017, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748917556018, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748917556017,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748917556018,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1748907188132, "options": ["yes"] }]
         },
@@ -2892,8 +3060,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748917759663, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748917759664, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748917759663,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748917759664,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null,
           "rule": null
@@ -2954,7 +3134,13 @@
               "order": 1,
               "color": "#1b9e77"
             },
-            {  "value": "ph", "label": "pH", "id": 1748917801441, "order": 2, "color": "#d95f02" },
+            {
+              "value": "ph",
+              "label": "pH",
+              "id": 1748917801441,
+              "order": 2,
+              "color": "#d95f02"
+            },
             {
               "value": "conductivity",
               "label": "Conductivity",
@@ -2974,7 +3160,7 @@
               "label": "Total Suspended Solids",
               "id": 1748917801444,
               "order": 5,
-              "color": "#66a61e"
+              "color": "#003f5c"
             },
             {
               "value": "total_dissolved_solids",
@@ -3016,7 +3202,7 @@
               "label": "Nitrite",
               "id": 1748917801450,
               "order": 11,
-              "color": "#4daf4a"
+              "color": "#17becf"
             },
             {
               "value": "total_phosphate",
@@ -3058,7 +3244,7 @@
               "label": "Chloride",
               "id": 1748917801456,
               "order": 17,
-              "color": "#66c2a5"
+              "color": "#fdc086"
             },
             {
               "value": "oil_and_grease",
@@ -3384,8 +3570,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748918425239, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748918425240, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748918425239,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748918425240,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null,
           "short_label": null
@@ -3411,8 +3609,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1748918507612, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1748918507613, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1748918507612,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1748918507613,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": null,
           "short_label": null
@@ -3459,7 +3669,7 @@
               "label": "Training",
               "id": 1748918622626,
               "order": 5,
-              "color": "#66a61e"
+              "color": "#003f5c"
             },
             {
               "value": "plant_rehabilitation",

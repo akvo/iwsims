@@ -60,9 +60,15 @@
               "label": "Turbidity",
               "id": 1749640717030,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
-            {  "value": "ph", "label": "pH", "id": 1749640717031, "order": 2, "color": "#d95f02" },
+            {
+              "value": "ph",
+              "label": "pH",
+              "id": 1749640717031,
+              "order": 2,
+              "color": "#d95f02"
+            },
             {
               "value": "residual_chlorine",
               "label": "Residual Chlorine",
@@ -102,8 +108,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749640793604, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749640793605, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749640793604,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749640793605,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -229,7 +247,7 @@
               "label": "Turbidity in NTU",
               "id": 1749641135122,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "residual_chlorine_mg_l",
@@ -475,8 +493,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749643284427, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749643284428, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749643284427,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749643284428,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -536,8 +566,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749650646217, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749650646218, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749650646217,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749650646218,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["chlorine_gas"] }]
         },
@@ -720,8 +762,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749651063505, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749651063506, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749651063505,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749651063506,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["hth_powder"] }]
         },
@@ -910,8 +964,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749651436440, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749651436441, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749651436440,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749651436441,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [
             { "id": 1749641480407, "options": ["sodium_hypochlorite"] }
@@ -1096,8 +1162,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749651728117, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749651728118, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749651728117,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749651728118,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ],
           "dependency": [{ "id": 1749641480407, "options": ["dpd_tablets"] }]
         },
@@ -1273,8 +1351,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749651906382, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749651906383, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749651906382,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749651906383,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -1296,8 +1386,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749651978732, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749651978733, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749651978732,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749651978733,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -1314,7 +1416,7 @@
               "label": "Increase in budget",
               "id": 1749652017307,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "capacity_building",

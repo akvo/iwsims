@@ -354,14 +354,14 @@
               "label": "Not Active",
               "id": 1749622721235,
               "order": 2,
-              "color": "#e41a1c"
+              "color": "#666666"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749622721236,
               "order": 3,
-              "color": "#ff6900"
+              "color": "#e41a1c"
             }
           ],
           "dependency": [
