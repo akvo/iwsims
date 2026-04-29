@@ -248,7 +248,7 @@
     },
     {
       "id": "kpi_operational_systems",
-      "chart_type": "card",
+      "chart_type": "metric_card",
       "order": 10,
       "col_span": 6,
       "label": "Operational Systems",
@@ -256,13 +256,10 @@
       "api": {
         "form_id": 1749631041125,
         "question_id": 1749631041155,
-        "option_value": "operational",
-        "monitoring": "latest",
-        "sum_by": "parent_id"
+        "group_by": "option"
       },
-      "denominator_api": {
-        "form_id": 1749621221728
-      }
+      "show_percentage": true,
+      "target_group": "operational"
     },
     {
       "id": "kpi_drinking_water_compliance",
@@ -289,7 +286,7 @@
     },
     {
       "id": "kpi_active_water_committees",
-      "chart_type": "card",
+      "chart_type": "metric_card",
       "order": 12,
       "col_span": 6,
       "label": "Active Water Committees",
@@ -297,12 +294,10 @@
       "api": {
         "form_id": 1749621221728,
         "question_id": 1749622715678,
-        "option_value": "yes",
-        "sum_by": "parent_id"
+        "group_by": "option"
       },
-      "denominator_api": {
-        "form_id": 1749621221728
-      }
+      "show_percentage": true,
+      "target_group": "yes"
     },
     {
       "id": "kpi_accessibility_no_issues",
@@ -320,8 +315,8 @@
         "stack_by": "option"
       },
       "issues_api": {
-        "form_id": 1749631041125,
-        "question_id": 1749631041156,
+        "form_id": 1749621962296,
+        "question_id": 1749623661234,
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"

@@ -92,6 +92,7 @@ Only these six keys at the top level. Everything else is an item.
 | `chart_type` | Renders | Key extra fields |
 |---|---|---|
 | `card` | KPI tile | `color`, `api`, `api.value_type` (including `"ratio_percentage"` + sibling `denominator_api`), or `compute` ∈ {`compliance_kpi`, `accessibility_no_issues_kpi`} |
+| `metric_card` | Single-fetch metric tile (count / % / share / share %) | `color`, `api`, `target_group`, `show_percentage` — see [Metric cards](#8-metric-cards-metric_card) |
 | `bar`, `line`, `doughnut`, `half_doughnut`, `pie`, `stack_bar` | akvo-charts component | `config`, and one of: `api` / (`source`+`progress_ref`+`field`) / (`compute`+`params_ref`+`globals_ref`) / (`compute`+`category_api`+`series_api`) / (`compute`+`sample_api`+`issues_api`) / (`compute`+`segments[]`) |
 | `histogram` | Bar chart with binned water-quality data | `group`, `threshold`, `display`, `api` |
 | `table` | Escalation / data table | `api` (with `criteria[]`), `columns[]` |
@@ -253,11 +254,14 @@ columns (shape: `{label, group, [option_label]: count, …}`).
 
 ### 5. Frontend-derived accessibility bucket (`compute: "accessibility_bucket"`)
 
-Joins two per-parent option-question responses (sample + issues) by
-`parent_id` and emits a single-column stacked bar with three buckets per the
-A.2 rule: `sample=yes ∧ issues≠yes → easily_accessible`; `sample=yes ∧
-issues=yes → accessible_with_issues`; `sample=no → not_accessible`; parents
-with no sample record are EXCLUDED.
+Joins two per-parent option-question responses (sample + issues) by `parent_id`
+and emits a single-column stacked bar with three accessibility buckets:
+
+- **Easily accessible**: Sample answered "yes" AND issues answered "no"
+- **Accessible with issues**: Sample answered "yes" AND issues answered "yes"
+- **Not accessible**: Sample answered "no"
+
+Parents with no sample record are excluded from the chart.
 
 ```json
 {
@@ -361,6 +365,59 @@ marker required. Three flavours:
     "sum_by": "parent_id"
   },
   "denominator_api": { "form_id": 1749621221728 }
+}
+```
+
+### 8. Metric cards (`metric_card`)
+
+A generic single-fetch metric tile that subsumes both **scalar** counts and
+**share-of-total** ratios — a slimmer alternative to ratio `card` that does
+not require `denominator_api` or `compute`. Four display modes, dispatched
+on the presence of `target_group` and the top-level `show_percentage`
+flag:
+
+| `target_group` | `show_percentage` | Output | Example |
+|---|---|---|---|
+| absent | absent / `false` | scalar count | `40` |
+| absent | `true` | scalar % | `40%` |
+| set | absent / `false` | share | `2/3` |
+| set | `true` | share with % | `2/3 (66%)` |
+
+In share modes a missing or zero denominator renders `"—"`.
+
+When `target_group` is set the backend is expected to return one row per
+group (`{ value, label, group }[]`); the matching `group` row's value is the
+numerator and the sum of every row's `value` becomes the denominator. The
+api block must therefore NOT include `option_value` (which would filter the
+response to a single row and defeat the share calculation). `target_group`
+itself is a frontend-only signal and is stripped before the backend call.
+
+```json
+{
+  "id": "kpi_operational_share",
+  "chart_type": "metric_card",
+  "label": "Operational EPS share",
+  "color": "#64A73B",
+  "show_percentage": true,
+  "api": {
+    "form_id": 1749632545233,
+    "question_id": 1749633373968,
+    "monitoring": "latest",
+    "sum_by": "parent_id",
+    "target_group": "operational"
+  }
+}
+```
+
+Scalar count example (no `target_group`, no `show_percentage`):
+
+```json
+{
+  "id": "kpi_total_registered",
+  "chart_type": "metric_card",
+  "label": "Total EPS registered",
+  "color": "#1890ff",
+  "api": { "form_id": 1749623934933 }
 }
 ```
 
