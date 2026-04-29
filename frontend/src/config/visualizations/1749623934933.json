@@ -218,7 +218,11 @@
       "order": 10,
       "col_span": 12,
       "config": {
-        "title": "Operational Status"
+        "title": "Operational Status",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
       },
       "api": {
         "form_id": 1749632545233,
@@ -267,7 +271,11 @@
       "order": 12,
       "col_span": 8,
       "config": {
-        "title": "Water Committee"
+        "title": "Water Committee",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
       },
       "api": {
         "form_id": 1749623934933,
@@ -295,7 +303,11 @@
       "order": 14,
       "col_span": 8,
       "config": {
-        "title": "Lab tested vs CBT tested"
+        "title": "Lab tested vs CBT tested",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
       },
       "api": {
         "form_id": 1749632545233,
