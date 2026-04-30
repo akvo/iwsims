@@ -156,7 +156,8 @@
         "question_id": 1749630516826,
         "option_value": "no",
         "monitoring": "latest",
-        "sum_by": "parent_id"
+        "sum_by": "parent_id",
+        "include_unanswered": true
       }
     },
     {
@@ -275,7 +276,8 @@
       "api": {
         "form_id": 1749623934933,
         "question_id": 1749624452105,
-        "group_by": "option"
+        "group_by": "option",
+        "include_unanswered": true
       }
     },
     {
@@ -541,7 +543,8 @@
                 "sum_by": "parent_id",
                 "value_type": "percentage",
                 "date_question_id": 1749632545235,
-                "rolling_months": 12
+                "rolling_months": 12,
+                "include_unanswered": true
               }
             },
             {
