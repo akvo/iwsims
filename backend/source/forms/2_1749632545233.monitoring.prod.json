@@ -52,8 +52,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749632842043, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749632842044, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749632842043,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749632842044,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         }
       ],
@@ -81,7 +93,7 @@
               "label": "Rainy",
               "id": 1749632202487,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#1f77b4"
             },
             {
               "value": "cloudy",
@@ -108,8 +120,20 @@
           "required": true,
           "meta": false,
           "options": [
-            {  "value": "yes", "label": "Yes", "id": 1749632860507, "order": 1, "color": "#64A73B" },
-            {  "value": "no", "label": "No", "id": 1749632860508, "order": 2, "color": "#e41a1c" }
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1749632860507,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1749632860508,
+              "order": 2,
+              "color": "#e41a1c"
+            }
           ]
         },
         {
@@ -260,7 +284,13 @@
               "order": 5,
               "color": "#66a61e"
             },
-            {  "value": "ph", "label": "pH", "id": 1749633193921, "order": 6, "color": "#e6ab02" },
+            {
+              "value": "ph",
+              "label": "pH",
+              "id": 1749633193921,
+              "order": 6,
+              "color": "#e6ab02"
+            },
             {
               "value": "conductivity",
               "label": "Conductivity in \u00b5S/cm",

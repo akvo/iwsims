@@ -188,7 +188,7 @@
               "label": "Maintenance in progress",
               "id": 1749612815463,
               "order": 3,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             }
           ]
         },
@@ -213,7 +213,7 @@
               "label": "Maintenance in progress",
               "id": 1749612844278,
               "order": 2,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             },
             {
               "value": "faulty",
@@ -252,7 +252,7 @@
               "label": "Not available",
               "id": 1749612905891,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#666666"
             }
           ]
         },
@@ -277,7 +277,7 @@
               "label": "Need Maintenance",
               "id": 1749612978432,
               "order": 2,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             },
             {
               "value": "electrical_hazard",
@@ -323,7 +323,7 @@
               "label": "Missing",
               "id": 1749613055551,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#666666"
             }
           ]
         },
@@ -348,7 +348,7 @@
               "label": "Mechanical Hoist",
               "id": 1749613086551,
               "order": 2,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             },
             {
               "value": "portable_hoist",
@@ -387,7 +387,7 @@
               "label": "Maintenance in progress",
               "id": 1749613157598,
               "order": 2,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             },
             {
               "value": "faulty",
@@ -419,7 +419,7 @@
               "label": "Maintenance in progress",
               "id": 1749613193819,
               "order": 2,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             },
             {
               "value": "faulty",
@@ -451,7 +451,7 @@
               "label": "Maintenance in progress",
               "id": 1749613403884,
               "order": 2,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             },
             {
               "value": "faulty",
@@ -490,14 +490,14 @@
               "label": "Maintenance in progress",
               "id": 1749613466726,
               "order": 3,
-              "color": "#d95f02"
+              "color": "#984ea3"
             },
             {
               "value": "needs_upgrade",
               "label": "Needs Upgrade",
               "id": 1749613474866,
               "order": 4,
-              "color": "#1b9e77"
+              "color": "#e6ab02"
             }
           ]
         },
@@ -629,21 +629,21 @@
               "label": "Overflowing",
               "id": 1749613719016,
               "order": 2,
-              "color": "#e41a1c"
+              "color": "#e6ab02"
             },
             {
               "value": "blocked",
               "label": "Blocked",
               "id": 1749613738974,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#e41a1c"
             },
             {
               "value": "not_operational",
               "label": "Not Operational",
               "id": 1749613747550,
               "order": 4,
-              "color": "#d95f02"
+              "color": "#666666"
             }
           ]
         },
@@ -668,7 +668,7 @@
               "label": "Electrical fault",
               "id": 1749613783696,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#984ea3"
             },
             {
               "value": "duck_foot_problem",
@@ -682,7 +682,7 @@
               "label": "Guide rail Problem",
               "id": 1749613826908,
               "order": 4,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             }
           ]
         },
@@ -714,7 +714,7 @@
               "label": "Not available",
               "id": 1749613907566,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#666666"
             }
           ]
         },
@@ -746,7 +746,7 @@
               "label": "Intermittent Supply",
               "id": 1749613941200,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#e6ab02"
             }
           ]
         },
@@ -778,7 +778,7 @@
               "label": "Not used",
               "id": 1749614003421,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#666666"
             }
           ]
         }

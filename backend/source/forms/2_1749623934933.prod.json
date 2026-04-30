@@ -72,7 +72,7 @@
               "label": "Water Authority of Fiji",
               "id": 1749630688030,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "department_of_water_and_sewerage",
@@ -177,20 +177,22 @@
               "value": "yes",
               "label": "Yes",
               "id": 1749624452995,
-              "order": 1
+              "order": 1,
+              "color": "#64A73B"
             },
             {
               "value": "not_active",
               "label": "Not Active",
               "id": 1749624452997,
               "order": 2,
-              "color": "#e41a1c"
+              "color": "#666666"
             },
             {
               "value": "no",
               "label": "No",
               "id": 1749624452996,
-              "order": 3
+              "order": 3,
+              "color": "#e41a1c"
             }
           ]
         }

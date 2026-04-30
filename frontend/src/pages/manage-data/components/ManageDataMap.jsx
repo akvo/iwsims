@@ -67,6 +67,10 @@ const ManageDataMap = () => {
       ?.filter((qg) => qg?.options?.length > 0);
   }, [mapForm, selectedForm]);
 
+  const handleQuestionSearch = (input, option) => {
+    return option?.label?.toLowerCase().includes(input.toLowerCase());
+  };
+
   // Calculate color scale based on numeric data values for shape coloring
   const colorScale = useMemo(() => {
     // Extract numeric values from dataset, filtering out null/undefined values
@@ -215,7 +219,7 @@ const ManageDataMap = () => {
             ...d,
             ...item,
             hidden: typeof item?.value === "undefined" || item?.value === null,
-            color: item?.value <= 0 ? "#FFF" : currentColorScale(item?.value),
+            color: item?.value < 0 ? "#ffffff" : currentColorScale(item?.value),
             values: null, // Reset values for numeric questions
           };
         });
@@ -441,6 +445,8 @@ const ManageDataMap = () => {
               setSelectedGradationIndex(null);
               onMapFormChange(mapForm);
             }}
+            filterOption={handleQuestionSearch}
+            showSearch
             allowClear
           />
         </Space>

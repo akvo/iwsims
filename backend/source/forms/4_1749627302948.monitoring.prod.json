@@ -74,21 +74,21 @@
               "label": "Overflowing",
               "id": 1749627569056,
               "order": 2,
-              "color": "#e41a1c"
+              "color": "#e6ab02"
             },
             {
               "value": "blocked",
               "label": "Blocked",
               "id": 1749627586469,
               "order": 3,
-              "color": "#1b9e77"
+              "color": "#e41a1c"
             },
             {
               "value": "not_operational",
               "label": "Not Operational",
               "id": 1749627594136,
               "order": 4,
-              "color": "#d95f02"
+              "color": "#666666"
             }
           ]
         },
@@ -113,7 +113,7 @@
               "label": "Electrical fault",
               "id": 1749627637663,
               "order": 2,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "duck_foot_problem",
@@ -127,7 +127,7 @@
               "label": "Guide rail Problem",
               "id": 1749627669563,
               "order": 4,
-              "color": "#d95f02"
+              "color": "#e6ab02"
             }
           ]
         }
