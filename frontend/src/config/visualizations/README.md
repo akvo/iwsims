@@ -390,7 +390,8 @@ group (`{ value, label, group }[]`); the matching `group` row's value is the
 numerator and the sum of every row's `value` becomes the denominator. The
 api block must therefore NOT include `option_value` (which would filter the
 response to a single row and defeat the share calculation). `target_group`
-itself is a frontend-only signal and is stripped before the backend call.
+is a **top-level item field** (not inside `api`) — it is a frontend-only
+signal and is never sent to the backend.
 
 ```json
 {
@@ -399,12 +400,12 @@ itself is a frontend-only signal and is stripped before the backend call.
   "label": "Operational EPS share",
   "color": "#64A73B",
   "show_percentage": true,
+  "target_group": "operational",
   "api": {
     "form_id": 1749632545233,
     "question_id": 1749633373968,
     "monitoring": "latest",
-    "sum_by": "parent_id",
-    "target_group": "operational"
+    "sum_by": "parent_id"
   }
 }
 ```
