@@ -9,19 +9,25 @@ export const config = {
 
 // Tracks in-flight requests by opt-in cancelKey. Reusing a key aborts the
 // previous request before issuing the new one — callers handle CanceledError
-// via api.isCancel(err).
+// via api.isCancel(err). The map entry is cleared in a .finally() guarded
+// by an identity check, so an aborted request never deletes the replacement
+// controller put in place by the call that aborted it.
 const inflight = {};
 
-const withCancel = (cancelKey, requestConfig) => {
+const sendWithCancel = (cancelKey, requestConfig) => {
   if (!cancelKey) {
-    return requestConfig;
+    return axios(requestConfig);
   }
   if (inflight[cancelKey]) {
     inflight[cancelKey].abort();
   }
   const controller = new AbortController();
   inflight[cancelKey] = controller;
-  return { ...requestConfig, signal: controller.signal };
+  return axios({ ...requestConfig, signal: controller.signal }).finally(() => {
+    if (inflight[cancelKey] === controller) {
+      delete inflight[cancelKey];
+    }
+  });
 };
 
 const API = () => {
@@ -38,7 +44,7 @@ const API = () => {
   };
   return {
     get: (url, config = {}, cancelKey = null) =>
-      axios(withCancel(cancelKey, { url, ...getConfig(), ...config })),
+      sendWithCancel(cancelKey, { url, ...getConfig(), ...config }),
     post: (url, data, config = {}) =>
       axios({ url, method: "POST", data, ...getConfig(), ...config }),
     put: (url, data, config) =>
