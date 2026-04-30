@@ -527,6 +527,37 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         # feature_y appears in both latest submissions; 2/4 = 50%
         self.assertEqual(by_group["feature_y"], 50.0)
 
+    def test_include_unanswered_share_card_denominator_includes_bucket(self):
+        """share_card denominator includes the _no_info bucket (FR-11).
+
+        MetricCard computes share as numerator / sum(all row values).
+        With include_unanswered=true the _no_info row is present so the
+        denominator is total registrations, not just monitored ones.
+
+        Setup: 2 mixin parents monitored (active=1, pending=1), 3 extra
+        unmonitored. Expected: active=1, pending=1, inactive=0, _no_info=3.
+        sum(values) == 5 == total registrations → denominator is correct.
+        """
+        for i in range(3):
+            self._create_registration(
+                name=f"Share Extra {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d["value"] for d in data["data"]}
+        self.assertEqual(by_group["active"], 1)
+        self.assertEqual(by_group["pending"], 1)
+        self.assertEqual(by_group["_no_info"], 3)
+        # sum equals total registrations — MetricCard denominator is correct
+        self.assertEqual(sum(by_group.values()), 5)
+
     # -- Helper for tests that need additional registrations --
 
     def _create_registration(self, name, administration):
