@@ -363,6 +363,7 @@ const ManageDataMap = () => {
     fetchStatsRequestIdRef.current += 1;
     setMapForm(value);
     setActiveQuestion(null);
+    setIsNumeric(false);
     setLegendOptions([]);
     setLegendTitle(null);
     setSelectedLegendOption(null);
