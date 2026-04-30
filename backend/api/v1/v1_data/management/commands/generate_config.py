@@ -8,9 +8,35 @@ from api.v1.v1_forms.models import Forms
 from api.v1.v1_profile.models import Levels
 from api.v1.v1_profile.constants import FeatureTypes, FeatureAccessTypes
 from api.v1.v1_forms.serializers import FormDataSerializer
+from api.v1.v1_visualization.functions import refresh_materialized_data
 
 
 class Command(BaseCommand):
+    help = (
+        "Generate source/config/config.min.js (forms, levels, topojson, "
+        "appConfig, roleFeatures) for the frontend bundle. "
+        "Pass --refresh-views to also refresh the view_data_options "
+        "materialized view (acquires an exclusive lock — see flag help)."
+    )
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--refresh-views",
+            action="store_true",
+            help=(
+                "Also REFRESH MATERIALIZED VIEW view_data_options after "
+                "writing the config. WARNING: this takes an exclusive "
+                "ACCESS EXCLUSIVE lock on the view and blocks readers "
+                "and writers for the full refresh duration. CONCURRENTLY "
+                "is not used because refresh_materialized_data() runs "
+                "inside @transaction.atomic. Skip in routine config "
+                "rebuilds (startup, missing-file regenerate); prefer "
+                "the v1_data.tasks.refresh_materialized_data task or a "
+                "maintenance window for explicit refreshes."
+            ),
+            default=False,
+        )
+
     def handle(self, *args, **options):
         print("GENERATING CONFIG JS")
         topojson = open(f"source/{COUNTRY_NAME}.topojson").read()
@@ -82,3 +108,5 @@ class Command(BaseCommand):
         del levels
         del forms
         del min_config
+        if options.get("refresh_views"):
+            refresh_materialized_data()

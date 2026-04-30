@@ -11,6 +11,7 @@ import {
   FullscreenOutlined,
 } from "@ant-design/icons";
 import "./style.scss";
+import { buildOffsetCoordinates } from "./overlapUtils";
 
 const MapView = ({ dataset, loading, position }) => {
   const selectedForm = store.useState((s) => s.selectedForm);
@@ -96,38 +97,6 @@ const MapView = ({ dataset, loading, position }) => {
     };
   }, [lg, loading]);
 
-  // Helper function to detect and offset overlapping markers
-  const getOffsetCoordinates = (coordinates, index, allCoordinates) => {
-    const threshold = 0.0001; // Distance threshold for considering markers as overlapping (about 11 meters)
-    const offsetDistance = 0.0002; // Offset distance (about 22 meters)
-
-    // Find how many markers are at similar coordinates before this one
-    let offsetIndex = 0;
-    for (let i = 0; i < index; i++) {
-      const otherCoords = allCoordinates[i];
-      if (
-        otherCoords &&
-        Math.abs(coordinates[0] - otherCoords[0]) < threshold &&
-        Math.abs(coordinates[1] - otherCoords[1]) < threshold
-      ) {
-        offsetIndex++;
-      }
-    }
-
-    if (offsetIndex > 0) {
-      // Apply spiral offset pattern
-      const angle = offsetIndex * 60 * (Math.PI / 180); // 60 degrees apart
-      const radius = offsetDistance * Math.ceil(offsetIndex / 6); // Increase radius every 6 markers
-
-      return [
-        coordinates[0] + radius * Math.cos(angle),
-        coordinates[1] + radius * Math.sin(angle),
-      ];
-    }
-
-    return coordinates;
-  };
-
   useEffect(() => {
     if (lg.current && !loading) {
       lg.current.clearLayers();
@@ -137,11 +106,10 @@ const MapView = ({ dataset, loading, position }) => {
           !d?.hidden && d?.geo && Array.isArray(d.geo) && d.geo.length === 2
       );
 
-      // Get all coordinates for overlap detection
-      const allCoordinates = filteredDataset.map((d) => d.geo);
+      const offsets = buildOffsetCoordinates(filteredDataset);
 
       filteredDataset.forEach((d, index) => {
-        const offsetCoords = getOffsetCoordinates(d.geo, index, allCoordinates);
+        const offsetCoords = offsets[index];
         const finalCoords = geo.fixCoordinates(offsetCoords);
 
         const marker = L.marker(finalCoords, {

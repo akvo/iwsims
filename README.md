@@ -111,6 +111,25 @@ To specify a custom URL:
 ./dc.sh exec backend python manage.py generate_qr_code --url https://example.com/app
 ```
 
+Refresh Materialized Views:
+
+The dashboard map/visualization queries read from the `view_data_options`
+materialized view. By default, `generate_config` (run on backend startup, by
+the seeder, and lazily by the `/config-file` endpoint when the JS bundle is
+missing) **does not** refresh this view because `REFRESH MATERIALIZED VIEW`
+acquires an `ACCESS EXCLUSIVE` lock that blocks readers and writers for the
+full refresh duration. `CONCURRENTLY` is not used because
+`refresh_materialized_data()` runs inside `@transaction.atomic`.
+
+Routine refreshes already happen as part of the data seeders
+(`fake_complete_data_seeder`, `flow_data_seeder`) and the
+`v1_data.tasks.refresh_materialized_data` async task. To refresh explicitly
+during a maintenance window:
+
+```bash
+./dc.sh exec backend python manage.py generate_config --refresh-views
+```
+
 #### Log
 
 ```bash
