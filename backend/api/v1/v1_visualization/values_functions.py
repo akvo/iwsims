@@ -26,18 +26,20 @@ def _should_fill_gaps(params):
     )
 
 
-def _count_no_info_parents(form, params, qualifying_parent_ids):
-    """Count parents in scope with no qualifying answer for the question.
+def _count_no_info_parents(form, params, qualifying_ids):
+    """Count datapoints in scope with no qualifying answer.
 
-    Returns 0 for registration forms. Respects administration_id and
-    parent_criteria so the count reconciles with option counts under
-    filtering (FR-3).
+    For monitoring forms: counts parent registrations without any
+    qualifying monitoring submission (gap in monitoring coverage).
+    For registration forms: counts registrations that exist but have no
+    answer for the question (field left blank / skipped).
+
+    Respects administration_id and parent_criteria so the count
+    reconciles with option counts under filtering (FR-3).
     """
-    if not form.parent:
-        return 0
-    parent_form = form.parent
+    scope_form = form.parent if form.parent else form
     qs = FormData.objects.filter(
-        form=parent_form,
+        form=scope_form,
         parent__isnull=True,
         is_pending=False,
         is_draft=False,
@@ -49,7 +51,7 @@ def _count_no_info_parents(form, params, qualifying_parent_ids):
         qs, True, params.get("parent_criteria"),
     )
     total = qs.count()
-    return max(0, total - len(qualifying_parent_ids))
+    return max(0, total - len(qualifying_ids))
 
 
 # -- Count mode handler --
@@ -532,18 +534,24 @@ def _option_group_by_option(
     )
     tallies = defaultdict(int)
     qualifying_parents = set()
-    for parent_id, opts in Answers.objects.filter(
+    # Registration forms have no parent; track data_id directly.
+    # Monitoring forms track data__parent_id (the registration ID).
+    is_registration = form is not None and form.parent is None
+    tracking_field = (
+        "data_id" if is_registration else "data__parent_id"
+    )
+    for tracking_id, opts in Answers.objects.filter(
         data_id__in=data_ids,
         question_id=question.id,
         options__isnull=False,
-    ).values_list("data__parent_id", "options"):
+    ).values_list(tracking_field, "options"):
         matched = False
         for v in (opts or []):
             if v in tally_values:
                 tallies[v] += 1
                 matched = True
         if matched:
-            qualifying_parents.add(parent_id)
+            qualifying_parents.add(tracking_id)
 
     counts = [tallies.get(opt.value, 0) for opt in options]
 

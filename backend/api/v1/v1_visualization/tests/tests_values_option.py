@@ -466,12 +466,24 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         # Only 1 non-deleted extra registration is unmonitored
         self.assertEqual(by_group["_no_info"]["value"], 1)
 
-    def test_include_unanswered_ignored_on_registration_form(self):
-        """Flag is silently ignored for registration-form questions (FR-7).
+    def test_include_unanswered_works_on_registration_form(self):
+        """include_unanswered works for registration-form questions.
 
-        The registration form has no parent, so _count_no_info_parents
-        returns 0 and the bucket is never appended.
+        Registrations that exist but have no answer for the option
+        question are counted in the _no_info bucket, using data_id
+        as the tracking key (registration records have no parent_id).
+
+        Setup: answer q_reg_option for reg1 only; reg2 stays unanswered.
+        Expect: answered option row has value 1; _no_info = 1 (reg2).
         """
+        from api.v1.v1_data.models import Answers as _Ans
+        # q_reg_option (site_type) has options: urban, rural, peri_urban
+        _Ans.objects.create(
+            data=self.reg1,
+            question=self.q_reg_option,
+            options=["urban"],
+            created_by=self.user,
+        )
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.registration.id}"
             f"&question_id={self.q_reg_option.id}"
@@ -480,8 +492,10 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        groups = {d["group"] for d in data["data"]}
-        self.assertNotIn("_no_info", groups)
+        by_group = {d["group"]: d["value"] for d in data["data"]}
+        self.assertEqual(by_group.get("urban"), 1)
+        self.assertIn("_no_info", by_group)
+        self.assertEqual(by_group["_no_info"], 1)
 
     def test_include_unanswered_ignored_on_count_mode(self):
         """Flag is silently ignored when no question_id (count mode, FR-7).
