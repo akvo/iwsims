@@ -5,6 +5,7 @@ import { Alert, Skeleton } from "antd";
 import "leaflet/dist/leaflet.css";
 import { api, geo } from "../../lib";
 import { applyDashboardFilters } from "../../lib/dashboardFilterHints";
+import uiText from "../../lib/ui-text";
 
 const DEFAULT_COLOR = "#1890ff";
 
@@ -115,11 +116,25 @@ const DashboardMap = ({
   const colorForParent = (parentId) => {
     const label = statusByParent[parentId];
     if (!label) {
-      return DEFAULT_COLOR;
+      return statusColors._no_info || DEFAULT_COLOR;
     }
     const slug = label.toLowerCase().replace(/\s+/g, "_");
     return statusColors[slug] || statusColors[label] || DEFAULT_COLOR;
   };
+
+  const legendEntries = useMemo(() => {
+    const colors = item?.status_colors || {};
+    if (!Object.keys(colors).length) {
+      return [];
+    }
+    return Object.entries(colors).map(([key, color]) => ({
+      color,
+      label:
+        key === "_no_info"
+          ? uiText.en.noInformationAvailable
+          : key.replace(/_/g, " "),
+    }));
+  }, [item]);
 
   const buildUrl = (pointId) =>
     urlTemplate
@@ -139,50 +154,80 @@ const DashboardMap = ({
   }
 
   return (
-    <MapContainer
-      center={center}
-      zoom={7}
-      style={{ height, width: "100%" }}
-      scrollWheelZoom={false}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {points
-        .filter((p) => Array.isArray(p.geo) && p.geo.length === 2)
-        .map((p) => (
-          <CircleMarker
-            key={p.id}
-            center={p.geo}
-            radius={7}
-            pathOptions={{
-              color: colorForParent(String(p.id)),
-              fillColor: colorForParent(String(p.id)),
-              fillOpacity: 0.9,
-              weight: 1,
-            }}
-            eventHandlers={{
-              click: () =>
-                window.open(buildUrl(p.id), "_blank", "noopener,noreferrer"),
-            }}
-          >
-            <Popup>
-              <div>
-                <strong>{p.name || `EPS #${p.id}`}</strong>
-                <br />
-                <a
-                  href={buildUrl(p.id)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Open monitoring
-                </a>
-              </div>
-            </Popup>
-          </CircleMarker>
-        ))}
-    </MapContainer>
+    <div>
+      {legendEntries.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            marginBottom: 8,
+          }}
+        >
+          {legendEntries.map(({ color, label }) => (
+            <span
+              key={label}
+              style={{ display: "flex", alignItems: "center", gap: 4 }}
+            >
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  background: color,
+                }}
+              />
+              {label}
+            </span>
+          ))}
+        </div>
+      )}
+      <MapContainer
+        center={center}
+        zoom={7}
+        style={{ height, width: "100%" }}
+        scrollWheelZoom={false}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {points
+          .filter((p) => Array.isArray(p.geo) && p.geo.length === 2)
+          .map((p) => (
+            <CircleMarker
+              key={p.id}
+              center={p.geo}
+              radius={7}
+              pathOptions={{
+                color: colorForParent(String(p.id)),
+                fillColor: colorForParent(String(p.id)),
+                fillOpacity: 0.9,
+                weight: 1,
+              }}
+              eventHandlers={{
+                click: () =>
+                  window.open(buildUrl(p.id), "_blank", "noopener,noreferrer"),
+              }}
+            >
+              <Popup>
+                <div>
+                  <strong>{p.name || `EPS #${p.id}`}</strong>
+                  <br />
+                  <a
+                    href={buildUrl(p.id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open monitoring
+                  </a>
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
+      </MapContainer>
+    </div>
   );
 };
 

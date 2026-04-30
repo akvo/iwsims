@@ -53,6 +53,10 @@ class ValuesFilterSerializer(serializers.Serializer):
     administration_id = serializers.IntegerField(required=False)
     option_value = serializers.CharField(required=False)
     criteria = serializers.CharField(required=False)
+    include_unanswered = serializers.BooleanField(
+        required=False,
+        default=False,
+    )
 
     def validate_criteria(self, value):
         try:

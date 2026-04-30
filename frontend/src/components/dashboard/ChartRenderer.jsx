@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Bar, Doughnut, Line, Pie, StackBar } from "akvo-charts";
 import { Alert, Skeleton } from "antd";
 import { useDashboardValues, useDashboardProgress } from "../../util/hooks";
+import uiText from "../../lib/ui-text";
 import { toHistogramBarData } from "./compute/progressHistogram";
 import { computeComplianceStackData } from "./compute/compliance";
 import { rotateToFiscalOrder } from "./compute/fiscalMonthRotation";
@@ -420,7 +421,7 @@ const ChartRenderer = ({
   const isApiDriven =
     (Boolean(Component) || isDots) &&
     Boolean(item.api) &&
-    !item.compute &&
+    (!item.compute || (item.compute === "kpi_stack" && !item.segments)) &&
     !item.source;
 
   const {
@@ -472,12 +473,28 @@ const ChartRenderer = ({
     }
 
     if (item.compute === "kpi_stack") {
-      const responses = computeResponses?.kpi_stack?.[item.id];
-      return computeKpiStack(
-        item.segments,
-        responses,
-        item.config?.title || "Total"
-      );
+      if (item.segments) {
+        const responses = computeResponses?.kpi_stack?.[item.id];
+        return computeKpiStack(
+          item.segments,
+          responses,
+          item.config?.title || "Total"
+        );
+      }
+      // api-driven kpi_stack: single /values call with group_by=option;
+      // rows become stack segments dynamically
+      const rows = apiData?.data || [];
+      if (!rows.length) {
+        return [];
+      }
+      const category = item.config?.title || "Total";
+      const row = { category };
+      rows.forEach((r) => {
+        const label =
+          r.group === "_no_info" ? uiText.en.noInformationAvailable : r.label;
+        row[label] = r.value ?? 0;
+      });
+      return [row];
     }
 
     if (item.compute === "compliance") {
@@ -536,7 +553,11 @@ const ChartRenderer = ({
           extendTo,
         });
       }
-      return rows.map((r) => ({ label: r.label, value: r.value }));
+      return rows.map((r) => ({
+        label:
+          r.group === "_no_info" ? uiText.en.noInformationAvailable : r.label,
+        value: r.value,
+      }));
     }
     return [];
   }, [

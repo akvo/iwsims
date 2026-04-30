@@ -293,3 +293,248 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         data = response.json()
         self.assertEqual(len(data["data"]), 1)
         self.assertEqual(data["data"][0]["value"], 50.0)
+
+    # -- include_unanswered tests --
+
+    def test_include_unanswered_appends_no_info_row(self):
+        """include_unanswered=true appends _no_info for unmonitored parents.
+
+        Mixin has 2 parents, both monitored (latest: reg1=active,
+        reg2=pending). Create 3 more registrations without monitoring.
+        Expected: active=1, inactive=0, pending=1, _no_info=3.
+        """
+        for i in range(3):
+            self.reg_extra = self._create_registration(
+                name=f"Extra Site {i}",
+                administration=self.adm_parent,
+            )
+
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d for d in data["data"]}
+        self.assertEqual(by_group["active"]["value"], 1)
+        self.assertEqual(by_group["pending"]["value"], 1)
+        self.assertIn("_no_info", by_group)
+        self.assertEqual(by_group["_no_info"]["value"], 3)
+        self.assertEqual(by_group["_no_info"]["color"], "#bfbfbf")
+        self.assertEqual(
+            by_group["_no_info"]["label"], "No information available"
+        )
+        # _no_info must be the last row
+        self.assertEqual(data["data"][-1]["group"], "_no_info")
+
+    def test_include_unanswered_default_false_unchanged(self):
+        """Without the flag the response is identical to the baseline.
+
+        The baseline (test_option_group_by_option_latest) returns
+        active=1, pending=1, inactive=0. No _no_info row.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        groups = {d["group"] for d in data["data"]}
+        self.assertNotIn("_no_info", groups)
+        self.assertEqual(len(data["data"]), 3)
+
+    def test_include_unanswered_multiple_option_distinct_parents(self):
+        """Multi-choice: _no_info uses distinct-parent count, not subtraction.
+
+        Mixin: 2 parents, both have latest monitoring with multi answers.
+        Add 1 extra registration without monitoring.
+        _no_info = 1 (not 3 - sum of multi selections).
+        """
+        self._create_registration(
+            name="Unmonitored Multi",
+            administration=self.adm_parent,
+        )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=option&monitoring=latest"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d for d in data["data"]}
+        self.assertIn("_no_info", by_group)
+        self.assertEqual(by_group["_no_info"]["value"], 1)
+
+    def test_include_unanswered_percentage_sums_100_single_choice(self):
+        """Percentage with include_unanswered: single-choice sums to 100%.
+
+        Mixin has 2 parents monitored (active=1, pending=1).
+        Add 2 extra registrations without monitoring.
+        Total parents = 4. active=1, pending=1, _no_info=2.
+        Percentages: active=25%, inactive=0%, pending=25%, _no_info=50%.
+        Sum of all = 100%.
+        """
+        for i in range(2):
+            self._create_registration(
+                name=f"Pct Extra {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+            "&include_unanswered=true&value_type=percentage"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d["value"] for d in data["data"]}
+        self.assertEqual(by_group["active"], 25.0)
+        self.assertEqual(by_group["inactive"], 0.0)
+        self.assertEqual(by_group["pending"], 25.0)
+        self.assertEqual(by_group["_no_info"], 50.0)
+        self.assertAlmostEqual(sum(by_group.values()), 100.0, places=1)
+
+    def test_include_unanswered_respects_administration_filter(self):
+        """Administration filter narrows the bucket to the filtered universe.
+
+        adm_parent (level 0) has reg1. adm_child (level 1) has reg2.
+        When filtering to adm_child, only 1 parent is in scope.
+        Latest for adm_child: reg2 = pending → 0 unanswered.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+            "&include_unanswered=true"
+            f"&administration_id={self.adm_child.id}"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d for d in data["data"]}
+        # reg2 (child) has pending answer → qualifying_parents = {reg2}
+        # total in admin_child scope = 1 → bucket = 0 → no _no_info row
+        self.assertNotIn("_no_info", by_group)
+        self.assertEqual(by_group["pending"]["value"], 1)
+
+    def test_include_unanswered_zero_bucket_emits_no_row(self):
+        """When all parents are monitored, _no_info row is not appended.
+
+        Mixin: both registrations have monitoring. Bucket = 0.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        groups = {d["group"] for d in data["data"]}
+        self.assertNotIn("_no_info", groups)
+        self.assertEqual(len(data["data"]), 3)
+
+    def test_include_unanswered_excludes_soft_deleted_parents(self):
+        """Soft-deleted parents are not counted in the bucket.
+
+        Add 2 extra registrations, soft-delete one. Bucket = 1.
+        """
+        extra1 = self._create_registration(
+            name="SoftDelete Site",
+            administration=self.adm_parent,
+        )
+        self._create_registration(
+            name="Normal Site",
+            administration=self.adm_parent,
+        )
+        # Soft-delete extra1 via the SoftDeletes mixin
+        extra1.delete()
+
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&group_by=option&monitoring=latest"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d for d in data["data"]}
+        self.assertIn("_no_info", by_group)
+        # Only 1 non-deleted extra registration is unmonitored
+        self.assertEqual(by_group["_no_info"]["value"], 1)
+
+    def test_include_unanswered_ignored_on_registration_form(self):
+        """Flag is silently ignored for registration-form questions (FR-7).
+
+        The registration form has no parent, so _count_no_info_parents
+        returns 0 and the bucket is never appended.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.registration.id}"
+            f"&question_id={self.q_reg_option.id}"
+            "&group_by=option"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        groups = {d["group"] for d in data["data"]}
+        self.assertNotIn("_no_info", groups)
+
+    def test_include_unanswered_ignored_on_count_mode(self):
+        """Flag is silently ignored when no question_id (count mode, FR-7).
+
+        No per-option breakdown → no bucket makes sense.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        groups = {d.get("group") for d in data["data"]}
+        self.assertNotIn("_no_info", groups)
+
+    def test_include_unanswered_percentage_multi_choice_denominator(self):
+        """Multi-choice percentage uses distinct-parent denominator.
+
+        Mixin: 2 parents monitored (both have multi answers for feature_*).
+        Add 2 extra registrations without monitoring.
+        Total parents = 4, qualifying = 2, bucket = 2.
+        feature_y latest: reg1(mon1b)=[feature_y,feature_z],
+                          reg2(mon2b)=[feature_x,feature_y,feature_z]
+        feature_y tally = 2, denom = 2 qualifying + 2 bucket = 4.
+        feature_y % = 2/4*100 = 50%.
+        """
+        for i in range(2):
+            self._create_registration(
+                name=f"Multi Pct Extra {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=option&monitoring=latest"
+            "&include_unanswered=true&value_type=percentage"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d["value"] for d in data["data"]}
+        self.assertIn("_no_info", by_group)
+        self.assertEqual(by_group["_no_info"], 50.0)
+        # feature_y appears in both latest submissions; 2/4 = 50%
+        self.assertEqual(by_group["feature_y"], 50.0)
+
+    # -- Helper for tests that need additional registrations --
+
+    def _create_registration(self, name, administration):
+        """Create a registration FormData without any monitoring."""
+        from api.v1.v1_data.models import FormData as _FD
+        return _FD.objects.create(
+            name=name,
+            form=self.registration,
+            administration=administration,
+            created_by=self.user,
+        )

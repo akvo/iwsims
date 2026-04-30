@@ -393,7 +393,8 @@
         "form_id": 1749621962296,
         "question_id": 1749622849604,
         "group_by": "option",
-        "monitoring": "latest"
+        "monitoring": "latest",
+        "include_unanswered": true
       }
     },
     {
@@ -415,7 +416,8 @@
       "api": {
         "form_id": 1749621221728,
         "question_id": 1749622291234,
-        "group_by": "option"
+        "group_by": "option",
+        "include_unanswered": true
       }
     },
     {
@@ -428,32 +430,12 @@
         "yAxisLabel": "RWS count"
       },
       "compute": "kpi_stack",
-      "segments": [
-        {
-          "key": "operational",
-          "label": "Operational",
-          "color": "#3C3CFF",
-          "api": {
-            "form_id": 1749631041125,
-            "question_id": 1749631041155,
-            "option_value": "operational",
-            "monitoring": "latest",
-            "sum_by": "parent_id"
-          }
-        },
-        {
-          "key": "issues",
-          "label": "Issues with the system",
-          "color": "#1AB99F",
-          "api": {
-            "form_id": 1749631041125,
-            "question_id": 1749631041156,
-            "option_value": "yes",
-            "monitoring": "latest",
-            "sum_by": "parent_id"
-          }
-        }
-      ]
+      "api": {
+        "form_id": 1749631041125,
+        "question_id": 1749631041155,
+        "group_by": "option",
+        "include_unanswered": true
+      }
     },
     {
       "id": "chart_accessibility_bucket",

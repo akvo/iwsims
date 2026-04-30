@@ -228,7 +228,8 @@
         "form_id": 1749632545233,
         "question_id": 1749633373968,
         "group_by": "option",
-        "monitoring": "latest"
+        "monitoring": "latest",
+        "include_unanswered": true
       }
     },
     {
@@ -294,7 +295,8 @@
       "api": {
         "form_id": 1749623934933,
         "question_id": 1749624452993,
-        "group_by": "option"
+        "group_by": "option",
+        "include_unanswered": true
       }
     },
     {
@@ -313,7 +315,8 @@
         "form_id": 1749632545233,
         "question_id": 1749633001462,
         "group_by": "option",
-        "monitoring": "latest"
+        "monitoring": "latest",
+        "include_unanswered": true
       }
     },
     {
