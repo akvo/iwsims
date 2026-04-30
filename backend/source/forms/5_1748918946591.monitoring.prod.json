@@ -264,7 +264,7 @@
               "label": "Temperature",
               "id": 1789193153536,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "ph",
@@ -811,7 +811,7 @@
               "label": "Increase in Budget",
               "id": 1748919999827,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "capacity_building",

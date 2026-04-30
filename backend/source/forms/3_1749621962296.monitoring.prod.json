@@ -151,7 +151,7 @@
               "label": "Turbidity in NTU",
               "id": 1749621100015,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "temperature_c",
@@ -448,7 +448,7 @@
               "label": "Surface Water (River)",
               "id": 1749621384996,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "surface_water_creek",
@@ -540,7 +540,7 @@
               "label": "Dam",
               "id": 17496227330011,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "raw_water_main",
@@ -606,7 +606,7 @@
               "label": "Raw Water Main",
               "id": 17496227330022,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "reservoir",
@@ -679,7 +679,7 @@
               "label": "Raw Water Main",
               "id": 17496227330023,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "reservoir",
@@ -1434,7 +1434,7 @@
               "label": "Collecting Box",
               "id": 1723459278010,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "inlet_strainer",
@@ -2511,7 +2511,7 @@
               "label": "Reservoir Inlet",
               "id": 1723459255026,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "reservoir_outlet",
@@ -2645,7 +2645,7 @@
               "label": "200mm",
               "order": 1,
               "id": 1849622785221,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -2697,7 +2697,7 @@
               "label": "200mm",
               "order": 1,
               "id": 1849622785241,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -2780,7 +2780,7 @@
               "label": "200mm",
               "order": 1,
               "id": 1849622785228,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -2832,7 +2832,7 @@
               "label": "200mm",
               "order": 1,
               "id": 1849622785247,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -2915,7 +2915,7 @@
               "label": "200mm",
               "order": 1,
               "id": 1849622785235,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -2967,7 +2967,7 @@
               "label": "200mm",
               "order": 1,
               "id": 1849622785253,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -3254,7 +3254,7 @@
               "label": "200mm",
               "id": 1723459200047,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -3306,7 +3306,7 @@
               "label": "200mm",
               "id": 1723459240133,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -3678,7 +3678,7 @@
               "label": "200mm",
               "id": 1723459200058,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -3730,7 +3730,7 @@
               "label": "200mm",
               "id": 1723459267041,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "150mm",
@@ -4622,7 +4622,7 @@
               "label": "Borehole Casing",
               "id": 1749622107890,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "borehole_cover",
@@ -5301,7 +5301,7 @@
               "label": "20000L",
               "id": 1749622267890,
               "order": 1,
-              "color": "#1b9e77"
+              "color": "#003f5c"
             },
             {
               "value": "10000L",
