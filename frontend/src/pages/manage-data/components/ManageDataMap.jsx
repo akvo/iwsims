@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { Select, Space } from "antd";
-import { takeRight } from "lodash";
+import { takeRight, debounce } from "lodash";
 import { scaleQuantize } from "d3-scale";
 import { GradationLegend, MapView, MarkerLegend } from "../../../components";
 import { api, store, uiText, geo, QUESTION_TYPES, config } from "../../../lib";
@@ -15,7 +15,8 @@ const { getBounds } = geo;
 
 const ManageDataMap = () => {
   const [loading, setLoading] = useState(true);
-  const [dataset, setDataset] = useState([]);
+  const [geoDataset, setGeoDataset] = useState([]);
+  const [statsByQuestion, setStatsByQuestion] = useState({});
   const [position, setPosition] = useState(null);
   const selectedForm = store.useState((s) => s.selectedForm);
   const [prevForm, setPrevForm] = useState(selectedForm);
@@ -28,6 +29,12 @@ const ManageDataMap = () => {
   const [isLocationFetched, setIsLocationFetched] = useState(false);
   const fetchStatsRequestIdRef = useRef(0);
   const loadingTimerRef = useRef(null);
+  const subscribeStateRef = useRef({ prevForm, isLocationFetched });
+  const fetchStatsRef = useRef(null);
+
+  useEffect(() => {
+    subscribeStateRef.current = { prevForm, isLocationFetched };
+  });
 
   const flashLoading = useCallback(() => {
     setLoading(true);
@@ -97,52 +104,59 @@ const ManageDataMap = () => {
     return option?.label?.toLowerCase().includes(input.toLowerCase());
   };
 
+  // Merge immutable location records with per-question stats for the active question
+  const activeStats = useMemo(() => {
+    if (!activeQuestion || !statsByQuestion[activeQuestion]) {
+      return geoDataset.map((d) => ({ ...d, hidden: false }));
+    }
+    const stats = statsByQuestion[activeQuestion];
+    return geoDataset.map((d) => ({
+      ...d,
+      hidden: stats.hidden[d.id] ?? true,
+      color: stats.color?.[d.id] ?? null,
+      value: stats.value?.[d.id] ?? null,
+      values: stats.values?.[d.id] ?? null,
+    }));
+  }, [geoDataset, activeQuestion, statsByQuestion]);
+
   // Calculate color scale based on numeric data values for shape coloring
   const colorScale = useMemo(() => {
-    // Extract numeric values from dataset, filtering out null/undefined values
-    const numericValues = dataset
+    const numericValues = activeStats
       .map((d) => d.value)
       .filter((v) => typeof v === "number" && !isNaN(v) && v > 0);
 
-    if (numericValues.length === 0 || !isNumeric || !dataset.length) {
+    if (numericValues.length === 0 || !isNumeric || !activeStats.length) {
       return scaleQuantize().domain([0, 1]).range(config.mapConfig.colorRange);
     }
 
-    // Calculate domain based on actual data distribution
     const maxValue = Math.max(...numericValues);
     let domainMax = maxValue;
 
     if (maxValue <= 10) {
-      // For small values, round up to the nearest 5 or 10
       domainMax = Math.ceil(maxValue / 5) * 5;
     } else if (maxValue <= 100) {
-      // For medium values, round up to nearest 10
       domainMax = Math.ceil(maxValue / 10) * 10;
     } else {
-      // For larger values, round up to nearest 50
       domainMax = Math.ceil(maxValue / 50) * 50;
     }
     return scaleQuantize()
       .domain([0, domainMax])
       .range(config.mapConfig.colorRange);
-  }, [dataset, isNumeric]);
+  }, [activeStats, isNumeric]);
 
   // Compute filtered dataset based on legend selections
   const filteredDataset = useMemo(() => {
     if (!selectedLegendOption && selectedGradationIndex === null) {
-      // No filters applied, return all non-hidden items
-      return dataset.filter((d) => !d.hidden);
+      return activeStats.filter((d) => !d.hidden);
     }
 
-    return dataset.filter((d) => {
+    return activeStats.filter((d) => {
       if (d.hidden) {
         return false;
       }
 
       if (selectedLegendOption) {
-        // Filter by marker legend selection
         if (d?.values?.length > 0) {
-          // For multiple option questions, check if any value matches the selected option
           return d.values.some(
             (v) =>
               v.value === selectedLegendOption.value ||
@@ -156,25 +170,22 @@ const ManageDataMap = () => {
       }
 
       if (selectedGradationIndex !== null) {
-        // Filter by gradation legend selection
         const colorRange = config.mapConfig.colorRange;
         return d.color === colorRange[selectedGradationIndex];
       }
 
       return true;
     });
-  }, [dataset, selectedLegendOption, selectedGradationIndex]);
+  }, [activeStats, selectedLegendOption, selectedGradationIndex]);
 
   const handleMarkerLegendClick = (option) => {
     setSelectedLegendOption(option);
-    flashLoading();
-    setSelectedGradationIndex(null); // Reset gradation selection
+    setSelectedGradationIndex(null);
   };
 
   const handleGradationLegendClick = (index) => {
     setSelectedGradationIndex(index);
-    setSelectedLegendOption(null); // Reset marker selection
-    flashLoading();
+    setSelectedLegendOption(null);
   };
 
   const fetchStats = async (questionId, questionType, questionForm = null) => {
@@ -183,32 +194,32 @@ const ManageDataMap = () => {
     try {
       const mapFormID = questionForm || mapForm;
       const apiURL = `/visualization/formdata-stats/${mapFormID}?question_id=${questionId}`;
-      const { data: apiData } = await api.get(apiURL);
+      const { data: apiData } = await api.get(
+        apiURL,
+        {},
+        "manage-data-map:stats"
+      );
       if (reqId !== fetchStatsRequestIdRef.current) {
         return;
       }
       if (apiData?.data?.length === 0) {
-        // Hide all markers if no data is available
-        const _dataset = dataset.map((d) => ({
-          ...d,
-          hidden: true,
-        }));
         setLegendOptions([]);
         setLegendTitle(null);
-        setDataset(_dataset);
+        setStatsByQuestion((prev) => ({
+          ...prev,
+          [questionId]: {
+            hidden: Object.fromEntries(geoDataset.map((d) => [d.id, true])),
+            color: {},
+            value: {},
+            values: {},
+          },
+        }));
         flashLoading();
         return;
       }
       if (apiData?.options?.length === 0) {
-        /**
-         * Handle case where no options are available for the question
-         * This can happen for questions like number or text where options are not defined
-         * In this case, we will just set the dataset with the data from apiData
-         * and reset the legend options and title
-         */
         setLegendOptions([]);
 
-        // Create color scale based on API data values for numeric questions
         const numericValues =
           apiData?.data
             ?.map((item) => item.value)
@@ -235,34 +246,53 @@ const ManageDataMap = () => {
             .range(config.mapConfig.colorRange);
         }
 
-        const _dataset = dataset.map((d) => {
-          const item = apiData?.data?.find((a) => a.id === d.id);
-          return {
-            ...d,
-            ...item,
-            hidden: typeof item?.value === "undefined" || item?.value === null,
-            color: item?.value < 0 ? "#ffffff" : currentColorScale(item?.value),
-            values: null, // Reset values for numeric questions
-          };
+        const dataByID = Object.fromEntries(
+          (apiData?.data || []).map((item) => [item.id, item])
+        );
+        const hiddenMap = {};
+        const colorMap = {};
+        const valueMap = {};
+        geoDataset.forEach((d) => {
+          const item = dataByID[d.id];
+          hiddenMap[d.id] =
+            typeof item?.value === "undefined" || item?.value === null;
+          colorMap[d.id] =
+            item?.value < 0 ? "#ffffff" : currentColorScale(item?.value);
+          valueMap[d.id] = item?.value ?? null;
         });
-        setDataset(_dataset);
+        setStatsByQuestion((prev) => ({
+          ...prev,
+          [questionId]: {
+            hidden: hiddenMap,
+            color: colorMap,
+            value: valueMap,
+            values: {},
+          },
+        }));
         flashLoading();
       } else {
-        // Generate dynamic colors based on the number of options
         const dynamicColors = color.forMarker(apiData?.options?.length);
         const options = apiData?.options?.map((o, ox) => ({
           ...o,
           color: o?.color || dynamicColors[ox],
         }));
         setLegendOptions(options);
-        const _dataset = dataset.map((d) => {
-          if (questionType === QUESTION_TYPES.multiple_option) {
-            const groupedData = apiData?.data?.reduce((acc, item) => {
-              item?.id in acc
-                ? acc[item.id].push(item)
-                : (acc[item.id] = [item]);
-              return acc;
-            }, {});
+
+        const hiddenMap = {};
+        const colorMap = {};
+        const valueMap = {};
+        const valuesMap = {};
+
+        if (questionType === QUESTION_TYPES.multiple_option) {
+          const groupedData = apiData?.data?.reduce((acc, item) => {
+            if (item?.id in acc) {
+              acc[item.id].push(item);
+            } else {
+              acc[item.id] = [item];
+            }
+            return acc;
+          }, {});
+          geoDataset.forEach((d) => {
             const dataValues = groupedData?.[d?.id]
               ?.map((item) => {
                 const option = options?.find((o) => o?.id === item?.value);
@@ -274,28 +304,38 @@ const ManageDataMap = () => {
                 };
               })
               ?.filter((v) => !v.hidden);
-            return {
-              ...d,
-              values: dataValues,
-              hidden: dataValues?.length === 0,
-            };
-          }
-          const optionID = apiData?.data?.find(
-            (item) => item?.id === d?.id
-          )?.value;
-          const option = options?.find((o) => o?.id === optionID);
-          return {
-            ...d,
-            values: null, // Reset values for single option questions
-            color: option?.color,
-            value: option?.label,
-            hidden: typeof optionID === "undefined" || optionID === null,
-          };
-        });
-        setDataset(_dataset);
+            hiddenMap[d.id] = !dataValues?.length;
+            valuesMap[d.id] = dataValues || null;
+          });
+        } else {
+          const singleDataByID = Object.fromEntries(
+            (apiData?.data || []).map((item) => [item.id, item])
+          );
+          geoDataset.forEach((d) => {
+            const optionID = singleDataByID[d.id]?.value;
+            const option = options?.find((o) => o?.id === optionID);
+            hiddenMap[d.id] =
+              typeof optionID === "undefined" || optionID === null;
+            colorMap[d.id] = option?.color ?? null;
+            valueMap[d.id] = option?.label ?? null;
+          });
+        }
+
+        setStatsByQuestion((prev) => ({
+          ...prev,
+          [questionId]: {
+            hidden: hiddenMap,
+            color: colorMap,
+            value: valueMap,
+            values: valuesMap,
+          },
+        }));
         flashLoading();
       }
     } catch (error) {
+      if (api.isCancel(error)) {
+        return;
+      }
       if (reqId !== fetchStatsRequestIdRef.current) {
         return;
       }
@@ -303,44 +343,46 @@ const ManageDataMap = () => {
     }
   };
 
+  fetchStatsRef.current = fetchStats;
+
+  const debouncedFetchStats = useMemo(
+    () =>
+      debounce((questionId, questionType, questionFormID) => {
+        fetchStatsRef.current(questionId, questionType, questionFormID);
+      }, 150),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedFetchStats.cancel();
+    };
+  }, [debouncedFetchStats]);
+
   const onMapFormChange = (value) => {
+    fetchStatsRequestIdRef.current += 1;
     setMapForm(value);
     setActiveQuestion(null);
     setLegendOptions([]);
     setLegendTitle(null);
     setSelectedLegendOption(null);
     setSelectedGradationIndex(null);
-    const resetDataset = dataset.map((d) => ({
-      ...d,
-      color: null,
-      value: null,
-      values: null,
-    }));
-    setDataset(resetDataset);
+    setStatsByQuestion({});
     flashLoading();
   };
 
-  const onQuestionChange = async (value) => {
+  const onQuestionChange = (value) => {
     const q = mapQuestions
       ?.flatMap((m) => m?.options)
       ?.find((q) => q?.value === value);
     if (!q) {
-      // Reset if question not found
       setLegendOptions([]);
       setLegendTitle(null);
       setActiveQuestion(null);
       setIsNumeric(false);
       setSelectedLegendOption(null);
       setSelectedGradationIndex(null);
-      // set hidden false for all markers
-      const resetDataset = dataset.map((d) => ({
-        ...d,
-        hidden: false,
-        color: null,
-        value: null,
-        values: null,
-      }));
-      setDataset(resetDataset);
+      setStatsByQuestion({});
       return;
     }
     setLegendTitle(q?.label);
@@ -348,36 +390,31 @@ const ManageDataMap = () => {
     setIsNumeric(q?.type === QUESTION_TYPES.number);
     setSelectedLegendOption(null);
     setSelectedGradationIndex(null);
-    await fetchStats(value, q.type, q.formID);
+    debouncedFetchStats(value, q.type, q.formID);
   };
 
   const fetchData = useCallback(async () => {
     try {
       if (isLocationFetched) {
-        // If location data is already fetched, no need to refetch
         return;
       }
       const adm = takeRight(selectedAdm, 1)[0];
       const apiURL = adm?.id
         ? `/maps/geolocation/${selectedForm}?administration=${adm.id}`
         : `/maps/geolocation/${selectedForm}`;
-      const { data: apiData } = await api.get(apiURL);
+      const { data: apiData } = await api.get(
+        apiURL,
+        {},
+        "manage-data-map:geo"
+      );
       const isFormSwitch = prevForm !== selectedForm;
       if (isFormSwitch) {
         setPrevForm(selectedForm);
+        setStatsByQuestion({});
       }
-      setDataset((prev) => {
-        if (prev?.length > 0 && isFormSwitch) {
-          return prev.map((d) => {
-            const item = apiData?.find((a) => a.id === d.id);
-            if (item) {
-              return { ...d, hidden: false };
-            }
-            return { ...d, hidden: true };
-          });
-        }
-        return apiData?.map((d) => ({ ...d, hidden: false }));
-      });
+      setGeoDataset(
+        apiData?.map((d) => ({ id: d.id, name: d.name, geo: d.geo }))
+      );
       setIsLocationFetched(true);
       const selected = [{ prop: adm?.level_name, value: adm?.name }];
       const pos = getBounds(selected);
@@ -385,8 +422,11 @@ const ManageDataMap = () => {
       setMapForm(mapForms?.[0]?.id);
       flashLoading();
     } catch (error) {
+      if (api.isCancel(error)) {
+        return;
+      }
       setIsLocationFetched(true);
-      setDataset([]);
+      setGeoDataset([]);
       setLoading(false);
     }
   }, [
@@ -406,10 +446,12 @@ const ManageDataMap = () => {
   useEffect(() => {
     const unsubscribe = store.subscribe(
       ({ selectedForm, administration }) => ({ selectedForm, administration }),
-      ({ selectedForm, administration }) => {
-        const isFormChanged = selectedForm && selectedForm !== prevForm;
-        if ((isFormChanged || administration) && isLocationFetched) {
-          // If form or administration changes, reset state and fetch new data
+      ({ selectedForm: sf, administration }) => {
+        const { prevForm: pf, isLocationFetched: ilf } =
+          subscribeStateRef.current;
+        const isFormChanged = sf && sf !== pf;
+        if ((isFormChanged || administration) && ilf) {
+          fetchStatsRequestIdRef.current += 1;
           if (isFormChanged) {
             setIsNumeric(false);
             setActiveQuestion(null);
@@ -422,8 +464,9 @@ const ManageDataMap = () => {
         }
       }
     );
-    return () => unsubscribe();
-  }, [prevForm, selectedForm, isLocationFetched]);
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="manage-data-map">
