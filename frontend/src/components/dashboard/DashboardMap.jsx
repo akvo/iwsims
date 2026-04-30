@@ -164,9 +164,9 @@ const DashboardMap = ({
             marginBottom: 8,
           }}
         >
-          {legendEntries.map(({ color, label }) => (
+          {legendEntries.map(({ color, label }, index) => (
             <span
-              key={label}
+              key={index}
               style={{ display: "flex", alignItems: "center", gap: 4 }}
             >
               <span
