@@ -87,11 +87,14 @@ const MetricCard = ({
 
   let displayValue = "—";
   if (target) {
-    const numerator = rows.find((r) => r.group === target)?.value ?? 0;
-    const denominator = rows.reduce((acc, r) => acc + (r.value || 0), 0);
-    displayValue = showPercentage
-      ? formatRatioPercentage(numerator, denominator)
-      : formatShare(numerator, denominator);
+    const targetRow = rows.find((r) => r.group === target);
+    if (targetRow) {
+      const numerator = targetRow.value ?? 0;
+      const denominator = rows.reduce((acc, r) => acc + (r.value || 0), 0);
+      displayValue = showPercentage
+        ? formatRatioPercentage(numerator, denominator)
+        : formatShare(numerator, denominator);
+    }
   } else {
     const v = rows[0]?.value;
     if (v !== null && typeof v !== "undefined") {
