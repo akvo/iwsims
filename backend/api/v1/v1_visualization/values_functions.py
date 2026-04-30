@@ -26,17 +26,8 @@ def _should_fill_gaps(params):
     )
 
 
-def _count_no_info_parents(form, params, qualifying_ids):
-    """Count datapoints in scope with no qualifying answer.
-
-    For monitoring forms: counts parent registrations without any
-    qualifying monitoring submission (gap in monitoring coverage).
-    For registration forms: counts registrations that exist but have no
-    answer for the question (field left blank / skipped).
-
-    Respects administration_id and parent_criteria so the count
-    reconciles with option counts under filtering (FR-3).
-    """
+def _total_parents_in_scope(form, params):
+    """Count all parent registrations in scope, respecting filters."""
     scope_form = form.parent if form.parent else form
     qs = FormData.objects.filter(
         form=scope_form,
@@ -50,7 +41,21 @@ def _count_no_info_parents(form, params, qualifying_ids):
     qs = apply_parent_criteria_to_qs(
         qs, True, params.get("parent_criteria"),
     )
-    total = qs.count()
+    return qs.count()
+
+
+def _count_no_info_parents(form, params, qualifying_ids):
+    """Count datapoints in scope with no qualifying answer.
+
+    For monitoring forms: counts parent registrations without any
+    qualifying monitoring submission (gap in monitoring coverage).
+    For registration forms: counts registrations that exist but have no
+    answer for the question (field left blank / skipped).
+
+    Respects administration_id and parent_criteria so the count
+    reconciles with option counts under filtering (FR-3).
+    """
+    total = _total_parents_in_scope(form, params)
     return max(0, total - len(qualifying_ids))
 
 
@@ -345,7 +350,12 @@ def handle_option_question(form, question, params):
     if option_value:
         return _option_value_filter(
             question, data_ids, qs, is_latest,
-            option_value, sum_by, value_type
+            option_value, sum_by, value_type,
+            include_unanswered=params.get(
+                "include_unanswered", False
+            ),
+            form=form,
+            params=params,
         )
 
     if stack_by == "option" and group_by:
@@ -373,7 +383,8 @@ def handle_option_question(form, question, params):
 
 def _option_value_filter(
     question, data_ids, qs, is_latest,
-    option_value, sum_by, value_type
+    option_value, sum_by, value_type,
+    include_unanswered=False, form=None, params=None,
 ):
     """Filter by specific option value and count."""
     count = Answers.objects.filter(
@@ -389,7 +400,10 @@ def _option_value_filter(
         count = count.count()
 
     if value_type == "percentage":
-        total = qs.count() if is_latest else len(data_ids)
+        if include_unanswered and form is not None:
+            total = _total_parents_in_scope(form, params or {})
+        else:
+            total = qs.count() if is_latest else len(data_ids)
         value = round(
             (count / total * 100), 2
         ) if total > 0 else 0

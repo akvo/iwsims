@@ -294,6 +294,31 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(len(data["data"]), 1)
         self.assertEqual(data["data"][0]["value"], 50.0)
 
+    def test_option_value_percentage_include_unanswered_uses_total_parents(
+        self,
+    ):
+        """include_unanswered widens the denominator to total registrations.
+
+        Without the flag: 1 match / 2 monitored parents = 50%.
+        With 3 extra unmonitored and include_unanswered=true: 1/5 = 20%.
+        """
+        for i in range(3):
+            self._create_registration(
+                name=f"Unmonitored {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&sum_by=parent_id"
+            "&monitoring=latest&value_type=percentage"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 20.0)
+
     # -- include_unanswered tests --
 
     def test_include_unanswered_appends_no_info_row(self):
