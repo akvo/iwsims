@@ -8,6 +8,7 @@ from api.v1.v1_forms.models import Forms
 from api.v1.v1_profile.models import Levels
 from api.v1.v1_profile.constants import FeatureTypes, FeatureAccessTypes
 from api.v1.v1_forms.serializers import FormDataSerializer
+from api.v1.v1_visualization.functions import refresh_materialized_data
 
 
 class Command(BaseCommand):
@@ -82,3 +83,4 @@ class Command(BaseCommand):
         del levels
         del forms
         del min_config
+        refresh_materialized_data()
