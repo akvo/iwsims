@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { unstable_batchedUpdates } from "react-dom";
 import { Select, Space } from "antd";
 import { takeRight, debounce } from "lodash";
 import { scaleQuantize } from "d3-scale";
@@ -203,23 +204,23 @@ const ManageDataMap = () => {
         return;
       }
       if (apiData?.data?.length === 0) {
-        setLegendOptions([]);
-        setLegendTitle(null);
-        setStatsByQuestion((prev) => ({
-          ...prev,
-          [questionId]: {
-            hidden: Object.fromEntries(geoDataset.map((d) => [d.id, true])),
-            color: {},
-            value: {},
-            values: {},
-          },
-        }));
-        flashLoading();
+        unstable_batchedUpdates(() => {
+          setLegendOptions([]);
+          setLegendTitle(null);
+          setStatsByQuestion((prev) => ({
+            ...prev,
+            [questionId]: {
+              hidden: Object.fromEntries(geoDataset.map((d) => [d.id, true])),
+              color: {},
+              value: {},
+              values: {},
+            },
+          }));
+          flashLoading();
+        });
         return;
       }
       if (apiData?.options?.length === 0) {
-        setLegendOptions([]);
-
         const numericValues =
           apiData?.data
             ?.map((item) => item.value)
@@ -260,24 +261,25 @@ const ManageDataMap = () => {
             item?.value < 0 ? "#ffffff" : currentColorScale(item?.value);
           valueMap[d.id] = item?.value ?? null;
         });
-        setStatsByQuestion((prev) => ({
-          ...prev,
-          [questionId]: {
-            hidden: hiddenMap,
-            color: colorMap,
-            value: valueMap,
-            values: {},
-          },
-        }));
-        flashLoading();
+        unstable_batchedUpdates(() => {
+          setLegendOptions([]);
+          setStatsByQuestion((prev) => ({
+            ...prev,
+            [questionId]: {
+              hidden: hiddenMap,
+              color: colorMap,
+              value: valueMap,
+              values: {},
+            },
+          }));
+          flashLoading();
+        });
       } else {
         const dynamicColors = color.forMarker(apiData?.options?.length);
         const options = apiData?.options?.map((o, ox) => ({
           ...o,
           color: o?.color || dynamicColors[ox],
         }));
-        setLegendOptions(options);
-
         const hiddenMap = {};
         const colorMap = {};
         const valueMap = {};
@@ -321,16 +323,19 @@ const ManageDataMap = () => {
           });
         }
 
-        setStatsByQuestion((prev) => ({
-          ...prev,
-          [questionId]: {
-            hidden: hiddenMap,
-            color: colorMap,
-            value: valueMap,
-            values: valuesMap,
-          },
-        }));
-        flashLoading();
+        unstable_batchedUpdates(() => {
+          setLegendOptions(options);
+          setStatsByQuestion((prev) => ({
+            ...prev,
+            [questionId]: {
+              hidden: hiddenMap,
+              color: colorMap,
+              value: valueMap,
+              values: valuesMap,
+            },
+          }));
+          flashLoading();
+        });
       }
     } catch (error) {
       if (api.isCancel(error)) {
@@ -409,19 +414,21 @@ const ManageDataMap = () => {
         "manage-data-map:geo"
       );
       const isFormSwitch = prevForm !== selectedForm;
-      if (isFormSwitch) {
-        setPrevForm(selectedForm);
-        setStatsByQuestion({});
-      }
-      setGeoDataset(
-        apiData?.map((d) => ({ id: d.id, name: d.name, geo: d.geo }))
-      );
-      setIsLocationFetched(true);
       const selected = [{ prop: adm?.level_name, value: adm?.name }];
       const pos = getBounds(selected);
-      setPosition(pos);
-      setMapForm(mapForms?.[0]?.id);
-      flashLoading();
+      unstable_batchedUpdates(() => {
+        if (isFormSwitch) {
+          setPrevForm(selectedForm);
+          setStatsByQuestion({});
+        }
+        setGeoDataset(
+          apiData?.map((d) => ({ id: d.id, name: d.name, geo: d.geo }))
+        );
+        setIsLocationFetched(true);
+        setPosition(pos);
+        setMapForm(mapForms?.[0]?.id);
+        flashLoading();
+      });
     } catch (error) {
       if (api.isCancel(error)) {
         return;
@@ -453,15 +460,17 @@ const ManageDataMap = () => {
         const isFormChanged = sf && sf !== pf;
         if ((isFormChanged || administration) && ilf) {
           fetchStatsRequestIdRef.current += 1;
-          if (isFormChanged) {
-            setIsNumeric(false);
-            setActiveQuestion(null);
-            setLegendOptions([]);
-            setLegendTitle(null);
-            setSelectedLegendOption(null);
-            setSelectedGradationIndex(null);
-          }
-          setIsLocationFetched(false);
+          unstable_batchedUpdates(() => {
+            if (isFormChanged) {
+              setIsNumeric(false);
+              setActiveQuestion(null);
+              setLegendOptions([]);
+              setLegendTitle(null);
+              setSelectedLegendOption(null);
+              setSelectedGradationIndex(null);
+            }
+            setIsLocationFetched(false);
+          });
         }
       }
     );
@@ -505,7 +514,6 @@ const ManageDataMap = () => {
         loading={loading}
         position={position}
       />
-      {/* )} */}
       {legendOptions.length > 0 && (
         <MarkerLegend
           title={legendTitle}

@@ -43,14 +43,13 @@ const DataFilters = ({
   search = "",
   onSearchChange = () => {},
 }) => {
-  const {
-    user: authUser,
-    selectedForm,
-    loadingForm,
-    administration,
-    showAdvancedFilters,
-    dateRange,
-  } = store.useState((s) => s);
+  const authUser = store.useState((s) => s.user);
+  const selectedForm = store.useState((s) => s.selectedForm);
+  const loadingForm = store.useState((s) => s.loadingForm);
+  const administration = store.useState((s) => s.administration);
+  const showAdvancedFilters = store.useState((s) => s.showAdvancedFilters);
+  const dateRange = store.useState((s) => s.dateRange);
+  const activeLang = store.useState((s) => s.language?.active);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { notify } = useNotification();
@@ -62,8 +61,6 @@ const DataFilters = ({
   const [openExcel, setOpenExcel] = useState(false);
   const [downloadType, setDownloadType] = useState("recent");
   const isUserHasForms = authUser?.is_superuser || authUser?.forms?.length || 0;
-  const language = store.useState((s) => s.language);
-  const { active: activeLang } = language;
 
   const text = useMemo(() => {
     return uiText[activeLang];
