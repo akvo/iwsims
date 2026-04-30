@@ -256,7 +256,8 @@
       "api": {
         "form_id": 1749631041125,
         "question_id": 1749631041155,
-        "group_by": "option"
+        "group_by": "option",
+        "include_unanswered": true
       },
       "show_percentage": true,
       "target_group": "operational"
@@ -294,7 +295,8 @@
       "api": {
         "form_id": 1749621221728,
         "question_id": 1749622715678,
-        "group_by": "option"
+        "group_by": "option",
+        "include_unanswered": true
       },
       "show_percentage": true,
       "target_group": "yes"
@@ -332,12 +334,6 @@
       "col_span": 24,
       "height": 400,
       "source_form_id": 1749621221728,
-      "status_question_id": 1749631041155,
-      "status_monitoring_form_id": 1749631041125,
-      "status_colors": {
-        "operational": "#64A73B",
-        "non_operational": "#e41a1c"
-      },
       "click_action": "navigate",
       "click_url_template": "/control-center/data/{parent_form_id}/monitoring/{data_id}"
     },

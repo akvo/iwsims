@@ -196,12 +196,6 @@
       "col_span": 24,
       "height": 400,
       "source_form_id": 1749623934933,
-      "status_question_id": 1749633373968,
-      "status_monitoring_form_id": 1749632545233,
-      "status_colors": {
-        "operational": "#64A73B",
-        "issue_with_system": "#e41a1c"
-      },
       "click_action": "navigate",
       "click_url_template": "/control-center/data/{parent_form_id}/monitoring/{data_id}"
     },
