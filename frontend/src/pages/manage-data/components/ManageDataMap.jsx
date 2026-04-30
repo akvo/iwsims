@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Select, Space } from "antd";
 import { takeRight } from "lodash";
 import { scaleQuantize } from "d3-scale";
@@ -20,6 +26,26 @@ const ManageDataMap = () => {
   const [selectedLegendOption, setSelectedLegendOption] = useState(null);
   const [selectedGradationIndex, setSelectedGradationIndex] = useState(null);
   const [isLocationFetched, setIsLocationFetched] = useState(false);
+  const fetchStatsRequestIdRef = useRef(0);
+  const loadingTimerRef = useRef(null);
+
+  const flashLoading = useCallback(() => {
+    setLoading(true);
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+    }
+    loadingTimerRef.current = setTimeout(() => {
+      setLoading(false);
+    }, 100);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, []);
 
   const selectedAdm = store.useState((s) => s.administration);
   const { active: activeLang } = store.useState((s) => s.language);
@@ -141,27 +167,26 @@ const ManageDataMap = () => {
 
   const handleMarkerLegendClick = (option) => {
     setSelectedLegendOption(option);
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 100);
+    flashLoading();
     setSelectedGradationIndex(null); // Reset gradation selection
   };
 
   const handleGradationLegendClick = (index) => {
     setSelectedGradationIndex(index);
     setSelectedLegendOption(null); // Reset marker selection
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 100);
+    flashLoading();
   };
 
   const fetchStats = async (questionId, questionType, questionForm = null) => {
+    const reqId = fetchStatsRequestIdRef.current + 1;
+    fetchStatsRequestIdRef.current = reqId;
     try {
       const mapFormID = questionForm || mapForm;
       const apiURL = `/visualization/formdata-stats/${mapFormID}?question_id=${questionId}`;
       const { data: apiData } = await api.get(apiURL);
+      if (reqId !== fetchStatsRequestIdRef.current) {
+        return;
+      }
       if (apiData?.data?.length === 0) {
         // Hide all markers if no data is available
         const _dataset = dataset.map((d) => ({
@@ -171,10 +196,7 @@ const ManageDataMap = () => {
         setLegendOptions([]);
         setLegendTitle(null);
         setDataset(_dataset);
-        setLoading(true);
-        setTimeout(() => {
-          setLoading(false);
-        }, 100);
+        flashLoading();
         return;
       }
       if (apiData?.options?.length === 0) {
@@ -224,10 +246,7 @@ const ManageDataMap = () => {
           };
         });
         setDataset(_dataset);
-        setLoading(true);
-        setTimeout(() => {
-          setLoading(false);
-        }, 100);
+        flashLoading();
       } else {
         // Generate dynamic colors based on the number of options
         const dynamicColors = color.forMarker(apiData?.options?.length);
@@ -274,12 +293,12 @@ const ManageDataMap = () => {
           };
         });
         setDataset(_dataset);
-        setLoading(true);
-        setTimeout(() => {
-          setLoading(false);
-        }, 100);
+        flashLoading();
       }
     } catch (error) {
+      if (reqId !== fetchStatsRequestIdRef.current) {
+        return;
+      }
       console.error("Error fetching geolocation stats:", error);
     }
   };
@@ -298,10 +317,7 @@ const ManageDataMap = () => {
       values: null,
     }));
     setDataset(resetDataset);
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 100);
+    flashLoading();
   };
 
   const onQuestionChange = async (value) => {
@@ -346,39 +362,28 @@ const ManageDataMap = () => {
         ? `/maps/geolocation/${selectedForm}?administration=${adm.id}`
         : `/maps/geolocation/${selectedForm}`;
       const { data: apiData } = await api.get(apiURL);
-      if (dataset?.length > 0 && prevForm !== selectedForm) {
+      const isFormSwitch = prevForm !== selectedForm;
+      if (isFormSwitch) {
         setPrevForm(selectedForm);
-        const _dataset = dataset.map((d) => {
-          const item = apiData?.find((a) => a.id === d.id);
-          if (item) {
-            return {
-              ...d,
-              hidden: false,
-            };
-          }
-          return {
-            ...d,
-            hidden: true,
-          };
-        });
-        setDataset(_dataset);
-        setLoading(true);
-      } else {
-        const newDataset = apiData?.map((d) => ({
-          ...d,
-          hidden: false,
-        }));
-        setDataset(newDataset);
-        setLoading(true);
       }
+      setDataset((prev) => {
+        if (prev?.length > 0 && isFormSwitch) {
+          return prev.map((d) => {
+            const item = apiData?.find((a) => a.id === d.id);
+            if (item) {
+              return { ...d, hidden: false };
+            }
+            return { ...d, hidden: true };
+          });
+        }
+        return apiData?.map((d) => ({ ...d, hidden: false }));
+      });
       setIsLocationFetched(true);
       const selected = [{ prop: adm?.level_name, value: adm?.name }];
       const pos = getBounds(selected);
       setPosition(pos);
       setMapForm(mapForms?.[0]?.id);
-      setTimeout(() => {
-        setLoading(false);
-      }, 100);
+      flashLoading();
     } catch (error) {
       setIsLocationFetched(true);
       setDataset([]);
@@ -388,9 +393,9 @@ const ManageDataMap = () => {
     selectedAdm,
     prevForm,
     selectedForm,
-    dataset,
     mapForms,
     isLocationFetched,
+    flashLoading,
   ]);
 
   useEffect(() => {
