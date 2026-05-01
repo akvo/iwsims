@@ -37,7 +37,7 @@ const AboutHome = () => {
           {/* Update button */}
           <Button
             title={trans.updateApp}
-            onPress={checkVersion}
+            onPress={() => checkVersion()}
             icon={<Icon name="system-update" type="materialicon" color="#fff" />}
             buttonStyle={styles.updateButton}
             titleStyle={styles.updateButtonText}
