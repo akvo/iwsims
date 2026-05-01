@@ -1,56 +1,18 @@
-import React, { useState, useCallback } from 'react';
-import { View, Linking, Alert, StyleSheet, Text } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, Text } from 'react-native';
 import { Icon, Dialog, Button } from '@rneui/themed';
-import * as Sentry from '@sentry/react-native';
 import { BaseLayout } from '../../components';
 import { BuildParamsState, UIState } from '../../store';
-import { i18n, api } from '../../lib';
+import { i18n } from '../../lib';
+import useVersionCheck from '../../hooks/use-version-check';
 
 const AboutHome = () => {
-  const { appVersion, apkURL, apkName } = BuildParamsState.useState((s) => s);
+  const { appVersion, apkName } = BuildParamsState.useState((s) => s);
   const isOnline = UIState.useState((s) => s.online);
   const { lang } = UIState.useState((s) => s);
   const trans = i18n.text(lang);
-  const [visible, setVisible] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState({ status: null, text: '' });
-
-  const handleCheckAppVersion = () => {
-    setChecking(true);
-    setVisible(true);
-    api
-      .get(`/apk/version/${appVersion}`)
-      .then((res) => {
-        // update
-        setUpdateInfo({
-          status: 200,
-          text: `${trans.newVersionAvailable} (v ${res.data.version})`,
-        });
-      })
-      .catch((e) => {
-        // no update
-        setUpdateInfo({ status: e?.response?.status || 500, text: trans.noUpdateFound });
-        if (e?.response?.status !== 404) {
-          Sentry.captureMessage('[About] Unable to fetch app version');
-          Sentry.captureException(e);
-        }
-      })
-      .finally(() => {
-        setChecking(false);
-      });
-  };
-
-  const handleUpdateButton = useCallback(async () => {
-    // if the link is supported for links with custom URL scheme.
-    const supported = await Linking.canOpenURL(apkURL);
-    if (supported) {
-      // Opening the link with some app, if the URL scheme is "http" the web link should be opened
-      // by some browser in the mobile
-      await Linking.openURL(apkURL);
-    } else {
-      Alert.alert(`Don't know how to open this URL: ${apkURL}`);
-    }
-  }, [apkURL]);
+  const { visible, setVisible, checking, updateInfo, checkVersion, handleUpdate } =
+    useVersionCheck();
 
   return (
     <BaseLayout title={trans.about} rightComponent={false}>
@@ -75,7 +37,7 @@ const AboutHome = () => {
           {/* Update button */}
           <Button
             title={trans.updateApp}
-            onPress={handleCheckAppVersion}
+            onPress={checkVersion}
             icon={<Icon name="system-update" type="materialicon" color="#fff" />}
             buttonStyle={styles.updateButton}
             titleStyle={styles.updateButtonText}
@@ -95,7 +57,7 @@ const AboutHome = () => {
                 <Text>{updateInfo.text}</Text>
                 <Dialog.Actions>
                   {updateInfo.status === 200 ? (
-                    <Dialog.Button onPress={handleUpdateButton}>{trans.buttonUpdate}</Dialog.Button>
+                    <Dialog.Button onPress={handleUpdate}>{trans.buttonUpdate}</Dialog.Button>
                   ) : (
                     ''
                   )}
