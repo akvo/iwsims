@@ -31,12 +31,13 @@ const SyncService = () => {
   const userId = UserState.useState((s) => s.id);
   const db = useSQLiteContext();
   const syncLockRef = useRef(false);
+  const onSyncLockRef = useRef(false);
 
   const onSync = useCallback(async () => {
-    if (syncLockRef.current) {
+    if (onSyncLockRef.current) {
       return;
     }
-    syncLockRef.current = true;
+    onSyncLockRef.current = true;
     try {
       let activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
       const pendingToSync = await crudDataPoints.selectSubmissionToSync(db, 1);
@@ -110,7 +111,7 @@ const SyncService = () => {
         await backgroundTask.syncFormSubmission(db, activeJob);
       }
     } finally {
-      syncLockRef.current = false;
+      onSyncLockRef.current = false;
     }
   }, [db, userId]);
 
