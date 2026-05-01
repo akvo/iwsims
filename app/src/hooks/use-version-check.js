@@ -50,6 +50,11 @@ const useVersionCheck = ({ autoCheck = false } = {}) => {
   );
 
   const handleUpdate = useCallback(async () => {
+    if (!apkURL) {
+      Sentry.captureMessage('[VersionCheck] apkURL is missing — cannot open update');
+      Alert.alert('Update URL is not configured. Please contact support.');
+      return;
+    }
     const supported = await Linking.canOpenURL(apkURL);
     if (supported) {
       await Linking.openURL(apkURL);
@@ -59,8 +64,13 @@ const useVersionCheck = ({ autoCheck = false } = {}) => {
   }, [apkURL]);
 
   useEffect(() => {
-    if (autoCheck && isOnline && !hasChecked.current) {
-      hasChecked.current = true;
+    if (!autoCheck || hasChecked.current) {
+      return;
+    }
+    // One-shot per mount: lock the gate even when offline so a late
+    // online-flip cannot trigger a delayed force-update dialog mid-session.
+    hasChecked.current = true;
+    if (isOnline) {
       checkVersion(true);
     }
   }, [autoCheck, isOnline, checkVersion]);

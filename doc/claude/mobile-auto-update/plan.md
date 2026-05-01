@@ -61,10 +61,10 @@ sequenceDiagram
     participant Dialog
 
     App->>Hook: mount (autoCheck=true)
-    alt isOnline = false
-        Hook-->>App: skip (no-op)
-    else isOnline = true and not yet checked
-        Hook->>Hook: hasChecked.current = true
+    Hook->>Hook: hasChecked.current = true (lock once per mount)
+    alt isOnline = false at mount
+        Hook-->>App: skip (no API call, never retries this session)
+    else isOnline = true at mount
         Hook->>API: GET /apk/version/{appVersion}
         alt 200 — update available
             API-->>Hook: { version: "X.X.X" }
@@ -127,13 +127,15 @@ const {
 
 ## One-run guard
 
-`hasChecked` is a `useRef(false)` inside the hook. The `autoCheck` effect gate:
+`hasChecked` is a `useRef(false)` inside the hook. The `autoCheck` effect gate (one-shot per mount):
 
 ```
-autoCheck && isOnline && !hasChecked.current  →  check once, set hasChecked.current = true
+if (!autoCheck || hasChecked.current) return;
+hasChecked.current = true;          // lock unconditionally
+if (isOnline) checkVersion(true);   // only fire when online
 ```
 
-Prevents re-checking when `isOnline` flips or language changes (which recreate `checkVersion` via `useCallback`).
+The lock flips to `true` on the first effect run **regardless of `isOnline`**. This ensures that if the device is offline at mount, the check is skipped entirely and a later online-flip mid-session cannot trigger a delayed force-update dialog. A fresh mount (e.g., navigating away and back to Home) resets the ref and a new check fires.
 
 ---
 
@@ -152,7 +154,7 @@ Prevents re-checking when `isOnline` flips or language changes (which recreate `
 Key props:
 - `onBackdropPress={() => {}}` — tapping outside does nothing
 - No Cancel / close button
-- Android back button is NOT intercepted (acceptable — pressing back exits the app, which is fine)
+- Android hardware back is intercepted while the dialog is visible via `BackHandler`, so pressing back does not dismiss or bypass the force-update prompt.
 
 ---
 
