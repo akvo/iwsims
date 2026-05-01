@@ -173,6 +173,11 @@ const TypeCascade = ({
 
     // Group by parent and handle national group special case
     const groupedDs = groupBy(filterDs, 'parent');
+    const groupValues = Object.values(groupedDs);
+    if (!groupValues.length) {
+      return [];
+    }
+
     const hasMultipleGroups = parentIDs.length > 1 && Object.keys(groupedDs).length > 1;
 
     if (hasMultipleGroups) {
@@ -188,22 +193,17 @@ const TypeCascade = ({
           },
         ];
       }
-
-      // For multiple groups without national group, take the first available group
-      const firstGroupOptions = Object.values(groupedDs)[0];
-      return [
-        {
-          options: firstGroupOptions,
-          value: resolveValue(firstGroupOptions, value?.[0]),
-        },
-      ];
     }
 
-    // Map all grouped data to dropdown items (single group case)
-    return Object.values(groupedDs).map((options, ox) => ({
-      options,
-      value: resolveValue(options, value?.[ox]),
-    }));
+    // Always render a single dropdown on first load; handleOnChange pushes
+    // the next level when the user selects a value.
+    const firstGroupOptions = groupValues[0];
+    return [
+      {
+        options: firstGroupOptions,
+        value: resolveValue(firstGroupOptions, value?.[0]),
+      },
+    ];
   }, [dataSource, cascadeParent, cascadeType, parentId, prevAdmAnswer, value]);
 
   const loadCascadeData = useCallback(async () => {

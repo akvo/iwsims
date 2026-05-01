@@ -31,70 +31,89 @@ const SyncService = () => {
   const userId = UserState.useState((s) => s.id);
   const db = useSQLiteContext();
   const syncLockRef = useRef(false);
+  const onSyncLockRef = useRef(false);
 
   const onSync = useCallback(async () => {
-    const activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
-    if (!activeJob) {
+    if (onSyncLockRef.current) {
       return;
     }
-
-    const pendingToSync = await crudDataPoints.selectSubmissionToSync(db, 1);
-
-    // No pending data → clean up the job
-    if (!pendingToSync?.length) {
-      await crudJobs.deleteJob(db, activeJob.id);
-      return;
-    }
-
-    // Check network constraints
-    const settings = await crudConfig.getConfig(db);
-    const { type: networkType } = await Network.getNetworkStateAsync();
-    if (settings?.syncWifiOnly && networkType !== Network.NetworkStateType.WIFI) {
-      return;
-    }
-
-    // Stale job detection: if ON_PROGRESS, it may be stuck (app crashed)
-    if (activeJob.status === jobStatus.ON_PROGRESS) {
-      if (activeJob.attempt >= MAX_ATTEMPT) {
-        await crudJobs.deleteJob(db, activeJob.id);
-        UIState.update((s) => {
-          s.statusBar = {
-            type: SYNC_STATUS.failed,
-            bgColor: '#ec003f',
-            icon: 'alert',
-          };
-        });
-      } else {
-        await crudJobs.updateJob(db, activeJob.id, {
+    onSyncLockRef.current = true;
+    try {
+      let activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
+      const pendingToSync = await crudDataPoints.selectSubmissionToSync(db, 1);
+      // if pendingToSync exists but activeJob is null then create new one
+      if (!activeJob && pendingToSync?.length) {
+        await crudJobs.addJob(db, {
+          user: userId,
+          type: SYNC_FORM_SUBMISSION_TASK_NAME,
           status: jobStatus.PENDING,
-          attempt: activeJob.attempt + 1,
         });
+
+        activeJob = await crudJobs.getActiveJob(db, SYNC_FORM_SUBMISSION_TASK_NAME);
+      }
+
+      // No pending data → clean up the job
+      if (!pendingToSync?.length && activeJob) {
+        await crudJobs.deleteJob(db, activeJob.id);
+        return;
+      }
+
+      if (!activeJob) {
+        return;
+      }
+
+      // Check network constraints
+      const settings = await crudConfig.getConfig(db);
+      const { type: networkType } = await Network.getNetworkStateAsync();
+      if (settings?.syncWifiOnly && networkType !== Network.NetworkStateType.WIFI) {
+        return;
+      }
+
+      // Stale job detection: if ON_PROGRESS, it may be stuck (app crashed)
+      if (activeJob.status === jobStatus.ON_PROGRESS) {
+        if (activeJob.attempt >= MAX_ATTEMPT) {
+          await crudJobs.deleteJob(db, activeJob.id);
+          UIState.update((s) => {
+            s.statusBar = {
+              type: SYNC_STATUS.failed,
+              bgColor: '#ec003f',
+              icon: 'alert',
+            };
+          });
+        } else {
+          await crudJobs.updateJob(db, activeJob.id, {
+            status: jobStatus.PENDING,
+            attempt: activeJob.attempt + 1,
+          });
+          UIState.update((s) => {
+            s.statusBar = {
+              type: SYNC_STATUS.re_sync,
+              bgColor: '#d97706',
+              icon: 'repeat',
+            };
+          });
+        }
+        return;
+      }
+
+      // PENDING → execute sync
+      if (activeJob.status === jobStatus.PENDING && activeJob.attempt < MAX_ATTEMPT) {
         UIState.update((s) => {
           s.statusBar = {
-            type: SYNC_STATUS.re_sync,
-            bgColor: '#d97706',
-            icon: 'repeat',
+            type: SYNC_STATUS.on_progress,
+            bgColor: '#2563eb',
+            icon: 'sync',
           };
         });
+        await crudJobs.updateJob(db, activeJob.id, {
+          status: jobStatus.ON_PROGRESS,
+        });
+        await backgroundTask.syncFormSubmission(db, activeJob);
       }
-      return;
+    } finally {
+      onSyncLockRef.current = false;
     }
-
-    // PENDING → execute sync
-    if (activeJob.status === jobStatus.PENDING && activeJob.attempt < MAX_ATTEMPT) {
-      UIState.update((s) => {
-        s.statusBar = {
-          type: SYNC_STATUS.on_progress,
-          bgColor: '#2563eb',
-          icon: 'sync',
-        };
-      });
-      await crudJobs.updateJob(db, activeJob.id, {
-        status: jobStatus.ON_PROGRESS,
-      });
-      await backgroundTask.syncFormSubmission(db, activeJob);
-    }
-  }, [db]);
+  }, [db, userId]);
 
   useEffect(() => {
     if (!syncInSecond || !isOnline) {

@@ -6,6 +6,7 @@ import {
   LeftCircleOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
+import debounce from "lodash/debounce";
 import { Breadcrumbs, DescriptionPanel } from "../../components";
 import { api, store, uiText } from "../../lib";
 import DetailAssignment from "./DetailAssignment";
@@ -15,6 +16,7 @@ const { Search } = Input;
 
 const MobileAssignment = () => {
   const [loading, setLoading] = useState(true);
+  const [inputValue, setInputValue] = useState("");
   const [search, setSearch] = useState(null);
   const [dataset, setDataset] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -126,11 +128,28 @@ const MobileAssignment = () => {
     setCurrentPage(e.current);
   };
 
+  const debouncedSetSearch = useMemo(
+    () =>
+      debounce((value) => {
+        setSearch(value || null);
+        setCurrentPage(1);
+      }, 500),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedSetSearch.cancel();
+    };
+  }, [debouncedSetSearch]);
+
   const fetchData = useCallback(async () => {
     try {
-      const { data: apiData } = await api.get(
-        `/mobile-assignments?page=${currentPage}`
-      );
+      let url = `/mobile-assignments?page=${currentPage}`;
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+      const { data: apiData } = await api.get(url);
       const { total, current, data: _assignments } = apiData || {};
       setDataset(_assignments);
       setTotalCount(total);
@@ -139,7 +158,7 @@ const MobileAssignment = () => {
     } catch {
       setLoading(false);
     }
-  }, [currentPage]);
+  }, [currentPage, search]);
 
   useEffect(() => {
     fetchData();
@@ -168,10 +187,18 @@ const MobileAssignment = () => {
                 <Search
                   placeholder="Search..."
                   onChange={(e) => {
-                    setSearch(e.target.value);
+                    const { value } = e.target;
+                    setInputValue(value);
+                    if (!value) {
+                      debouncedSetSearch.cancel();
+                      setSearch(null);
+                      setCurrentPage(1);
+                    } else {
+                      debouncedSetSearch(value);
+                    }
                   }}
                   style={{ width: 425 }}
-                  value={search}
+                  value={inputValue}
                   allowClear
                 />
               </Space>

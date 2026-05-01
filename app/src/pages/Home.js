@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Platform, ToastAndroid, TouchableOpacity } from 'react-native';
+import { BackHandler, Platform, Text, ToastAndroid, TouchableOpacity } from 'react-native';
+import { Dialog } from '@rneui/themed';
 import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
 import * as Network from 'expo-network';
@@ -18,6 +19,7 @@ import {
 } from '../store';
 import { crudForms, crudUsers } from '../database/crud';
 import { api, cascades, i18n } from '../lib';
+import useVersionCheck from '../hooks/use-version-check';
 import crudJobs from '../database/crud/crud-jobs';
 import {
   SYNC_STATUS,
@@ -50,6 +52,12 @@ const Home = ({ navigation, route }) => {
 
   const { id: currentUserId, name: currentUserName } = UserState.useState((s) => s);
   const subTitleText = currentUserName ? `${trans.userLabel} ${currentUserName}` : null;
+
+  const {
+    visible: updateDialogVisible,
+    updateInfo,
+    handleUpdate,
+  } = useVersionCheck({ autoCheck: true });
 
   const goToSubmission = (id) => {
     const findForm = data.find((d) => d?.id === id);
@@ -226,6 +234,14 @@ const Home = ({ navigation, route }) => {
   }, [getUserForms]);
 
   useEffect(() => {
+    if (!updateDialogVisible) {
+      return () => {};
+    }
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => subscription.remove();
+  }, [updateDialogVisible]);
+
+  useEffect(() => {
     if (loading) {
       if (Platform.OS === 'android') {
         ToastAndroid.show(trans.downloadingData, ToastAndroid.SHORT);
@@ -356,6 +372,13 @@ const Home = ({ navigation, route }) => {
           !isOnline || syncLoading || syncDisabled || statusBar?.type === SYNC_STATUS.on_progress
         }
       />
+      <Dialog isVisible={updateDialogVisible} onBackdropPress={() => {}}>
+        <Dialog.Title title={trans.updateRequiredTitle} />
+        <Text>{updateInfo.text}</Text>
+        <Dialog.Actions>
+          <Dialog.Button onPress={handleUpdate}>{trans.buttonUpdate}</Dialog.Button>
+        </Dialog.Actions>
+      </Dialog>
     </BaseLayout>
   );
 };
