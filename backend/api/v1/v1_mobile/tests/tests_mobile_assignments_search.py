@@ -110,3 +110,19 @@ class MobileAssignmentSearchTestCase(TestCase, ProfileTestHelperMixin):
         self.assertIn(self.alpha.id, ids)
         self.assertIn(self.beta.id, ids)
         self.assertNotIn(self.other.id, ids)
+
+    def test_search_trims_surrounding_whitespace(self):
+        response = typing.cast(
+            HttpResponse,
+            self.client.get(
+                "/api/v1/mobile-assignments",
+                data={"search": "  Alpha  "},
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {self.token}",
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()["data"]
+        ids = [d["id"] for d in data]
+        self.assertIn(self.alpha.id, ids)
+        self.assertNotIn(self.beta.id, ids)

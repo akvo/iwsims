@@ -548,11 +548,14 @@ class MobileAssignmentViewSet(ModelViewSet):
                 {"message": validate_serializers_message(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        self._validated_search = (
+            serializer.validated_data.get("search") or None
+        )
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
         user = self.request.user
-        search = self.request.query_params.get("search")
+        search = getattr(self, "_validated_search", None)
         mobile_users = MobileAssignment.objects.prefetch_related(
             "administrations", "forms"
         ).filter(user=user)
