@@ -156,7 +156,8 @@
         "question_id": 1749630516826,
         "option_value": "no",
         "monitoring": "latest",
-        "sum_by": "parent_id"
+        "sum_by": "parent_id",
+        "include_unanswered": true
       }
     },
     {
@@ -196,12 +197,6 @@
       "col_span": 24,
       "height": 400,
       "source_form_id": 1749623934933,
-      "status_question_id": 1749633373968,
-      "status_monitoring_form_id": 1749632545233,
-      "status_colors": {
-        "operational": "#64A73B",
-        "issue_with_system": "#e41a1c"
-      },
       "click_action": "navigate",
       "click_url_template": "/control-center/data/{parent_form_id}/monitoring/{data_id}"
     },
@@ -218,13 +213,18 @@
       "order": 10,
       "col_span": 12,
       "config": {
-        "title": "Operational Status"
+        "title": "Operational Status",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
       },
       "api": {
         "form_id": 1749632545233,
         "question_id": 1749633373968,
         "group_by": "option",
-        "monitoring": "latest"
+        "monitoring": "latest",
+        "include_unanswered": true
       }
     },
     {
@@ -267,12 +267,17 @@
       "order": 12,
       "col_span": 8,
       "config": {
-        "title": "Water Committee"
+        "title": "Water Committee",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
       },
       "api": {
         "form_id": 1749623934933,
         "question_id": 1749624452105,
-        "group_by": "option"
+        "group_by": "option",
+        "include_unanswered": true
       }
     },
     {
@@ -286,7 +291,8 @@
       "api": {
         "form_id": 1749623934933,
         "question_id": 1749624452993,
-        "group_by": "option"
+        "group_by": "option",
+        "include_unanswered": true
       }
     },
     {
@@ -295,13 +301,18 @@
       "order": 14,
       "col_span": 8,
       "config": {
-        "title": "Lab tested vs CBT tested"
+        "title": "Lab tested vs CBT tested",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
       },
       "api": {
         "form_id": 1749632545233,
         "question_id": 1749633001462,
         "group_by": "option",
-        "monitoring": "latest"
+        "monitoring": "latest",
+        "include_unanswered": true
       }
     },
     {
@@ -532,7 +543,8 @@
                 "sum_by": "parent_id",
                 "value_type": "percentage",
                 "date_question_id": 1749632545235,
-                "rolling_months": 12
+                "rolling_months": 12,
+                "include_unanswered": true
               }
             },
             {

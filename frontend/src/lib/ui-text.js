@@ -79,6 +79,7 @@ const uiText = {
     lorem2: "Lorem ipsum dolor sit amet consectetur adipisicing elit.",
     // Charts
     showEmpty: "Show empty values",
+    noInformationAvailable: "No information available",
     // User Management
     manageDataValidationSetup: "Validation Tree",
     manageUsers: "Manage Users",

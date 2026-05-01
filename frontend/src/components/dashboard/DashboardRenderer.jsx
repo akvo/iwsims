@@ -5,6 +5,7 @@ import ChartRenderer from "./ChartRenderer";
 import DashboardMap from "./DashboardMap";
 import EscalationTable from "./EscalationTable";
 import KPICard from "./widgets/KPICard";
+import MetricCard from "./widgets/MetricCard";
 import SectionTitleWidget from "./widgets/SectionTitleWidget";
 import FilterBarWidget from "./widgets/FilterBarWidget";
 import TabsWidget from "./widgets/TabsWidget";
@@ -133,6 +134,18 @@ const DashboardRenderer = ({
           today={today}
           definitionsById={definitionsById}
           computeResponses={resolvedComputeResponses}
+        />
+      );
+    }
+
+    if (type === "metric_card") {
+      return (
+        <MetricCard
+          item={item}
+          filterState={filterState}
+          fiscalYearStartMonth={fiscalYearStartMonth}
+          customFilterDefs={customFilterDefs}
+          today={today}
         />
       );
     }

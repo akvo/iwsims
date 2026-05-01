@@ -14,6 +14,8 @@ from api.v1.v1_visualization.functions import (
     format_date_group,
     fill_month_gaps,
     fill_date_gaps,
+    apply_administration_filter,
+    apply_parent_criteria_to_qs,
 )
 
 
@@ -22,6 +24,39 @@ def _should_fill_gaps(params):
     return bool(
         params.get("from_date") and params.get("to_date")
     )
+
+
+def _total_parents_in_scope(form, params):
+    """Count all parent registrations in scope, respecting filters."""
+    scope_form = form.parent if form.parent else form
+    qs = FormData.objects.filter(
+        form=scope_form,
+        parent__isnull=True,
+        is_pending=False,
+        is_draft=False,
+    )
+    administration_id = params.get("administration_id")
+    if administration_id:
+        qs = apply_administration_filter(qs, administration_id)
+    qs = apply_parent_criteria_to_qs(
+        qs, True, params.get("parent_criteria"),
+    )
+    return qs.count()
+
+
+def _count_no_info_parents(form, params, qualifying_ids):
+    """Count datapoints in scope with no qualifying answer.
+
+    For monitoring forms: counts parent registrations without any
+    qualifying monitoring submission (gap in monitoring coverage).
+    For registration forms: counts registrations that exist but have no
+    answer for the question (field left blank / skipped).
+
+    Respects administration_id and parent_criteria so the count
+    reconciles with option counts under filtering (FR-3).
+    """
+    total = _total_parents_in_scope(form, params)
+    return max(0, total - len(qualifying_ids))
 
 
 # -- Count mode handler --
@@ -315,7 +350,12 @@ def handle_option_question(form, question, params):
     if option_value:
         return _option_value_filter(
             question, data_ids, qs, is_latest,
-            option_value, sum_by, value_type
+            option_value, sum_by, value_type,
+            include_unanswered=params.get(
+                "include_unanswered", False
+            ),
+            form=form,
+            params=params,
         )
 
     if stack_by == "option" and group_by:
@@ -330,7 +370,12 @@ def handle_option_question(form, question, params):
         )
         return _option_group_by_option(
             question, options, data_ids, qs,
-            is_latest, value_type, restricted
+            is_latest, value_type, restricted,
+            include_unanswered=params.get(
+                "include_unanswered", False
+            ),
+            form=form,
+            params=params,
         )
 
     return [], []
@@ -338,7 +383,8 @@ def handle_option_question(form, question, params):
 
 def _option_value_filter(
     question, data_ids, qs, is_latest,
-    option_value, sum_by, value_type
+    option_value, sum_by, value_type,
+    include_unanswered=False, form=None, params=None,
 ):
     """Filter by specific option value and count."""
     count = Answers.objects.filter(
@@ -354,7 +400,10 @@ def _option_value_filter(
         count = count.count()
 
     if value_type == "percentage":
-        total = qs.count() if is_latest else len(data_ids)
+        if include_unanswered and form is not None:
+            total = _total_parents_in_scope(form, params or {})
+        else:
+            total = qs.count() if is_latest else len(data_ids)
         value = round(
             (count / total * 100), 2
         ) if total > 0 else 0
@@ -473,7 +522,8 @@ def _extract_criteria_option_values(params, question_id):
 
 def _option_group_by_option(
     question, options, data_ids, qs,
-    is_latest, value_type, restricted_values=None
+    is_latest, value_type, restricted_values=None,
+    include_unanswered=False, form=None, params=None,
 ):
     """Group by option values (donut chart).
 
@@ -485,6 +535,11 @@ def _option_group_by_option(
     same question), only those values are tallied — so a
     multiple_option record ["a", "b"] filtered by "a" counts only
     for "a", not "b".
+
+    When `include_unanswered=True`, appends one synthetic row
+    (group="_no_info") for parents with no qualifying answer,
+    and adjusts the percentage denominator to include the bucket
+    so single-choice rows sum to 100%.
     """
     option_values = {o.value for o in options}
     tally_values = (
@@ -492,32 +547,66 @@ def _option_group_by_option(
         if restricted_values else option_values
     )
     tallies = defaultdict(int)
-    rows = Answers.objects.filter(
+    qualifying_parents = set()
+    # Registration forms have no parent; track data_id directly.
+    # Monitoring forms track data__parent_id (the registration ID).
+    is_registration = form is not None and form.parent is None
+    tracking_field = (
+        "data_id" if is_registration else "data__parent_id"
+    )
+    for tracking_id, opts in Answers.objects.filter(
         data_id__in=data_ids,
         question_id=question.id,
         options__isnull=False,
-    ).values_list("options", flat=True)
-    for opts in rows:
+    ).values_list(tracking_field, "options"):
+        matched = False
         for v in (opts or []):
             if v in tally_values:
                 tallies[v] += 1
+                matched = True
+        if matched:
+            qualifying_parents.add(tracking_id)
 
     counts = [tallies.get(opt.value, 0) for opt in options]
-    total_for_pct = sum(counts)
+
+    bucket_count = (
+        _count_no_info_parents(form, params, qualifying_parents)
+        if include_unanswered else 0
+    )
+
+    if value_type == "percentage":
+        if include_unanswered:
+            denom = len(qualifying_parents) + bucket_count
+        else:
+            denom = sum(counts)
+    else:
+        denom = None
+
     data = []
     for opt, count in zip(options, counts):
-        if value_type == "percentage":
-            val = round(
-                (count / total_for_pct * 100), 2
-            ) if total_for_pct > 0 else 0.0
-        else:
-            val = count
+        val = (
+            round((count / denom * 100), 2)
+            if value_type == "percentage" and denom else count
+        )
         data.append({
             "value": val,
             "label": opt.label,
             "group": opt.value,
             "color": opt.color,
         })
+
+    if include_unanswered and bucket_count > 0:
+        bucket_val = (
+            round((bucket_count / denom * 100), 2)
+            if value_type == "percentage" and denom else bucket_count
+        )
+        data.append({
+            "value": bucket_val,
+            "label": "No information available",
+            "group": "_no_info",
+            "color": "#bfbfbf",
+        })
+
     labels = [d["label"] for d in data]
     return data, labels
 

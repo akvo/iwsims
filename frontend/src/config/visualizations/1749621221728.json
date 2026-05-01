@@ -248,26 +248,24 @@
     },
     {
       "id": "kpi_operational_systems",
-      "chart_type": "card",
-      "order": 9,
+      "chart_type": "metric_card",
+      "order": 10,
       "col_span": 6,
       "label": "Operational Systems",
       "color": "#1890ff",
       "api": {
         "form_id": 1749631041125,
         "question_id": 1749631041155,
-        "option_value": "operational",
-        "monitoring": "latest",
-        "sum_by": "parent_id"
+        "group_by": "option",
+        "include_unanswered": true
       },
-      "denominator_api": {
-        "form_id": 1749621221728
-      }
+      "show_percentage": true,
+      "target_group": "operational"
     },
     {
       "id": "kpi_drinking_water_compliance",
       "chart_type": "card",
-      "order": 10,
+      "order": 11,
       "col_span": 6,
       "label": "Drinking Water Compliance",
       "color": "#64A73B",
@@ -289,25 +287,24 @@
     },
     {
       "id": "kpi_active_water_committees",
-      "chart_type": "card",
-      "order": 11,
+      "chart_type": "metric_card",
+      "order": 12,
       "col_span": 6,
       "label": "Active Water Committees",
       "color": "#fa8c16",
       "api": {
         "form_id": 1749621221728,
         "question_id": 1749622715678,
-        "option_value": "yes",
-        "sum_by": "parent_id"
+        "group_by": "option",
+        "include_unanswered": true
       },
-      "denominator_api": {
-        "form_id": 1749621221728
-      }
+      "show_percentage": true,
+      "target_group": "yes"
     },
     {
       "id": "kpi_accessibility_no_issues",
       "chart_type": "card",
-      "order": 12,
+      "order": 13,
       "col_span": 6,
       "label": "Accessibility Issues — No Issues",
       "color": "#13c2c2",
@@ -320,8 +317,8 @@
         "stack_by": "option"
       },
       "issues_api": {
-        "form_id": 1749631041125,
-        "question_id": 1749631041156,
+        "form_id": 1749621962296,
+        "question_id": 1749623661234,
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
@@ -337,19 +334,13 @@
       "col_span": 24,
       "height": 400,
       "source_form_id": 1749621221728,
-      "status_question_id": 1749631041155,
-      "status_monitoring_form_id": 1749631041125,
-      "status_colors": {
-        "operational": "#64A73B",
-        "non_operational": "#e41a1c"
-      },
       "click_action": "navigate",
       "click_url_template": "/control-center/data/{parent_form_id}/monitoring/{data_id}"
     },
     {
       "id": "title_status_compliance",
       "chart_type": "section_title",
-      "order": 13,
+      "order": 9,
       "col_span": 24,
       "text": "RWS at-a-glance: Status and Compliance"
     },
@@ -361,7 +352,10 @@
       "config": {
         "title": "Implementation at Scale",
         "xAxisLabel": "Number of RWS",
-        "yAxisLabel": "Project type"
+        "yAxisLabel": "Project type",
+        "xAxis": {
+          "nameGap": 164
+        }
       },
       "compute": "cross_tab",
       "orientation": "horizontal",
@@ -385,13 +379,18 @@
       "order": 15,
       "col_span": 12,
       "config": {
-        "title": "Lab tested vs CBT tested"
+        "title": "Lab tested vs CBT tested",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
       },
       "api": {
         "form_id": 1749621962296,
         "question_id": 1749622849604,
         "group_by": "option",
-        "monitoring": "latest"
+        "monitoring": "latest",
+        "include_unanswered": true
       }
     },
     {
@@ -413,7 +412,8 @@
       "api": {
         "form_id": 1749621221728,
         "question_id": 1749622291234,
-        "group_by": "option"
+        "group_by": "option",
+        "include_unanswered": true
       }
     },
     {
@@ -426,32 +426,12 @@
         "yAxisLabel": "RWS count"
       },
       "compute": "kpi_stack",
-      "segments": [
-        {
-          "key": "operational",
-          "label": "Operational",
-          "color": "#3C3CFF",
-          "api": {
-            "form_id": 1749631041125,
-            "question_id": 1749631041155,
-            "option_value": "operational",
-            "monitoring": "latest",
-            "sum_by": "parent_id"
-          }
-        },
-        {
-          "key": "issues",
-          "label": "Issues with the system",
-          "color": "#1AB99F",
-          "api": {
-            "form_id": 1749631041125,
-            "question_id": 1749631041156,
-            "option_value": "yes",
-            "monitoring": "latest",
-            "sum_by": "parent_id"
-          }
-        }
-      ]
+      "api": {
+        "form_id": 1749631041125,
+        "question_id": 1749631041155,
+        "group_by": "option",
+        "include_unanswered": true
+      }
     },
     {
       "id": "chart_accessibility_bucket",

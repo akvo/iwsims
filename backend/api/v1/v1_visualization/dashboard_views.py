@@ -197,6 +197,9 @@ def visualization_values(request, version):
         "option_value": validated.get("option_value"),
         "criteria": validated.get("criteria"),
         "parent_criteria": validated.get("parent_criteria"),
+        "include_unanswered": validated.get(
+            "include_unanswered", False
+        ),
     }
 
     # Route to handler

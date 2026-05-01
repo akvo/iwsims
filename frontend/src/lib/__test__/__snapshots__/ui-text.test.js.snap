@@ -773,6 +773,7 @@ Object {
     "next": "Next",
     "noFormSelectedText": "No form selected",
     "noFormText": "No data",
+    "noInformationAvailable": "No information available",
     "noTemplate": "No templates found",
     "noText": "No",
     "notAssigned": "Not assigned",

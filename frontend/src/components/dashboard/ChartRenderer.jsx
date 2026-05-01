@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Bar, Doughnut, Line, Pie, StackBar } from "akvo-charts";
 import { Alert, Skeleton } from "antd";
 import { useDashboardValues, useDashboardProgress } from "../../util/hooks";
+import uiText from "../../lib/ui-text";
 import { toHistogramBarData } from "./compute/progressHistogram";
 import { computeComplianceStackData } from "./compute/compliance";
 import { rotateToFiscalOrder } from "./compute/fiscalMonthRotation";
@@ -22,11 +23,40 @@ const COMPONENT_BY_TYPE = {
 };
 
 /**
+ * akvo-charts' `transformConfig` hardcodes its default tooltip and does NOT
+ * read `config.tooltip` — so a tooltip block in the visualization JSON is
+ * silently dropped. Surface it here as a setOption patch so configs can
+ * customise trigger / formatter (string template, HTML, or rich-text via
+ * https://echarts.apache.org/examples/en/editor.html?c=pie-rich-text) per
+ * chart. Returned object is spread into the wrapper's setOption call with
+ * notMerge=false so unspecified fields keep akvo-charts' defaults.
+ */
+const tooltipPatch = (config) =>
+  config?.tooltip ? { tooltip: config.tooltip } : {};
+
+/**
+ * Reshape ChartRenderer's `[{label, value}]` rows into ECharts' native
+ * pie data format `[{name, value}]`. Used by the pie/doughnut wrappers to
+ * override `series[0].data` post-mount and bypass akvo-charts' dataset
+ * +encode binding — that binding causes the tooltip's `{c}` placeholder
+ * to render the dataset row object as "[object Object]" instead of the
+ * scalar value (only an issue for pie series; bar/line resolve scalars
+ * correctly from dataset+encode because they have axes).
+ */
+const toPieSeriesData = (rows) =>
+  (rows || []).map((r) => ({ name: r.label, value: r.value }));
+
+/**
  * Wrap a pie/doughnut Component so we can hide the outer slice callout
- * labels after mount. akvo-charts doesn't expose a label-config prop
- * and its internal setOption replaces rather than merges — so we grab
- * the ECharts instance via ref and setOption with notMerge=false to
- * layer label:{show:false} on top while preserving dataset + encode.
+ * labels after mount AND swap dataset+encode for direct `series.data` so
+ * tooltip `{c}` resolves to the scalar value (matches the official
+ * https://echarts.apache.org/examples/en/editor.html?c=pie-rich-text
+ * tooltip-formatter behaviour).
+ *
+ * akvo-charts doesn't expose label-config or data-binding props, so we
+ * grab the ECharts instance via ref and setOption with notMerge=false to
+ * layer overrides on top of akvo-charts' own setOption (which runs first
+ * each render).
  *
  * Uses the same callback-ref + empty-deps pattern as ChartWithMarkLines
  * (see long comment there): akvo-charts' useImperativeHandle only
@@ -46,7 +76,14 @@ const PieWithHiddenLabels = ({ Component, commonProps }) => {
     }
     chart.setOption(
       {
-        series: [{ label: { show: false }, labelLine: { show: false } }],
+        series: [
+          {
+            label: { show: false },
+            labelLine: { show: false },
+            data: toPieSeriesData(commonProps.data),
+          },
+        ],
+        ...tooltipPatch(commonProps.config),
       },
       false
     );
@@ -97,8 +134,10 @@ const HalfDoughnut = ({ Component, commonProps }) => {
             radius: ["55%", "85%"],
             label: { show: false },
             labelLine: { show: false },
+            data: toPieSeriesData(commonProps.data),
           },
         ],
+        ...tooltipPatch(commonProps.config),
       },
       false
     );
@@ -239,6 +278,7 @@ const ChartWithMarkLines = ({ Component, commonProps, markLines, today }) => {
             },
           },
         ],
+        ...tooltipPatch(commonProps.config),
       },
       false
     );
@@ -269,6 +309,11 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       setChart((prev) => prev || instance);
     }
   }, []);
+  // Horizontal stack/bar charts (bar-y-category style — see
+  // https://echarts.apache.org/examples/en/editor.html?c=bar-y-category)
+  // put the category labels on the y-axis, so the per-item axis override
+  // must follow the category axis rather than always landing on x.
+  const horizontal = Boolean(commonProps.config?.horizontal);
   // Per-item overrides via config.xAxis: { rotate, interval, nameGap }.
   // Lets horizontal bar charts (numeric x-axis) opt out of the default
   // 20° rotation that exists for long category labels.
@@ -277,28 +322,31 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
     if (!chart) {
       return;
     }
+    // Align category-axis ticks with labels (not between them) — see
+    // https://echarts.apache.org/examples/en/editor.html?c=bar-tick-align.
+    // Force interval=0 so every category label renders; ECharts' default
+    // "auto" silently drops labels it judges overlapping — which hid
+    // Settlements / Government Stations / Healthcare Facility on the RWS
+    // Beneficiaries bar (akvo-mis-db9). Modest rotate keeps long
+    // multi-word labels from colliding horizontally. nameGap=64 pushes
+    // the axis name (e.g. "Target group") below the rotated labels —
+    // default nameGap=15 lands right on top of them (akvo-mis-c01).
+    const categoryAxisOverride = {
+      axisTick: { alignWithLabel: true },
+      axisLabel: {
+        interval: xAxisOverride?.axisLabel?.interval ?? 0,
+        rotate: xAxisOverride?.axisLabel?.rotate ?? 0,
+      },
+      nameGap: xAxisOverride?.nameGap ?? 48,
+      nameLocation: "middle",
+    };
     chart.setOption(
       {
         legend: { type: "scroll" },
-        // Align x-axis ticks with labels (not between them) — see
-        // https://echarts.apache.org/examples/en/editor.html?c=bar-tick-align.
-        // Force interval=0 so every category label renders; ECharts'
-        // default "auto" silently drops labels it judges overlapping —
-        // which hid Settlements / Government Stations / Healthcare Facility
-        // on the RWS Beneficiaries bar (akvo-mis-db9). Modest rotate keeps
-        // long multi-word labels from colliding horizontally. nameGap=64
-        // pushes the axis name (e.g. "Target group") below the rotated
-        // labels — default nameGap=15 lands right on top of them
-        // (akvo-mis-c01).
-        xAxis: {
-          axisTick: { alignWithLabel: true },
-          axisLabel: {
-            interval: xAxisOverride?.axisLabel?.interval ?? 0,
-            rotate: xAxisOverride?.axisLabel?.rotate ?? 0,
-          },
-          nameGap: xAxisOverride?.nameGap ?? 48,
-          nameLocation: "middle",
-        },
+        ...(horizontal
+          ? { yAxis: categoryAxisOverride }
+          : { xAxis: categoryAxisOverride }),
+        ...tooltipPatch(commonProps.config),
       },
       false
     );
@@ -373,7 +421,7 @@ const ChartRenderer = ({
   const isApiDriven =
     (Boolean(Component) || isDots) &&
     Boolean(item.api) &&
-    !item.compute &&
+    (!item.compute || (item.compute === "kpi_stack" && !item.segments)) &&
     !item.source;
 
   const {
@@ -425,12 +473,28 @@ const ChartRenderer = ({
     }
 
     if (item.compute === "kpi_stack") {
-      const responses = computeResponses?.kpi_stack?.[item.id];
-      return computeKpiStack(
-        item.segments,
-        responses,
-        item.config?.title || "Total"
-      );
+      if (item.segments) {
+        const responses = computeResponses?.kpi_stack?.[item.id];
+        return computeKpiStack(
+          item.segments,
+          responses,
+          item.config?.title || "Total"
+        );
+      }
+      // api-driven kpi_stack: single /values call with group_by=option;
+      // rows become stack segments dynamically
+      const rows = apiData?.data || [];
+      if (!rows.length) {
+        return [];
+      }
+      const category = item.config?.title || "Total";
+      const row = { category };
+      rows.forEach((r) => {
+        const label =
+          r.group === "_no_info" ? uiText.en.noInformationAvailable : r.label;
+        row[label] = r.value ?? 0;
+      });
+      return [row];
     }
 
     if (item.compute === "compliance") {
@@ -489,7 +553,11 @@ const ChartRenderer = ({
           extendTo,
         });
       }
-      return rows.map((r) => ({ label: r.label, value: r.value }));
+      return rows.map((r) => ({
+        label:
+          r.group === "_no_info" ? uiText.en.noInformationAvailable : r.label,
+        value: r.value,
+      }));
     }
     return [];
   }, [
@@ -548,8 +616,16 @@ const ChartRenderer = ({
   // are no-ops — those live in the setOption-after-mount wrappers above.
   const rawOverrides = item.raw_overrides;
 
+  // Schema flag → akvo-charts' StackBar/Bar `config.horizontal`, which
+  // swaps axes (xAxis becomes value, yAxis becomes category) per
+  // https://echarts.apache.org/examples/en/editor.html?c=bar-y-category.
+  const horizontal = item.orientation === "horizontal";
+
   const commonProps = {
-    config: item.config || {},
+    config: {
+      ...(item.config || {}),
+      ...(horizontal ? { horizontal: true } : {}),
+    },
     data,
     rawConfig: item.raw_config,
     rawOverrides,
