@@ -43,6 +43,7 @@ from utils.custom_pagination import Pagination
 from .serializers import (
     MobileAssignmentFormsSerializer,
     MobileApkSerializer,
+    MobileAssignmentListRequestSerializer,
     MobileAssignmentSerializer,
     MobileDataPointDownloadListSerializer,
     SyncDeviceFormDataSerializer,
@@ -529,8 +530,29 @@ class MobileAssignmentViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = Pagination
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="search",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter by name or email (case-insensitive)",
+            )
+        ],
+    )
+    def list(self, request, *args, **kwargs):
+        serializer = MobileAssignmentListRequestSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(
+                {"message": validate_serializers_message(serializer.errors)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().list(request, *args, **kwargs)
+
     def get_queryset(self):
         user = self.request.user
+        search = self.request.query_params.get("search")
         mobile_users = MobileAssignment.objects.prefetch_related(
             "administrations", "forms"
         ).filter(user=user)
@@ -554,7 +576,13 @@ class MobileAssignmentViewSet(ModelViewSet):
                 "administrations", "forms"
             ).filter(adm_q)
             mobile_users |= descendant_users
-        return mobile_users.order_by("-id").distinct()
+        qs = mobile_users.order_by("-id").distinct()
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search)
+                | Q(user__email__icontains=search)
+            )
+        return qs
 
 
 @extend_schema(

@@ -331,3 +331,7 @@ class DraftFormDataSerializer(serializers.ModelSerializer):
             "repeats",
         ]
         read_only_fields = ["id", "submittedAt", "json", "repeats"]
+
+
+class MobileAssignmentListRequestSerializer(serializers.Serializer):
+    search = serializers.CharField(required=False, allow_blank=True)
