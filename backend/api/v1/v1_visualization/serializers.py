@@ -83,9 +83,28 @@ class MonitoringStatSerializer(serializers.Serializer):
 
 
 class GeoLocationListSerializer(serializers.ModelSerializer):
+    administration_full_name = serializers.SerializerMethodField()
+    updated = serializers.DateTimeField(allow_null=True)
+
+    def get_administration_full_name(self, obj):
+        full_names = self.context.get("admin_full_names") or {}
+        admin_id = (
+            obj["administration_id"]
+            if isinstance(obj, dict)
+            else obj.administration_id
+        )
+        return full_names.get(admin_id) or ""
+
     class Meta:
         model = FormData
-        fields = ["id", "name", "geo", "administration_id"]
+        fields = [
+            "id",
+            "name",
+            "geo",
+            "administration_id",
+            "administration_full_name",
+            "updated",
+        ]
 
 
 class GeoLocationFilterSerializer(serializers.Serializer):
@@ -95,6 +114,9 @@ class GeoLocationFilterSerializer(serializers.Serializer):
     criteria = serializers.CharField(required=False)
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
+    include_monitoring = serializers.BooleanField(
+        required=False, default=False
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -119,5 +141,5 @@ class GeoLocationFilterSerializer(serializers.Serializer):
     class Meta:
         fields = [
             "administration", "criteria",
-            "from_date", "to_date",
+            "from_date", "to_date", "include_monitoring",
         ]

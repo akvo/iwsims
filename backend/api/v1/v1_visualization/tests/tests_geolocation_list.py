@@ -83,6 +83,8 @@ class GeolocationListTestCases(TestCase, ProfileTestHelperMixin):
                 "name",
                 "geo",
                 "administration_id",
+                "administration_full_name",
+                "updated",
             ]
         )
         # Ensure draft data is not included in the response
@@ -90,6 +92,10 @@ class GeolocationListTestCases(TestCase, ProfileTestHelperMixin):
 
         # Ensure the geolocation is correctly formatted
         self.assertIsInstance(data[0]["geo"], list)
+        # administration_full_name is populated and updated is serialised
+        self.assertIsInstance(data[0]["administration_full_name"], str)
+        self.assertGreater(len(data[0]["administration_full_name"]), 0)
+        self.assertIn("updated", data[0])
 
     def test_get_geolocation_list_with_administration_filter(self):
         """
