@@ -472,6 +472,7 @@
         "title": "Beneficiaries",
         "xAxisLabel": "Target group",
         "yAxisLabel": "Number of RWS",
+        "yAxis": { "minInterval": 1 },
         "xAxis": {
           "axisLabel": {
             "rotate": 20
@@ -843,7 +844,8 @@
               "config": {
                 "title": "E-coli presence",
                 "xAxisLabel": "CFU/100mL",
-                "yAxisLabel": "RWS count"
+                "yAxisLabel": "RWS count",
+                "yAxis": { "minInterval": 1 }
               },
               "display": {
                 "mode": "histogram",
@@ -871,7 +873,8 @@
               "config": {
                 "title": "Total coliform presence",
                 "xAxisLabel": "CFU/100mL",
-                "yAxisLabel": "RWS count"
+                "yAxisLabel": "RWS count",
+                "yAxis": { "minInterval": 1 }
               },
               "display": {
                 "mode": "histogram",
@@ -900,7 +903,8 @@
               "config": {
                 "title": "Fecal coliform presence",
                 "xAxisLabel": "CFU/100mL",
-                "yAxisLabel": "RWS count"
+                "yAxisLabel": "RWS count",
+                "yAxis": { "minInterval": 1 }
               },
               "display": {
                 "mode": "histogram",
@@ -935,7 +939,8 @@
               "config": {
                 "title": "Turbidity",
                 "xAxisLabel": "NTU",
-                "yAxisLabel": "RWS count"
+                "yAxisLabel": "RWS count",
+                "yAxis": { "minInterval": 1 }
               },
               "display": {
                 "mode": "histogram",
@@ -963,7 +968,8 @@
               "config": {
                 "title": "Water Temperature",
                 "xAxisLabel": "°C",
-                "yAxisLabel": "RWS count"
+                "yAxisLabel": "RWS count",
+                "yAxis": { "minInterval": 1 }
               },
               "display": {
                 "mode": "histogram",
@@ -998,7 +1004,8 @@
               "config": {
                 "title": "pH",
                 "xAxisLabel": "pH",
-                "yAxisLabel": "RWS count"
+                "yAxisLabel": "RWS count",
+                "yAxis": { "minInterval": 1 }
               },
               "display": {
                 "mode": "histogram",
@@ -1027,7 +1034,8 @@
               "config": {
                 "title": "Conductivity",
                 "xAxisLabel": "µS/cm",
-                "yAxisLabel": "RWS count"
+                "yAxisLabel": "RWS count",
+                "yAxis": { "minInterval": 1 }
               },
               "display": {
                 "mode": "histogram",
@@ -1055,7 +1063,8 @@
               "config": {
                 "title": "Salinity",
                 "xAxisLabel": "ppt",
-                "yAxisLabel": "RWS count"
+                "yAxisLabel": "RWS count",
+                "yAxis": { "minInterval": 1 }
               },
               "display": {
                 "mode": "histogram",
@@ -1120,7 +1129,8 @@
                 "title": "Percentage of projects completed",
                 "description": "Distribution of RWS across overall-progress buckets (0-10%, 11-20%, ..., 91-100%).",
                 "xAxisLabel": "Progress bucket",
-                "yAxisLabel": "Number of RWS"
+                "yAxisLabel": "Number of RWS",
+                "yAxis": { "minInterval": 1 }
               },
               "source": "progress",
               "progress_ref": "progress_construction",
@@ -1135,7 +1145,8 @@
                 "title": "Proposed completion date",
                 "description": "RWS counted by month of their planned completion date. Incomplete projects only; TODAY reference line drawn on x-axis.",
                 "xAxisLabel": "Month",
-                "yAxisLabel": "Number of RWS"
+                "yAxisLabel": "Number of RWS",
+                "yAxis": { "minInterval": 1 }
               },
               "api": {
                 "form_id": 1749621962296,
