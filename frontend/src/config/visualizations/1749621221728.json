@@ -330,11 +330,68 @@
     {
       "id": "map_main",
       "chart_type": "map",
+      "title": "Monitored RWS Sites",
       "order": 8,
       "col_span": 24,
       "height": 400,
       "source_form_id": 1749621221728,
-      "click_action": "navigate",
+      "filters": [
+        {
+          "type": "select",
+          "key": "infrastructure_status",
+          "label": "Infrastructure status",
+          "form_id": 1749631041125,
+          "question_id": 1749631041155,
+          "color_map": {
+            "operational": "#64A73B",
+            "non_operational": "#e41a1c",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "select",
+          "key": "drinking_water_compliance",
+          "label": "Drinking water compliance",
+          "form_id": 1749631041125,
+          "formula": {
+            "buckets": [
+              {
+                "value": "compliant",
+                "label": "Yes",
+                "all_of": [
+                  { "question_id": 1749631041143, "op": "<=", "value": 0 },
+                  { "question_id": 1749631041144, "op": "<=", "value": 5 },
+                  { "question_id": 1749631041145, "op": "<=", "value": 0 },
+                  { "question_id": 1749631041146, "op": "<=", "value": 0 },
+                  { "question_id": 1749631041147, "op": "<=", "value": 30 },
+                  {
+                    "question_id": 1749631041148,
+                    "op": "between",
+                    "min": 6.5,
+                    "max": 8.5
+                  },
+                  { "question_id": 1749631041149, "op": "<=", "value": 1000 },
+                  { "question_id": 1749631041150, "op": "<=", "value": 1 }
+                ]
+              }
+            ],
+            "default": { "value": "non_compliant", "label": "No" }
+          },
+          "color_map": {
+            "compliant": "#64A73B",
+            "non_compliant": "#e41a1c",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "toggle",
+          "key": "monitored_last_year",
+          "label": "Monitored last year",
+          "default": true,
+          "rolling_months": 12
+        }
+      ],
+      "click_action": "popup",
       "click_url_template": "/control-center/data/{parent_form_id}/monitoring/{data_id}"
     },
     {

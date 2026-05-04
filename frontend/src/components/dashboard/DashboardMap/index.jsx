@@ -46,13 +46,8 @@ const DashboardMap = ({
 
   const itemFilters = useMemo(() => item?.filters || [], [item]);
 
-  const {
-    values,
-    setValue,
-    queryParams,
-    toggleDisabled,
-    activeFilter,
-  } = useMapFilters(itemFilters, filterState);
+  const { values, setValue, queryParams, toggleDisabled, activeFilter } =
+    useMapFilters(itemFilters, filterState);
 
   const { byParent } = useMapByParent({ activeFilter, filterState });
 

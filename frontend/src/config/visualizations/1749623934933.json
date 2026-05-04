@@ -193,11 +193,68 @@
     {
       "id": "map_main",
       "chart_type": "map",
+      "title": "Monitored EPS",
       "order": 8,
       "col_span": 24,
       "height": 400,
       "source_form_id": 1749623934933,
-      "click_action": "navigate",
+      "filters": [
+        {
+          "type": "select",
+          "key": "operational_status",
+          "label": "Operational status",
+          "form_id": 1749632545233,
+          "question_id": 1749633373968,
+          "color_map": {
+            "operational": "#64A73B",
+            "issue_with_system": "#e41a1c",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "select",
+          "key": "drinking_water_compliance",
+          "label": "Drinking water compliance",
+          "form_id": 1749632545233,
+          "formula": {
+            "buckets": [
+              {
+                "value": "compliant",
+                "label": "Yes",
+                "all_of": [
+                  { "question_id": 1749633220746, "op": "<=", "value": 0 },
+                  { "question_id": 1749633220745, "op": "<=", "value": 5 },
+                  { "question_id": 1749633259392, "op": "<=", "value": 0 },
+                  { "question_id": 1749633295165, "op": "<=", "value": 0 },
+                  { "question_id": 1797307852531, "op": "<=", "value": 30 },
+                  {
+                    "question_id": 1797307852532,
+                    "op": "between",
+                    "min": 6.5,
+                    "max": 8.5
+                  },
+                  { "question_id": 1797307852533, "op": "<=", "value": 1000 },
+                  { "question_id": 1797307852534, "op": "<=", "value": 1 }
+                ]
+              }
+            ],
+            "default": { "value": "non_compliant", "label": "No" }
+          },
+          "color_map": {
+            "compliant": "#64A73B",
+            "non_compliant": "#e41a1c",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "toggle",
+          "key": "monitored_last_year",
+          "label": "Monitored last year",
+          "default": true,
+          "rolling_months": 12
+        }
+      ],
+      "click_action": "popup",
       "click_url_template": "/control-center/data/{parent_form_id}/monitoring/{data_id}"
     },
     {

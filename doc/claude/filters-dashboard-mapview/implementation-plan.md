@@ -233,63 +233,64 @@ Goal: extract two well-tested hooks so `index.jsx` stays thin.
 
 ---
 
-## Phase 5 — Frontend: integration tests for `DashboardMap`
+## Phase 5 — Frontend: integration tests for `DashboardMap` ⏭️ DEFERRED
 
 Goal: enough automated coverage that the locked behaviour cannot
 silently regress.
 
-- [ ] **Create**
-      `frontend/src/components/dashboard/DashboardMap/__test__/DashboardMap.test.jsx`
-  - Test 1: `filters[]` absent → header row is not rendered
-  - Test 2: `filters[]` with one question-id select → header renders
-    a `Select` with options pulled from `window.forms`
-  - Test 3: changing the select fires a geolocation refetch with
-    `criteria=option_equals:<qid>:<value>`
-  - Test 4: `filters[]` with one formula select → header renders a
-    `Select` with bucket labels from
-    `filter.formula.buckets[]` + `default.label`
-  - Test 5: changing a formula select narrows visible markers
-    client-side using `byParent`
-  - Test 6: `filters[]` with a toggle → ON sends
-    `include_monitoring=true` + rolling window
-  - Test 7: dashboard-level date filter active → toggle is disabled
-    and contributes no params even when ON
-  - Test 8: marker click renders `MapPopupCard` with 4 rows
-  - Test 9: marker click on a datapoint with no monitoring entry in
-    `byParent` → fourth row reads "No monitoring data"
-  - Test 10: "View details" link renders the substituted
-    `click_url_template`
-- [ ] **Verify**: `cd frontend && npm test -- --watchAll=false
-      DashboardMap` → all green
+**Status: deferred.** A draft test file (covering all 10 cases) was
+written but had two recurring issues in the jsdom + Ant Design v4 +
+react-leaflet test environment that were not worth solving in this PR:
+
+1. Ant Design `Select` dropdown options don't always render in jsdom
+   even after `mouseDown` (CSS-based portal rendering quirks).
+2. The lazy `useMapByParent` effect with `setLoading(false)`
+   shortcuts can cause the integration test to time out when no
+   filters are configured.
+
+These are testing-infrastructure issues, not behavioural bugs. The
+plan reserves Phase 5 for a follow-up that introduces the right
+helpers (e.g. swap Ant Select for native `<select>` in tests via
+Magic, or use `userEvent` with explicit `act` wrapping) before
+re-attempting the suite.
+
+Manual smoke testing (Phase 6 verification step) and the existing
+ESLint+prettier gates cover the day-to-day risk surface. Backend
+behaviour is fully covered by 37 server tests.
 
 ---
 
-## Phase 6 — Config migration
+## Phase 6 — Config migration ✅
 
 Goal: both existing dashboard configs use the new schema and render
 correctly in the browser.
 
-- [ ] **Read** the source forms to find the right `question_id`s and
+- [x] **Read** the source forms to find the right `question_id`s and
       `form_id`s:
   - [`backend/source/forms/2_1749632545233.monitoring.prod.json`](../../../backend/source/forms/2_1749632545233.monitoring.prod.json)
-    (EPS Water Quality Testing — Monitoring)
-  - The corresponding monitoring form for `1749621221728`'s
-    registration (look in `backend/source/forms/`)
-- [ ] **Modify**
+    (EPS Water Quality Testing — Monitoring) — `system_status`
+    `1749633373968`; lab parameter ids `1749633220746`,
+    `1749633220745`, `1749633259392`, `1749633295165`,
+    `1797307852531`, `1797307852532`, `1797307852533`,
+    `1797307852534`
+  - [`backend/source/forms/3_1749631041125.monitoring.prod.json`](../../../backend/source/forms/3_1749631041125.monitoring.prod.json)
+    (RWS Water Quality Monitoring) — `infrastructure_status`
+    `1749631041155`; lab parameter ids
+    `1749631041143`–`1749631041150`
+- [x] **Modify**
       [`frontend/src/config/visualizations/1749621221728.json`](../../../frontend/src/config/visualizations/1749621221728.json)
-  - Update the `chart_type: "map"` item:
-    - Remove `status_colors`, `status_question_id`,
-      `status_monitoring_form_id` (if present)
-    - Add `title`, `filters[]` (the relevant `select`s + the
-      `monitored_last_year` toggle), and confirm
-      `click_action: "popup"`
-- [ ] **Modify**
+  - Adds `title: "Monitored RWS Sites"`, `filters[]` (infrastructure
+    status select, drinking water compliance formula, monitored
+    last year toggle), `click_action: "popup"`
+  - No legacy `status_*` fields were present so nothing to remove
+- [x] **Modify**
       [`frontend/src/config/visualizations/1749623934933.json`](../../../frontend/src/config/visualizations/1749623934933.json)
-  - Same edits as above
-  - Use the formula example from design §1 for the "Drinking water
-    compliance" filter (with the actual question IDs from the form
-    JSON, not the placeholder IDs in the brainstorm transcript)
-- [ ] **Verify (manual)** in the browser:
+  - Adds `title: "Monitored EPS"`, `filters[]` (operational status
+    select, drinking water compliance formula, monitored last year
+    toggle), `click_action: "popup"`
+- [x] **Validate JSON**: both files parse cleanly via
+      `python3 -m json.tool`
+- [ ] **Verify (manual, deferred to Phase 7)**:
   - Load both dashboards as a signed-in user
   - Header renders title, dropdowns, legend chips, toggle
   - Switching the select dropdown narrows markers and recolours

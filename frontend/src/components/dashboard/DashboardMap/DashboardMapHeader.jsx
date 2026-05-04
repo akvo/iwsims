@@ -83,11 +83,7 @@ const DashboardMapHeader = ({
     return entries;
   }, [activeFilter]);
 
-  if (
-    !title &&
-    selectFilters.length === 0 &&
-    toggleFilters.length === 0
-  ) {
+  if (!title && selectFilters.length === 0 && toggleFilters.length === 0) {
     return null;
   }
 
@@ -109,10 +105,7 @@ const DashboardMapHeader = ({
         <div className="dashboard-map-legend">
           {legendEntries.map(({ color, label }, i) => (
             <span className="legend-chip" key={`${label}-${i}`}>
-              <span
-                className="legend-dot"
-                style={{ background: color }}
-              />
+              <span className="legend-dot" style={{ background: color }} />
               {label}
             </span>
           ))}
