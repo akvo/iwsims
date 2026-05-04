@@ -413,19 +413,43 @@ filter.
 ```js
 // useMapByParent.js (signature)
 export const useMapByParent = ({
-  sourceFormId,
-  monitoringFormId,
   activeFilter, // { type, key, question_id?, formula? }
   filterState,  // dashboard-level
 }) => {
-  // returns { byParent: Map<id, bucket_value>, loading, error }
+  // returns { byParent: Object<id, bucket_value>, loading, error }
 };
 ```
 
-Internally the hook routes to `GET /visualization/values` for
-question-id filters and `GET /visualization/values/formula` for
-formula filters. Both produce a
-`Map<parent_id, bucket_value_string>`.
+Both filter modes call `GET /visualization/values/formula`. For an
+explicit `formula` filter the JSON is taken straight from the config.
+For a `question_id` filter the hook **constructs** an equivalent
+formula on the frontend: it reads the question's `option[]` from
+`window.forms` (already populated at app startup) and builds one
+`option_equals` bucket per option value plus a `_no_info` default.
+This avoids relying on `handle_option_question`'s `group_by=parent_id`
+branch which currently falls through to `[], []` for option questions.
+
+```js
+// question_id filter → constructed formula
+const options = getQuestionOptions(filter.form_id, filter.question_id);
+const formula = {
+  buckets: options.map((opt) => ({
+    value: opt.value,
+    label: opt.label,
+    all_of: [{ question_id: filter.question_id, op: "option_equals", value: opt.value }],
+  })),
+  default: { value: "_no_info", label: "No info" },
+};
+// then: api.get("visualization/values/formula", { params: { form_id, group_by: "parent_id", monitoring: "latest", formula: JSON.stringify(formula) } })
+```
+
+If `window.forms` doesn't include the monitoring form, `getQuestionOptions`
+returns `[]` — the formula has no buckets, every datapoint falls to the
+`_no_info` default, and all markers render in the `_no_info` colour
+(graceful degradation, no crash).
+
+Both filter modes produce `{ byParent: Object<parent_id, bucket_value_string> }`
+via `(res.data.data || []).forEach(row => { map[row.group] = row.label })`.
 
 ## 4. URL Composition Examples
 
@@ -438,12 +462,16 @@ GET /api/v1/maps/geolocation/1749623934933
   &to_date=2026-05-04
   &include_monitoring=true
 
-GET /api/v1/visualization/values
+GET /api/v1/visualization/values/formula
   ?form_id=1749632545233
-  &question_id=1749633373968
   &group_by=parent_id
   &monitoring=latest
+  &formula=<url-encoded constructed formula>
 ```
+
+The `formula` is built at runtime from the question's `option[]` in
+`window.forms` — one `option_equals` bucket per option value, plus a
+`_no_info` default. See §3.4 for the construction logic.
 
 ### 4.2 Formula filter active, toggle OFF
 

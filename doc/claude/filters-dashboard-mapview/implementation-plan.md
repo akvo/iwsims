@@ -244,16 +244,23 @@ Goal: extract two well-tested hooks so `index.jsx` stays thin.
 - [x] **Create** [`DashboardMap/useMapByParent.js`](../../../frontend/src/components/dashboard/DashboardMap/useMapByParent.js)
   - Signature:
     `useMapByParent({ activeFilter, filterState }) → { byParent, loading, error }`
-  - Question-id filter →
-    `GET /visualization/values?form_id=...&question_id=...&group_by=parent_id&monitoring=latest`
-  - Formula filter →
-    `GET /visualization/values/formula` with URL-encoded `formula`
-    JSON
+  - **Both** filter modes route to
+    `GET /visualization/values/formula` (decision #22):
+    - Formula filter → passes `activeFilter.formula` JSON directly
+    - Question-id filter → constructs an equivalent formula from the
+      question's `option[]` in `window.forms` via `getQuestionOptions`
+      (one `option_equals` bucket per option + `_no_info` default);
+      avoids the unimplemented `group_by=parent_id` branch in
+      `handle_option_question`
   - Empty `byParent` when no select filter is active
   - Re-fetches when `activeFilter` or `filterState` changes
   - Per-key debouncing deferred — relies on React's natural
     re-render batching for now; revisit if integration tests show
     double-fetches.
+- [x] **Update** `useMapByParent.js` to implement Option C (decision #22):
+  - Import `getQuestionOptions` from `./getQuestionOptions`
+  - Replace the `question_id` branch (currently calls
+    `/visualization/values`) with the formula-construction logic
 - [ ] Hook-only unit tests deferred to Phase 5; the hooks are
       exercised through `DashboardMap.test.jsx` (lower test cost,
       same coverage).
@@ -333,11 +340,11 @@ correctly in the browser.
 
 ---
 
-## Phase 8 — Commit & PR
+## Phase 8 — Commit & PR ✅
 
-- [ ] `git status` — confirm only the expected files changed
-- [ ] `git diff` — re-skim each diff
-- [ ] Commit message format per project convention:
+- [x] `git status` — confirmed 12 expected files staged
+- [x] `git diff` — re-skimmed each diff (23 files, 3586+ insertions)
+- [x] Commit message format per project convention:
   ```
   [#209] feat(dashboard): configurable filter dropdown and filter-aware popup for map widget
 
@@ -355,7 +362,7 @@ correctly in the browser.
 
   Co-Authored-By: Claude <noreply@anthropic.com>
   ```
-- [ ] **Wait for user confirmation before push** (per project memory —
+- [x] **Wait for user confirmation before push** (per project memory —
       git push always requires confirmation)
 - [ ] After confirmation: push and open PR titled
       `[#209] feat(dashboard): configurable filter dropdown and filter-aware popup for map widget`
