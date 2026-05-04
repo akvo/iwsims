@@ -266,6 +266,60 @@ class ValidateShapeTests(unittest.TestCase):
                 "default": {"value": "y", "label": "Y"},
             })
 
+    def test_numeric_op_value_must_be_number(self):
+        """
+        String value for numeric op
+        must be rejected (would cause TypeError).
+        """
+        with self.assertRaises(ValueError):
+            validate_shape({
+                "buckets": [{
+                    "value": "x",
+                    "label": "X",
+                    "all_of": [
+                        {"question_id": 1, "op": "<=", "value": "abc"},
+                    ],
+                }],
+                "default": {"value": "y", "label": "Y"},
+            })
+
+    def test_between_min_max_must_be_numbers(self):
+        """String min/max for between op must be rejected."""
+        with self.assertRaises(ValueError):
+            validate_shape({
+                "buckets": [{
+                    "value": "x",
+                    "label": "X",
+                    "all_of": [
+                        {
+                            "question_id": 1,
+                            "op": "between",
+                            "min": "low",
+                            "max": "high",
+                        },
+                    ],
+                }],
+                "default": {"value": "y", "label": "Y"},
+            })
+
+    def test_option_equals_string_value_passes(self):
+        """option_equals value is a string — no numeric type check."""
+        result = validate_shape({
+            "buckets": [{
+                "value": "x",
+                "label": "X",
+                "all_of": [
+                    {
+                        "question_id": 1,
+                        "op": "option_equals",
+                        "value": "some_option",
+                    },
+                ],
+            }],
+            "default": {"value": "y", "label": "Y"},
+        })
+        self.assertIsNotNone(result)
+
     def test_default_required(self):
         with self.assertRaises(ValueError):
             validate_shape({

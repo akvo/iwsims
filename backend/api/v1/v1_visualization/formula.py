@@ -157,13 +157,30 @@ def validate_shape(formula):
                         f"buckets[{i}].all_of[{j}] op 'between' "
                         "requires 'min' and 'max'"
                     )
+                if not isinstance(cond["min"], (int, float)) or \
+                        not isinstance(cond["max"], (int, float)):
+                    raise ValueError(
+                        f"buckets[{i}].all_of[{j}] op 'between' "
+                        "'min' and 'max' must be numbers"
+                    )
             elif op == "option_in":
                 if not isinstance(cond.get("values"), list):
                     raise ValueError(
                         f"buckets[{i}].all_of[{j}] op 'option_in' "
                         "requires 'values' array"
                     )
-            elif op in NUMERIC_OPS or op == "option_equals":
+            elif op in NUMERIC_OPS:
+                if "value" not in cond:
+                    raise ValueError(
+                        f"buckets[{i}].all_of[{j}] op '{op}' "
+                        "requires 'value'"
+                    )
+                if not isinstance(cond["value"], (int, float)):
+                    raise ValueError(
+                        f"buckets[{i}].all_of[{j}] op '{op}' "
+                        "'value' must be a number"
+                    )
+            elif op == "option_equals":
                 if "value" not in cond:
                     raise ValueError(
                         f"buckets[{i}].all_of[{j}] op '{op}' "
