@@ -6,7 +6,6 @@ from datetime import datetime
 from django.db.models import Q
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_forms.models import Forms, QuestionTypes
-from api.v1.v1_profile.models import Administration
 from api.v1.v1_visualization.serializers import (
     MonitoringStatSerializer,
     GeoLocationListSerializer,
@@ -15,7 +14,10 @@ from api.v1.v1_visualization.serializers import (
     FormDataStatsFilterSerializer,
     FormulaValuesSerializer,
 )
-from api.v1.v1_visualization.models import ViewDataOptions
+from api.v1.v1_visualization.models import (
+    ViewDataOptions,
+    build_admin_full_name_map,
+)
 from api.v1.v1_visualization.functions import (
     apply_criteria_to_monitoring_qs,
 )
@@ -29,43 +31,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 # from rest_framework.permissions import IsAuthenticated
 from utils.custom_serializer_fields import validate_serializers_message
-
-
-def _build_admin_full_name_map(admin_ids):
-    """Return {admin_id: " - "-joined ancestor + self name} in 2 queries.
-
-    Avoids the N+1 ancestors/full_name property when serializing many
-    points at once.
-    """
-    if not admin_ids:
-        return {}
-    admins = list(
-        Administration.objects.filter(id__in=admin_ids)
-        .values("id", "name", "path")
-    )
-    needed_ids = set(admin_ids)
-    for adm in admins:
-        if adm["path"]:
-            needed_ids.update(
-                int(x) for x in adm["path"].split(".") if x
-            )
-    name_by_id = dict(
-        Administration.objects.filter(id__in=needed_ids)
-        .values_list("id", "name")
-    )
-    out = {}
-    for adm in admins:
-        if adm["path"]:
-            ancestor_ids = [
-                int(x) for x in adm["path"].split(".") if x
-            ]
-            ancestor_names = [
-                name_by_id[i] for i in ancestor_ids if i in name_by_id
-            ]
-            out[adm["id"]] = " - ".join(ancestor_names + [adm["name"]])
-        else:
-            out[adm["id"]] = adm["name"]
-    return out
 
 
 @extend_schema(
@@ -420,7 +385,7 @@ class GeolocationListView(APIView):
             r["administration_id"] for r in rows
             if r.get("administration_id")
         })
-        admin_full_names = _build_admin_full_name_map(admin_ids)
+        admin_full_names = build_admin_full_name_map(admin_ids)
         serializer = GeoLocationListSerializer(
             rows,
             many=True,
