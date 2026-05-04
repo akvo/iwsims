@@ -298,6 +298,17 @@ class GeolocationListView(APIView):
                     "instead of the datapoint's own created date."
                 ),
             ),
+            OpenApiParameter(
+                name="monitoring_form_id",
+                required=False,
+                type=OpenApiTypes.NUMBER,
+                location=OpenApiParameter.QUERY,
+                description=(
+                    "When include_monitoring=true, restrict the "
+                    "children join to this form ID so that unrelated "
+                    "child forms do not satisfy the date window."
+                ),
+            ),
         ],
         tags=["Maps"],
         summary="To get list of geolocations for a form",
@@ -330,16 +341,23 @@ class GeolocationListView(APIView):
             "include_monitoring", False
         )
 
+        monitoring_form_id = serializer.validated_data.get(
+            "monitoring_form_id"
+        )
         if include_monitoring and (from_date or to_date):
             child_q = Q()
             if from_date:
                 child_q &= Q(children__created__date__gte=from_date)
             if to_date:
                 child_q &= Q(children__created__date__lte=to_date)
+            child_filter = {
+                "children__is_pending": False,
+                "children__is_draft": False,
+            }
+            if monitoring_form_id:
+                child_filter["children__form_id"] = monitoring_form_id
             queryset = queryset.filter(
-                child_q,
-                children__is_pending=False,
-                children__is_draft=False,
+                child_q, **child_filter
             ).distinct()
         else:
             if from_date:
@@ -399,7 +417,8 @@ class DatapointDetailView(APIView):
     )
     def get(self, request, data_id, version):
         point = get_object_or_404(
-            FormData, pk=data_id, is_pending=False, parent__isnull=True
+            FormData, pk=data_id,
+            is_pending=False, is_draft=False, parent__isnull=True
         )
         return Response(
             DatapointDetailSerializer(instance=point).data,

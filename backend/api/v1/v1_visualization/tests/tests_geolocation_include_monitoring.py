@@ -142,6 +142,18 @@ class DatapointDetailTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(f"{self.BASE_URL}/999999")
         self.assertEqual(response.status_code, 404)
 
+    def test_404_for_draft_registration(self):
+        """Draft registrations (is_draft=True) return 404, not 200.
+
+        is_draft=False is not checked by is_pending alone — drafts are stored
+        with is_pending=False, so the lookup must explicitly exclude them to
+        prevent leaking unpublished names/locations via a public endpoint.
+        """
+        from api.v1.v1_data.models import FormData
+        FormData.objects.filter(id=self.reg1.id).update(is_draft=True)
+        response = self.client.get(f"{self.BASE_URL}/{self.reg1.id}")
+        self.assertEqual(response.status_code, 404)
+
     def test_public_access(self):
         """Unauthenticated requests return 200."""
         self.client.logout()

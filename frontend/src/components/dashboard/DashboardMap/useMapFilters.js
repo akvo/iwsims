@@ -117,11 +117,15 @@ const useMapFilters = (itemFilters, filterState) => {
           params.set("from_date", isoDate(from));
           params.set("to_date", isoDate(today));
           params.set("include_monitoring", "true");
+          const monFormId = selectFilters[0]?.form_id;
+          if (monFormId) {
+            params.set("monitoring_form_id", monFormId);
+          }
         }
       });
     }
     return params;
-  }, [toggleFilters, toggleValues, toggleDisabled]);
+  }, [toggleFilters, toggleValues, toggleDisabled, selectFilters]);
 
   return {
     activeKey,

@@ -113,6 +113,7 @@ class GeoLocationFilterSerializer(serializers.Serializer):
     include_monitoring = serializers.BooleanField(
         required=False, default=False
     )
+    monitoring_form_id = serializers.IntegerField(required=False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -137,7 +138,8 @@ class GeoLocationFilterSerializer(serializers.Serializer):
     class Meta:
         fields = [
             "administration", "criteria",
-            "from_date", "to_date", "include_monitoring",
+            "from_date", "to_date",
+            "include_monitoring", "monitoring_form_id",
         ]
 
 
