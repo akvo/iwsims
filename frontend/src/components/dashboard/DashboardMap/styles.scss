@@ -1,0 +1,88 @@
+.dashboard-map-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+
+  .dashboard-map-title {
+    font-weight: 600;
+    margin-right: 8px;
+  }
+
+  .dashboard-map-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+  }
+
+  .dashboard-map-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    .toggle-label {
+      font-size: 13px;
+    }
+  }
+}
+
+.dashboard-map-popup {
+  .leaflet-popup-tip,
+  .leaflet-popup-tip-container {
+    display: none;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    padding: 0;
+  }
+
+  .leaflet-popup-content {
+    margin: 0;
+  }
+
+  .map-popup-card {
+    min-width: 240px;
+  }
+
+  .map-popup-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &.map-popup-link {
+      justify-content: flex-end;
+    }
+  }
+
+  .map-popup-label {
+    font-weight: 600;
+    color: #555;
+  }
+
+  .map-popup-value {
+    text-align: right;
+    color: #222;
+  }
+}

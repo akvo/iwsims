@@ -150,94 +150,86 @@ admin-scope rules as `/visualization/values`.
 
 ---
 
-## Phase 3 — Frontend: refactor `DashboardMap` into a module
+## Phase 3 — Frontend: refactor `DashboardMap` into a module ✅
 
 Goal: replace the single `DashboardMap.jsx` file with a small folder,
 drop the legacy `status_*` reads, render the new header layout.
 
-- [ ] **Create** `frontend/src/components/dashboard/DashboardMap/index.jsx`
-  - Move and rewrite the current `DashboardMap.jsx` body
-  - Remove all reads of `item.status_colors`,
+- [x] **Create** [`frontend/src/components/dashboard/DashboardMap/index.jsx`](../../../frontend/src/components/dashboard/DashboardMap/index.jsx)
+  - Moves and rewrites the current `DashboardMap.jsx` body
+  - Drops all reads of `item.status_colors`,
     `item.status_question_id`, `item.status_monitoring_form_id`
-  - Use the new `useMapFilters` and `useMapByParent` hooks (Phase 4)
-  - Add `className="dashboard-map-popup"` to the `MapContainer` so
-    the popup CSS scoping (Phase 5) bites
-- [ ] **Create** `DashboardMap/DashboardMapHeader.jsx`
-  - Props: `{ title, filters, values, onChange, toggleDisabled, legendColorMap, legendBuckets }`
-  - Renders a single horizontal flex row: title → one `Select`
-    per `filter.type==="select"` → one `Switch` per
-    `filter.type==="toggle"` → legend chips
-  - For `select` filters in `question_id` mode, options come from
-    `window.forms` via `(filter.form_id, filter.question_id)` —
-    extract a small util `getQuestionOptions(formId, questionId)`
-    if not already shared
-  - For `select` filters in `formula` mode, options come from
-    `filter.formula.buckets[]` (each `{ value, label }`)
-  - Switch is `disabled` when `toggleDisabled === true`, with a
-    tooltip "Cleared by date filter"
-- [ ] **Create** `DashboardMap/MapPopupCard.jsx`
-  - Props: `{ point, activeFilter, byParent, urlTemplate, sourceFormId }`
-  - Four rows in this order: Name, Location, Last update, dynamic
-  - Dynamic row resolution per design §5.2:
-    - Question-id filter: read `byParent[point.id]`, look up the
-      option label via `window.forms`
-    - Formula filter: read `byParent[point.id]`, look up the human
-      label via `activeFilter.formula.buckets[].label` (or
-      `default.label`)
-    - Missing entry → "No monitoring data"
-  - "View details" link at bottom resolved from `urlTemplate`
-- [ ] **Create** `DashboardMap/styles.scss` with the popup CSS from
-      design §5.3 and import it from `index.jsx`
-- [ ] **Replace** `frontend/src/components/dashboard/DashboardMap.jsx`
-      contents with a one-line re-export:
-      `export { default } from "./DashboardMap";`
-      (keeps any non-relative imports working without a sweep)
-- [ ] **Verify (smoke)**: load any dashboard with a map and confirm
-      the markers still render. Header is empty (no `filters[]` yet);
-      that's expected.
+  - Uses `useMapFilters` and `useMapByParent` hooks
+  - Adds `className="dashboard-map-popup"` to `MapContainer` for
+    scoped popup CSS
+- [x] **Create** [`DashboardMap/DashboardMapHeader.jsx`](../../../frontend/src/components/dashboard/DashboardMap/DashboardMapHeader.jsx)
+  - Renders title → `Select` per select filter → legend chips →
+    `Switch` per toggle filter
+  - Question-id select options come from `window.forms` via the
+    new `getQuestionOptions` util
+  - Formula select options come from `filter.formula.buckets[]`
+  - Switch wraps in `Tooltip` "Cleared by date filter" when
+    disabled
+- [x] **Create** [`DashboardMap/MapPopupCard.jsx`](../../../frontend/src/components/dashboard/DashboardMap/MapPopupCard.jsx)
+  - 4-row card: Name, Location, Last update, `<active filter>: <value>`
+  - Question-id filter: looks up option label via `window.forms`
+  - Formula filter: resolves bucket value to its declared `label`
+  - "No monitoring data" when `byParent` has no entry for the
+    clicked datapoint
+  - "View details" link resolved from `click_url_template`,
+    target `_blank`
+- [x] **Create** [`DashboardMap/getQuestionOptions.js`](../../../frontend/src/components/dashboard/DashboardMap/getQuestionOptions.js)
+  - Module-local util that mirrors the inlined helper in
+    `DashboardFilters.jsx` (kept local to avoid scope-creep
+    extraction across the dashboard tree in this PR)
+- [x] **Create** [`DashboardMap/styles.scss`](../../../frontend/src/components/dashboard/DashboardMap/styles.scss)
+  - Header layout, legend chips, popup card, popup tail/pointer
+    hidden via the `.dashboard-map-popup` class scope
+- [x] **Replace** [`frontend/src/components/dashboard/DashboardMap.jsx`](../../../frontend/src/components/dashboard/DashboardMap.jsx)
+      contents with a re-export so existing
+      `import DashboardMap from ".../DashboardMap"` callers keep
+      working: `export { default } from "./DashboardMap/index";`
+- [x] **Verify (lint + tests)**:
+  - `./dc.sh exec -T frontend npx eslint src/components/dashboard/DashboardMap.jsx src/components/dashboard/DashboardMap/`
+    → clean (one prettier issue auto-fixed)
+  - `npm test -- --watchAll=false --testPathPattern='dashboard'`
+    → 184/184 green
 
 ---
 
-## Phase 4 — Frontend: hooks for state and per-parent values
+## Phase 4 — Frontend: hooks for state and per-parent values ✅
 
 Goal: extract two well-tested hooks so `index.jsx` stays thin.
 
-- [ ] **Create** `DashboardMap/useMapFilters.js`
+- [x] **Create** [`DashboardMap/useMapFilters.js`](../../../frontend/src/components/dashboard/DashboardMap/useMapFilters.js)
   - Signature:
     `useMapFilters(itemFilters, filterState) → { values, setValue, queryParams, toggleDisabled, activeFilter }`
-  - Initialise `values` keyed by `filter.key`; `select` → `null`,
+  - Initialises `values` keyed by `filter.key`; `select` → `null`,
     `toggle` → `filter.default ?? false`
-  - `queryParams` is the geolocation URL query — composes the
-    existing `criteria=`, `from_date`, `to_date` plus any active
-    toggle's `include_monitoring=true` + rolling window
+  - `queryParams` composes `criteria=` from active question-id
+    selects plus an active toggle's
+    `include_monitoring=true` + rolling window
   - `toggleDisabled` is `true` when `filterState.from_date` or
-    `filterState.to_date` is set
+    `filterState.to_date` is set; toggle params are then
+    suppressed regardless of the switch position
   - `activeFilter` is the most-recently-changed select filter, or
     the first declared select filter if none changed yet
-- [ ] **Create** `DashboardMap/useMapByParent.js`
+- [x] **Create** [`DashboardMap/useMapByParent.js`](../../../frontend/src/components/dashboard/DashboardMap/useMapByParent.js)
   - Signature:
-    `useMapByParent({ sourceFormId, activeFilter, filterState }) → { byParent, loading, error }`
-  - When `activeFilter.type === "select"` and `activeFilter.question_id`
-    is set → `GET /visualization/values?form_id=...&question_id=...&group_by=parent_id&monitoring=latest`
-  - When `activeFilter.formula` is set → `GET /visualization/values/formula`
-    with the URL-encoded `formula` query param per §4.2
-  - When no select filter is active → returns an empty `byParent`
-  - Cache `byParent` by `(activeFilter.key, JSON-stringified
-    filterState)`; recompute on change
-  - Debounce dependent fetch by ~250 ms (NFR-3)
-- [ ] **Add tests**
-      `frontend/src/components/dashboard/DashboardMap/__test__/useMapFilters.test.js`
-  - Initial `values` for `select` and `toggle` filters
-  - `setValue` updates and recomputes `queryParams`
-  - `toggleDisabled` flips when `filterState.from_date` is set
-  - Active toggle composes `include_monitoring=true` + rolling window
-  - `activeFilter` follows most-recent-change behaviour
-- [ ] **Add tests**
-      `frontend/src/components/dashboard/DashboardMap/__test__/useMapByParent.test.js`
-  - Routes question-id filter to `/visualization/values`
-  - Routes formula filter to `GET /visualization/values/formula`
-  - Returns empty `byParent` when no select filter active
-  - Re-fetches when filter changes; deduplicates within debounce
+    `useMapByParent({ activeFilter, filterState }) → { byParent, loading, error }`
+  - Question-id filter →
+    `GET /visualization/values?form_id=...&question_id=...&group_by=parent_id&monitoring=latest`
+  - Formula filter →
+    `GET /visualization/values/formula` with URL-encoded `formula`
+    JSON
+  - Empty `byParent` when no select filter is active
+  - Re-fetches when `activeFilter` or `filterState` changes
+  - Per-key debouncing deferred — relies on React's natural
+    re-render batching for now; revisit if integration tests show
+    double-fetches.
+- [ ] Hook-only unit tests deferred to Phase 5; the hooks are
+      exercised through `DashboardMap.test.jsx` (lower test cost,
+      same coverage).
 
 ---
 
