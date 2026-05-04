@@ -88,8 +88,10 @@ For a *formula* active filter, bucket values are
 #### FR-2.3 — `byParent` table
 
 For both filter modes the frontend fetches a `byParent` table from
-the backend (question-id mode → `/visualization/values`; formula
-mode → `/visualization/values/formula`). `byParent[datapoint_id]`
+the backend via `GET /visualization/values/formula`. For question-id
+filters the hook constructs an equivalent `option_equals` formula from
+`window.forms` options at call-time (decision #22); for formula
+filters the config JSON is passed directly. `byParent[datapoint_id]`
 yields the bucket value for that datapoint. Datapoints absent from
 `byParent` are treated as `_no_info`.
 
@@ -243,9 +245,11 @@ tail/pointer is hidden via CSS.
 - Filter-change-driven refetches are debounced (~250 ms) to avoid
   double-fetch when the user toggles the switch and changes the
   dropdown in rapid succession.
-- The geolocation response now includes `administration_full_name`
-  and `updated` per point. For the largest existing dashboards this
-  adds ≤ ~80 bytes per point — acceptable.
+- The geolocation response is lean: `{id, name, geo, administration_id}`
+  only. `administration_full_name` and `updated` are fetched on demand
+  via `GET /maps/datapoint/{id}` when a marker is clicked, and cached
+  in a per-component `useRef` map so repeated clicks are instant
+  (decision #21).
 - Per-parent filter results (`byParent`) are cached on the component
   for the lifetime of the active filter selection. They are
   recomputed only when the filter changes or the dashboard-level
@@ -281,12 +285,20 @@ Frontend unit tests for `DashboardMap`:
 Backend tests:
 
 - `GeolocationListView` with `include_monitoring=true` filters by
-  monitoring children's `created`.
-- `GeolocationListView` response now includes
-  `administration_full_name` and `updated` per point.
+  monitoring children's `created`, scoped to the configured
+  `monitoring_form_id` so unrelated child forms do not satisfy the
+  date window.
+- `GeolocationListView` response is lean (`{id, name, geo,
+  administration_id}`); `administration_full_name` and `updated` are
+  not included — verified by asserting their absence.
+- `DatapointDetailView` (`GET /maps/datapoint/{id}`) returns the
+  expected fields, returns 404 for monitoring children and drafts
+  (`is_draft=True`), and is publicly accessible.
 - New formula endpoint evaluates AND-of-conditions (including
   `between` ranges), respects "latest repeat" semantics, returns the
   `default` bucket when no bucket matches, and groups by `parent_id`.
+- `validate_shape` rejects non-numeric values for numeric operators
+  (prevents 500 TypeError at evaluation time).
 - Permission checks on the new endpoint match the existing
   `/visualization/values` pattern.
 
