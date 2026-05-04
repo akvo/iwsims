@@ -1,6 +1,11 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 
-const isoDate = (d) => d.toISOString().slice(0, 10);
+const isoDate = (d) =>
+  [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
 
 /**
  * Local state + derived geolocation query params for the dashboard
@@ -57,6 +62,14 @@ const useMapFilters = (itemFilters, filterState) => {
     }
   }, [selectFilters, activeKey]);
 
+  // Reset chip selections when the widget config changes. Both dashboards
+  // share the same map_main item id, so navigating between them reuses this
+  // component instance — without a reset, the previous dashboard's chip
+  // selections carry over into the new one.
+  useEffect(() => {
+    setSelectedChips({});
+  }, [itemFilters]);
+
   const activeFilter = useMemo(
     () => selectFilters.find((f) => f.key === activeKey) || null,
     [selectFilters, activeKey]
@@ -74,6 +87,13 @@ const useMapFilters = (itemFilters, filterState) => {
   const setToggleValue = useCallback((key, next) => {
     setToggleValues((prev) => ({ ...prev, [key]: next }));
   }, []);
+
+  // Reset toggle values to config defaults on config change, for the same
+  // reason as the chip reset above — a toggle turned off in dashboard A must
+  // not persist into dashboard B where the config default is true.
+  useEffect(() => {
+    setToggleValues(initialToggleValues);
+  }, [initialToggleValues]);
 
   const toggleChip = useCallback((filterKey, bucketValue, allBucketValues) => {
     setSelectedChips((prev) => {
