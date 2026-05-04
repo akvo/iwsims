@@ -85,28 +85,22 @@ class MonitoringStatSerializer(serializers.Serializer):
 
 
 class GeoLocationListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FormData
+        fields = ["id", "name", "geo", "administration_id"]
+
+
+class DatapointDetailSerializer(serializers.ModelSerializer):
     administration_full_name = serializers.SerializerMethodField()
-    updated = serializers.DateTimeField(allow_null=True)
 
     def get_administration_full_name(self, obj):
-        full_names = self.context.get("admin_full_names") or {}
-        admin_id = (
-            obj["administration_id"]
-            if isinstance(obj, dict)
-            else obj.administration_id
-        )
-        return full_names.get(admin_id) or ""
+        if obj.administration:
+            return obj.administration.full_name
+        return ""
 
     class Meta:
         model = FormData
-        fields = [
-            "id",
-            "name",
-            "geo",
-            "administration_id",
-            "administration_full_name",
-            "updated",
-        ]
+        fields = ["id", "name", "administration_full_name", "updated"]
 
 
 class GeoLocationFilterSerializer(serializers.Serializer):

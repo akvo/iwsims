@@ -1,13 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
+import { api } from "../../../lib";
 import getQuestionOptions from "./getQuestionOptions";
 
 const NO_DATA = "No monitoring data";
+const LOADING = "…";
 
-/**
- * Resolve the dynamic row's display value for a clicked datapoint
- * given the active filter and the byParent table.
- */
 const resolveDynamic = (activeFilter, byParent, pointId) => {
   if (!activeFilter) {
     return null;
@@ -59,7 +57,37 @@ const MapPopupCard = ({
   byParent,
   urlTemplate,
   sourceFormId,
+  cache,
 }) => {
+  const cached = cache.current[point.id];
+  const [detail, setDetail] = useState(cached || null);
+  const [loadingDetail, setLoadingDetail] = useState(!cached);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!cache.current[point.id]) {
+      api
+        .get(`/maps/datapoint/${point.id}`)
+        .then((res) => {
+          if (cancelled) {
+            return;
+          }
+          cache.current[point.id] = res.data;
+          setDetail(res.data);
+          setLoadingDetail(false);
+        })
+        .catch(() => {
+          if (cancelled) {
+            return;
+          }
+          setLoadingDetail(false);
+        });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [point.id, cache]);
+
   const detailHref = useMemo(() => {
     if (!urlTemplate) {
       return null;
@@ -74,6 +102,11 @@ const MapPopupCard = ({
     [activeFilter, byParent, point.id]
   );
 
+  const locationValue = loadingDetail
+    ? LOADING
+    : detail?.administration_full_name || "—";
+  const updatedValue = loadingDetail ? LOADING : formatUpdated(detail?.updated);
+
   return (
     <div className="map-popup-card">
       <div className="map-popup-row">
@@ -82,13 +115,11 @@ const MapPopupCard = ({
       </div>
       <div className="map-popup-row">
         <span className="map-popup-label">Location</span>
-        <span className="map-popup-value">
-          {point.administration_full_name || "—"}
-        </span>
+        <span className="map-popup-value">{locationValue}</span>
       </div>
       <div className="map-popup-row">
         <span className="map-popup-label">Last update</span>
-        <span className="map-popup-value">{formatUpdated(point.updated)}</span>
+        <span className="map-popup-value">{updatedValue}</span>
       </div>
       {activeFilter && (
         <div className="map-popup-row">
@@ -113,6 +144,7 @@ MapPopupCard.propTypes = {
   byParent: PropTypes.object,
   urlTemplate: PropTypes.string,
   sourceFormId: PropTypes.number,
+  cache: PropTypes.object.isRequired,
 };
 
 export default MapPopupCard;

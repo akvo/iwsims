@@ -78,24 +78,17 @@ class GeolocationListTestCases(TestCase, ProfileTestHelperMixin):
         self.assertGreater(len(data), 0)
         self.assertEqual(
             list(data[0]),
-            [
-                "id",
-                "name",
-                "geo",
-                "administration_id",
-                "administration_full_name",
-                "updated",
-            ]
+            ["id", "name", "geo", "administration_id"]
         )
         # Ensure draft data is not included in the response
         self.assertNotIn(self.draft_data.id, [d["id"] for d in data])
 
         # Ensure the geolocation is correctly formatted
         self.assertIsInstance(data[0]["geo"], list)
-        # administration_full_name is populated and updated is serialised
-        self.assertIsInstance(data[0]["administration_full_name"], str)
-        self.assertGreater(len(data[0]["administration_full_name"]), 0)
-        self.assertIn("updated", data[0])
+        # administration_full_name and updated are fetched on demand
+        # via /maps/datapoint/{id} — not bundled into the list response
+        self.assertNotIn("administration_full_name", data[0])
+        self.assertNotIn("updated", data[0])
 
     def test_get_geolocation_list_with_administration_filter(self):
         """

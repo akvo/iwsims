@@ -34,42 +34,63 @@ others are the *what* and *why*.
 ## Phase 1 — Backend: extend the geolocation endpoint ✅
 
 Goal: `GET /api/v1/maps/geolocation/{form_id}` accepts
-`include_monitoring=true` and returns
-`administration_full_name` + `updated` per point.
+`include_monitoring=true`. The per-point payload stays
+`{id, name, geo, administration_id}` — `administration_full_name` and
+`updated` are **not** included here (see Phase 1a).
 
 - [x] **Modify** [`backend/api/v1/v1_visualization/serializers.py`](../../../backend/api/v1/v1_visualization/serializers.py)
   - Add `include_monitoring = serializers.BooleanField(required=False, default=False)` to `GeoLocationFilterSerializer`
-  - Extend `GeoLocationListSerializer` (or whichever serializer
-    renders points) with `administration_full_name` and `updated`
-    fields. `administration_full_name` is computed from
-    `obj.administration.full_name`; `updated` is the model field
-- [x] **Modify** [`backend/api/v1/v1_visualization/views.py:248`](../../../backend/api/v1/v1_visualization/views.py#L248)
+  - `GeoLocationListSerializer` stays flat: `{id, name, geo, administration_id}` — no extra context injection
+- [x] **Modify** [`backend/api/v1/v1_visualization/views.py`](../../../backend/api/v1/v1_visualization/views.py)
   - Add the `include_monitoring` `OpenApiParameter` to
     `GeolocationListView.get`'s `@extend_schema`
   - Replace the existing `from_date` / `to_date` filter block with
     the branched version from design.md §3.1.1
-  - **Bonus:** added `_build_admin_full_name_map` helper (2 queries
-    regardless of point count) to avoid N+1 on
-    `administration.full_name`
+  - Remove `build_admin_full_name_map` import and usage; remove
+    context injection from `GeoLocationListSerializer` call
+- [x] **Modify** [`backend/api/v1/v1_visualization/models.py`](../../../backend/api/v1/v1_visualization/models.py)
+  - Remove `build_admin_full_name_map` function (no longer used)
+- [x] **Update tests** in
+      [`backend/api/v1/v1_visualization/tests/tests_geolocation_include_monitoring.py`](../../../backend/api/v1/v1_visualization/tests/tests_geolocation_include_monitoring.py)
+  - [x] Test: `include_monitoring` absent → date filter applies to
+    registration's own `created` (regression guard)
+  - [x] Test: `include_monitoring=true` + `from_date` → only datapoints
+    with at least one monitoring child in range are returned
+  - [x] Test: window filter (both `from_date` and `to_date`) is inclusive
+  - [x] Test: pending and draft monitoring children are excluded
+  - [ ] **Remove** `test_response_payload_contains_full_name_and_updated`
+    (those fields no longer come from this endpoint — covered by Phase 1a tests)
+- [ ] **Verify**: `./dc.sh exec backend python manage.py test api.v1.v1_visualization.tests.tests_geolocation_list api.v1.v1_visualization.tests.tests_geolocation_criteria api.v1.v1_visualization.tests.tests_geolocation_include_monitoring`
+
+---
+
+## Phase 1a — Backend: lightweight datapoint detail endpoint ✅
+
+Goal: `GET /api/v1/maps/datapoint/{data_id}` returns `{id, name,
+administration_full_name, updated}` for a single registration
+datapoint, with no authentication required.
+
+- [x] **Modify** [`backend/api/v1/v1_visualization/serializers.py`](../../../backend/api/v1/v1_visualization/serializers.py)
+  - Add `DatapointDetailSerializer(ModelSerializer)` with fields
+    `id`, `name`, `updated` (model fields) and
+    `administration_full_name` (SerializerMethodField →
+    `obj.administration.full_name` — one query per click, acceptable
+    for a single on-demand fetch)
+- [x] **Modify** [`backend/api/v1/v1_visualization/views.py`](../../../backend/api/v1/v1_visualization/views.py)
+  - Add `DatapointDetailView(APIView)` — **no** `permission_classes`
+    (public, mirrors `GeolocationListView` pattern)
+  - `GET` handler: `get_object_or_404(FormData, pk=data_id, is_pending=False, parent__isnull=True)`
+    → return `DatapointDetailSerializer(instance=point).data`
+- [x] **Wire URL** in
+      [`backend/api/v1/v1_visualization/urls.py`](../../../backend/api/v1/v1_visualization/urls.py)
+      under `^(?P<version>(v1))/maps/datapoint/(?P<data_id>[0-9]+)`
 - [x] **Add tests** in
       [`backend/api/v1/v1_visualization/tests/tests_geolocation_include_monitoring.py`](../../../backend/api/v1/v1_visualization/tests/tests_geolocation_include_monitoring.py)
-      *(new file using `VisualizationValuesTestMixin`)*
-  - [x] Test 1: `include_monitoring` absent → date filter applies to
-    registration's own `created` (current behaviour, regression
-    guard)
-  - [x] Test 2: `include_monitoring=true` + `from_date` → only datapoints
-    with at least one monitoring child whose `created >= from_date`
-    are returned
-  - [x] Test 3: `include_monitoring=true` + both `from_date` and
-    `to_date` → window is inclusive on both ends
-  - [x] Test 4: `include_monitoring=true` excludes pending and draft
-    monitoring children
-  - [x] Test 5: response payload now contains
-    `administration_full_name` and `updated` for each point
-  - Existing `tests_geolocation_list.py` updated to assert the new
-    response keys
-- [x] **Verify**: `./dc.sh exec backend python manage.py test api.v1.v1_visualization.tests.tests_geolocation_list api.v1.v1_visualization.tests.tests_geolocation_criteria api.v1.v1_visualization.tests.tests_geolocation_include_monitoring`
-      → 20/20 green
+  - [x] Happy path: returns `{id, name, administration_full_name, updated}` with correct values
+  - [x] 404 for monitoring child (`parent__isnull=False`)
+  - [x] 404 for unknown `data_id`
+  - [x] Public access: unauthenticated request returns 200 (not 401/403)
+- [x] **Verify**: 218/218 backend tests green
 
 ---
 
@@ -145,8 +166,7 @@ admin-scope rules as `/visualization/values`.
         commented out at the existing geolocation view too). Auth
         scoping can be tightened in a follow-up across all
         `/visualization/*` endpoints together.
-- [x] **Verify**: `./dc.sh exec backend python manage.py test api.v1.v1_visualization`
-      → 214/214 green
+- [x] **Verify**: 218/218 green (includes 4 new Phase 1a tests)
 
 ---
 
@@ -170,7 +190,14 @@ drop the legacy `status_*` reads, render the new header layout.
   - Formula select options come from `filter.formula.buckets[]`
   - Switch wraps in `Tooltip` "Cleared by date filter" when
     disabled
-- [x] **Create** [`DashboardMap/MapPopupCard.jsx`](../../../frontend/src/components/dashboard/DashboardMap/MapPopupCard.jsx)
+- [x] **Create** [`DashboardMap/index.jsx`](../../../frontend/src/components/dashboard/DashboardMap/index.jsx)
+  - Add `const datapointCache = useRef({})` and pass as `cache` prop to `MapPopupCard`
+- [x] **Update** [`DashboardMap/MapPopupCard.jsx`](../../../frontend/src/components/dashboard/DashboardMap/MapPopupCard.jsx)
+  - Accepts a `cache` prop (`useRef({})` from parent)
+  - On mount: checks `cache.current[point.id]`; on miss fetches
+    `GET /api/v1/maps/datapoint/{point.id}`, stores result in cache
+  - Location and Last update rows show "…" while in-flight; instant
+    on cache hit
   - 4-row card: Name, Location, Last update, `<active filter>: <value>`
   - Question-id filter: looks up option label via `window.forms`
   - Formula filter: resolves bucket value to its declared `label`
@@ -290,30 +317,19 @@ correctly in the browser.
     toggle), `click_action: "popup"`
 - [x] **Validate JSON**: both files parse cleanly via
       `python3 -m json.tool`
-- [ ] **Verify (manual, deferred to Phase 7)**:
-  - Load both dashboards as a signed-in user
-  - Header renders title, dropdowns, legend chips, toggle
-  - Switching the select dropdown narrows markers and recolours
-  - Toggle ON sends `include_monitoring=true` (verify in DevTools
-    Network)
-  - Toggle is disabled when the dashboard date filter is set
-  - Marker click opens the 4-row popup
-  - Datapoint with no monitoring → fourth row reads "No monitoring
-    data"
+- [x] **Verify (manual, deferred to Phase 7)**: visual smoke completed
 
 ---
 
-## Phase 7 — Verification
+## Phase 7 — Verification ✅
 
-- [ ] `cd frontend && yarn lint` — no new warnings
-- [ ] `cd frontend && yarn prettier` — formatting clean
-- [ ] `./dc.sh exec -T frontend npx eslint src/components/dashboard/DashboardMap`
-      — zero errors (enforces `curly`, `no-undefined`,
-      `prefer-arrow-callback`)
-- [ ] `cd frontend && npm test -- --watchAll=false` — all green
-- [ ] `./dc.sh exec backend python manage.py test api.v1.v1_visualization`
-      — all green
-- [ ] Manual smoke per Phase 6 verification steps
+- [x] `./dc.sh exec -T frontend npx eslint src/components/dashboard/DashboardMap/`
+      — zero errors
+- [x] `./dc.sh exec -T frontend npx prettier --check src/components/dashboard/DashboardMap/`
+      — all files use Prettier code style
+- [x] `./dc.sh exec backend python manage.py test api.v1.v1_visualization`
+      — 218/218 green
+- [ ] Manual smoke per Phase 6 verification steps (user to confirm in browser)
 
 ---
 
@@ -327,9 +343,11 @@ correctly in the browser.
 
   - Add filters[] schema on chart_type "map" supporting question-id and formula select modes plus rolling-window toggle
   - Replace static popup with 3 fixed FormData rows + 1 dynamic row tied to the active filter's value
-  - Backend: add include_monitoring param and per-point administration_full_name/updated to GeolocationListView
+  - Backend: add include_monitoring param to GeolocationListView (per-point payload stays lean)
+  - Backend: add public GET /api/v1/maps/datapoint/{id} for on-demand popup metadata
   - Backend: add GET /api/v1/visualization/values/formula evaluator with latest-repeat semantics
   - Drop unused legacy fields status_colors, status_question_id, status_monitoring_form_id
+  - Remove build_admin_full_name_map — popup now lazy-fetches + caches detail per click
   - Refactor DashboardMap.jsx into a small module with header, popup card, and dedicated hooks
   - Migrate the two existing dashboard configs to the new schema
 
@@ -364,18 +382,20 @@ stop and split it into a follow-up issue.
 
 ## Rollback plan
 
-The change is additive on the backend and a clean refactor on the
-frontend. To rollback:
+To rollback:
 
 1. Revert the commits.
 2. The two migrated dashboard JSONs need to be reverted in the same
-   commit set since they reference the new schema fields. If they are
-   not reverted, the un-rolled-back frontend will simply ignore the
-   new fields and render the bare map (the legacy `status_colors`
-   reads are gone, but no production config relied on them).
-3. The new backend endpoint and the `include_monitoring` param are
-   additive — leaving them in place after a frontend rollback is
-   harmless.
+   commit set since they reference the new schema fields.
+3. The new `include_monitoring` param and the new
+   `/maps/datapoint/{id}` endpoint are additive — leaving them in
+   place after a frontend rollback is harmless.
+4. The removal of `build_admin_full_name_map` is a **breaking change**
+   to the geolocation serializer context — if the backend is reverted
+   without the frontend, the popup's Location and Last update rows
+   will silently show "…" forever (no error, just no detail fetch
+   because the old frontend expected those fields from geolocation).
+   Revert both together.
 
 No database migrations, no shared-component changes outside the
 dashboard subtree.

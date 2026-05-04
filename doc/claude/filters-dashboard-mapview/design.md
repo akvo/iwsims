@@ -180,7 +180,7 @@ sequenceDiagram
     participant Eval as Formula evaluator (or /values)
     Renderer->>Map: item, filterState
     Map->>Geo: GET /maps/geolocation/<source_form_id>?...
-    Geo-->>Map: [{ id, name, geo, administration_full_name, updated }]
+    Geo-->>Map: [{ id, name, geo, administration_id }]
     par Per active select filter
         Map->>ByParent: load(activeFilter)
         alt question_id filter
@@ -201,71 +201,73 @@ sequenceDiagram
     participant User
     participant Marker as CircleMarker
     participant Popup as MapPopupCard
-    participant Map as DashboardMap
+    participant Cache as datapointCache (useRef)
+    participant Detail as GET /maps/datapoint/{id}
     User->>Marker: click
     Marker->>Popup: open with point + active filter
-    Popup->>Map: read byParent[point.id], point.name, point.administration_full_name, point.updated
+    Popup->>Cache: check cache[point.id]
+    alt cache hit
+        Cache-->>Popup: { name, administration_full_name, updated }
+    else cache miss
+        Popup->>Detail: GET /api/v1/maps/datapoint/{point.id}
+        Detail-->>Popup: { id, name, administration_full_name, updated }
+        Popup->>Cache: store result
+    end
     alt byParent has entry
-        Popup-->>User: "active.label: <bucket_label>"
+        Popup-->>User: all 4 rows rendered
     else no entry
         Popup-->>User: "active.label: No monitoring data"
     end
     Popup-->>User: View details link
 ```
 
-No additional fetch is required on click — all data is already on the
-component. (Decision #9: cache per-parent values for the lifetime of
-the active filter.)
+The popup shows "…" for Location and Last update while the detail
+fetch is in-flight. The cache (`datapointCache`) lives in a `useRef`
+on `DashboardMap` and persists for the component's lifetime — repeated
+clicks on the same marker are instant.
 
 ## 3. Backend Contract
 
 ### 3.1 `GET /api/v1/maps/geolocation/{form_id}` — extended
 
-Existing endpoint at `backend/api/v1/v1_visualization/views.py:248`
-(`GeolocationListView`). Two changes:
+Existing endpoint at `backend/api/v1/v1_visualization/views.py`
+(`GeolocationListView`). One change — a new query parameter:
 
-1. New query parameter:
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `include_monitoring` | boolean | `false` | When `true`, the existing `from_date` / `to_date` params filter by the datapoint's **monitoring children's** `created` date instead of the datapoint's own. |
 
-   | Param | Type | Default | Description |
-   |-------|------|---------|-------------|
-   | `include_monitoring` | boolean | `false` | When `true`, the existing `from_date` / `to_date` params filter by the datapoint's **monitoring children's** `created` date instead of the datapoint's own. |
+Per-point payload (unchanged from the existing endpoint):
 
-2. Per-point payload gains two fields:
+```json
+{
+  "id": 999,
+  "name": "EPS A",
+  "geo": [-17.5, 178.0],
+  "administration_id": 42
+}
+```
 
-   ```json
-   {
-     "id": 999,
-     "name": "EPS A",
-     "geo": [-17.5, 178.0],
-     "administration_full_name": "Eastern | Lomaiviti | Levuka",
-     "updated": "2026-05-04T12:34:56Z"
-   }
-   ```
+`administration_full_name` and `updated` are **not** included here —
+they are fetched on demand via §3.2 when the user clicks a marker.
 
-#### 3.1.1 Server logic change (sketch)
+#### 3.1.1 Server logic change
 
-In `GeolocationListView.get`, replace the existing date-filter block
-(currently lines 308–313 of `views.py`):
+In `GeolocationListView.get`, branch the date-filter logic on
+`include_monitoring`:
 
 ```python
-from_date = serializer.validated_data.get("from_date")
-to_date = serializer.validated_data.get("to_date")
-include_monitoring = serializer.validated_data.get(
-    "include_monitoring", False
-)
-
-if include_monitoring:
+if include_monitoring and (from_date or to_date):
     child_q = Q()
     if from_date:
         child_q &= Q(children__created__date__gte=from_date)
     if to_date:
         child_q &= Q(children__created__date__lte=to_date)
-    if child_q:
-        queryset = queryset.filter(
-            child_q,
-            children__is_pending=False,
-            children__is_draft=False,
-        ).distinct()
+    queryset = queryset.filter(
+        child_q,
+        children__is_pending=False,
+        children__is_draft=False,
+    ).distinct()
 else:
     if from_date:
         queryset = queryset.filter(created__date__gte=from_date)
@@ -273,20 +275,60 @@ else:
         queryset = queryset.filter(created__date__lte=to_date)
 ```
 
-`children` is the existing reverse relation on `FormData`
-(`parent = ForeignKey(self, related_name="children")`, see
-`backend/api/v1/v1_data/models.py:14`).
+`children` is the reverse relation on `FormData`
+(`parent = ForeignKey(self, related_name="children")`).
 
 #### 3.1.2 Serializer changes
 
-- Add `include_monitoring = serializers.BooleanField(required=False, default=False)`
-  to `GeoLocationFilterSerializer`.
-- Extend the per-point response serializer with
-  `administration_full_name` (computed from
-  `obj.administration.full_name` — already exposed on
-  `Administration`) and `updated`.
+Add `include_monitoring = serializers.BooleanField(required=False, default=False)`
+to `GeoLocationFilterSerializer`. The response serializer stays flat:
+`{id, name, geo, administration_id}` — no extra context injection
+needed.
 
-### 3.2 New endpoint — formula evaluator
+### 3.2 New endpoint — lightweight datapoint detail (public)
+
+`GET /api/v1/maps/datapoint/{data_id}`
+
+Serves the map popup's Location and Last update rows on demand.
+No authentication required — mirrors the open-access policy of
+`GeolocationListView`.
+
+#### Request
+
+| Segment / param | Type | Notes |
+|-----------------|------|-------|
+| `data_id` | int (path) | `FormData.pk`; must have `is_pending=False`, `parent=NULL` (registration only). Returns 404 otherwise. |
+
+#### Response
+
+```json
+{
+  "id": 999,
+  "name": "EPS A",
+  "administration_full_name": "Eastern - Lomaiviti - Levuka",
+  "updated": "2026-05-04T12:34:56Z"
+}
+```
+
+`administration_full_name` is produced by
+`obj.administration.full_name` (the existing property on
+`Administration`). For a single record this is two queries (the
+per-instance cost is acceptable here; the N+1 concern only applies
+when serialising many points at once).
+
+#### Server location
+
+`DatapointDetailView` in `backend/api/v1/v1_visualization/views.py`.
+Route added to `backend/api/v1/v1_visualization/urls.py`.
+
+#### Frontend caching
+
+`MapPopupCard` holds a `cache` prop — a `useRef({})` created in
+`DashboardMap/index.jsx`. On mount the popup checks `cache.current[point.id]`;
+on miss it fetches and stores the result. Location and Last update
+rows show "…" while in-flight.
+
+### 3.3 New endpoint — formula evaluator
 
 `GET /api/v1/visualization/values/formula`
 
@@ -366,7 +408,7 @@ answers by `(question, -index)` and picking the first per
 Mirror `/visualization/values` — same auth class, same admin-scope
 filter.
 
-### 3.3 Frontend hook contract
+### 3.4 Frontend hook contract
 
 ```js
 // useMapByParent.js (signature)
@@ -538,13 +580,18 @@ do not bleed into other Leaflet popups in the app.
 
 ## 7. Migration Plan
 
-1. **Backend — `include_monitoring` + popup metadata.**
-   - Add the param to `GeoLocationFilterSerializer`.
-   - Update `GeolocationListView` filter logic.
-   - Add `administration_full_name` and `updated` to the
-     `GeoLocationListSerializer`.
+1. **Backend — `include_monitoring` param.**
+   - Add `include_monitoring` to `GeoLocationFilterSerializer`.
+   - Update `GeolocationListView` filter logic (§3.1.1).
+   - Keep the per-point payload as `{id, name, geo, administration_id}` —
+     do **not** add `administration_full_name` / `updated` here.
    - Backend tests for the three behaviour paths
      (`include_monitoring=false`, `=true`, combined with `criteria`).
+1a. **Backend — lightweight datapoint detail endpoint (§3.2).**
+   - New `DatapointDetailView` — public, no auth.
+   - `GET /api/v1/maps/datapoint/{data_id}` → `{id, name, administration_full_name, updated}`.
+   - `DatapointDetailSerializer` calls `obj.administration.full_name` directly.
+   - Tests: happy-path payload, 404 for monitoring child, public access.
 2. **Backend — formula evaluator.**
    - New `GET /api/v1/visualization/values/formula` view + serializer.
    - Latest-repeat resolution helper.

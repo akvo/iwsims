@@ -98,8 +98,7 @@ class GeolocationIncludeMonitoringTestCases(
         names = sorted(row["name"] for row in response.json())
         self.assertEqual(names, ["Site Beta"])
 
-    def test_response_payload_contains_full_name_and_updated(self):
-        """Response carries administration_full_name and updated."""
+    def test_geolocation_payload_is_lean(self):
         response = self.client.get(
             f"{self.BASE_URL}/{self.registration.id}"
         )
@@ -107,6 +106,44 @@ class GeolocationIncludeMonitoringTestCases(
         data = response.json()
         self.assertGreater(len(data), 0)
         for row in data:
-            self.assertIn("administration_full_name", row)
-            self.assertIn("updated", row)
-            self.assertIsInstance(row["administration_full_name"], str)
+            self.assertIn("id", row)
+            self.assertIn("name", row)
+            self.assertIn("geo", row)
+            self.assertNotIn("administration_full_name", row)
+            self.assertNotIn("updated", row)
+
+
+@override_settings(USE_TZ=False, TEST_ENV=True)
+class DatapointDetailTestCases(VisualizationValuesTestMixin, APITestCase):
+    """Test GET /api/v1/maps/datapoint/{data_id}."""
+
+    BASE_URL = "/api/v1/maps/datapoint"
+
+    def test_returns_expected_fields(self):
+        """Response contains id, name, administration_full_name, updated."""
+        response = self.client.get(f"{self.BASE_URL}/{self.reg1.id}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("id", data)
+        self.assertIn("name", data)
+        self.assertIn("administration_full_name", data)
+        self.assertIn("updated", data)
+        self.assertEqual(data["id"], self.reg1.id)
+        self.assertEqual(data["name"], self.reg1.name)
+        self.assertIsInstance(data["administration_full_name"], str)
+
+    def test_404_for_monitoring_child(self):
+        """A monitoring child (parent != NULL) returns 404."""
+        response = self.client.get(f"{self.BASE_URL}/{self.mon1a.id}")
+        self.assertEqual(response.status_code, 404)
+
+    def test_404_for_unknown_id(self):
+        """An unknown data_id returns 404."""
+        response = self.client.get(f"{self.BASE_URL}/999999")
+        self.assertEqual(response.status_code, 404)
+
+    def test_public_access(self):
+        """Unauthenticated requests return 200."""
+        self.client.logout()
+        response = self.client.get(f"{self.BASE_URL}/{self.reg1.id}")
+        self.assertEqual(response.status_code, 200)

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import { Alert, Skeleton } from "antd";
@@ -39,6 +39,7 @@ const DashboardMap = ({
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const datapointCache = useRef({});
 
   const sourceFormId = item?.source_form_id;
   const urlTemplate =
@@ -216,6 +217,7 @@ const DashboardMap = ({
                 byParent={byParent}
                 urlTemplate={urlTemplate}
                 sourceFormId={sourceFormId}
+                cache={datapointCache}
               />
             </Popup>
           </CircleMarker>

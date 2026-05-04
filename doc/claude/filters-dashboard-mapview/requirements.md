@@ -192,10 +192,13 @@ backend already grouped by `parent_id` — the popup just looks up
 
 #### FR-5.4 — Static FormData fields
 
-`administration_full_name` and `updated` are not in the existing
-`/maps/geolocation` response. They are added to that endpoint's
-per-point payload (see design.md §3.1) so no extra fetch is needed
-per click.
+`administration_full_name` and `updated` are not pre-loaded in the
+geolocation response. When the user clicks a marker the popup fetches
+them on demand from `GET /api/v1/maps/datapoint/{data_id}` (see
+design.md §3.2). Results are cached in a `useRef` map for the lifetime
+of the `DashboardMap` component so repeated clicks on the same marker
+are instant. While the detail is loading the popup renders "…" for
+those two rows.
 
 #### FR-5.5 — View details link
 

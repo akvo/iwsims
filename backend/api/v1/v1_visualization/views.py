@@ -13,10 +13,10 @@ from api.v1.v1_visualization.serializers import (
     FormDataStatSerializer,
     FormDataStatsFilterSerializer,
     FormulaValuesSerializer,
+    DatapointDetailSerializer,
 )
 from api.v1.v1_visualization.models import (
     ViewDataOptions,
-    build_admin_full_name_map,
 )
 from api.v1.v1_visualization.functions import (
     apply_criteria_to_monitoring_qs,
@@ -377,23 +377,33 @@ class GeolocationListView(APIView):
                 Q(administration__path__startswith=adm_path)
             )
         rows = list(
-            queryset.values(
-                "id", "name", "geo", "administration_id", "updated"
-            )
+            queryset.values("id", "name", "geo", "administration_id")
         )
-        admin_ids = list({
-            r["administration_id"] for r in rows
-            if r.get("administration_id")
-        })
-        admin_full_names = build_admin_full_name_map(admin_ids)
-        serializer = GeoLocationListSerializer(
-            rows,
-            many=True,
-            context={"admin_full_names": admin_full_names},
+        serializer = GeoLocationListSerializer(rows, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class DatapointDetailView(APIView):
+    # permission_classes = [IsAuthenticated]
+    # public, same as GeolocationListView
+
+    @extend_schema(
+        responses=DatapointDetailSerializer,
+        tags=["Maps"],
+        summary="Lightweight datapoint metadata for the map popup",
+        description=(
+            "Returns name, administration_full_name, and updated for "
+            "a single registration datapoint. Fetched on demand when "
+            "the user clicks a map marker; results are cached client-side."
+        ),
+    )
+    def get(self, request, data_id, version):
+        point = get_object_or_404(
+            FormData, pk=data_id, is_pending=False, parent__isnull=True
         )
         return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
+            DatapointDetailSerializer(instance=point).data,
+            status=status.HTTP_200_OK,
         )
 
 
