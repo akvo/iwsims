@@ -13,10 +13,15 @@ from api.v1.v1_visualization.serializers import (
     GeoLocationFilterSerializer,
     FormDataStatSerializer,
     FormDataStatsFilterSerializer,
+    FormulaValuesSerializer,
 )
 from api.v1.v1_visualization.models import ViewDataOptions
 from api.v1.v1_visualization.functions import (
     apply_criteria_to_monitoring_qs,
+)
+from api.v1.v1_visualization.formula import (
+    evaluate as formula_evaluate,
+    pick_latest_repeat,
 )
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
@@ -425,3 +430,121 @@ class GeolocationListView(APIView):
             serializer.data,
             status=status.HTTP_200_OK
         )
+
+
+@extend_schema(
+    description=(
+        "Evaluate a formula against the latest monitoring child of "
+        "each datapoint and group the resulting bucket value by "
+        "parent_id. Same response shape as /visualization/values."
+    ),
+    tags=["Visualization"],
+    parameters=[
+        OpenApiParameter(
+            name="form_id", required=True,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="The monitoring form id.",
+        ),
+        OpenApiParameter(
+            name="group_by", required=True,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=["parent_id"],
+        ),
+        OpenApiParameter(
+            name="monitoring", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=["latest"],
+        ),
+        OpenApiParameter(
+            name="formula", required=True,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "URL-encoded JSON formula. See "
+                "doc/claude/filters-dashboard-mapview/design.md §1.2."
+            ),
+        ),
+        OpenApiParameter(
+            name="criteria", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "AND-joined multi-criteria filter "
+                "(same grammar as /values)."
+            ),
+        ),
+        OpenApiParameter(
+            name="from_date", required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="to_date", required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+    ],
+)
+@api_view(["GET"])
+def visualization_values_formula(request, version):
+    """Evaluate a formula per datapoint, grouped by parent_id."""
+    serializer = FormulaValuesSerializer(data=request.query_params)
+    if not serializer.is_valid():
+        return Response(
+            {"message": validate_serializers_message(serializer.errors)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    validated = serializer.validated_data
+    monitoring_form = get_object_or_404(Forms, pk=validated["form_id"])
+    formula = validated["formula"]
+    criteria = validated.get("criteria")
+    from_date = validated.get("from_date")
+    to_date = validated.get("to_date")
+
+    # Latest monitoring child per parent_id, restricted to non-pending
+    # / non-draft submissions for the configured monitoring form.
+    qs = monitoring_form.form_form_data.filter(
+        is_pending=False,
+        is_draft=False,
+        parent__isnull=False,
+    )
+    if criteria:
+        qs = apply_criteria_to_monitoring_qs(qs, False, criteria)
+    if from_date:
+        qs = qs.filter(created__date__gte=from_date)
+    if to_date:
+        qs = qs.filter(created__date__lte=to_date)
+
+    monitorings = qs.order_by("parent_id", "-created").values(
+        "id", "parent_id", "created"
+    )
+    latest_by_parent = {}
+    for row in monitorings:
+        parent_id = row["parent_id"]
+        if parent_id not in latest_by_parent:
+            latest_by_parent[parent_id] = row["id"]
+
+    if not latest_by_parent:
+        return Response(
+            {"data": []}, status=status.HTTP_200_OK
+        )
+
+    answers = Answers.objects.filter(
+        data_id__in=latest_by_parent.values()
+    ).values("data_id", "question_id", "value", "options", "index")
+
+    answers_by_data = {}
+    for ans in answers:
+        answers_by_data.setdefault(ans["data_id"], []).append(ans)
+
+    data = []
+    for parent_id, data_id in latest_by_parent.items():
+        per_question = pick_latest_repeat(answers_by_data.get(data_id, []))
+        bucket = formula_evaluate(formula, per_question)
+        data.append({"group": parent_id, "label": bucket})
+
+    return Response({"data": data}, status=status.HTTP_200_OK)

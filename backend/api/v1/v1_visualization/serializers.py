@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 from api.v1.v1_data.models import (
     FormData,
@@ -12,6 +13,7 @@ from utils.custom_serializer_fields import (
     CustomPrimaryKeyRelatedField,
     CustomIntegerField,
 )
+from api.v1.v1_visualization.formula import validate_shape
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -142,4 +144,56 @@ class GeoLocationFilterSerializer(serializers.Serializer):
         fields = [
             "administration", "criteria",
             "from_date", "to_date", "include_monitoring",
+        ]
+
+
+class FormulaValuesSerializer(serializers.Serializer):
+    """Validates query params for the formula evaluator endpoint.
+
+    The ``formula`` param arrives as a URL-encoded JSON string; the
+    ``validate_formula`` hook parses and structurally validates it.
+    """
+
+    form_id = serializers.IntegerField(required=True)
+    group_by = serializers.ChoiceField(
+        choices=["parent_id"], required=True,
+    )
+    monitoring = serializers.ChoiceField(
+        choices=["latest"], required=False, default="latest",
+    )
+    formula = serializers.CharField(required=True)
+    criteria = serializers.CharField(required=False)
+    from_date = serializers.DateField(required=False)
+    to_date = serializers.DateField(required=False)
+
+    def validate_formula(self, value):
+        try:
+            parsed = json.loads(value)
+        except (TypeError, ValueError) as exc:
+            raise serializers.ValidationError(
+                f"formula is not valid JSON: {exc}"
+            )
+        try:
+            return validate_shape(parsed)
+        except ValueError as exc:
+            raise serializers.ValidationError(str(exc))
+
+    def validate_criteria(self, value):
+        from api.v1.v1_visualization.constants import (
+            VALID_VALUES_CRITERIA_TYPES,
+        )
+        from api.v1.v1_visualization.functions import (
+            parse_criteria_string,
+        )
+        try:
+            return parse_criteria_string(
+                value, VALID_VALUES_CRITERIA_TYPES,
+            )
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
+
+    class Meta:
+        fields = [
+            "form_id", "group_by", "monitoring", "formula",
+            "criteria", "from_date", "to_date",
         ]
