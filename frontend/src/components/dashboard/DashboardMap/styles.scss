@@ -1,9 +1,13 @@
+@import "../../../variables";
+
 .dashboard-map-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 8px;
+  padding: 8px 16px 0px;
 
   .dashboard-map-title {
     font-weight: 600;
@@ -14,12 +18,35 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px;
 
     .legend-chip {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      padding: 2px 10px;
+      border: 1px solid transparent;
+      border-radius: 16px;
+      background: transparent;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.15s ease, border-color 0.15s ease;
+
+      &.is-selected {
+        opacity: 1;
+        border-color: rgba(0, 0, 0, 0.06);
+      }
+
+      &.is-deselected {
+        opacity: 0.45;
+        border-color: rgba(0, 0, 0, 0.12);
+        text-decoration: line-through;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #1890ff;
+        outline-offset: 2px;
+      }
     }
 
     .legend-dot {
@@ -27,6 +54,7 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
+      box-sizing: border-box;
     }
   }
 
@@ -85,4 +113,8 @@
     text-align: right;
     color: #222;
   }
+}
+
+.dashboard-map-wrapper {
+  background-color: $white;
 }

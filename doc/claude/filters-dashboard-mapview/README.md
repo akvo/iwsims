@@ -15,8 +15,10 @@ the system.
 
 ## Scope at a Glance
 
-- New header row inside `DashboardMap` with title, configurable
-  `Select` and `Switch` controls, and inline legend chips.
+- New header row inside `DashboardMap` with title, **one filter-mode
+  dropdown** that switches between configured select filters,
+  **clickable legend chips** that narrow visible markers, and an
+  optional toggle.
 - New `filters[]` config block on `chart_type: "map"` items, supporting
   three filter shapes:
   - `select` + `question_id` → narrow by an answer value (existing
@@ -60,7 +62,7 @@ hardcoded to that domain.
 | # | Decision | Source |
 |---|----------|--------|
 | 1 | Filters configured via explicit `item.filters[]` array (Option B) | brainstorm Q1 |
-| 2 | Selected value hides non-matching markers | brainstorm Q2 |
+| 2 | ~~Selected value hides non-matching markers~~ — **superseded by #18** | brainstorm Q2 |
 | 3 | Toggle reuses `from_date`/`to_date` + new `include_monitoring` flag | brainstorm Q3 + follow-up |
 | 4 | Marker click → filter-aware popup (3 FormData fields + 1 derived field) | brainstorm Q4 + clarification |
 | 5 | Popup includes "View details" link (replaces `window.open` on click) | brainstorm Q5 |
@@ -76,3 +78,6 @@ hardcoded to that domain.
 | 15 | Schema is form-agnostic — EPS is just the initial example | clarification Q-D |
 | 16 | Formula filters declare buckets explicitly; values are not auto-generated Yes/No | clarification Q-E |
 | 17 | 7-field popup from screenshot is superseded by 4-field filter-aware popup | clarification Q-F |
+| 18 | **One filter-mode dropdown** lists each select filter as a *mode*; the active mode's `color_map` entries render as **clickable legend chips** that multi-select-narrow the visible markers. The first declared select filter is the default mode. | post-render review |
+| 19 | Default chip state: all chips selected (no narrowing). Clicking a chip deselects it (its value's markers hide). Clicking again re-selects. If user deselects all chips, no markers show. | follow-up to #18 |
+| 20 | Formula-mode dropdown legend includes the `default` bucket alongside the explicit `buckets[]` so deselecting "No" works even though "No" comes from the formula's default branch. | post-render review |

@@ -5,7 +5,7 @@ import { Alert, Skeleton } from "antd";
 import "leaflet/dist/leaflet.css";
 import { api, geo } from "../../../lib";
 import { applyDashboardFilters } from "../../../lib/dashboardFilterHints";
-import DashboardMapHeader from "./DashboardMapHeader";
+import DashboardMapHeader, { resolveBuckets } from "./DashboardMapHeader";
 import MapPopupCard from "./MapPopupCard";
 import useMapFilters from "./useMapFilters";
 import useMapByParent from "./useMapByParent";
@@ -25,9 +25,10 @@ const DEFAULT_COLOR = "#1890ff";
  *   GET /api/v1/visualization/values/formula
  *       (when active select filter has formula)
  *
- * The response from `/maps/geolocation` carries id, name, geo,
- * administration_id, administration_full_name, updated; the byParent
- * map drives both marker colours and the popup's dynamic row.
+ * The geolocation response carries id, name, geo, administration_id,
+ * administration_full_name, updated. byParent[id] is the active
+ * filter's bucket value for the datapoint, used for marker colour,
+ * the popup's dynamic row, and chip-based narrowing.
  */
 const DashboardMap = ({
   item,
@@ -46,8 +47,17 @@ const DashboardMap = ({
 
   const itemFilters = useMemo(() => item?.filters || [], [item]);
 
-  const { values, setValue, queryParams, toggleDisabled, activeFilter } =
-    useMapFilters(itemFilters, filterState);
+  const {
+    activeKey,
+    setActiveKey,
+    activeFilter,
+    isChipSelected,
+    toggleChip,
+    toggleValues,
+    setToggleValue,
+    queryParams,
+    toggleDisabled,
+  } = useMapFilters(itemFilters, filterState);
 
   const { byParent } = useMapByParent({ activeFilter, filterState });
 
@@ -65,13 +75,8 @@ const DashboardMap = ({
     if (adminId) {
       query.set("administration", adminId);
     }
-    const dashboardCriteria = dashboardParams.criteria;
-    const widgetCriteria = queryParams.get("criteria");
-    const mergedCriteria = [dashboardCriteria, widgetCriteria]
-      .filter(Boolean)
-      .join(",");
-    if (mergedCriteria) {
-      query.set("criteria", mergedCriteria);
+    if (dashboardParams.criteria) {
+      query.set("criteria", dashboardParams.criteria);
     }
 
     const widgetFrom = queryParams.get("from_date");
@@ -130,12 +135,11 @@ const DashboardMap = ({
     return d?.coordinates || [0, 0];
   }, []);
 
-  const colorForParent = (parentId) => {
+  const bucketForPoint = (pointId) => byParent[pointId] || "_no_info";
+
+  const colorForParent = (pointId) => {
     const map = activeFilter?.color_map || {};
-    const value = byParent[parentId];
-    if (!value) {
-      return map._no_info || DEFAULT_COLOR;
-    }
+    const value = bucketForPoint(pointId);
     return map[value] || map._no_info || DEFAULT_COLOR;
   };
 
@@ -146,15 +150,15 @@ const DashboardMap = ({
     if (!activeFilter) {
       return pts;
     }
-    if (activeFilter.formula) {
-      const selected = values[activeFilter.key];
-      if (!selected) {
-        return pts;
-      }
-      return pts.filter((p) => byParent[String(p.id)] === selected);
+    const buckets = resolveBuckets(activeFilter);
+    if (buckets.length === 0) {
+      return pts;
     }
-    return pts;
-  }, [points, activeFilter, values, byParent]);
+    return pts.filter((p) =>
+      isChipSelected(activeFilter.key, bucketForPoint(String(p.id)))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [points, activeFilter, byParent, isChipSelected]);
 
   if (loading) {
     return <Skeleton active paragraph={{ rows: 6 }} />;
@@ -173,10 +177,14 @@ const DashboardMap = ({
       <DashboardMapHeader
         title={item?.title}
         filters={itemFilters}
-        values={values}
-        onChange={setValue}
-        toggleDisabled={toggleDisabled}
+        activeKey={activeKey}
+        onActiveKeyChange={setActiveKey}
         activeFilter={activeFilter}
+        isChipSelected={isChipSelected}
+        onChipToggle={toggleChip}
+        toggleValues={toggleValues}
+        onToggleChange={setToggleValue}
+        toggleDisabled={toggleDisabled}
       />
       <MapContainer
         center={center}

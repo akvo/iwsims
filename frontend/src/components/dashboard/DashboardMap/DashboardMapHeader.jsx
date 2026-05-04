@@ -1,22 +1,75 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
-import { Select, Switch, Tooltip } from "antd";
+import { Select, Space, Switch, Tooltip } from "antd";
 import getQuestionOptions from "./getQuestionOptions";
 
 const DEFAULT_NO_INFO_LABEL = "No information available";
 
 /**
- * Header row for the dashboard map widget. Renders the title,
- * configurable Select / Switch controls, and inline legend chips
- * driven by the active select filter's color_map.
+ * Resolve the bucket entries (value, label, color) for a given
+ * select filter — the chips users can click to narrow markers.
+ * Includes the formula `default` bucket and the `_no_info` fallback
+ * when present in the color_map.
+ */
+export const resolveBuckets = (filter) => {
+  if (!filter) {
+    return [];
+  }
+  const map = filter.color_map || {};
+  const out = [];
+  if (filter.formula) {
+    (filter.formula.buckets || []).forEach((b) => {
+      out.push({
+        value: b.value,
+        label: b.label,
+        color: map[b.value] || "#1890ff",
+      });
+    });
+    const fallback = filter.formula.default;
+    if (fallback) {
+      out.push({
+        value: fallback.value,
+        label: fallback.label,
+        color: map[fallback.value] || "#1890ff",
+      });
+    }
+  } else if (filter.question_id) {
+    const opts = getQuestionOptions(filter.form_id, filter.question_id);
+    opts.forEach((o) => {
+      out.push({
+        value: o.value,
+        label: o.label,
+        color: map[o.value] || "#1890ff",
+      });
+    });
+  }
+  if (map._no_info) {
+    out.push({
+      value: "_no_info",
+      label: DEFAULT_NO_INFO_LABEL,
+      color: map._no_info,
+    });
+  }
+  return out;
+};
+
+/**
+ * Header row for the dashboard map widget. Renders the title, a
+ * single filter-mode Select (one option per declared select filter),
+ * clickable legend chips for the active filter's buckets, and any
+ * configured Switch toggles.
  */
 const DashboardMapHeader = ({
   title,
   filters,
-  values,
-  onChange,
-  toggleDisabled,
+  activeKey,
+  onActiveKeyChange,
   activeFilter,
+  isChipSelected,
+  onChipToggle,
+  toggleValues,
+  onToggleChange,
+  toggleDisabled,
 }) => {
   const selectFilters = useMemo(
     () => filters.filter((f) => f.type === "select"),
@@ -27,61 +80,17 @@ const DashboardMapHeader = ({
     [filters]
   );
 
-  const selectOptions = useMemo(() => {
-    const out = {};
-    selectFilters.forEach((f) => {
-      if (f.formula) {
-        const buckets = (f.formula.buckets || []).map((b) => ({
-          value: b.value,
-          label: b.label,
-        }));
-        out[f.key] = buckets;
-      } else if (f.question_id) {
-        out[f.key] = getQuestionOptions(f.form_id, f.question_id);
-      } else {
-        out[f.key] = [];
-      }
-    });
-    return out;
-  }, [selectFilters]);
+  const filterModeOptions = useMemo(
+    () =>
+      selectFilters.map((f) => ({
+        value: f.key,
+        label: f.label,
+      })),
+    [selectFilters]
+  );
 
-  const legendEntries = useMemo(() => {
-    if (!activeFilter || !activeFilter.color_map) {
-      return [];
-    }
-    const map = activeFilter.color_map;
-    if (activeFilter.formula) {
-      const buckets = activeFilter.formula.buckets || [];
-      const fallback = activeFilter.formula.default;
-      const entries = [];
-      buckets.forEach((b) => {
-        if (map[b.value]) {
-          entries.push({ color: map[b.value], label: b.label });
-        }
-      });
-      if (fallback && map[fallback.value]) {
-        entries.push({
-          color: map[fallback.value],
-          label: fallback.label,
-        });
-      }
-      return entries;
-    }
-    const opts = getQuestionOptions(
-      activeFilter.form_id,
-      activeFilter.question_id
-    );
-    const entries = [];
-    opts.forEach((o) => {
-      if (map[o.value]) {
-        entries.push({ color: map[o.value], label: o.label });
-      }
-    });
-    if (map._no_info) {
-      entries.push({ color: map._no_info, label: DEFAULT_NO_INFO_LABEL });
-    }
-    return entries;
-  }, [activeFilter]);
+  const buckets = useMemo(() => resolveBuckets(activeFilter), [activeFilter]);
+  const allBucketValues = useMemo(() => buckets.map((b) => b.value), [buckets]);
 
   if (!title && selectFilters.length === 0 && toggleFilters.length === 0) {
     return null;
@@ -89,47 +98,65 @@ const DashboardMapHeader = ({
 
   return (
     <div className="dashboard-map-header">
-      {title && <span className="dashboard-map-title">{title}</span>}
-      {selectFilters.map((f) => (
-        <Select
-          key={f.key}
-          allowClear
-          placeholder={f.label}
-          style={{ minWidth: 180 }}
-          value={values[f.key] ?? undefined}
-          onChange={(v) => onChange(f.key, v ?? null)}
-          options={selectOptions[f.key] || []}
-        />
-      ))}
-      {legendEntries.length > 0 && (
-        <div className="dashboard-map-legend">
-          {legendEntries.map(({ color, label }, i) => (
-            <span className="legend-chip" key={`${label}-${i}`}>
-              <span className="legend-dot" style={{ background: color }} />
-              {label}
-            </span>
-          ))}
-        </div>
-      )}
-      {toggleFilters.map((f) => {
-        const sw = (
-          <Switch
-            checked={Boolean(values[f.key]) && !toggleDisabled}
-            disabled={toggleDisabled}
-            onChange={(v) => onChange(f.key, v)}
+      <Space>
+        {title && <span className="dashboard-map-title">{title}</span>}
+        {filterModeOptions.length > 0 && (
+          <Select
+            className="dashboard-map-filter-mode"
+            style={{ minWidth: 200 }}
+            value={activeKey || typeof activeKey === "undefined"}
+            onChange={onActiveKeyChange}
+            options={filterModeOptions}
           />
-        );
-        return (
-          <span className="dashboard-map-toggle" key={f.key}>
-            {toggleDisabled ? (
-              <Tooltip title="Cleared by date filter">{sw}</Tooltip>
-            ) : (
-              sw
-            )}
-            <span className="toggle-label">{f.label}</span>
-          </span>
-        );
-      })}
+        )}
+        {buckets.length > 0 && (
+          <div className="dashboard-map-legend">
+            {buckets.map((b) => {
+              const selected = isChipSelected(activeFilter.key, b.value);
+              return (
+                <button
+                  type="button"
+                  key={b.value}
+                  className={`legend-chip${
+                    selected ? " is-selected" : " is-deselected"
+                  }`}
+                  onClick={() =>
+                    onChipToggle(activeFilter.key, b.value, allBucketValues)
+                  }
+                  aria-pressed={selected}
+                >
+                  <span
+                    className="legend-dot"
+                    style={{ background: b.color }}
+                  />
+                  {b.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </Space>
+      <div>
+        {toggleFilters.map((f) => {
+          const sw = (
+            <Switch
+              checked={Boolean(toggleValues[f.key]) && !toggleDisabled}
+              disabled={toggleDisabled}
+              onChange={(v) => onToggleChange(f.key, v)}
+            />
+          );
+          return (
+            <span className="dashboard-map-toggle" key={f.key}>
+              {toggleDisabled ? (
+                <Tooltip title="Cleared by date filter">{sw}</Tooltip>
+              ) : (
+                sw
+              )}
+              <span className="toggle-label">{f.label}</span>
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -137,10 +164,14 @@ const DashboardMapHeader = ({
 DashboardMapHeader.propTypes = {
   title: PropTypes.string,
   filters: PropTypes.array.isRequired,
-  values: PropTypes.object.isRequired,
-  onChange: PropTypes.func.isRequired,
-  toggleDisabled: PropTypes.bool,
+  activeKey: PropTypes.string,
+  onActiveKeyChange: PropTypes.func.isRequired,
   activeFilter: PropTypes.object,
+  isChipSelected: PropTypes.func.isRequired,
+  onChipToggle: PropTypes.func.isRequired,
+  toggleValues: PropTypes.object.isRequired,
+  onToggleChange: PropTypes.func.isRequired,
+  toggleDisabled: PropTypes.bool,
 };
 
 export default DashboardMapHeader;

@@ -50,50 +50,85 @@ in production.
 
 ### FR-1 — Header layout
 
-- The map widget renders a single header row above the map containing,
-  left-to-right:
-  - Title (from `item.title`).
-  - One Ant `Select` per `filters[].type === "select"` entry.
-  - One Ant `Switch` per `filters[].type === "toggle"` entry.
-  - Legend chips derived from the **active** select filter's
-    `color_map`.
-- When `item.filters` is missing or empty, the header collapses (only
-  the title shows, or the entire row is omitted if no title).
+The map widget renders a single header row above the map containing,
+left-to-right:
 
-### FR-2 — Question-id select filter
+- **Title** from `item.title`.
+- **One filter-mode `Select`** whose options are the labels of every
+  `filters[].type === "select"` entry. Picking an option switches the
+  *active filter* (decision #18). Default value: the first declared
+  select filter.
+- **Clickable legend chips** for the active filter (FR-2.4).
+- **One Ant `Switch`** per `filters[].type === "toggle"` entry,
+  pushed to the right of the row.
 
-- Renders an Ant `Select` with `allowClear` and a placeholder equal to
-  `filter.label`.
-- Options are resolved from `window.forms` using
-  `(filter.form_id, filter.question_id)` — same lookup used by
-  `filter_option` widgets in `DashboardFilters.jsx`.
-- Picking a value:
-  - Updates **map-local** state only.
-  - Triggers a refetch of `/api/v1/maps/geolocation/{source_form_id}`
-    with `criteria=option_equals:<question_id>:<value>` appended (in
-    addition to any other active criteria).
-  - Hides markers whose backing point does not match (server-side, by
-    virtue of the `criteria` filter).
-  - Recolours visible markers via the active filter's `color_map`,
-    keyed by the answer value — `_no_info` is the fallback key.
-- Clearing the select removes the criterion and shows all markers
-  using the default colour (`_no_info` or `#1890ff`).
+When `item.filters` is missing or empty (or contains only toggles),
+the dropdown and legend collapse; only the title and any toggles
+render.
 
-### FR-3 — Formula select filter
+### FR-2 — Active filter and clickable legend chips
 
-- Renders an Ant `Select` whose options come from
-  `filter.formula.buckets[]` plus the implicit `_no_info` bucket.
-- Each bucket has `value`, `label`, and is paired with a `color_map`
-  entry keyed by `bucket.value`.
-- The map widget calls a **new backend endpoint** (see design.md §3)
-  that evaluates the formula per parent and returns one bucket value
-  per datapoint. The resulting `byParent[id] → bucket_value` table
-  drives both marker colouring and popup display.
-- Picking a bucket value narrows the markers to datapoints whose
-  computed bucket matches.
-- Repeatable group handling: the formula evaluator considers the
-  **latest repeat** (highest `index`) for each referenced
-  `question_id`. (Decision #14.)
+#### FR-2.1 — Active filter resolution
+
+The *active filter* is the value of the filter-mode dropdown. By
+default it is the first declared `select` filter in `filters[]`. The
+user can switch by picking another option in the dropdown.
+
+#### FR-2.2 — Bucket-value resolution per active filter
+
+For a *question-id* active filter, bucket values come from the
+question's options resolved via `window.forms[filter.form_id]`
+walked by `filter.question_id`. Plus the implicit `_no_info` bucket
+when the active filter's `color_map._no_info` is set.
+
+For a *formula* active filter, bucket values are
+`filter.formula.buckets[].value` plus `filter.formula.default.value`
+(decision #20). Plus `_no_info` when set.
+
+#### FR-2.3 — `byParent` table
+
+For both filter modes the frontend fetches a `byParent` table from
+the backend (question-id mode → `/visualization/values`; formula
+mode → `/visualization/values/formula`). `byParent[datapoint_id]`
+yields the bucket value for that datapoint. Datapoints absent from
+`byParent` are treated as `_no_info`.
+
+#### FR-2.4 — Clickable legend chips (multi-select narrowing)
+
+Each bucket renders as a chip: a coloured dot (from `color_map`) plus
+its human label. Chips are clickable.
+
+- **Default state**: all chips are *selected*. Visible marker set =
+  all datapoints whose bucket is in the selected set, i.e. all
+  datapoints. (Decision #19.)
+- **Click**: toggles a chip's selection. Deselected chips dim
+  visually (e.g. reduced opacity / outlined-only). Datapoints whose
+  bucket is no longer selected become hidden.
+- **All chips deselected**: no markers render.
+- **Re-clicking** a deselected chip re-includes that bucket.
+
+The narrowing is **client-side** for both filter modes: the
+geolocation list is fetched once per `(filterState, toggle)`
+combination; chip selection only affects which already-fetched
+points render.
+
+#### FR-2.5 — Marker colour
+
+A visible marker is coloured by `color_map[byParent[id]]`, falling
+back to `color_map._no_info`, falling back to `#1890ff`.
+
+### FR-3 — Formula filter mode
+
+When the active filter is a formula (Decision #18), narrowing and
+colouring use the formula's per-datapoint bucket as computed by the
+backend `/visualization/values/formula` endpoint. Repeatable group
+handling: the formula evaluator considers the **latest repeat**
+(highest `index`) for each referenced `question_id` (Decision #14).
+
+Bucket-value resolution for chips includes both the explicit
+`buckets[]` and the `default` bucket (Decision #20) so the user can
+deselect "No" / fallback values that arise from the formula's
+default branch.
 
 ### FR-4 — Toggle filter
 

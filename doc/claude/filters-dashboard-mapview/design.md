@@ -436,6 +436,37 @@ behaviour is identical.
 Toggle is disabled, `include_monitoring` is omitted, `from_date` /
 `to_date` filter the datapoint's own `created` (legacy behaviour).
 
+## 4a. Header Layout (post-render review revision)
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ Monitored EPS  [Operational status ▾]  ● Yes  ● No  ◌ No info     [☑] Monitored last year │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+- The filter-mode `Select` carries one option per declared `select`
+  filter; the *value* is the active filter's `key`.
+- Legend chips for the active filter render to the right. Each chip
+  shows a coloured dot + the bucket's human label.
+- Selected chips are full-opacity; deselected chips dim
+  (e.g. opacity 0.4) and the dot becomes outlined. Click toggles.
+- The "Monitored last year" toggle stays on the right edge.
+
+### Active filter `useState` shape
+
+```ts
+type SelectedChips = Record<string /* filterKey */, Set<string /* bucketValue */>>;
+
+const [activeKey, setActiveKey] = useState(firstSelectKey);
+const [selectedChips, setSelectedChips] = useState<SelectedChips>({});
+```
+
+For each filter key, the `Set` of selected bucket values. Missing key
+or empty Set is treated as "all selected" (no narrowing). When the
+user clicks a chip the first time, the hook lazily seeds the Set
+with all known bucket values, then removes the clicked one — so
+subsequent clicks have a coherent baseline.
+
 ## 5. Popup Rendering
 
 ### 5.1 Layout
