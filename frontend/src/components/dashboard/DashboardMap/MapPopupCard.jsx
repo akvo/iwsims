@@ -3,16 +3,17 @@ import PropTypes from "prop-types";
 import { api } from "../../../lib";
 import getQuestionOptions from "./getQuestionOptions";
 
-const NO_DATA = "No monitoring data";
 const LOADING = "…";
 
-const resolveDynamic = (activeFilter, byParent, pointId) => {
+const resolveDynamic = (activeFilter, byParent, pointId, sourceFormId) => {
   if (!activeFilter) {
     return null;
   }
   const raw = byParent?.[pointId];
   if (raw === null || typeof raw === "undefined") {
-    return NO_DATA;
+    const isRegistrationFilter =
+      Number(activeFilter.form_id) === Number(sourceFormId);
+    return isRegistrationFilter ? "Not answered" : "No monitoring data";
   }
   if (activeFilter.formula) {
     const buckets = activeFilter.formula.buckets || [];
@@ -98,8 +99,9 @@ const MapPopupCard = ({
   }, [urlTemplate, sourceFormId, point.id]);
 
   const dynamicValue = useMemo(
-    () => resolveDynamic(activeFilter, byParent, String(point.id)),
-    [activeFilter, byParent, point.id]
+    () =>
+      resolveDynamic(activeFilter, byParent, String(point.id), sourceFormId),
+    [activeFilter, byParent, point.id, sourceFormId]
   );
 
   const locationValue = loadingDetail

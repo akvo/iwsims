@@ -484,7 +484,19 @@ class DatapointDetailView(APIView):
 )
 @api_view(["GET"])
 def visualization_values_formula(request, version):
-    """Evaluate a formula per datapoint, grouped by parent_id."""
+    """Evaluate a formula per datapoint.
+
+    For monitoring forms (form.parent is set): groups by parent_id,
+    using the latest monitoring child per registration datapoint.
+    ``group`` in the response is the registration datapoint id.
+
+    For registration forms (form.parent is None): evaluates the formula
+    directly against each registration datapoint's answers.
+    ``group`` in the response is the datapoint's own id.
+
+    Both cases produce {group: datapoint_id, label: bucket_value} so
+    the frontend's byParent[point.id] lookup works identically.
+    """
     serializer = FormulaValuesSerializer(data=request.query_params)
     if not serializer.is_valid():
         return Response(
@@ -493,18 +505,18 @@ def visualization_values_formula(request, version):
         )
 
     validated = serializer.validated_data
-    monitoring_form = get_object_or_404(Forms, pk=validated["form_id"])
+    form = get_object_or_404(Forms, pk=validated["form_id"])
     formula = validated["formula"]
     criteria = validated.get("criteria")
     from_date = validated.get("from_date")
     to_date = validated.get("to_date")
 
-    # Latest monitoring child per parent_id, restricted to non-pending
-    # / non-draft submissions for the configured monitoring form.
-    qs = monitoring_form.form_form_data.filter(
+    is_registration = form.parent_id is None
+
+    qs = form.form_form_data.filter(
         is_pending=False,
         is_draft=False,
-        parent__isnull=False,
+        parent__isnull=is_registration,
     )
     if criteria:
         qs = apply_criteria_to_monitoring_qs(qs, False, criteria)
@@ -513,22 +525,30 @@ def visualization_values_formula(request, version):
     if to_date:
         qs = qs.filter(created__date__lte=to_date)
 
-    monitorings = qs.order_by("parent_id", "-created").values(
-        "id", "parent_id", "created"
-    )
-    latest_by_parent = {}
-    for row in monitorings:
-        parent_id = row["parent_id"]
-        if parent_id not in latest_by_parent:
-            latest_by_parent[parent_id] = row["id"]
-
-    if not latest_by_parent:
-        return Response(
-            {"data": []}, status=status.HTTP_200_OK
+    if is_registration:
+        # Each registration datapoint is its own "group".
+        data_ids = list(qs.values_list("id", flat=True))
+        if not data_ids:
+            return Response({"data": []}, status=status.HTTP_200_OK)
+        id_to_group = {d: d for d in data_ids}
+    else:
+        # Latest monitoring child per parent_id.
+        monitorings = qs.order_by("parent_id", "-created").values(
+            "id", "parent_id", "created"
         )
+        latest_by_parent = {}
+        for row in monitorings:
+            parent_id = row["parent_id"]
+            if parent_id not in latest_by_parent:
+                latest_by_parent[parent_id] = row["id"]
+        if not latest_by_parent:
+            return Response({"data": []}, status=status.HTTP_200_OK)
+        # Map data_id → group (parent_id) for response assembly.
+        id_to_group = {v: k for k, v in latest_by_parent.items()}
+        data_ids = list(id_to_group.keys())
 
     answers = Answers.objects.filter(
-        data_id__in=latest_by_parent.values()
+        data_id__in=data_ids
     ).values("data_id", "question_id", "value", "options", "index")
 
     answers_by_data = {}
@@ -536,9 +556,9 @@ def visualization_values_formula(request, version):
         answers_by_data.setdefault(ans["data_id"], []).append(ans)
 
     data = []
-    for parent_id, data_id in latest_by_parent.items():
+    for data_id, group in id_to_group.items():
         per_question = pick_latest_repeat(answers_by_data.get(data_id, []))
         bucket = formula_evaluate(formula, per_question)
-        data.append({"group": parent_id, "label": bucket})
+        data.append({"group": group, "label": bucket})
 
     return Response({"data": data}, status=status.HTTP_200_OK)

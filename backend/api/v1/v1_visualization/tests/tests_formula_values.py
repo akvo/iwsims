@@ -229,3 +229,85 @@ class FormulaValuesViewTests(
         # reg2's latest (mon2b) is 'pending', not 'active', and
         # mon2a is 'inactive', so reg2 should be filtered out.
         self.assertNotIn(self.reg2.id, rows)
+
+
+@override_settings(USE_TZ=False, TEST_ENV=True)
+class FormulaValuesRegistrationFormTests(
+    VisualizationValuesTestMixin, APITestCase
+):
+    """Formula endpoint with a registration-form question (form.parent is None).
+
+    The endpoint must group by the datapoint's own id rather than parent_id,
+    since registration data has parent__isnull=True.
+    """
+
+    BASE_URL = "/api/v1/visualization/values/formula"
+
+    def setUp(self):
+        super().setUp()
+        # Give reg1 a "yes" option answer and reg2 a "no" answer on the
+        # registration-form option question (site_type, id=Q_REG_OPTION_ID).
+        Answers.objects.create(
+            data=self.reg1,
+            question=self.q_reg_option,
+            options=["yes"],
+            created_by=self.user,
+        )
+        Answers.objects.create(
+            data=self.reg2,
+            question=self.q_reg_option,
+            options=["no"],
+            created_by=self.user,
+        )
+
+    def _formula(self):
+        return {
+            "buckets": [{
+                "value": "yes",
+                "label": "Yes",
+                "all_of": [{
+                    "question_id": self.Q_REG_OPTION_ID,
+                    "op": "option_equals",
+                    "value": "yes",
+                }],
+            }],
+            "default": {"value": "no", "label": "No"},
+        }
+
+    def test_registration_form_groups_by_own_id(self):
+        """
+        group key is the registration datapoint's own id,
+        not a parent_id.
+        """
+        url = (
+            f"{self.BASE_URL}"
+            f"?form_id={self.REGISTRATION_FORM_ID}"
+            f"&group_by=parent_id"
+            f"&formula={_encode(self._formula())}"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        rows = {
+            row["group"]: row["label"]
+            for row in response.json()["data"]
+        }
+        # Both registration datapoints should appear.
+        self.assertIn(self.reg1.id, rows)
+        self.assertIn(self.reg2.id, rows)
+        self.assertEqual(rows[self.reg1.id], "yes")
+        self.assertEqual(rows[self.reg2.id], "no")
+
+    def test_registration_form_excludes_pending(self):
+        """Pending registration datapoints are not included."""
+        FormData.objects.filter(id=self.reg1.id).update(is_pending=True)
+        url = (
+            f"{self.BASE_URL}"
+            f"?form_id={self.REGISTRATION_FORM_ID}"
+            f"&group_by=parent_id"
+            f"&formula={_encode(self._formula())}"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        groups = [row["group"] for row in response.json()["data"]]
+        self.assertNotIn(self.reg1.id, groups)
+        self.assertIn(self.reg2.id, groups)

@@ -384,6 +384,19 @@
           }
         },
         {
+          "type": "select",
+          "key": "presence_water_committee",
+          "label": "Presence of active water committee",
+          "form_id": 1749621221728,
+          "question_id": 1749622715678,
+          "color_map": {
+            "yes": "#64A73B",
+            "not_active": "#999999",
+            "no": "#e41a1c",
+            "_no_info": "#377eb8"
+          }
+        },
+        {
           "type": "toggle",
           "key": "monitored_last_year",
           "label": "Monitored last year",

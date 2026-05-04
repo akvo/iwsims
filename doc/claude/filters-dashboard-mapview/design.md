@@ -337,13 +337,27 @@ endpoint so the frontend's `byParent` table works identically. GET
 chosen for consistency with `/visualization/values` and because this
 is a side-effect-free fetch.
 
+The endpoint supports **both registration and monitoring forms**
+(decision #23). Detection: `form.parent_id is None` → registration.
+
+- **Registration form**: evaluates the formula against each registration
+  datapoint's own answers (`parent__isnull=True`); `group` in the
+  response is the datapoint's own `id`.
+- **Monitoring form**: evaluates the formula against the latest
+  monitoring child per `parent_id` (`parent__isnull=False`); `group`
+  is the `parent_id` (the registration datapoint's id).
+
+In both cases the frontend's `byParent[point.id]` lookup works
+identically because `group` always equals the registration datapoint's
+id.
+
 #### Query parameters
 
 | Param | Type | Required | Notes |
 |-------|------|----------|-------|
-| `form_id` | int | yes | The **monitoring** form (holds the questions referenced by the formula). |
-| `group_by` | string | yes | Only `"parent_id"` supported in Phase 1. |
-| `monitoring` | string | no | Default `"latest"`; selects the most recent monitoring child per `parent_id`. |
+| `form_id` | int | yes | The form whose questions the formula references. May be a registration form or a monitoring form. |
+| `group_by` | string | yes | Only `"parent_id"` accepted (kept for symmetry with `/values`; the actual grouping key varies by form type — see above). |
+| `monitoring` | string | no | Default `"latest"`; for monitoring forms selects the most recent child per `parent_id`. |
 | `formula` | string | yes | URL-encoded JSON blob — see §1.2 for the shape. Same trick `criteria` uses for its mini-grammar. |
 | `criteria` | string | no | Reuses the existing `apply_criteria_to_monitoring_qs` helper so formula composes with question-id filters. |
 | `from_date` | ISO date | no | Reused for the toggle filter. |
