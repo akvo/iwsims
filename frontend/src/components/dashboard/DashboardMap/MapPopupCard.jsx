@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { api } from "../../../lib";
+import { api, uiText } from "../../../lib";
 import getQuestionOptions from "./getQuestionOptions";
 
 const LOADING = "…";
@@ -98,11 +98,18 @@ const MapPopupCard = ({
       .replace("{data_id}", point.id);
   }, [urlTemplate, sourceFormId, point.id]);
 
-  const dynamicValue = useMemo(
-    () =>
-      resolveDynamic(activeFilter, byParent, String(point.id), sourceFormId),
-    [activeFilter, byParent, point.id, sourceFormId]
-  );
+  const dynamicValue = useMemo(() => {
+    const answerValue = resolveDynamic(
+      activeFilter,
+      byParent,
+      String(point.id),
+      sourceFormId
+    );
+
+    return answerValue === "_no_info"
+      ? uiText.en.noInformationAvailable
+      : answerValue;
+  }, [activeFilter, byParent, point.id, sourceFormId]);
 
   const locationValue = loadingDetail
     ? LOADING
