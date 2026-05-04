@@ -352,7 +352,7 @@ const UploadDetail = ({ record: batch, setReload }) => {
   const fetchData = (recordId, questionGroups) => {
     setDataLoading(recordId);
     api
-      .get(`pending-data/${recordId}`)
+      .get(`data/${recordId}`)
       .then((res) => {
         const data = transformRawData(questionGroups, res.data);
         setRawValues((rv) =>
