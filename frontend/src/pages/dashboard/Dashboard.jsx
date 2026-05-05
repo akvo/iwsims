@@ -60,18 +60,26 @@ const ComplianceTotalsFetcher = ({
   onData,
 }) => {
   const totalsApi = useMemo(() => ({ form_id: parentFormId }), [parentFormId]);
-  const { data } = useDashboardValues(totalsApi, filterState, {
+  const { data, loading, error } = useDashboardValues(totalsApi, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,
   });
   useEffect(() => {
+    // Clear the stale total while a fresh request is in-flight or has failed.
+    // Without this the previous dashboard/filter total persists until the
+    // next response arrives, causing the gap bar to compute against the
+    // wrong universe size.
+    if (loading || error) {
+      onData(chartId, null);
+      return;
+    }
     if (data) {
       const total = data?.data?.[0]?.value;
       if (typeof total === "number") {
         onData(chartId, total);
       }
     }
-  }, [data, chartId, onData]);
+  }, [data, loading, error, chartId, onData]);
   return null;
 };
 
@@ -345,9 +353,17 @@ const Dashboard = () => {
 
   const [complianceTotals, setComplianceTotals] = useState({});
   const onComplianceTotalData = useCallback((id, total) => {
-    setComplianceTotals((prev) =>
-      prev[id] === total ? prev : { ...prev, [id]: total }
-    );
+    setComplianceTotals((prev) => {
+      if (total === null) {
+        if (!(id in prev)) {
+          return prev;
+        }
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      return prev[id] === total ? prev : { ...prev, [id]: total };
+    });
   }, []);
 
   // ── Cross-form & derived-compute fan-out ──────────────────────────────────
