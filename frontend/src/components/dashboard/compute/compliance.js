@@ -85,16 +85,30 @@ export const getCompliantCount = (parameters, responsesByKey) => {
 /**
  * Compute the Yes/No stacked-bar data for the drinking-water compliance chart.
  *
+ * When `options.totalRegistered` is a finite number, appends a third
+ * "No information available" row representing parents in the registered
+ * universe that contributed to neither Yes nor No (e.g. EPS without any
+ * water-quality measurements). Count is clamped to zero to defend against
+ * transient races where param fetches resolve before the totals fetch.
+ *
  * @param {Array<object>} parameters       config.water_quality.parameters (with threshold + label + key)
  * @param {Object.<string,object>} responsesByKey  { [param.key]: /values response }
+ * @param {object} [options]
+ * @param {number} [options.totalRegistered]  Universe size (count of registered parents in the filtered scope) used to derive the gap bucket.
+ * @param {string} [options.noInfoLabel]      Translated label for the third X-axis category. Defaults to "No information available".
  * @returns {{
  *   data: Array<object>,
  *   stackLabels: string[],
  *   yesCount: number,
  *   noCount: number,
+ *   noInfoCount: number,
  * }}
  */
-export const computeComplianceStackData = (parameters, responsesByKey) => {
+export const computeComplianceStackData = (
+  parameters,
+  responsesByKey,
+  options = {}
+) => {
   const activeParams = (parameters || []).filter((p) => !p.hide);
   const byEps = buildByEps(activeParams, responsesByKey);
 
@@ -119,11 +133,28 @@ export const computeComplianceStackData = (parameters, responsesByKey) => {
     }
   });
 
+  const data = [yesRow, noRow];
+  const stackLabels = ["Compliant", ...activeParams.map((p) => p.label)];
+
+  let noInfoCount = 0;
+  const { totalRegistered, noInfoLabel } = options;
+  if (typeof totalRegistered === "number" && Number.isFinite(totalRegistered)) {
+    noInfoCount = Math.max(0, totalRegistered - yesCount - noCount);
+    if (noInfoCount > 0) {
+      data.push({
+        compliance: noInfoLabel || "No information available",
+        _no_info: noInfoCount,
+      });
+      stackLabels.push("_no_info");
+    }
+  }
+
   return {
-    data: [yesRow, noRow],
-    stackLabels: ["Compliant", ...activeParams.map((p) => p.label)],
+    data,
+    stackLabels,
     yesCount,
     noCount,
+    noInfoCount,
   };
 };
 

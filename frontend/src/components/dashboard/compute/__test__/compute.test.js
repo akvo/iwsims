@@ -138,6 +138,95 @@ describe("computeComplianceStackData", () => {
     expect(out.yesCount).toBe(1);
     expect(out.noCount).toBe(0);
   });
+
+  describe("include_unanswered support", () => {
+    const responses = {
+      e_coli: {
+        data: [
+          { group: "1", label: "A", value: 0 },
+          { group: "2", label: "B", value: 5 },
+          { group: "3", label: "C", value: 0 },
+        ],
+      },
+      ph: {
+        data: [
+          { group: "1", label: "A", value: 7.0 },
+          { group: "2", label: "B", value: 7.0 },
+          { group: "3", label: "C", value: 9.5 },
+        ],
+      },
+    };
+
+    test("2-arg signature unchanged when options omitted", () => {
+      const out = computeComplianceStackData(parameters, responses);
+      expect(out.data).toHaveLength(2);
+      expect(out.stackLabels).toEqual(["Compliant", "E. coli", "pH"]);
+      expect(out.noInfoCount).toBe(0);
+    });
+
+    test("appends third row when totalRegistered exceeds yes+no", () => {
+      const out = computeComplianceStackData(parameters, responses, {
+        totalRegistered: 10,
+      });
+      expect(out.yesCount).toBe(1);
+      expect(out.noCount).toBe(2);
+      expect(out.noInfoCount).toBe(7);
+      expect(out.data).toHaveLength(3);
+      expect(out.data[2]).toEqual({
+        compliance: "No information available",
+        _no_info: 7,
+      });
+      expect(out.stackLabels).toEqual([
+        "Compliant",
+        "E. coli",
+        "pH",
+        "_no_info",
+      ]);
+    });
+
+    test("omits third row when totalRegistered equals yes+no", () => {
+      const out = computeComplianceStackData(parameters, responses, {
+        totalRegistered: 3,
+      });
+      expect(out.noInfoCount).toBe(0);
+      expect(out.data).toHaveLength(2);
+      expect(out.stackLabels).toEqual(["Compliant", "E. coli", "pH"]);
+    });
+
+    test("clamps to zero when totalRegistered is less than yes+no", () => {
+      const out = computeComplianceStackData(parameters, responses, {
+        totalRegistered: 1,
+      });
+      expect(out.noInfoCount).toBe(0);
+      expect(out.data).toHaveLength(2);
+    });
+
+    test("respects custom noInfoLabel from i18n", () => {
+      const out = computeComplianceStackData(parameters, responses, {
+        totalRegistered: 10,
+        noInfoLabel: "Sin información",
+      });
+      expect(out.data[2].compliance).toBe("Sin información");
+    });
+
+    test("does nothing when totalRegistered is undefined", () => {
+      const out = computeComplianceStackData(parameters, responses, {});
+      expect(out.data).toHaveLength(2);
+      expect(out.noInfoCount).toBe(0);
+      expect(out.stackLabels).not.toContain("_no_info");
+    });
+
+    test("does nothing when totalRegistered is non-number", () => {
+      const cases = [null, "10", NaN, true, []];
+      cases.forEach((bad) => {
+        const out = computeComplianceStackData(parameters, responses, {
+          totalRegistered: bad,
+        });
+        expect(out.data).toHaveLength(2);
+        expect(out.noInfoCount).toBe(0);
+      });
+    });
+  });
 });
 
 describe("getCompliantCount", () => {
