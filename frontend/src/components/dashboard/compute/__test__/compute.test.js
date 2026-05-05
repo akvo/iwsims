@@ -174,13 +174,13 @@ describe("computeComplianceStackData", () => {
       expect(out.data).toHaveLength(3);
       expect(out.data[2]).toEqual({
         compliance: "No information available",
-        _no_info: 7,
+        "No information available": 7,
       });
       expect(out.stackLabels).toEqual([
         "Compliant",
         "E. coli",
         "pH",
-        "_no_info",
+        "No information available",
       ]);
     });
 
@@ -213,7 +213,7 @@ describe("computeComplianceStackData", () => {
       const out = computeComplianceStackData(parameters, responses, {});
       expect(out.data).toHaveLength(2);
       expect(out.noInfoCount).toBe(0);
-      expect(out.stackLabels).not.toContain("_no_info");
+      expect(out.stackLabels).not.toContain("No information available");
     });
 
     test("does nothing when totalRegistered is non-number", () => {

@@ -141,11 +141,9 @@ export const computeComplianceStackData = (
   if (typeof totalRegistered === "number" && Number.isFinite(totalRegistered)) {
     noInfoCount = Math.max(0, totalRegistered - yesCount - noCount);
     if (noInfoCount > 0) {
-      data.push({
-        compliance: noInfoLabel || "No information available",
-        _no_info: noInfoCount,
-      });
-      stackLabels.push("_no_info");
+      const label = noInfoLabel || "No information available";
+      data.push({ compliance: label, [label]: noInfoCount });
+      stackLabels.push(label);
     }
   }
 
