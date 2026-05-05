@@ -43,6 +43,39 @@ const WqParamFetcher = ({
 };
 
 /**
+ * Invisible totals fetcher for compute=compliance charts that opt into
+ * include_unanswered. Synthesizes { form_id: parentFormId } from the
+ * dashboard root's existing parent_form_id (same shape as
+ * kpi_total_registered.api), fires the count fetch, and reports the
+ * scalar back via onData keyed by chart id.
+ *
+ * Spec: doc/claude/compliance-chart-no-info/.
+ */
+const ComplianceTotalsFetcher = ({
+  chartId,
+  parentFormId,
+  filterState,
+  fiscalYearStartMonth,
+  customFilterDefs,
+  onData,
+}) => {
+  const totalsApi = useMemo(() => ({ form_id: parentFormId }), [parentFormId]);
+  const { data } = useDashboardValues(totalsApi, filterState, {
+    fiscalYearStartMonth,
+    customFilterDefs,
+  });
+  useEffect(() => {
+    if (data) {
+      const total = data?.data?.[0]?.value;
+      if (typeof total === "number") {
+        onData(chartId, total);
+      }
+    }
+  }, [data, chartId, onData]);
+  return null;
+};
+
+/**
  * Invisible progress fetcher. One instance per `progress_definition` item
  * in the config tree. Reports back via `onData` keyed by item id.
  */
@@ -288,6 +321,35 @@ const Dashboard = () => {
     );
   }, []);
 
+  // Compliance charts that opt into include_unanswered need an extra fetch
+  // for the registered universe so a "No information available" third bar
+  // can be rendered. Universe form_id comes from the dashboard root's
+  // parent_form_id; missing it is a config error and the flag is ignored.
+  // Spec: doc/claude/compliance-chart-no-info/.
+  const complianceTotalsItems = useMemo(() => {
+    if (!config) {
+      return [];
+    }
+    const matches = collectByCompute(config.items, "compliance").filter(
+      (item) => item.include_unanswered === true
+    );
+    if (matches.length > 0 && !config.parent_form_id) {
+      console.error(
+        "compliance chart has include_unanswered=true but dashboard config " +
+          "is missing parent_form_id; falling back to two-bar render"
+      );
+      return [];
+    }
+    return matches;
+  }, [config]);
+
+  const [complianceTotals, setComplianceTotals] = useState({});
+  const onComplianceTotalData = useCallback((id, total) => {
+    setComplianceTotals((prev) =>
+      prev[id] === total ? prev : { ...prev, [id]: total }
+    );
+  }, []);
+
   // ── Cross-form & derived-compute fan-out ──────────────────────────────────
   // Items with compute=cross_tab / accessibility_bucket / kpi_stack /
   // accessibility_no_issues_kpi each need pre-fetched /values responses
@@ -352,6 +414,7 @@ const Dashboard = () => {
   const computeResponses = useMemo(
     () => ({
       compliance: complianceResponses,
+      compliance_totals: complianceTotals,
       cross_tab: crossTabByItem,
       accessibility_bucket: accessibilityBucketByItem,
       kpi_stack: kpiStackByItem,
@@ -359,6 +422,7 @@ const Dashboard = () => {
     }),
     [
       complianceResponses,
+      complianceTotals,
       crossTabByItem,
       accessibilityBucketByItem,
       kpiStackByItem,
@@ -554,6 +618,19 @@ const Dashboard = () => {
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onParamData}
+        />
+      ))}
+
+      {/* Invisible compliance totals fetchers (universe count for _no_info bar) */}
+      {complianceTotalsItems.map((chartItem) => (
+        <ComplianceTotalsFetcher
+          key={chartItem.id}
+          chartId={chartItem.id}
+          parentFormId={config.parent_form_id}
+          filterState={filters.queryParams}
+          fiscalYearStartMonth={fyStart}
+          customFilterDefs={customFilterDefs}
+          onData={onComplianceTotalData}
         />
       ))}
 
