@@ -525,7 +525,18 @@ const ChartRenderer = ({
         ...p,
         key: p.id,
       }));
-      return computeComplianceStackData(normalised, responsesByKey).data;
+      // When the chart opts into include_unanswered, read the universe
+      // count fetched by ComplianceTotalsFetcher in Dashboard.jsx and
+      // forward it to the compute helper so a third "_no_info" bar can
+      // be appended. Spec: doc/claude/compliance-chart-no-info/.
+      const totalRegistered =
+        item.include_unanswered === true
+          ? computeResponses?.compliance_totals?.[item.id]
+          : undefined;
+      return computeComplianceStackData(normalised, responsesByKey, {
+        totalRegistered,
+        noInfoLabel: uiText.en.noInformationAvailable,
+      }).data;
     }
 
     if (item.source === "progress" && progressData) {
