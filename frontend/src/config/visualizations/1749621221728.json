@@ -551,10 +551,12 @@
           "#a65628",
           "#f781bf",
           "#999999",
-          "#cccccc"
+          "#cccccc",
+          "#bfbfbf"
         ]
       },
       "compute": "compliance",
+      "include_unanswered": true,
       "params_ref": [
         "param_e_coli",
         "param_total_coliform",
