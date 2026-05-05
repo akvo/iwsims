@@ -22,6 +22,8 @@ const COMPONENT_BY_TYPE = {
   stack_bar: StackBar,
 };
 
+const NO_INFO_COLOR = "#bfbfbf";
+
 /**
  * akvo-charts' `transformConfig` hardcodes its default tooltip and does NOT
  * read `config.tooltip` — so a tooltip block in the visualization JSON is
@@ -44,7 +46,13 @@ const tooltipPatch = (config) =>
  * correctly from dataset+encode because they have axes).
  */
 const toPieSeriesData = (rows) =>
-  (rows || []).map((r) => ({ name: r.label, value: r.value }));
+  (rows || []).map((r) => ({
+    name: r.label,
+    value: r.value,
+    ...(r.label === uiText.en.noInformationAvailable
+      ? { itemStyle: { color: NO_INFO_COLOR } }
+      : {}),
+  }));
 
 /**
  * Wrap a pie/doughnut Component so we can hide the outer slice callout
@@ -343,19 +351,61 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       nameGap: xAxisOverride?.nameGap ?? 48,
       nameLocation: "middle",
     };
-    chart.setOption(
-      {
-        legend: { type: "scroll" },
-        ...(horizontal
-          ? { yAxis: categoryAxisOverride }
-          : { xAxis: categoryAxisOverride }),
-        ...(commonProps.config?.yAxis && !horizontal
-          ? { yAxis: commonProps.config.yAxis }
-          : {}),
-        ...tooltipPatch(commonProps.config),
-      },
-      false
-    );
+    const overrides = {
+      legend: { type: "scroll" },
+      ...(horizontal
+        ? { yAxis: categoryAxisOverride }
+        : { xAxis: categoryAxisOverride }),
+      ...(commonProps.config?.yAxis && !horizontal
+        ? { yAxis: commonProps.config.yAxis }
+        : {}),
+      ...tooltipPatch(commonProps.config),
+    };
+
+    // Color the "No information available" entry gray regardless of palette.
+    // Two shapes of data arrive here:
+    //  • Simple bar  [{label, value}, ...] — one series, per-item color via
+    //    series.data + xAxis.data (switching away from dataset+encode).
+    //  • kpi_stack   [{category, SeriesA: N, "No information available": M}]
+    //    — one series per stack key; target by series name via chart.getOption().
+    const noInfoLabel = uiText.en.noInformationAvailable;
+    const chartData = commonProps.data || [];
+    if (chartData.length > 0 && "label" in chartData[0]) {
+      // Simple bar chart path.
+      if (chartData.some((r) => r.label === noInfoLabel)) {
+        const categoryLabels = chartData.map((r) => r.label);
+        const axisWithData = {
+          ...categoryAxisOverride,
+          data: categoryLabels,
+        };
+        overrides.series = [
+          {
+            data: chartData.map((r) => ({
+              value: r.value,
+              ...(r.label === noInfoLabel
+                ? { itemStyle: { color: NO_INFO_COLOR } }
+                : {}),
+            })),
+          },
+        ];
+        if (horizontal) {
+          overrides.yAxis = axisWithData;
+        } else {
+          overrides.xAxis = axisWithData;
+        }
+      }
+    } else if (chartData.length > 0 && noInfoLabel in chartData[0]) {
+      // kpi_stack path: find the series by name and set its itemStyle.
+      const existingSeries = chart.getOption()?.series || [];
+      const noInfoIdx = existingSeries.findIndex((s) => s.name === noInfoLabel);
+      if (noInfoIdx !== -1) {
+        overrides.series = existingSeries.map((_, i) =>
+          i === noInfoIdx ? { itemStyle: { color: NO_INFO_COLOR } } : {}
+        );
+      }
+    }
+
+    chart.setOption(overrides, false);
   }); // No deps: see ChartWithMarkLines note.
   return <Component ref={setRef} {...commonProps} />;
 };

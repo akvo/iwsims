@@ -511,7 +511,8 @@
       "col_span": 8,
       "config": {
         "title": "Accessibility",
-        "yAxisLabel": "RWS count"
+        "yAxisLabel": "RWS count",
+        "color": ["#64A73B", "#FDAE60", "#bfbfbf"]
       },
       "compute": "accessibility_bucket",
       "sample_api": {
