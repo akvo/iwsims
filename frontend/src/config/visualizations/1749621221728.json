@@ -511,7 +511,8 @@
       "col_span": 8,
       "config": {
         "title": "Accessibility",
-        "yAxisLabel": "RWS count"
+        "yAxisLabel": "RWS count",
+        "color": ["#64A73B", "#FDAE60", "#e41a1c", "#bfbfbf"]
       },
       "compute": "accessibility_bucket",
       "sample_api": {
@@ -551,10 +552,12 @@
           "#a65628",
           "#f781bf",
           "#999999",
-          "#cccccc"
+          "#cccccc",
+          "#bfbfbf"
         ]
       },
       "compute": "compliance",
+      "include_unanswered": true,
       "params_ref": [
         "param_e_coli",
         "param_total_coliform",

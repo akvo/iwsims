@@ -218,6 +218,13 @@ and builds a stacked-bar chart client-side.
 }
 ```
 
+**Optional:** add `"include_unanswered": true` to surface a third
+"No information available" X-axis category counting registered parents
+that have no qualifying water-quality measurements (so the bars sum to
+the dashboard's `parent_form_id` total). The universe count fetch reuses
+the dashboard root's existing `parent_form_id`; no per-chart api block
+is required. See [`doc/claude/compliance-chart-no-info/`](../../../../doc/claude/compliance-chart-no-info/README.md).
+
 ### 4. Frontend-computed cross-form join (`compute: "cross_tab"`)
 
 Fires two per-parent option-question `/values` calls and joins the rows by
