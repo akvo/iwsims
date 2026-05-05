@@ -585,7 +585,17 @@ const ChartRenderer = ({
       if (item.include_unanswered === true) {
         const total = computeResponses?.compliance_totals?.[item.id];
         if (typeof total === "number") {
-          complianceOptions.totalRegistered = total;
+          // Only apply the universe count once every active parameter has a
+          // response. If totalRegistered arrives before the param fetches the
+          // gap formula (totalRegistered - 0 - 0) would render the entire
+          // registered universe as "No information available".
+          const activeNormalised = normalised.filter((p) => !p.hide);
+          const allParamsLoaded =
+            activeNormalised.length > 0 &&
+            activeNormalised.every((p) => p.key in responsesByKey);
+          if (allParamsLoaded) {
+            complianceOptions.totalRegistered = total;
+          }
         }
       }
       return computeComplianceStackData(
