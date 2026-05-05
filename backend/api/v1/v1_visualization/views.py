@@ -12,10 +12,18 @@ from api.v1.v1_visualization.serializers import (
     GeoLocationFilterSerializer,
     FormDataStatSerializer,
     FormDataStatsFilterSerializer,
+    FormulaValuesSerializer,
+    DatapointDetailSerializer,
 )
-from api.v1.v1_visualization.models import ViewDataOptions
+from api.v1.v1_visualization.models import (
+    ViewDataOptions,
+)
 from api.v1.v1_visualization.functions import (
     apply_criteria_to_monitoring_qs,
+)
+from api.v1.v1_visualization.formula import (
+    evaluate as formula_evaluate,
+    pick_latest_repeat,
 )
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
@@ -279,6 +287,28 @@ class GeolocationListView(APIView):
                 type=OpenApiTypes.DATE,
                 location=OpenApiParameter.QUERY,
             ),
+            OpenApiParameter(
+                name="include_monitoring",
+                required=False,
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description=(
+                    "When true, from_date / to_date filter by the "
+                    "datapoint's monitoring children's created date "
+                    "instead of the datapoint's own created date."
+                ),
+            ),
+            OpenApiParameter(
+                name="monitoring_form_id",
+                required=False,
+                type=OpenApiTypes.NUMBER,
+                location=OpenApiParameter.QUERY,
+                description=(
+                    "When include_monitoring=true, restrict the "
+                    "children join to this form ID so that unrelated "
+                    "child forms do not satisfy the date window."
+                ),
+            ),
         ],
         tags=["Maps"],
         summary="To get list of geolocations for a form",
@@ -307,10 +337,33 @@ class GeolocationListView(APIView):
 
         from_date = serializer.validated_data.get("from_date")
         to_date = serializer.validated_data.get("to_date")
-        if from_date:
-            queryset = queryset.filter(created__date__gte=from_date)
-        if to_date:
-            queryset = queryset.filter(created__date__lte=to_date)
+        include_monitoring = serializer.validated_data.get(
+            "include_monitoring", False
+        )
+
+        monitoring_form_id = serializer.validated_data.get(
+            "monitoring_form_id"
+        )
+        if include_monitoring and (from_date or to_date):
+            child_q = Q()
+            if from_date:
+                child_q &= Q(children__created__date__gte=from_date)
+            if to_date:
+                child_q &= Q(children__created__date__lte=to_date)
+            child_filter = {
+                "children__is_pending": False,
+                "children__is_draft": False,
+            }
+            if monitoring_form_id:
+                child_filter["children__form_id"] = monitoring_form_id
+            queryset = queryset.filter(
+                child_q, **child_filter
+            ).distinct()
+        else:
+            if from_date:
+                queryset = queryset.filter(created__date__gte=from_date)
+            if to_date:
+                queryset = queryset.filter(created__date__lte=to_date)
 
         if serializer.validated_data.get("administration"):
             adm = serializer.validated_data.get("administration")
@@ -341,11 +394,171 @@ class GeolocationListView(APIView):
                 Q(administration=adm) |
                 Q(administration__path__startswith=adm_path)
             )
-        queryset = queryset.values(
-            "id", "name", "geo", "administration_id"
+        rows = list(
+            queryset.values("id", "name", "geo", "administration_id")
         )
-        serializer = GeoLocationListSerializer(queryset, many=True)
+        serializer = GeoLocationListSerializer(rows, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class DatapointDetailView(APIView):
+    # permission_classes = [IsAuthenticated]
+    # public, same as GeolocationListView
+
+    @extend_schema(
+        responses=DatapointDetailSerializer,
+        tags=["Maps"],
+        summary="Lightweight datapoint metadata for the map popup",
+        description=(
+            "Returns name, administration_full_name, and updated for "
+            "a single registration datapoint. Fetched on demand when "
+            "the user clicks a map marker; results are cached client-side."
+        ),
+    )
+    def get(self, request, data_id, version):
+        point = get_object_or_404(
+            FormData, pk=data_id,
+            is_pending=False, is_draft=False, parent__isnull=True
+        )
         return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
+            DatapointDetailSerializer(instance=point).data,
+            status=status.HTTP_200_OK,
         )
+
+
+@extend_schema(
+    description=(
+        "Evaluate a formula against the latest monitoring child of "
+        "each datapoint and group the resulting bucket value by "
+        "parent_id. Same response shape as /visualization/values."
+    ),
+    tags=["Visualization"],
+    parameters=[
+        OpenApiParameter(
+            name="form_id", required=True,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="The monitoring form id.",
+        ),
+        OpenApiParameter(
+            name="group_by", required=True,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=["parent_id"],
+        ),
+        OpenApiParameter(
+            name="monitoring", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=["latest"],
+        ),
+        OpenApiParameter(
+            name="formula", required=True,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "URL-encoded JSON formula. See "
+                "doc/claude/filters-dashboard-mapview/design.md §1.2."
+            ),
+        ),
+        OpenApiParameter(
+            name="criteria", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "AND-joined multi-criteria filter "
+                "(same grammar as /values)."
+            ),
+        ),
+        OpenApiParameter(
+            name="from_date", required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="to_date", required=False,
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+        ),
+    ],
+)
+@api_view(["GET"])
+def visualization_values_formula(request, version):
+    """Evaluate a formula per datapoint.
+
+    For monitoring forms (form.parent is set): groups by parent_id,
+    using the latest monitoring child per registration datapoint.
+    ``group`` in the response is the registration datapoint id.
+
+    For registration forms (form.parent is None): evaluates the formula
+    directly against each registration datapoint's answers.
+    ``group`` in the response is the datapoint's own id.
+
+    Both cases produce {group: datapoint_id, label: bucket_value} so
+    the frontend's byParent[point.id] lookup works identically.
+    """
+    serializer = FormulaValuesSerializer(data=request.query_params)
+    if not serializer.is_valid():
+        return Response(
+            {"message": validate_serializers_message(serializer.errors)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    validated = serializer.validated_data
+    form = get_object_or_404(Forms, pk=validated["form_id"])
+    formula = validated["formula"]
+    criteria = validated.get("criteria")
+    from_date = validated.get("from_date")
+    to_date = validated.get("to_date")
+
+    is_registration = form.parent_id is None
+
+    qs = form.form_form_data.filter(
+        is_pending=False,
+        is_draft=False,
+        parent__isnull=is_registration,
+    )
+    if criteria:
+        qs = apply_criteria_to_monitoring_qs(qs, False, criteria)
+    if from_date:
+        qs = qs.filter(created__date__gte=from_date)
+    if to_date:
+        qs = qs.filter(created__date__lte=to_date)
+
+    if is_registration:
+        # Each registration datapoint is its own "group".
+        data_ids = list(qs.values_list("id", flat=True))
+        if not data_ids:
+            return Response({"data": []}, status=status.HTTP_200_OK)
+        id_to_group = {d: d for d in data_ids}
+    else:
+        # Latest monitoring child per parent_id.
+        monitorings = qs.order_by("parent_id", "-created").values(
+            "id", "parent_id", "created"
+        )
+        latest_by_parent = {}
+        for row in monitorings:
+            parent_id = row["parent_id"]
+            if parent_id not in latest_by_parent:
+                latest_by_parent[parent_id] = row["id"]
+        if not latest_by_parent:
+            return Response({"data": []}, status=status.HTTP_200_OK)
+        # Map data_id → group (parent_id) for response assembly.
+        id_to_group = {v: k for k, v in latest_by_parent.items()}
+        data_ids = list(id_to_group.keys())
+
+    answers = Answers.objects.filter(
+        data_id__in=data_ids
+    ).values("data_id", "question_id", "value", "options", "index")
+
+    answers_by_data = {}
+    for ans in answers:
+        answers_by_data.setdefault(ans["data_id"], []).append(ans)
+
+    data = []
+    for data_id, group in id_to_group.items():
+        per_question = pick_latest_repeat(answers_by_data.get(data_id, []))
+        bucket = formula_evaluate(formula, per_question)
+        data.append({"group": group, "label": bucket})
+
+    return Response({"data": data}, status=status.HTTP_200_OK)

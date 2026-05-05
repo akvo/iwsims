@@ -268,6 +268,9 @@ const ChartWithMarkLines = ({ Component, commonProps, markLines, today }) => {
         // https://echarts.apache.org/examples/en/editor.html?c=bar-tick-align.
         // Harmless for line/stack_bar with category axes.
         xAxis: { axisTick: { alignWithLabel: true } },
+        ...(commonProps.config?.yAxis
+          ? { yAxis: commonProps.config.yAxis }
+          : {}),
         series: [
           {
             markLine: {
@@ -346,6 +349,9 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
         ...(horizontal
           ? { yAxis: categoryAxisOverride }
           : { xAxis: categoryAxisOverride }),
+        ...(commonProps.config?.yAxis && !horizontal
+          ? { yAxis: commonProps.config.yAxis }
+          : {}),
         ...tooltipPatch(commonProps.config),
       },
       false

@@ -3,6 +3,8 @@ from api.v1.v1_visualization.views import (
     formdata_stats,
     monitoring_stats,
     GeolocationListView,
+    DatapointDetailView,
+    visualization_values_formula,
 )
 from api.v1.v1_visualization.dashboard_views import (
     visualization_values,
@@ -22,6 +24,14 @@ urlpatterns = [
     re_path(
         r"^(?P<version>(v1))/maps/geolocation/(?P<form_id>[0-9]+)",
         GeolocationListView.as_view(),
+    ),
+    re_path(
+        r"^(?P<version>(v1))/maps/datapoint/(?P<data_id>[0-9]+)",
+        DatapointDetailView.as_view(),
+    ),
+    re_path(
+        r"^(?P<version>(v1))/visualization/values/formula$",
+        visualization_values_formula,
     ),
     re_path(
         r"^(?P<version>(v1))/visualization/values",
