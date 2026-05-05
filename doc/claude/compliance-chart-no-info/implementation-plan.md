@@ -2,30 +2,38 @@
 
 Sequenced, checklisted task breakdown for adding the third "No information available" X-axis category to `chart_drinking_water_compliance`. Built to be executed top-to-bottom by an implementer who has read [requirements.md](./requirements.md) and [design.md](./design.md).
 
-**Branch**: TBD (suggest `feature/<issue>-compliance-no-info`)
-**Issue**: TBD — file via `bd create --title="Add 'No information available' bucket to compliance stacked bar" --type=feature --priority=2`
+**Branch**: `feature/199-feedback-2`
+**Issue**: `#199` (existing feedback round)
+**Status**: Phases 1, 3, 4, 5, 7 committed. Phase 2 **skipped** (i18n key already present from parent design). Phase 6 partial — automated checks green; manual smoke + push + PR pending user action.
 **Companions**: [`requirements.md`](./requirements.md), [`design.md`](./design.md), [`README.md`](./README.md)
 **Parent design**: [`/values` `_no_info`](../no-available-info-in-vis-values-api/README.md) — share its `_no_info` group key, `#bfbfbf` color, and `noInformationAvailable` i18n key.
 
----
+### Commit chain
 
-## Pre-flight
-
-Before touching code:
-
-- [ ] Read [requirements.md](./requirements.md) end-to-end. The 10 FRs + 7 NFRs are the contract.
-- [ ] Read [design.md](./design.md) — especially the [Edge cases table](./design.md#edge-cases) and the [race-defensive note](./requirements.md#nfr-3--race-defensive).
-- [ ] Skim the existing compliance helper at [`compute/compliance.js`](../../../frontend/src/components/dashboard/compute/compliance.js), the ChartRenderer compliance branch at [`ChartRenderer.jsx:506`](../../../frontend/src/components/dashboard/ChartRenderer.jsx#L506), and the Dashboard fan-out at [`Dashboard.jsx:271`](../../../frontend/src/pages/dashboard/Dashboard.jsx#L271).
-- [ ] Confirm the parent `_no_info` design status:
-  - If [parent design](../no-available-info-in-vis-values-api/) has shipped → reuse its `noInformationAvailable` key in `ui-text.js`; skip Phase 2.
-  - If not → this PR adds the i18n key as part of Phase 2.
-- [ ] Confirm the chart-flip scope. The wiring is generic; it applies to every `compute: "compliance"` chart on every dashboard whose root has `parent_form_id`. This PR locks in **two** charts (EPS + RWS Overview) per [requirements.md FR-10](./requirements.md#fr-10--generic-contract-existing-dashboards-opt-in). If you discover a third matching chart in `frontend/src/config/visualizations/`, either add it to FR-10 before starting **or** explicitly defer it in the PR body — don't silently flip it on. Run a sanity check: `grep -lr '"compute": "compliance"' frontend/src/config/visualizations/` should return at most the two known files.
-- [ ] Create the beads issue and `bd update <id> --status=in_progress`.
-- [ ] Create the feature branch: `git checkout -b feature/<issue>-compliance-no-info`.
+| Phase | Commit | Title |
+|---|---|---|
+| 1 | `56bc4d21` | `[#199] Add include_unanswered support to computeComplianceStackData` |
+| 2 | — | Skipped (parent design already added `noInformationAvailable` to `ui-text.js:82`) |
+| 3 | `5a2718c3` | `[#199] Fan out universe count fetch for compliance charts` |
+| 4 | `7ece760d` | `[#199] Wire compliance_totals into ChartRenderer compliance branch` |
+| 4 fix | `55f772ca` | `[#199] Avoid no-undefined lint warning in compliance branch` |
+| 5 | `49364395` | `[#199] Enable _no_info bucket on Drinking Water Compliance charts` |
+| 7 | `f9d88548` | `[#199] Document compliance chart _no_info bucket` |
 
 ---
 
-## Phase 1 — Compute helper + Jest tests
+## Pre-flight **done**
+
+- [x] Read [requirements.md](./requirements.md) end-to-end.
+- [x] Read [design.md](./design.md).
+- [x] Skim the existing compliance helper, ChartRenderer compliance branch, and Dashboard fan-out.
+- [x] Confirm the parent `_no_info` design status — `noInformationAvailable` already exists at [`ui-text.js:82`](../../../frontend/src/lib/ui-text.js#L82). **Phase 2 is skipped.**
+- [x] Confirm chart-flip scope. Sanity check `grep -lr '"compute": "compliance"' frontend/src/config/visualizations/` returned exactly the two known files (`1749623934933.json`, `1749621221728.json`) plus the README docs file.
+- [x] Branch already on `feature/199-feedback-2` (existing feedback round); used issue `#199`.
+
+---
+
+## Phase 1 — Compute helper + Jest tests **done** (`56bc4d21`)
 
 Pure-function change. Safest first commit. Single commit.
 
@@ -81,9 +89,9 @@ File: [`frontend/src/components/dashboard/compute/__test__/compliance.test.js`](
 
 ---
 
-## Phase 2 — i18n key (skip if parent design already landed)
+## Phase 2 — i18n key **skipped**
 
-Single commit. Skip entirely if [`uiText.en.noInformationAvailable`](../../../frontend/src/lib/ui-text.js) already exists from the [parent `_no_info` design](../no-available-info-in-vis-values-api/design.md#ui-textjs).
+`noInformationAvailable` already present at [`ui-text.js:82`](../../../frontend/src/lib/ui-text.js#L82) from the [parent `_no_info` design](../no-available-info-in-vis-values-api/design.md#ui-textjs). No change needed.
 
 ### 2.1 Add `noInformationAvailable`
 
@@ -112,7 +120,7 @@ File: [`frontend/src/lib/ui-text.js`](../../../frontend/src/lib/ui-text.js)
 
 ---
 
-## Phase 3 — Dashboard fan-out: `ComplianceTotalsFetcher`
+## Phase 3 — Dashboard fan-out: `ComplianceTotalsFetcher` **done** (`5a2718c3`)
 
 Single commit. Adds the parent-form count fetch as an invisible component.
 
@@ -148,17 +156,18 @@ File: [`frontend/src/pages/dashboard/Dashboard.jsx`](../../../frontend/src/pages
 
 ---
 
-## Phase 4 — ChartRenderer pass-through
+## Phase 4 — ChartRenderer pass-through **done** (`7ece760d` + lint fix `55f772ca`)
 
-Single commit. Wires the new compute-helper option into the existing compliance branch.
+Two commits — initial wire-through plus a small follow-up to dodge the project's `no-undefined` lint rule by building the compute helper's options object conditionally instead of passing the literal `undefined`.
 
 ### 4.1 Read `compliance_totals` and pass to helper
 
 File: [`frontend/src/components/dashboard/ChartRenderer.jsx`](../../../frontend/src/components/dashboard/ChartRenderer.jsx)
 
 - [ ] Around [line 506](../../../frontend/src/components/dashboard/ChartRenderer.jsx#L506) (the `item.compute === "compliance"` branch):
-  - Read `totalRegistered = item.include_unanswered === true ? computeResponses?.compliance_totals?.[item.id] : undefined`.
-  - Pass `{ totalRegistered, noInfoLabel: uiText.en.noInformationAvailable }` as the third arg to `computeComplianceStackData()`.
+  - Build `complianceOptions = { noInfoLabel: uiText.en.noInformationAvailable }`.
+  - When `item.include_unanswered === true` AND `computeResponses.compliance_totals[item.id]` is a number, set `complianceOptions.totalRegistered`. **Avoid the literal `undefined`** — the project's ESLint config has `no-undefined: warn`, and `npm run lint` is enforced in CI.
+  - Pass `complianceOptions` as the third arg to `computeComplianceStackData()`.
 - [ ] Verify `uiText` import already exists at the top of the file; add it if missing.
 - [ ] If the chart's `data` `useMemo` does not already depend on `computeResponses`, ensure it does (it likely already does for `cross_tab` etc. — confirm).
 
@@ -180,7 +189,7 @@ File: [`frontend/src/components/dashboard/ChartRenderer.jsx`](../../../frontend/
 
 ---
 
-## Phase 5 — JSON config: flip the charts on
+## Phase 5 — JSON config: flip the charts on **done** (`49364395`)
 
 Single commit. The visible change. The wiring from Phase 3-4 is dashboard-agnostic; this phase activates it on every chart in scope.
 
@@ -229,38 +238,39 @@ For each file:
 
 ---
 
-## Phase 6 — Verify
+## Phase 6 — Verify **partial** (automated DONE, manual smoke pending)
 
-### 6.1 Frontend test suite
+### 6.1 Frontend test suite **green**
 
 ```bash
-cd frontend
-npm run lint
-npm run prettier
-./dc.sh exec -T frontend npx jest --runInBand src/components/dashboard
+./dc.sh exec -T frontend npm run lint
+./dc.sh exec -T frontend env CI=true npx react-scripts test --watchAll=false \
+  --transformIgnorePatterns "node_modules/(?!d3|d3-geo|d3-array|internmap|delaunator|robust-predicates)/" \
+  --testPathPattern='dashboard'
 ```
 
-All green expected. If any test fails, halt and root-cause — don't disable.
+Result on this branch:
+- ESLint: 0 errors, 0 warnings.
+- Prettier: clean.
+- Dashboard test suite: **191 / 191 passed** (12 suites). 7 new cases in `compute.test.js` cover the include_unanswered contract; 184 existing cases unchanged.
+
+> Note: `--transformIgnorePatterns` is required because `src/lib/geo.js` imports `d3-geo` (ESM). The project's `npm test` script bakes this in; the raw `npx jest` invocation does not, which is why direct `jest` runs hit a SyntaxError on `TabsWidget.test.js`. This is **pre-existing** and orthogonal to this PR.
 
 ### 6.2 Backend regression (sanity)
 
-This PR has no backend code change, but confirm no test depends on the chart producing 2 rows specifically:
+This PR has no backend code change. Skipped on this branch as the diff contains zero backend files (`git diff --stat HEAD~6..HEAD -- backend/` is empty).
 
-```bash
-./dc.sh exec backend python manage.py test api.v1.v1_visualization
-```
+### 6.3 Manual smoke **pending user**
 
-### 6.3 Manual smoke
-
-Per [design.md "Manual smoke"](./design.md#manual-smoke). Run on **both** dashboards in scope (EPS + RWS) — the wiring is shared, but the JSON edits are per-file.
+Per [design.md "Manual smoke"](./design.md#manual-smoke). Run on **both** dashboards in scope (EPS + RWS) — the wiring is shared, but the JSON edits are per-file. **Not yet executed by the implementer; the user should drive this on a stack with seeded demo data.**
 
 - [ ] `./dc.sh up -d`
-- [ ] **EPS Overview**:
+- [ ] **EPS Overview** (`/dashboard/<eps slug>`):
   - [ ] "Drinking Water Compliance" shows three bars: Yes, No, "No information available".
   - [ ] `Yes + No + NoInfo === kpi_total_registered.value` (the `1749623934933` parent form count).
   - [ ] Apply admin filter; reconciliation holds.
   - [ ] DevTools → Network: one extra `/values?form_id=1749623934933` count fetch fires.
-- [ ] **RWS Overview**:
+- [ ] **RWS Overview** (`/dashboard/<rws slug>`):
   - [ ] "Drinking Water Compliance" shows three bars: Yes, No, "No information available".
   - [ ] Three-bar total reconciles with the `1749621221728` parent form count (the same total `kpi_drinking_water_compliance` uses as its `denominator_api`, which serves as the cross-check).
   - [ ] Apply admin filter; reconciliation holds.
@@ -272,31 +282,37 @@ Per [design.md "Manual smoke"](./design.md#manual-smoke). Run on **both** dashbo
 
 ## Phase 7 — Documentation + PR
 
-### 7.1 Update visualization README
+### 7.1 Update visualization README **done** (`f9d88548`)
 
 File: [`frontend/src/config/visualizations/README.md`](../../../frontend/src/config/visualizations/README.md)
 
-- [ ] Find the section that documents `compute: "compliance"` and add a paragraph cross-referencing this design:
-  > Chart items with `compute: "compliance"` may opt into a third "No information available" X-axis category by setting `include_unanswered: true`. The chart reuses the dashboard root's `parent_form_id` for the universe count — no per-chart api block is required. See [`doc/claude/compliance-chart-no-info/`](../../../../doc/claude/compliance-chart-no-info/README.md) for the design.
+- [x] Added a paragraph under section *"3. Frontend-computed (`compute: "compliance"`)"* cross-referencing this spec, mentioning the opt-in flag and the universe-fetch behavior.
 
-### 7.2 Update parent design's "Out of scope" cross-link
+### 7.2 Update parent design's "Out of scope" cross-link **done** (`f9d88548`)
 
 File: [`doc/claude/no-available-info-in-vis-values-api/README.md`](../no-available-info-in-vis-values-api/README.md)
 
-- [ ] If the "Out of scope" line about compute-driven charts still exists, add a cross-link:
-  > Compute-driven charts (e.g. compliance) — covered separately in [`doc/claude/compliance-chart-no-info/`](../compliance-chart-no-info/README.md).
+- [x] Added a bullet under "Out of scope" pointing back to this folder for compute-driven charts. Spec docs (the four-file set under `doc/claude/compliance-chart-no-info/`) and both cross-links were committed together.
 
-### 7.3 Commit + push + PR
+### 7.3 Commit + push + PR **pending user**
+
+The five code commits + the spec/docs commit are already on `feature/199-feedback-2`:
+
+```
+f9d88548 [#199] Document compliance chart _no_info bucket
+55f772ca [#199] Avoid no-undefined lint warning in compliance branch
+49364395 [#199] Enable _no_info bucket on Drinking Water Compliance charts
+7ece760d [#199] Wire compliance_totals into ChartRenderer compliance branch
+5a2718c3 [#199] Fan out universe count fetch for compliance charts
+56bc4d21 [#199] Add include_unanswered support to computeComplianceStackData
+```
+
+Remaining steps require explicit user approval per the global "destructive/visible-state actions" rule:
 
 ```bash
-git commit -m "[#<issue>] Cross-link compliance chart _no_info design
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-
 bd sync
-git push -u origin feature/<issue>-compliance-no-info  # confirm with user before pushing
+git push -u origin feature/199-feedback-2   # ← user must confirm
+gh pr create ...                             # ← user must confirm
 ```
 
 PR template:
@@ -325,7 +341,9 @@ Both Drinking Water Compliance charts now show three bars
 but newly visible — flag for stakeholder communication.
 
 ## Test plan
-- [ ] Jest: 7 new cases on computeComplianceStackData; existing cases pass.
+- [x] Jest: 7 new cases on computeComplianceStackData; existing cases pass.
+      Full dashboard suite green (191/191 across 12 suites).
+- [x] ESLint + Prettier: full project clean.
 - [ ] EPS dashboard: bars sum to kpi_total_registered, under no filter
       and under admin filter.
 - [ ] RWS dashboard: bars sum to the parent-form count;
@@ -370,24 +388,26 @@ The compute helper, fetcher, and ChartRenderer pass-through stay in place — th
 
 ### Full revert
 
-If the broader wiring is suspect:
+If the broader wiring is suspect, revert in reverse order so each step removes a coherent slice:
 
 ```bash
-git revert <commit-5>  # JSON
-git revert <commit-4>  # ChartRenderer
-git revert <commit-3>  # Dashboard fan-out
-git revert <commit-2>  # i18n (skip if shared with parent design)
-git revert <commit-1>  # compute helper
+git revert 49364395  # JSON config flip on both dashboards
+git revert 55f772ca  # ChartRenderer lint fix
+git revert 7ece760d  # ChartRenderer pass-through
+git revert 5a2718c3  # Dashboard fan-out
+git revert 56bc4d21  # Compute helper
+# Phase 7 docs (f9d88548) can stay — pure documentation.
 ```
 
-Confirm `npm test` and `./dc.sh exec backend python manage.py test` still pass on the reverted tree.
+Confirm `./dc.sh exec -T frontend npm run lint` and the dashboard test suite still pass on the reverted tree.
 
 ---
 
 ## Done definition
 
-- [ ] All 7 phases checked off.
-- [ ] PR merged to develop / main.
-- [ ] `bd close <issue>`.
+- [x] Phases 1, 3, 4, 5, 7 committed; Phase 2 skipped; Phase 6 automated checks green.
+- [ ] Manual smoke on EPS + RWS dashboards.
+- [ ] `git push -u origin feature/199-feedback-2` (user-confirmed).
+- [ ] PR opened with the template in [Phase 7.3](#73-commit--push--pr--pending-user); screenshots captured.
+- [ ] PR merged.
 - [ ] Stakeholder note sent (per the [risk register](./design.md#risk-register)).
-- [ ] Screenshot in the PR body shows three bars summing to the KPI.
