@@ -43,7 +43,7 @@ File: [`frontend/src/components/dashboard/compute/compliance.js`](../../../front
 
 - [ ] Add a third positional arg `options = {}` to `computeComplianceStackData`.
 - [ ] After the existing `Object.values(byEps).forEach(…)` loop, compute `noInfoCount = Math.max(0, options.totalRegistered − yesCount − noCount)` only when `typeof options.totalRegistered === "number"`.
-- [ ] If `noInfoCount > 0`, push a third row `{ compliance: options.noInfoLabel || "No information available", _no_info: noInfoCount }` and append `"_no_info"` to `stackLabels`.
+- [ ] If `noInfoCount > 0`, derive `label = options.noInfoLabel || "No information available"`, push a third row `{ compliance: label, [label]: noInfoCount }` and append `label` to `stackLabels`. Using the translated label as both the row key and the series key means the legend renders the human-readable string directly without any extra mapping.
 - [ ] Return shape gains a `noInfoCount` field (default 0). Existing callers ignore unknown fields, so this is backwards-compatible.
 - [ ] Update the JSDoc block at the top of the function to document `options.totalRegistered`, `options.noInfoLabel`, and the new return field.
 
@@ -77,8 +77,9 @@ File: [`frontend/src/components/dashboard/compute/__test__/compliance.test.js`](
   git commit -m "[#<issue>] Add include_unanswered support to computeComplianceStackData
 
   - Extend signature with optional { totalRegistered, noInfoLabel } options.
-  - When totalRegistered is a finite number, append a single _no_info row
-    with count = max(0, totalRegistered - yesCount - noCount); skip when 0.
+  - When totalRegistered is a finite number, append a single row keyed by
+    the translated label (not "_no_info"): count = max(0, totalRegistered
+    - yesCount - noCount); row omitted when count is 0.
   - Return shape gains noInfoCount for downstream reuse.
   - Existing 2-arg callers behave identically (NFR-1).
 

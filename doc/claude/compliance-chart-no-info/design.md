@@ -101,8 +101,8 @@ export const computeComplianceStackData = (
     );
     if (noInfoCount > 0) {
       const label = options.noInfoLabel || "No information available";
-      data.push({ compliance: label, _no_info: noInfoCount });
-      stackLabels.push("_no_info");
+      data.push({ compliance: label, [label]: noInfoCount });
+      stackLabels.push(label);
     }
   }
 
@@ -353,7 +353,7 @@ sequenceDiagram
   TF->>D: complianceTotals[chartId] = 105
   D->>CR: computeResponses (compliance + compliance_totals)
   CR->>CC: parameters, responsesByKey, { totalRegistered: 105, noInfoLabel }
-  CC-->>CR: data: [Yes:7, No:17, _no_info:81]
+  CC-->>CR: data: [Yes:7, No:17, "No information available":81]
   CR-->>U: render 3-bar stacked chart
 ```
 
@@ -391,11 +391,11 @@ Add to the existing test file beside [`computeComplianceStackData`](../../../fro
 | Test | Setup | Assertion |
 |---|---|---|
 | `existing 2-arg signature unchanged` | call without `options` | identical output to today |
-| `appends third row when totalRegistered exceeds yes+no` | totalRegistered=105, yes=7, no=17 | `data.length === 3`; row 3 is `{ compliance: "No information available", _no_info: 81 }`; `stackLabels` ends with `"_no_info"`; returned `noInfoCount === 81` |
+| `appends third row when totalRegistered exceeds yes+no` | totalRegistered=105, yes=7, no=17 | `data.length === 3`; row 3 is `{ compliance: "No information available", "No information available": 81 }`; `stackLabels` ends with `"No information available"`; returned `noInfoCount === 81` |
 | `omits third row when totalRegistered equals yes+no` | totalRegistered=24, yes=7, no=17 | `data.length === 2`; `stackLabels` unchanged; `noInfoCount === 0` |
 | `clamps to zero when totalRegistered less than yes+no` | totalRegistered=10, yes=7, no=17 | `data.length === 2`; `noInfoCount === 0` (no negative bar) |
-| `respects custom noInfoLabel` | options.noInfoLabel="Sin información" | row 3's `compliance` field is the custom label verbatim |
-| `does nothing when totalRegistered is undefined` | options={} | `data.length === 2`; `noInfoCount === 0`; no `_no_info` in stackLabels |
+| `respects custom noInfoLabel` | options.noInfoLabel="Sin información" | row 3's `compliance` field and series key are both `"Sin información"` |
+| `does nothing when totalRegistered is undefined` | options={} | `data.length === 2`; `noInfoCount === 0`; `"No information available"` not in stackLabels |
 | `does nothing when totalRegistered is non-number` | options.totalRegistered=null | identical to undefined |
 
 ### Component (RTL) — `ChartRenderer.test.js`

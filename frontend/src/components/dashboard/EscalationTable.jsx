@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Alert, Table } from "antd";
 import { DownCircleOutlined, LeftCircleOutlined } from "@ant-design/icons";
 import { useDashboardEscalation } from "../../util/hooks";
+
+const MAX_COLUMNS = 6;
 
 const renderValue = (column, row, cellComputers) => {
   if (column.computed) {
@@ -51,7 +53,14 @@ const EscalationTable = ({
     [item.columns]
   );
 
-  const MAX_COLUMNS = 6;
+  // window.forms is populated once at app load — stable reference, no deps.
+  const allQuestions = useMemo(
+    () =>
+      window.forms?.flatMap((f) =>
+        f?.content?.question_group?.flatMap((qg) => qg?.question)
+      ),
+    []
+  );
 
   const summaryColumns = useMemo(() => {
     const priority = visibleColumns.filter((c) => c.priority);
@@ -68,53 +77,63 @@ const EscalationTable = ({
         key: c.key,
         render: (_value, row) => {
           const display = renderValue(c, row, cellComputers);
+          const question = allQuestions?.find((q) => q?.id === c?.question_id);
           if (display === null) {
             return <span style={{ color: "#bbb" }}>—</span>;
+          }
+          if (question?.option?.length) {
+            const optionAnswer = question.option.find(
+              (qo) => qo?.value === display
+            );
+            return <span>{optionAnswer?.label || display}</span>;
           }
           return <span>{display}</span>;
         },
       })),
       Table.EXPAND_COLUMN,
     ],
-    [summaryColumns, cellComputers]
+    [summaryColumns, cellComputers, allQuestions]
   );
 
-  const renderExpandedRow = (row) => {
-    const rows = visibleColumns.map((c) => ({
-      key: c.key,
-      label: c.label,
-      display: renderValue(c, row, cellComputers),
-    }));
-    return (
-      <div className="pending-data-wrapper">
-        <h3>{item.label || "Details"}</h3>
-        <Table
-          pagination={false}
-          dataSource={rows}
-          rowKey="key"
-          columns={[
-            {
-              title: "Question",
-              dataIndex: "label",
-              width: "50%",
-              className: "table-col-question",
-            },
-            {
-              title: "Response",
-              dataIndex: "display",
-              width: "50%",
-              render: (display) =>
-                display === null ? (
-                  <span style={{ color: "#bbb" }}>—</span>
-                ) : (
-                  display
-                ),
-            },
-          ]}
-        />
-      </div>
-    );
-  };
+  const renderExpandedRow = useCallback(
+    (row) => {
+      const rows = visibleColumns.map((c) => ({
+        key: c.key,
+        label: c.label,
+        display: renderValue(c, row, cellComputers),
+      }));
+      return (
+        <div className="pending-data-wrapper">
+          <h3>{item.label || "Details"}</h3>
+          <Table
+            pagination={false}
+            dataSource={rows}
+            rowKey="key"
+            columns={[
+              {
+                title: "Question",
+                dataIndex: "label",
+                width: "50%",
+                className: "table-col-question",
+              },
+              {
+                title: "Response",
+                dataIndex: "display",
+                width: "50%",
+                render: (display) =>
+                  display === null ? (
+                    <span style={{ color: "#bbb" }}>—</span>
+                  ) : (
+                    display
+                  ),
+              },
+            ]}
+          />
+        </div>
+      );
+    },
+    [visibleColumns, cellComputers, item.label]
+  );
 
   if (error) {
     return (
