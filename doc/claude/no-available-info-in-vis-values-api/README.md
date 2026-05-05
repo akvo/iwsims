@@ -61,6 +61,7 @@ When a dashboard's KPI tile says "104 EPS registered" but the donut chart of ope
 - Auto-coloring un-monitored map markers without explicit `status_colors._no_info` — opt-in only.
 - Introducing a new i18n framework — reuse existing `uiText` map.
 - Backend changes to count-mode (no `question_id`) endpoints — out of scope; the gap doesn't apply when there's no per-option breakdown.
+- Compute-driven charts (e.g. `compute: "compliance"` stacked bar) — covered separately in [`doc/claude/compliance-chart-no-info/`](../compliance-chart-no-info/README.md). Those charts have no `api` block to attach `include_unanswered=true` to and reconcile their gap at the chart compute layer instead.
 
 ---
 
