@@ -21,28 +21,37 @@ const MapView = ({ dataset, loading, position }) => {
   const lg = useRef(null);
   const defPos = geo.defaultPos();
 
-  const renderMarker = (d) => {
-    if (d?.values?.length) {
-      return `<span style="background: conic-gradient(${d.values
-        .map(
-          (v, i) =>
-            `${v.color} ${i * (100 / d.values.length)}% ${
-              (i + 1) * (100 / d.values.length)
-            }%`
-        )
-        .join(", ")})"></span>`;
+  const getMarkerDisplayText = useCallback((value) => {
+    const isNullish = value === null || typeof value === "undefined";
+    if (isNullish || isNaN(value)) {
+      return "";
     }
-    const bgColor = d?.color || "#64A73B";
-    return `<span class="custom-marker" style="background-color:${bgColor};">${
-      d?.value === null ||
-      typeof d?.value === "undefined" ||
-      !isNaN(d.value) === false
-        ? ""
-        : d.value >= 1000
-        ? `${Math.floor(d.value / 1000)}k`
-        : d.value
-    }</span>`;
-  };
+    if (value < 1000) {
+      return String(value);
+    }
+    const abbreviated = `${Math.floor(value / 1000)}k`;
+    return abbreviated.length <= 4 ? abbreviated : "…";
+  }, []);
+
+  const renderMarker = useCallback(
+    (d) => {
+      if (d?.values?.length) {
+        return `<span style="background: conic-gradient(${d.values
+          .map(
+            (v, i) =>
+              `${v.color} ${i * (100 / d.values.length)}% ${
+                (i + 1) * (100 / d.values.length)
+              }%`
+          )
+          .join(", ")})"></span>`;
+      }
+      const bgColor = d?.color || "#64A73B";
+      return `<span class="custom-marker" style="background-color:${bgColor};">${getMarkerDisplayText(
+        d?.value
+      )}</span>`;
+    },
+    [getMarkerDisplayText]
+  );
 
   const mapStyle = (feature) => {
     const activeAdm = takeRight(selectedAdm, 1)[0];
@@ -112,6 +121,11 @@ const MapView = ({ dataset, loading, position }) => {
         const offsetCoords = offsets[index];
         const finalCoords = geo.fixCoordinates(offsetCoords);
 
+        const hasNumericValue =
+          d?.value !== null &&
+          typeof d?.value !== "undefined" &&
+          !isNaN(d.value);
+
         const marker = L.marker(finalCoords, {
           icon: L.divIcon({
             className: `custom-marker ${
@@ -124,10 +138,18 @@ const MapView = ({ dataset, loading, position }) => {
         }).bindPopup(
           `<a href="/control-center/data/${selectedForm}/monitoring/${d.id}" target="_blank" rel="noopener noreferrer" style="padding: 0;">${d.name}</a>`
         );
+
+        if (hasNumericValue) {
+          marker.bindTooltip(String(d.value), {
+            sticky: true,
+            direction: "top",
+          });
+        }
+
         lg.current.addLayer(marker);
       });
     }
-  }, [lg, selectedForm, dataset, loading]);
+  }, [lg, selectedForm, dataset, loading, renderMarker]);
 
   return (
     <div className="map-container">
