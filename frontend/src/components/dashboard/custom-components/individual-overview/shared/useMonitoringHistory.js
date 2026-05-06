@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../../../../lib";
+import { findAnswer } from "./helpers";
 
 const PAGE_SIZE = 20;
 
@@ -26,6 +27,9 @@ const fetchAllPages = async (formId, parentUuid) => {
  *
  * @param {number} formId
  * @param {string|null|undefined} parentUuid    Falsy disables the fetch.
+ * @param {number|null} [dateQuestionId]        When provided, the answer for
+ *   this question id is used as the row date instead of FormData.created.
+ *   Falls back to FormData.created when the answer is absent.
  *
  * @returns {{
  *   rows: Array<{ id: number, date: string|null, values: Array }>,
@@ -33,7 +37,7 @@ const fetchAllPages = async (formId, parentUuid) => {
  *   error: Error|null,
  * }}
  */
-const useMonitoringHistory = (formId, parentUuid) => {
+const useMonitoringHistory = (formId, parentUuid, dateQuestionId) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -62,10 +66,20 @@ const useMonitoringHistory = (formId, parentUuid) => {
           list.map(async (entry) => {
             try {
               const { data: values } = await api.get(`/data/${entry.id}`);
+              const dateAnswer = dateQuestionId
+                ? findAnswer(values || [], dateQuestionId)
+                : null;
+              const rawDate =
+                dateAnswer?.value || entry.created || entry.updated || null;
+              // Trim ISO datetimes (e.g. "2026-02-24T02:16:00.000Z") to
+              // date-only ("2026-02-24") so x-axis labels stay compact.
+              const date =
+                typeof rawDate === "string" && rawDate.length > 10
+                  ? rawDate.slice(0, 10)
+                  : rawDate;
               return {
                 id: entry.id,
-                date:
-                  entry.created || entry.updated || entry.submitted_at || null,
+                date,
                 values: values || [],
               };
             } catch (err) {
@@ -97,7 +111,7 @@ const useMonitoringHistory = (formId, parentUuid) => {
     return () => {
       cancelled = true;
     };
-  }, [formId, parentUuid]);
+  }, [formId, parentUuid, dateQuestionId]);
 
   return { rows, loading, error };
 };

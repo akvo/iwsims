@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Card, Empty } from "antd";
 import { Line } from "akvo-charts";
@@ -22,6 +22,42 @@ const numericValue = (raw) => {
 // akvo-charts `div[role="figure"]`, so we match the empty state to the
 // same floor — empty cards then align with chart cards in the same row.
 const FIGURE_MIN_HEIGHT = 320;
+
+/**
+ * <Line> with rotated x-axis labels. akvo-charts doesn't expose axisLabel
+ * config, so we grab the ECharts instance via callback ref and setOption
+ * after mount — same pattern as ChartRenderer's ChartWithScrollLegend.
+ */
+const LineWithRotatedAxis = ({ config, data }) => {
+  const [chart, setChart] = useState(null);
+  const setRef = useCallback((instance) => {
+    if (instance && typeof instance.setOption === "function") {
+      setChart((prev) => prev || instance);
+    }
+  }, []);
+  useEffect(() => {
+    if (!chart) {
+      return;
+    }
+    chart.setOption(
+      {
+        xAxis: {
+          axisTick: { alignWithLabel: true },
+          axisLabel: { rotate: 45, interval: "auto", hideOverlap: true },
+          nameGap: 64,
+          nameLocation: "middle",
+        },
+      },
+      false
+    );
+  }); // No deps: re-apply after every render (akvo-charts re-runs setOption each render).
+  return <Line ref={setRef} config={config} data={data} />;
+};
+
+LineWithRotatedAxis.propTypes = {
+  config: PropTypes.object.isRequired,
+  data: PropTypes.array.isRequired,
+};
 
 /**
  * akvo-charts <Line> wrapped with optional threshold band (markArea). Sorts
@@ -85,7 +121,7 @@ const HistoricalLineChart = ({
         <Empty description="No history yet" />
       </div>
     ) : (
-      <Line config={chartConfig} data={seriesData} />
+      <LineWithRotatedAxis config={chartConfig} data={seriesData} />
     );
 
   return (
