@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import ReactECharts from "echarts-for-react";
+import uiText from "../../lib/ui-text";
+
+const NO_INFO_COLOR = "#bfbfbf";
 
 /**
  * Packed-bubble ("dots") chart rendered via ECharts' `graph` series with
@@ -25,8 +28,8 @@ const DEFAULT_PALETTE = [
   "#16A085",
 ];
 
-const MIN_SYMBOL = 44;
-const MAX_SYMBOL = 130;
+const MIN_SYMBOL = 64;
+const MAX_SYMBOL = 160;
 const SELECTED_SCALE = 1.35;
 
 const scaleSymbolSize = (value, maxValue) => {
@@ -62,13 +65,14 @@ const DotsChart = ({ data, colors, height }) => {
         const isSelected = selectedLabel === d.label;
         const isDimmed = selectedLabel !== null && !isSelected;
         const size = isSelected ? baseSize * SELECTED_SCALE : baseSize;
+        const isNoInfo = d.label === uiText.en.noInformationAvailable;
         return {
           id: d.label,
           name: d.label,
           value: Number(d.value) || 0,
           symbolSize: size,
           itemStyle: {
-            color: palette[i % palette.length],
+            color: isNoInfo ? NO_INFO_COLOR : palette[i % palette.length],
             opacity: isDimmed ? 0.4 : 1,
             borderColor: isSelected ? "#ffffff" : "transparent",
             borderWidth: isSelected ? 3 : 0,
@@ -110,7 +114,7 @@ const DotsChart = ({ data, colors, height }) => {
           type: "graph",
           layout: "force",
           force: {
-            repulsion: 260,
+            repulsion: 320,
             gravity: 0.12,
             edgeLength: 0,
             friction: 0.2,
