@@ -40,6 +40,7 @@ import {
   WATER_QUALITY_DETAIL_QIDS,
   WATER_QUALITY_FORM_ID,
   WQ_CBT_PARAMS,
+  WQ_DATE_QID,
   WQ_LAB_PARAMS,
   WQ_PHOTO_CAPTION_QID,
   WQ_PHOTO_QID,
@@ -180,7 +181,8 @@ const IndividualEPSOverview = () => {
 
   const wqHistory = useMonitoringHistory(
     WATER_QUALITY_FORM_ID,
-    selectedDataPoint?.uuid
+    selectedDataPoint?.uuid,
+    WQ_DATE_QID
   );
 
   const photoUrl = extractPhotoUrl(constructionValues, CONSTRUCTION_PHOTO_QID);

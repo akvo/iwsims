@@ -145,6 +145,21 @@ export const formatAnswerValue = (answer, question, lookups) => {
     }
     return items.join(", ");
   }
+  /**
+   * Dates are stored as ISO strings but we want to display them in a more
+   * human-friendly format.
+   */
+  if (type === "date") {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-US", {
+        weekday: "short",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+  }
   return String(value);
 };
 
