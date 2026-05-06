@@ -126,6 +126,15 @@ const MapView = ({ dataset, loading, position }) => {
           typeof d?.value !== "undefined" &&
           !isNaN(d.value);
 
+        const popupLink = document.createElement("a");
+        popupLink.href = `/control-center/data/${encodeURIComponent(
+          selectedForm
+        )}/monitoring/${encodeURIComponent(d.id)}`;
+        popupLink.target = "_blank";
+        popupLink.rel = "noopener noreferrer";
+        popupLink.style.padding = "0";
+        popupLink.textContent = d.name;
+
         const marker = L.marker(finalCoords, {
           icon: L.divIcon({
             className: `custom-marker ${
@@ -135,9 +144,7 @@ const MapView = ({ dataset, loading, position }) => {
             iconAnchor: [16, 16],
             html: renderMarker(d),
           }),
-        }).bindPopup(
-          `<a href="/control-center/data/${selectedForm}/monitoring/${d.id}" target="_blank" rel="noopener noreferrer" style="padding: 0;">${d.name}</a>`
-        );
+        }).bindPopup(popupLink);
 
         if (hasNumericValue) {
           marker.bindTooltip(String(d.value), {
