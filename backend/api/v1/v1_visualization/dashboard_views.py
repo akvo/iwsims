@@ -200,6 +200,9 @@ def visualization_values(request, version):
         "include_unanswered": validated.get(
             "include_unanswered", False
         ),
+        "include_empty": validated.get(
+            "include_empty", False
+        ),
     }
 
     # Route to handler

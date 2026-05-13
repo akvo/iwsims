@@ -24,11 +24,15 @@ const numericValue = (raw) => {
 const FIGURE_MIN_HEIGHT = 320;
 
 /**
- * <Line> with rotated x-axis labels. akvo-charts doesn't expose axisLabel
- * config, so we grab the ECharts instance via callback ref and setOption
- * after mount — same pattern as ChartRenderer's ChartWithScrollLegend.
+ * <Line> with rotated x-axis labels and optional threshold markArea.
+ * akvo-charts doesn't expose axisLabel or series-level config, so we grab
+ * the ECharts instance via callback ref and setOption after mount — same
+ * pattern as ChartRenderer's ChartWithScrollLegend.
+ *
+ * markAreaBounds drives the green band; yAxisFloor extends the y-axis below
+ * the threshold so the band is visible when thresholdMax is at or near 0.
  */
-const LineWithRotatedAxis = ({ config, data }) => {
+const LineWithRotatedAxis = ({ config, data, markAreaBounds, yAxisFloor }) => {
   const [chart, setChart] = useState(null);
   const setRef = useCallback((instance) => {
     if (instance && typeof instance.setOption === "function") {
@@ -39,17 +43,31 @@ const LineWithRotatedAxis = ({ config, data }) => {
     if (!chart) {
       return;
     }
-    chart.setOption(
-      {
-        xAxis: {
-          axisTick: { alignWithLabel: true },
-          axisLabel: { rotate: 45, interval: "auto", hideOverlap: true },
-          nameGap: 64,
-          nameLocation: "middle",
-        },
+    const opts = {
+      xAxis: {
+        axisTick: { alignWithLabel: true },
+        axisLabel: { rotate: 45, interval: "auto", hideOverlap: true },
+        nameGap: 64,
+        nameLocation: "middle",
       },
-      false
-    );
+    };
+    if (markAreaBounds) {
+      opts.series = [
+        {
+          markArea: {
+            silent: true,
+            itemStyle: { color: "rgba(82, 196, 26, 0.12)" },
+            data: [
+              [{ yAxis: markAreaBounds.lo }, { yAxis: markAreaBounds.hi }],
+            ],
+          },
+        },
+      ];
+    }
+    if (typeof yAxisFloor === "number") {
+      opts.yAxis = { min: yAxisFloor };
+    }
+    chart.setOption(opts, false);
   }); // No deps: re-apply after every render (akvo-charts re-runs setOption each render).
   return <Line ref={setRef} config={config} data={data} />;
 };
@@ -57,6 +75,11 @@ const LineWithRotatedAxis = ({ config, data }) => {
 LineWithRotatedAxis.propTypes = {
   config: PropTypes.object.isRequired,
   data: PropTypes.array.isRequired,
+  markAreaBounds: PropTypes.shape({
+    lo: PropTypes.number,
+    hi: PropTypes.number,
+  }),
+  yAxisFloor: PropTypes.number,
 };
 
 /**
@@ -85,28 +108,40 @@ const HistoricalLineChart = ({
       .filter((row) => row.value !== null);
   }, [sorted]);
 
-  const chartConfig = useMemo(() => {
-    // No `title` here — the AntD <Card> header already shows it. Height is
-    // driven by div[role="figure"]'s SCSS min-height.
-    const cfg = {
+  const chartConfig = useMemo(
+    () => ({
       ...baseConfig,
       xAxisLabel: "Date",
       yAxisLabel: unit || "",
-    };
+    }),
+    [unit]
+  );
+
+  // markArea bounds for the green threshold band, passed to LineWithRotatedAxis
+  // which applies them directly via chart.setOption (ECharts series-level API).
+  // Avoids ±Infinity which ECharts silently drops.
+  const markAreaBounds = useMemo(() => {
     const hasMin = typeof thresholdMin === "number";
     const hasMax = typeof thresholdMax === "number";
-    if (hasMin || hasMax) {
-      const lo = hasMin ? thresholdMin : -Infinity;
-      const hi = hasMax ? thresholdMax : Infinity;
-      cfg.rawConfig = {
-        markArea: {
-          itemStyle: { color: "rgba(82, 196, 26, 0.12)" },
-          data: [[{ yAxis: lo }, { yAxis: hi }]],
-        },
-      };
+    if (!hasMin && !hasMax) {
+      return null;
     }
-    return cfg;
-  }, [unit, thresholdMin, thresholdMax]);
+    return {
+      lo: hasMin ? thresholdMin : thresholdMax - 1,
+      hi: hasMax ? thresholdMax : thresholdMin + 1,
+    };
+  }, [thresholdMin, thresholdMax]);
+
+  // When only thresholdMax is set (e.g. E-coli max=0), the safe band sits one
+  // unit below the threshold. Extend yAxis.min so that band is visible.
+  const yAxisFloor = useMemo(() => {
+    const hasMin = typeof thresholdMin === "number";
+    const hasMax = typeof thresholdMax === "number";
+    if (hasMax && !hasMin) {
+      return thresholdMax - 1;
+    }
+    return null;
+  }, [thresholdMin, thresholdMax]);
 
   const body =
     seriesData.length === 0 ? (
@@ -121,7 +156,12 @@ const HistoricalLineChart = ({
         <Empty description="No history yet" />
       </div>
     ) : (
-      <LineWithRotatedAxis config={chartConfig} data={seriesData} />
+      <LineWithRotatedAxis
+        config={chartConfig}
+        data={seriesData}
+        markAreaBounds={markAreaBounds}
+        yAxisFloor={yAxisFloor}
+      />
     );
 
   return (

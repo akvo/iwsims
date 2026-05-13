@@ -1,8 +1,9 @@
 import React, { useCallback, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { Alert, Table } from "antd";
+import { Alert, Table, Button } from "antd";
 import { DownCircleOutlined, LeftCircleOutlined } from "@ant-design/icons";
 import { useDashboardEscalation } from "../../util/hooks";
+import { uiText, store } from "../../lib";
 
 const MAX_COLUMNS = 6;
 
@@ -47,6 +48,11 @@ const EscalationTable = ({
     pageSize,
     customFilterDefs,
   });
+  uiText;
+  const { active: activeLang } = store.useState((s) => s.language);
+  const text = useMemo(() => {
+    return uiText?.[activeLang] || uiText.en;
+  }, [activeLang]);
 
   const visibleColumns = useMemo(
     () => (item.columns || []).filter((c) => !c.hide),
@@ -96,43 +102,65 @@ const EscalationTable = ({
   );
 
   const renderExpandedRow = useCallback(
-    (row) => {
+    (row, item, text) => {
       const rows = visibleColumns.map((c) => ({
         key: c.key,
         label: c.label,
         display: renderValue(c, row, cellComputers),
       }));
       return (
-        <div className="pending-data-wrapper">
-          <h3>{item.label || "Details"}</h3>
-          <Table
-            pagination={false}
-            dataSource={rows}
-            rowKey="key"
-            columns={[
-              {
-                title: "Question",
-                dataIndex: "label",
-                width: "50%",
-                className: "table-col-question",
-              },
-              {
-                title: "Response",
-                dataIndex: "display",
-                width: "50%",
-                render: (display) =>
-                  display === null ? (
-                    <span style={{ color: "#bbb" }}>—</span>
-                  ) : (
-                    display
-                  ),
-              },
-            ]}
-          />
+        <div>
+          {item?.api?.form_id && (
+            <div
+              style={{
+                textAlign: "right",
+                marginRight: 20,
+                paddingBottom: 4,
+                paddingTop: 4,
+              }}
+            >
+              <a
+                href={`/control-center/data/${item.api.form_id}/monitoring/${row.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button type="primary" shape="round">
+                  {text.viewDetails}
+                </Button>
+              </a>
+            </div>
+          )}
+          <div className="pending-data-wrapper">
+            <h3>{item.label || "Details"}</h3>
+            <Table
+              pagination={false}
+              dataSource={rows}
+              rowKey="key"
+              columns={[
+                {
+                  title: "Question",
+                  dataIndex: "label",
+                  width: "50%",
+                  className: "table-col-question",
+                },
+                {
+                  title: "Response",
+                  dataIndex: "display",
+                  width: "50%",
+                  render: (display) =>
+                    display === null ? (
+                      <span style={{ color: "#bbb" }}>—</span>
+                    ) : (
+                      display
+                    ),
+                },
+              ]}
+            />
+          </div>
         </div>
       );
     },
-    [visibleColumns, cellComputers, item.label]
+    [visibleColumns, cellComputers]
   );
 
   if (error) {
@@ -151,7 +179,7 @@ const EscalationTable = ({
       columns={columns}
       dataSource={data?.results || []}
       expandable={{
-        expandedRowRender: renderExpandedRow,
+        expandedRowRender: (row) => renderExpandedRow(row, item, text),
         expandRowByClick: true,
         expandIcon: ({ expanded, onExpand, record }) =>
           expanded ? (

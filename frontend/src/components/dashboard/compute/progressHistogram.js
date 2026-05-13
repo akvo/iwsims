@@ -10,7 +10,6 @@ export const toHistogramBarData = (response) => {
   return histogram.map((bucket) => ({
     label: bucket.progress,
     value: bucket.count,
-    group: bucket.progress,
   }));
 };
 

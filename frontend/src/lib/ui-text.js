@@ -1020,6 +1020,7 @@ const uiText = {
     downloadAppsLinkText: "or download using the links below:",
     dateFromPlaceholder: "From",
     dateToPlaceholder: "To",
+    viewDetails: "View Details",
   },
 
   de: {},

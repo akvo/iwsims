@@ -94,7 +94,8 @@ Only these six keys at the top level. Everything else is an item.
 | `card` | KPI tile | `color`, `api`, `api.value_type` (including `"ratio_percentage"` + sibling `denominator_api`), or `compute` ∈ {`compliance_kpi`, `accessibility_no_issues_kpi`} |
 | `metric_card` | Single-fetch metric tile (count / % / share / share %) | `color`, `api`, `target_group`, `show_percentage` — see [Metric cards](#8-metric-cards-metric_card) |
 | `bar`, `line`, `doughnut`, `half_doughnut`, `pie`, `stack_bar` | akvo-charts component | `config`, and one of: `api` / (`source`+`progress_ref`+`field`) / (`compute`+`params_ref`+`globals_ref`) / (`compute`+`category_api`+`series_api`) / (`compute`+`sample_api`+`issues_api`) / (`compute`+`segments[]`) |
-| `histogram` | Bar chart with binned water-quality data | `group`, `threshold`, `display`, `api` |
+| `boxplot` | Dot strip plot — one dot per record, colored by threshold compliance | `threshold`, `config` (`xAxisLabel`, `entity_label`), `api` — see [Dot strip chart](#9-dot-strip-chart-boxplot) |
+| `histogram` | Bar chart with binned numeric data (legacy — prefer `boxplot` for water-quality params) | `group`, `threshold`, `display`, `api` |
 | `table` | Escalation / data table | `api` (with `criteria[]`), `columns[]` |
 | `map` | Leaflet map | `source_form_id`, `status_question_id`, `status_monitoring_form_id`, `status_colors`, `click_url_template` |
 | `section_title` | `<h4>` heading | `text` |
@@ -205,8 +206,8 @@ background. No extra API call.
 
 ### 3. Frontend-computed (`compute: "compliance"`)
 
-Fans out `/values` calls per referenced `histogram` item (via `params_ref[]`)
-and builds a stacked-bar chart client-side.
+Fans out `/values` calls per referenced water-quality param item (via `params_ref[]`)
+and builds a stacked-bar chart client-side. Param items are typically `chart_type: "dot_strip"`.
 
 ```json
 {
@@ -429,82 +430,65 @@ Scalar count example (no `target_group`, no `show_percentage`):
 }
 ```
 
----
+### 9. Dot strip chart (`boxplot`)
 
-## Custom component escape hatch
-
-Some dashboard tabs follow a **record-centric** pattern that does not fit the
-aggregate chart paradigm — the user picks one record and downstream widgets
-render details for that single record. Rather than extending the JSON schema
-with primitives that only make sense for these tabs (token templates,
-component dependencies, custom endpoints, named render registries), use the
-`custom_component` chart_type to delegate rendering to a freely authored React
-component.
-
-### When to reach for it
-
-- The interaction model is **record-centric**, not aggregate.
-- The tab needs internal state that is not expressible as a global filter.
-- The behavior is unique enough that no other dashboard would reuse it today.
-
-### When NOT to reach for it
-
-- The widget can be expressed as `card` / `bar` / `doughnut` / `table` etc.
-  with an `api` block — extend the existing schema instead.
-- Two or three other dashboards would benefit from the same widget — promote
-  it to a first-class `chart_type` rather than copying components.
-
-### Adding a custom component
-
-1. Create `frontend/src/components/dashboard/custom-components/<Name>.jsx`.
-2. Add a named export in [`custom-components/index.js`](../../components/dashboard/custom-components/index.js).
-3. Reference it from JSON:
+Renders each individual measurement as a dot on a horizontal axis, colored by
+threshold compliance. Replaces histogram for water-quality parameters — avoids
+the bin-alignment artifact where a threshold line at the edge of a bin appears
+in the middle of a bar.
 
 ```json
 {
-  "id": "individual_overview_component",
-  "chart_type": "custom_component",
-  "order": 1,
-  "component": "<Name>"
+  "id": "param_e_coli",
+  "chart_type": "dot_strip",
+  "col_span": 12,
+  "description": "Acceptance threshold 0 CFU/100 mL",
+  "config": {
+    "title": "E-coli presence",
+    "xAxisLabel": "CFU/100mL",
+    "entity_label": "EPS"
+  },
+  "threshold": { "max": 0 },
+  "api": {
+    "form_id": 1749632545233,
+    "question_id": 1749633220746,
+    "group_by": "parent_id",
+    "monitoring": "latest",
+    "repeat_agg": "average"
+  }
 }
 ```
 
-Unknown component names are not fatal — the renderer logs `console.error` and
-displays an `<Alert>` placeholder, so the rest of the dashboard keeps working.
+**How it works:**
 
-### What the component owns
+- Dots are sorted by value, then spread vertically with rank-based jitter so
+  overlapping points fan out and remain countable.
+- Blue dots — value satisfies all threshold bounds (≤ `threshold.max` and
+  ≥ `threshold.min`).
+- Red dots — value violates at least one bound.
+- A dashed red vertical line marks each threshold bound.
+- Background zone shading: light blue = compliant zone, light pink = out-of-range.
+- Tooltip: `Value: 0 CFU/100mL (55 EPS)` — the count at that exact value is
+  shown when more than one dot shares it.
 
-- Data fetching, including auth-aware error handling.
-- Loading, empty, and error UI states.
-- Internal selection state, drill-downs, sub-tabs.
-- Any internal filters (the dashboard's global filter bar is **not** piped in).
+**`config` fields:**
 
-### Stay specific until rule-of-three
+| Field | Type | Notes |
+|---|---|---|
+| `xAxisLabel` | string | Axis name and tooltip unit (e.g. `"CFU/100mL"`, `"NTU"`, `"°C"`) |
+| `entity_label` | string | Noun shown in the tooltip count: `"(55 EPS)"` or `"(55 RWS)"`. Omit for a bare count `"(55)"` |
 
-Do not generalize prematurely. The first per-dashboard custom component is
-fine as a one-off. When a third dashboard needs a similar pattern, refactor
-the common pieces into shared building-block components
-(`<RecordSelectorBar>`, `<RegistrationDetailTable>`, etc.) — not into a single
-mega-component driven by yet another schema.
+**`threshold` fields:**
 
-### Worked example: the individual-overview pattern
+| Field | Semantics |
+|---|---|
+| `max` | Compliant when value ≤ max (single upper bound) |
+| `min` | Compliant when value ≥ min (single lower bound) |
+| both | Compliant when min ≤ value ≤ max (range, e.g. pH 6.5–8.5) |
 
-The record-centric "Individual Overview" tab on the EPS dashboard is the
-reference implementation of this escape hatch. It composes six reusable
-primitives out of
-[`custom-components/individual-overview/shared/`](../../components/dashboard/custom-components/individual-overview/shared/)
-(helpers, `<PhotoCaptionCard>`, `<CharacteristicsTable>`,
-`<HistoricalLineChart>`, `useIndividualOverviewData`, and
-`useMonitoringHistory`) plus per-dashboard constants in
-[`individual-overview/config/eps.js`](../../components/dashboard/custom-components/individual-overview/config/eps.js),
-so the shell itself stays a ~180-line orchestrator.
-
-Note the rule-of-three deviation: those primitives were extracted before
-three working consumers existed. The justification is that each primitive was
-designed against **two** concrete shell designs in hand (EPS and a planned
-RWS sibling) and appears ≥4× across them — past the rule-of-two threshold
-with concrete designs to validate against. For the full design rationale, see
-[`doc/claude/dashboard-individual-overview/`](../../../../doc/claude/dashboard-individual-overview/).
+The `api` block follows the same shape as other API-driven charts. Use
+`group_by: "parent_id"` + `monitoring: "latest"` to get one measurement per
+registered site.
 
 ---
 
@@ -659,6 +643,7 @@ columns resolved by the renderer:
 
 - [`DashboardRenderer`](../../components/dashboard/DashboardRenderer.jsx) — recursive item dispatcher
 - [`ChartRenderer`](../../components/dashboard/ChartRenderer.jsx) — chart type → akvo-charts dispatch
+- [`DotStripChart`](../../components/dashboard/DotStripChart.jsx) — dot strip plot for water-quality `boxplot` items
 - [`widgets/KPICard`](../../components/dashboard/widgets/KPICard.jsx) — single KPI tile
 - [`widgets/TabsWidget`](../../components/dashboard/widgets/TabsWidget.jsx) — tabs container
 - [`widgets/FilterBarWidget`](../../components/dashboard/widgets/FilterBarWidget.jsx) — filter bar container

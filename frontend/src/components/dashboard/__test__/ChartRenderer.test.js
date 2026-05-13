@@ -6,6 +6,14 @@ import { __clearVisualizationCache } from "../../../util/hooks/useVisualizationR
 
 jest.mock("axios");
 
+// Stub ECharts so DotStripChart can render in jsdom without a real canvas.
+// Implementations (init return value, getInstanceByDom return value) are set
+// up per-test via mockReturnValue so the factory stays free of jest.fn closures.
+jest.mock("echarts", () => ({
+  init: jest.fn(),
+  getInstanceByDom: jest.fn(),
+}));
+
 // Replace akvo-charts with lightweight stand-ins that expose the props they
 // were called with, so we can assert on what ChartRenderer passed through.
 // Bar is forwardRef so ChartWithMarkLines can call ref.current.setOption;
@@ -505,5 +513,55 @@ describe("ChartRenderer", () => {
         "true"
       )
     );
+  });
+
+  test("boxplot fetches data and renders a chart container", async () => {
+    const echartsLib = require("echarts");
+    const mockChart = {
+      setOption: jest.fn(),
+      resize: jest.fn(),
+      dispose: jest.fn(),
+    };
+    echartsLib.init.mockReset();
+    echartsLib.getInstanceByDom.mockReset();
+    echartsLib.init.mockReturnValue(mockChart);
+    echartsLib.getInstanceByDom.mockReturnValue(null);
+
+    axios.mockResolvedValue({
+      data: {
+        data: [
+          { value: 0, label: "EPS A", group: "a" },
+          { value: 0, label: "EPS B", group: "b" },
+          { value: 15, label: "EPS C", group: "c" },
+          { value: 200, label: "EPS D", group: "d" },
+        ],
+      },
+    });
+
+    render(
+      <ChartRenderer
+        item={{
+          id: "param_total_coliform",
+          chart_type: "dot_strip",
+          threshold: { max: 0 },
+          config: { title: "Total coliform presence", xAxisLabel: "CFU/100mL" },
+          api: {
+            form_id: 1749632545233,
+            question_id: 1749633259392,
+            group_by: "parent_id",
+            monitoring: "latest",
+          },
+        }}
+        filterState={emptyFilters}
+        today={today}
+      />
+    );
+
+    await waitFor(() => expect(echartsLib.init).toHaveBeenCalled());
+    expect(mockChart.setOption).toHaveBeenCalled();
+    const option = mockChart.setOption.mock.calls[0][0];
+    expect(option.series[0].type).toBe("scatter");
+    expect(option.series[0].markLine.data[0].xAxis).toBe(0);
+    expect(axios).toHaveBeenCalledTimes(1);
   });
 });
