@@ -79,7 +79,7 @@ describe("MetricCard — share mode (target_group set)", () => {
     expect(await screen.findByText("2/4 (50%)")).toBeInTheDocument();
   });
 
-  test("rounds percentage to nearest integer", async () => {
+  test("strips trailing zeros, up to 2 dp when non-zero", async () => {
     axiosRows([
       { group: "operational", value: 1 },
       { group: "non_functional", value: 2 },
@@ -90,8 +90,8 @@ describe("MetricCard — share mode (target_group set)", () => {
         filterState={emptyFilters}
       />
     );
-    // 1/3 = 33.33... → 33%
-    expect(await screen.findByText("1/3 (33%)")).toBeInTheDocument();
+    // 1/3 = 33.33...%
+    expect(await screen.findByText("1/3 (33.33%)")).toBeInTheDocument();
   });
 
   test("renders — when denominator is zero (all values zero)", async () => {

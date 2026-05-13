@@ -838,7 +838,7 @@
             },
             {
               "id": "param_e_coli",
-              "chart_type": "histogram",
+              "chart_type": "dot_strip",
               "order": 11,
               "col_span": 12,
               "group": "microbial",
@@ -847,12 +847,7 @@
               "config": {
                 "title": "E-coli presence",
                 "xAxisLabel": "CFU/100mL",
-                "yAxisLabel": "RWS count",
-                "yAxis": { "minInterval": 1 }
-              },
-              "display": {
-                "mode": "histogram",
-                "bin_width": 50
+                "entity_label": "RWS"
               },
               "threshold": {
                 "max": 0
@@ -867,7 +862,7 @@
             },
             {
               "id": "param_total_coliform",
-              "chart_type": "histogram",
+              "chart_type": "dot_strip",
               "order": 12,
               "col_span": 12,
               "group": "microbial",
@@ -876,12 +871,7 @@
               "config": {
                 "title": "Total coliform presence",
                 "xAxisLabel": "CFU/100mL",
-                "yAxisLabel": "RWS count",
-                "yAxis": { "minInterval": 1 }
-              },
-              "display": {
-                "mode": "histogram",
-                "bin_width": 50
+                "entity_label": "RWS"
               },
               "threshold": {
                 "max": 0
@@ -896,7 +886,7 @@
             },
             {
               "id": "param_fecal_coliform",
-              "chart_type": "histogram",
+              "chart_type": "dot_strip",
               "order": 13,
               "col_span": 12,
               "group": "microbial",
@@ -906,12 +896,7 @@
               "config": {
                 "title": "Fecal coliform presence",
                 "xAxisLabel": "CFU/100mL",
-                "yAxisLabel": "RWS count",
-                "yAxis": { "minInterval": 1 }
-              },
-              "display": {
-                "mode": "histogram",
-                "bin_width": 50
+                "entity_label": "RWS"
               },
               "threshold": {
                 "max": 0
@@ -933,7 +918,7 @@
             },
             {
               "id": "param_turbidity",
-              "chart_type": "histogram",
+              "chart_type": "dot_strip",
               "order": 21,
               "col_span": 12,
               "group": "physical",
@@ -942,12 +927,7 @@
               "config": {
                 "title": "Turbidity",
                 "xAxisLabel": "NTU",
-                "yAxisLabel": "RWS count",
-                "yAxis": { "minInterval": 1 }
-              },
-              "display": {
-                "mode": "histogram",
-                "bin_width": 1
+                "entity_label": "RWS"
               },
               "threshold": {
                 "max": 5
@@ -962,7 +942,7 @@
             },
             {
               "id": "param_temperature",
-              "chart_type": "histogram",
+              "chart_type": "dot_strip",
               "order": 22,
               "col_span": 12,
               "group": "physical",
@@ -971,12 +951,7 @@
               "config": {
                 "title": "Water Temperature",
                 "xAxisLabel": "°C",
-                "yAxisLabel": "RWS count",
-                "yAxis": { "minInterval": 1 }
-              },
-              "display": {
-                "mode": "histogram",
-                "bin_width": 1
+                "entity_label": "RWS"
               },
               "threshold": {
                 "max": 30
@@ -998,7 +973,7 @@
             },
             {
               "id": "param_ph",
-              "chart_type": "histogram",
+              "chart_type": "dot_strip",
               "order": 31,
               "col_span": 8,
               "group": "chemical",
@@ -1007,12 +982,7 @@
               "config": {
                 "title": "pH",
                 "xAxisLabel": "pH",
-                "yAxisLabel": "RWS count",
-                "yAxis": { "minInterval": 1 }
-              },
-              "display": {
-                "mode": "histogram",
-                "bin_width": 0.5
+                "entity_label": "RWS"
               },
               "threshold": {
                 "min": 6.5,
@@ -1028,7 +998,7 @@
             },
             {
               "id": "param_conductivity",
-              "chart_type": "histogram",
+              "chart_type": "dot_strip",
               "order": 32,
               "col_span": 8,
               "group": "chemical",
@@ -1037,12 +1007,7 @@
               "config": {
                 "title": "Conductivity",
                 "xAxisLabel": "µS/cm",
-                "yAxisLabel": "RWS count",
-                "yAxis": { "minInterval": 1 }
-              },
-              "display": {
-                "mode": "histogram",
-                "bin_width": 100
+                "entity_label": "RWS"
               },
               "threshold": {
                 "max": 1000
@@ -1057,7 +1022,7 @@
             },
             {
               "id": "param_salinity",
-              "chart_type": "histogram",
+              "chart_type": "dot_strip",
               "order": 33,
               "col_span": 8,
               "group": "chemical",
@@ -1066,12 +1031,7 @@
               "config": {
                 "title": "Salinity",
                 "xAxisLabel": "ppt",
-                "yAxisLabel": "RWS count",
-                "yAxis": { "minInterval": 1 }
-              },
-              "display": {
-                "mode": "histogram",
-                "bin_width": 0.1
+                "entity_label": "RWS"
               },
               "threshold": {
                 "max": 1

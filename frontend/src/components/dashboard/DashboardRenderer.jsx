@@ -31,6 +31,7 @@ const CHART_TYPES = new Set([
   "stack_bar",
   "histogram",
   "dots",
+  "dot_strip",
 ]);
 
 /**

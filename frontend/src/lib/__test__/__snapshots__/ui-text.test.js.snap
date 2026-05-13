@@ -977,6 +977,7 @@ Object {
     "valPhone": "Phone number is required",
     "valRole": "Please select a Role",
     "viewAttachment": "View Attachment",
+    "viewDetails": "View Details",
     "viewText": "View",
     "webformText": "Webform",
     "welcomeShort": <React.Fragment>

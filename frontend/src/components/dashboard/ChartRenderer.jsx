@@ -12,6 +12,7 @@ import { computeCrossTab } from "./compute/crossTab";
 import { computeAccessibilityBucket } from "./compute/accessibility";
 import { computeKpiStack } from "./compute/kpiStack";
 import DotsChart from "./DotsChart";
+import DotStripChart from "./DotStripChart";
 
 const COMPONENT_BY_TYPE = {
   bar: Bar,
@@ -473,9 +474,10 @@ const ChartRenderer = ({
   const chartType = item.chart_type === "histogram" ? "bar" : item.chart_type;
   const Component = COMPONENT_BY_TYPE[chartType];
   const isDots = item.chart_type === "dots";
+  const isDotStrip = item.chart_type === "dot_strip";
 
   const isApiDriven =
-    (Boolean(Component) || isDots) &&
+    (Boolean(Component) || isDots || isDotStrip) &&
     Boolean(item.api) &&
     (!item.compute || (item.compute === "kpi_stack" && !item.segments)) &&
     !item.source;
@@ -654,7 +656,7 @@ const ChartRenderer = ({
     fiscalYearStartMonth,
   ]);
 
-  if (!Component && !isDots) {
+  if (!Component && !isDots && !isDotStrip) {
     return (
       <Alert
         type="error"
@@ -687,6 +689,24 @@ const ChartRenderer = ({
       <div style={{ padding: 16, color: "#999", textAlign: "center" }}>
         No data
       </div>
+    );
+  }
+
+  if (isDotStrip) {
+    const boxRows = apiData?.data || [];
+    if (boxRows.length === 0) {
+      return (
+        <div style={{ padding: 16, color: "#999", textAlign: "center" }}>
+          No data
+        </div>
+      );
+    }
+    return (
+      <DotStripChart
+        rows={boxRows}
+        threshold={item.threshold}
+        config={item.config}
+      />
     );
   }
 

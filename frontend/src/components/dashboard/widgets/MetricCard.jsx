@@ -46,8 +46,8 @@ const formatRatioPercentage = (numerator, denominator) => {
   if (isMissingPair(numerator, denominator)) {
     return "—";
   }
-  const pct = Math.round((numerator / denominator) * 100);
-  return `${numerator}/${denominator} (${pct}%)`;
+  const pct = (numerator / denominator) * 100;
+  return `${numerator}/${denominator} (${parseFloat(pct.toFixed(2))}%)`;
 };
 
 const formatShare = (numerator, denominator) => {

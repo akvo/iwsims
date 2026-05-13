@@ -42,6 +42,8 @@ import {
   WQ_CBT_PARAMS,
   WQ_DATE_QID,
   WQ_LAB_PARAMS,
+  WQ_LAB_CHEMICAL_PARAMS,
+  WQ_LAB_PHYSICAL_PARAMS,
   WQ_PHOTO_CAPTION_QID,
   WQ_PHOTO_QID,
   WQ_STATUS_QID,
@@ -377,25 +379,57 @@ const IndividualEPSOverview = () => {
               </Row>
 
               {showLabCharts && (
-                <Card
-                  title="Microbial parameters"
-                  size="small"
-                  style={{ marginBottom: 16 }}
+                <Space
+                  direction="vertical"
+                  size="large"
+                  style={{ width: "100%", marginBottom: 16 }}
                 >
-                  <Row gutter={16}>
-                    {WQ_LAB_PARAMS.map((p) => (
-                      <Col span={8} key={p.key}>
-                        <HistoricalLineChart
-                          title={p.title}
-                          data={buildSeries(wqHistory.rows, p.qid)}
-                          unit={p.unit}
-                          thresholdMin={p.thresholdMin}
-                          thresholdMax={p.thresholdMax}
-                        />
-                      </Col>
-                    ))}
-                  </Row>
-                </Card>
+                  <Card title="Microbial parameters" size="small">
+                    <Row gutter={16}>
+                      {WQ_LAB_PARAMS.map((p) => (
+                        <Col xl={8} lg={12} md={24} key={p.key}>
+                          <HistoricalLineChart
+                            title={p.title}
+                            data={buildSeries(wqHistory.rows, p.qid)}
+                            unit={p.unit}
+                            thresholdMin={p.thresholdMin}
+                            thresholdMax={p.thresholdMax}
+                          />
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card>
+                  <Card title="Chemical Parameters" size="small">
+                    <Row gutter={16}>
+                      {WQ_LAB_CHEMICAL_PARAMS.map((p) => (
+                        <Col xl={8} lg={12} md={24} key={p.key}>
+                          <HistoricalLineChart
+                            title={p.title}
+                            data={buildSeries(wqHistory.rows, p.qid)}
+                            unit={p.unit}
+                            thresholdMin={p.thresholdMin}
+                            thresholdMax={p.thresholdMax}
+                          />
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card>
+                  <Card title="Physical Parameters" size="small">
+                    <Row gutter={16}>
+                      {WQ_LAB_PHYSICAL_PARAMS.map((p) => (
+                        <Col xl={8} lg={12} md={24} key={p.key}>
+                          <HistoricalLineChart
+                            title={p.title}
+                            data={buildSeries(wqHistory.rows, p.qid)}
+                            unit={p.unit}
+                            thresholdMin={p.thresholdMin}
+                            thresholdMax={p.thresholdMax}
+                          />
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card>
+                </Space>
               )}
 
               {showCbtCharts && (
@@ -408,6 +442,7 @@ const IndividualEPSOverview = () => {
                           data={buildSeries(wqHistory.rows, p.qid)}
                           unit={p.unit}
                           thresholdMax={p.thresholdMax}
+                          thresholdMin={p.thresholdMin}
                         />
                       </Col>
                     ))}

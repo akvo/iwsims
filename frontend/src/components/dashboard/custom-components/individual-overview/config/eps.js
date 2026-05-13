@@ -216,13 +216,66 @@ export const WQ_LAB_PARAMS = [
   },
 ];
 
+/**
+ * Chemical Parameters.
+ * Lab test that includes: pH, Conductivity and Salinity.
+ */
+
+export const WQ_LAB_CHEMICAL_PARAMS = [
+  {
+    key: "ph",
+    title: "pH",
+    qid: 1797307852532,
+    unit: "pH",
+    thresholdMax: 8.5,
+    thresholdMin: 6.5,
+  },
+  {
+    key: "conductivity",
+    title: "Conductivity",
+    qid: 1797307852533,
+    unit: "µS/cm",
+    thresholdMax: 1000,
+  },
+  {
+    key: "salinity",
+    title: "Salinity",
+    qid: 1797307852534,
+    unit: "ppt",
+    thresholdMax: 0.5,
+  },
+];
+
+/**
+ * Physical parameters.
+ * Lab test that includes: Temperature and Turbidity in NTU.
+ */
+
+export const WQ_LAB_PHYSICAL_PARAMS = [
+  {
+    key: "temperature",
+    title: "Temperature",
+    qid: 1797307852531,
+    unit: "°C",
+    thresholdMax: 30,
+  },
+  {
+    key: "turbidity",
+    title: "Turbidity",
+    qid: 1749633220745,
+    unit: "NTU",
+    thresholdMax: 5,
+  },
+];
+
 export const WQ_CBT_PARAMS = [
   {
     key: "cbt_count",
-    title: "CBT contamination count",
+    title: "Contamination using CBT bags",
     qid: 1749633325456,
     unit: "count",
-    thresholdMax: 0,
+    thresholdMax: 5,
+    thresholdMin: 3,
   },
 ];
 
