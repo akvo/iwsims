@@ -622,7 +622,8 @@
                 "question_id": 1749631041135,
                 "option_value": "no",
                 "monitoring": "latest",
-                "sum_by": "parent_id"
+                "sum_by": "parent_id",
+                "include_empty": true
               }
             },
             {
