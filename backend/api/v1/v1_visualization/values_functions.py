@@ -356,6 +356,7 @@ def handle_option_question(form, question, params):
             ),
             form=form,
             params=params,
+            include_empty=params.get("include_empty", False),
         )
 
     if stack_by == "option" and group_by:
@@ -385,8 +386,18 @@ def _option_value_filter(
     question, data_ids, qs, is_latest,
     option_value, sum_by, value_type,
     include_unanswered=False, form=None, params=None,
+    include_empty=False,
 ):
-    """Filter by specific option value and count."""
+    """Filter by specific option value and count.
+
+    include_unanswered=True: parents with no answer for the question
+    (monitored but null options) are added to the count.
+
+    include_empty=True: parents with zero monitoring submissions
+    (never visited) are added to the count. Takes precedence over
+    include_unanswered when both are set, as the coverage-gap count
+    already subsumes the answer-gap count.
+    """
     count = Answers.objects.filter(
         data_id__in=data_ids,
         question_id=question.id,
@@ -399,16 +410,42 @@ def _option_value_filter(
     else:
         count = count.count()
 
+    is_monitoring = form is not None and form.parent is not None
+    extra = 0
+
+    if include_empty and is_monitoring:
+        monitored_parent_ids = set(
+            FormData.objects.filter(id__in=data_ids)
+            .values_list("parent_id", flat=True)
+            .distinct()
+        )
+        extra = _count_no_info_parents(
+            form, params or {}, monitored_parent_ids
+        )
+    elif include_unanswered and is_monitoring:
+        all_answered_ids = set(
+            Answers.objects.filter(
+                data_id__in=data_ids,
+                question_id=question.id,
+                options__isnull=False,
+            ).values_list("data__parent_id", flat=True).distinct()
+        )
+        extra = _count_no_info_parents(
+            form, params or {}, all_answered_ids
+        )
+
     if value_type == "percentage":
-        if include_unanswered and form is not None:
+        if (include_empty or include_unanswered) and is_monitoring:
             total = _total_parents_in_scope(form, params or {})
+            numerator = count + extra
         else:
             total = qs.count() if is_latest else len(data_ids)
+            numerator = count
         value = round(
-            (count / total * 100), 2
+            (numerator / total * 100), 2
         ) if total > 0 else 0
     else:
-        value = count
+        value = count + extra
 
     return (
         [{"value": value, "label": option_value}],

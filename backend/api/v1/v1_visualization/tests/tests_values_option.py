@@ -297,10 +297,14 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
     def test_option_value_percentage_include_unanswered_uses_total_parents(
         self,
     ):
-        """include_unanswered widens the denominator to total registrations.
+        """include_unanswered adds unanswered to numerator and denominator.
 
-        Without the flag: 1 match / 2 monitored parents = 50%.
-        With 3 extra unmonitored and include_unanswered=true: 1/5 = 20%.
+        Mixin:
+        reg1=active(latest), reg2=pending(latest), both answered q_option.
+        3 extra unmonitored → total=5,
+        all_answered={reg1,reg2}=2, unanswered=3.
+        Without flag: 1/2 monitored = 50%.
+        With flag: (1+3)/5 = 80%.
         """
         for i in range(3):
             self._create_registration(
@@ -317,7 +321,93 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(len(data["data"]), 1)
-        self.assertEqual(data["data"][0]["value"], 20.0)
+        self.assertEqual(data["data"][0]["value"], 80.0)
+
+    def test_option_value_count_include_unanswered(self):
+        """
+        option_value + include_unanswered adds unanswered parents to count.
+        Mixin:
+        reg1=active(latest), reg2=pending(latest), both answered q_option.
+        2 extra unmonitored → total=4, all_answered=2, unanswered=2.
+        option_value=active: count=1, unanswered=2 → value=3.
+        """
+        for i in range(2):
+            self._create_registration(
+                name=f"Unmonitored {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&sum_by=parent_id"
+            "&monitoring=latest&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 3)
+
+    def test_option_value_include_unanswered_backward_compat(self):
+        """Without the flag, count is unchanged even with extra registrations.
+
+        Same setup as test_option_value_count_include_unanswered but without
+        include_unanswered=true — value must remain 1 (only matched parents).
+        """
+        for i in range(2):
+            self._create_registration(
+                name=f"Unmonitored {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&sum_by=parent_id"
+            "&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 1)
+
+    def test_option_value_include_unanswered_all_unanswered(self):
+        """When no parent answered option_value, count = total unanswered.
+
+        Mixin: neither reg1 nor reg2 answered "inactive" in latest monitoring
+        (reg1=active, reg2=pending). Neither has unanswered; count_inactive=0.
+        1 extra unmonitored → unanswered=1.
+        Result = 0 + 1 = 1.
+        """
+        self._create_registration(
+            name="Unmonitored",
+            administration=self.adm_parent,
+        )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=inactive&sum_by=parent_id"
+            "&monitoring=latest&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 1)
+
+    def test_option_value_include_unanswered_no_unmonitored(self):
+        """When all parents are monitored and answered, unanswered=0.
+
+        Mixin: reg1=active(latest), reg2=pending(latest) — both answered.
+        option_value=active: count=1, unanswered=0 → value=1.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&sum_by=parent_id"
+            "&monitoring=latest&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 1)
 
     # -- include_unanswered tests --
 
@@ -608,3 +698,91 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             administration=administration,
             created_by=self.user,
         )
+
+    # -- include_empty tests --
+
+    def test_include_empty_count_adds_never_monitored(self):
+        """include_empty adds parents with zero monitoring submissions.
+
+        Mixin: reg1=active(latest), reg2=pending(latest), both monitored.
+        2 extra unmonitored → total=4, monitored=2, never_monitored=2.
+        option_value=active: count=1, empty=2 → value=3.
+        """
+        for i in range(2):
+            self._create_registration(
+                name=f"NeverMonitored {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&sum_by=parent_id"
+            "&monitoring=latest&include_empty=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 3)
+
+    def test_include_empty_percentage_uses_total_registered(self):
+        """include_empty percentage: numerator=matched+empty, denom=total.
+
+        Mixin: reg1=active, reg2=pending, both monitored.
+        2 extra unmonitored → total=4, monitored=2, never_monitored=2.
+        option_value=active: count=1, empty=2 → (1+2)/4 × 100 = 75.0%.
+        """
+        for i in range(2):
+            self._create_registration(
+                name=f"NeverMonitored {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&sum_by=parent_id"
+            "&monitoring=latest&value_type=percentage"
+            "&include_empty=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 75.0)
+
+    def test_include_empty_no_unmonitored_parents(self):
+        """include_empty with all parents monitored: empty=0, value unchanged.
+
+        Mixin: reg1=active, reg2=pending — both monitored. No extra regs.
+        total=2, monitored=2, never_monitored=0.
+        option_value=active: count=1, empty=0 → value=1.
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&sum_by=parent_id"
+            "&monitoring=latest&include_empty=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 1)
+
+    def test_include_empty_backward_compat(self):
+        """Without include_empty, never-monitored parents are ignored.
+
+        2 extra unmonitored present but flag absent → value still 1.
+        """
+        for i in range(2):
+            self._create_registration(
+                name=f"NeverMonitored {i}",
+                administration=self.adm_parent,
+            )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_option.id}"
+            "&option_value=active&sum_by=parent_id"
+            "&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["data"]), 1)
+        self.assertEqual(data["data"][0]["value"], 1)

@@ -57,6 +57,10 @@ class ValuesFilterSerializer(serializers.Serializer):
         required=False,
         default=False,
     )
+    include_empty = serializers.BooleanField(
+        required=False,
+        default=False,
+    )
 
     def validate_criteria(self, value):
         try:
