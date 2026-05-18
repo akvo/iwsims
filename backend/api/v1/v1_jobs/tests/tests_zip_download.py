@@ -343,6 +343,70 @@ class ZipDownloadTestCase(TestCase, ProfileTestHelperMixin):
             os.remove(zip_path)
         storage.delete(url=f"download/{job.result}")
 
+    def test_zip_registration_included_when_monitoring_in_date_range(self):
+        """Registration created before date_from must appear in the
+        registration sheet when its monitoring child was created within
+        the date range (mirrors form-data list API behaviour)."""
+        import shutil
+
+        # Pick one registration and push its created date far into the past
+        reg = self.form.form_form_data.filter(
+            is_pending=False, is_draft=False
+        ).first()
+        self.assertIsNotNone(reg)
+        FormData.objects.filter(pk=reg.pk).update(
+            created=timezone.now() - timedelta(days=365)
+        )
+
+        # Set its monitoring child to be within the date range
+        child = self.child_form.form_form_data.filter(
+            parent=reg, is_pending=False, is_draft=False
+        ).first()
+        self.assertIsNotNone(child)
+        FormData.objects.filter(pk=child.pk).update(
+            created=timezone.now() - timedelta(days=1)
+        )
+
+        # Date range: only the last 7 days (registration is 365 days old)
+        date_from = (timezone.now() - timedelta(days=7)).date()
+        date_to = timezone.now().date()
+        job = self._create_zip_job(
+            date_from=str(date_from),
+            date_to=str(date_to),
+        )
+        job_generate_data_download(job_id=job.id, **job.info)
+        storage.download(f"download/{job.result}")
+        zip_path = f"./tmp/{job.result}"
+        reg_name = _sanitize_form_name(self.form.name) + ".xlsx"
+        child_name = (
+            _sanitize_form_name(
+                self.child_form.name,
+                form_id=self.child_form.id,
+            ) + ".xlsx"
+        )
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            zf.extract(reg_name, "./tmp/zip_extract/")
+            reg_df = pd.read_excel(
+                f"./tmp/zip_extract/{reg_name}", sheet_name="data"
+            )
+            reg_ids = reg_df["id"].tolist()
+            self.assertIn(
+                reg.id, reg_ids,
+                "Registration created before date_from must be included "
+                "because its monitoring child falls within the range."
+            )
+            zf.extract(child_name, "./tmp/zip_extract/")
+            child_df = pd.read_excel(
+                f"./tmp/zip_extract/{child_name}", sheet_name="data"
+            )
+            child_ids = child_df["id"].tolist()
+            self.assertIn(child.id, child_ids)
+        if os.path.exists("./tmp/zip_extract"):
+            shutil.rmtree("./tmp/zip_extract")
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+        storage.delete(url=f"download/{job.result}")
+
     def test_zip_definition_sheet_per_form(self):
         job = self._create_zip_job()
         job_generate_data_download(job_id=job.id, **job.info)

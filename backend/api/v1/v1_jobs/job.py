@@ -77,9 +77,18 @@ def download_data(
     date_from: str = None,
     date_to: str = None,
     selection_ids: list = None,
+    filter_child_form_ids: list = None,
 ) -> list:
     if child_form_ids is None:
         child_form_ids = []
+    # filter_child_form_ids controls which child forms are used when
+    # computing the union for date-range filtering. Falls back to
+    # child_form_ids when not provided (preserves existing behaviour).
+    effective_filter_children = (
+        filter_child_form_ids
+        if filter_child_form_ids is not None
+        else child_form_ids
+    )
 
     if selection_ids:
         data = form.form_form_data.filter(
@@ -116,12 +125,13 @@ def download_data(
     if administration_ids:
         filter_data["administration_id__in"] = administration_ids
 
-    if has_date_filter and child_form_ids:
-        # Filter children by date, include their parents regardless
+    if has_date_filter and effective_filter_children:
+        # Include parents with in-range children (by created date) OR
+        # parents whose own created date is in range.
         child_filter = {
             "is_pending": False,
             "is_draft": False,
-            "form_id__in": child_form_ids,
+            "form_id__in": effective_filter_children,
             **date_filter,
         }
         if administration_ids:
@@ -222,6 +232,7 @@ def generate_data_sheet(
     date_from: str = None,
     date_to: str = None,
     selection_ids: list = None,
+    filter_child_form_ids: list = None,
 ) -> None:
     if child_form_ids is None:
         child_form_ids = []
@@ -238,6 +249,7 @@ def generate_data_sheet(
         date_from=date_from,
         date_to=date_to,
         selection_ids=selection_ids,
+        filter_child_form_ids=filter_child_form_ids,
     )
     if len(data):
         df = pd.DataFrame(data)
@@ -591,6 +603,10 @@ def _generate_zip_download(job, **kwargs):
                     date_from=date_from,
                     date_to=date_to,
                     selection_ids=selection_ids or None,
+                    # Pass child_form_ids so registrations whose monitoring
+                    # falls within the date range are included even when the
+                    # registration itself was created before date_from.
+                    filter_child_form_ids=child_form_ids,
                 )
                 _write_context_sheet(
                     rw, form, child_forms, job,

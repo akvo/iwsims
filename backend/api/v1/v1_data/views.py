@@ -145,16 +145,24 @@ class FormDataAddListView(APIView):
                 required=False,
                 type=OpenApiTypes.DATE,
                 location=OpenApiParameter.QUERY,
-                description="Filter data created on or after this date "
-                "(YYYY-MM-DD)",
+                description=(
+                    "Lower bound date filter (YYYY-MM-DD). When "
+                    "sort_by=latest_activity, matches on the latest "
+                    "monitoring activity date; otherwise matches on "
+                    "the registration created date."
+                ),
             ),
             OpenApiParameter(
                 name="date_to",
                 required=False,
                 type=OpenApiTypes.DATE,
                 location=OpenApiParameter.QUERY,
-                description="Filter data created on or before this date "
-                "(YYYY-MM-DD)",
+                description=(
+                    "Upper bound date filter (YYYY-MM-DD). When "
+                    "sort_by=latest_activity, matches on the latest "
+                    "monitoring activity date; otherwise matches on "
+                    "the registration created date."
+                ),
             ),
         ],
         summary="To get list of form data",
@@ -258,20 +266,26 @@ class FormDataAddListView(APIView):
             user_path = adm.path if adm.path else f"{adm.pk}."
             filter_data["administration__path__startswith"] = user_path
 
-        # Subquery to get the form name of the child with latest activity
+        # Subquery to get the form name of the child with latest activity.
+        # Order by Coalesce(updated, created) so NULL updated records are
+        # ranked by created instead of being sorted first by PostgreSQL.
         latest_child_form_subquery = FormData.objects.filter(
             parent=OuterRef('pk'),
             is_pending=False,
             is_draft=False
-        ).order_by('-updated').values('form__name')[:1]
+        ).annotate(
+            child_activity=Coalesce('updated', 'created')
+        ).order_by('-child_activity').values('form__name')[:1]
 
         queryset = form.form_form_data.filter(**filter_data).annotate(
             total_children=Count(
                 'children',
                 filter=Q(children__is_pending=False, children__is_draft=False)
             ),
+            # Use Coalesce so flow-imported children with NULL updated
+            # fall back to their created date for activity calculation.
             latest_child_activity=Max(
-                'children__updated',
+                Coalesce('children__updated', 'children__created'),
                 filter=Q(children__is_pending=False, children__is_draft=False)
             ),
             latest_activity_source=Subquery(latest_child_form_subquery),
@@ -282,18 +296,27 @@ class FormDataAddListView(APIView):
         )
         if search:
             queryset = queryset.filter(name__icontains=search)
+        # When sorting by latest_activity, filter on that annotation so
+        # registrations with recent monitoring children are not excluded.
+        date_filter_field = (
+            "latest_activity" if sort_by == "latest_activity" else "created"
+        )
         if date_from:
             start_datetime = datetime.combine(date_from, time.min)
             if settings.USE_TZ:
                 start_datetime = timezone.make_aware(start_datetime)
-            queryset = queryset.filter(created__gte=start_datetime)
+            queryset = queryset.filter(
+                **{f"{date_filter_field}__gte": start_datetime}
+            )
         if date_to:
             end_datetime = datetime.combine(
                 date_to + timedelta(days=1), time.min
             )
             if settings.USE_TZ:
                 end_datetime = timezone.make_aware(end_datetime)
-            queryset = queryset.filter(created__lt=end_datetime)
+            queryset = queryset.filter(
+                **{f"{date_filter_field}__lt": end_datetime}
+            )
         queryset = queryset.order_by(order_by)
 
         instance = paginator.paginate_queryset(queryset, request)

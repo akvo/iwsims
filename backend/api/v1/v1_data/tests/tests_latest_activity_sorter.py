@@ -308,6 +308,112 @@ class LatestActivitySortingTestCase(TestCase, ProfileTestHelperMixin):
         )
         self.assertIsNone(no_monitoring_item["latest_activity_source"])
 
+    def test_null_updated_child_uses_created_for_latest_activity(self):
+        """Children with updated=NULL (flow-imported) must use created.
+
+        latest_child_activity must fall back to children__created when
+        children__updated is NULL, otherwise imported records are missed.
+        """
+        # Create a registration created long ago (simulates flow import)
+        old_reg = self.form.form_form_data.create(
+            name="OldFlowImport",
+            administration=self.administration,
+            geo=[0.0, 0.0],
+            created_by=self.user,
+            updated_by=self.user,
+            is_pending=False,
+            is_draft=False,
+        )
+        old_reg.created = self.base_time - timedelta(days=2000)
+        old_reg.updated = None  # Simulates flow-imported record
+        old_reg.save()
+
+        # Monitoring child also has updated=NULL but created recently
+        child_created = self.base_time - timedelta(days=1)
+        child = self.child_form.form_form_data.create(
+            parent=old_reg,
+            name="FlowMonitoringChild",
+            uuid=old_reg.uuid,
+            administration=self.administration,
+            geo=[0.0, 0.0],
+            created_by=self.user,
+            updated_by=self.user,
+            is_pending=False,
+            is_draft=False,
+        )
+        child.created = child_created
+        child.updated = None  # Simulates flow-imported record
+        child.save()
+
+        date_from = (self.base_time - timedelta(days=7)).date()
+        date_to = self.base_time.date()
+
+        response = self.client.get(
+            (
+                f"/api/v1/form-data/{self.form.id}"
+                f"?sort_by=latest_activity&sort_type=descend"
+                f"&date_from={date_from}&date_to={date_to}"
+            ),
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        ids = [item["id"] for item in data["data"]]
+
+        # old_reg has a child created 1 day ago — must be included
+        self.assertIn(old_reg.id, ids)
+
+    def test_date_filter_uses_latest_activity_when_sorting_by_it(self):
+        """Date filters should use latest_activity when sort_by=latest_activity.
+
+        A registration created before date_from must appear if its most recent
+        monitoring child falls within the requested date range.
+        """
+        # data_recent_monitoring was created 9 days ago (before date_from=8
+        # days ago), but its child was updated 1 day ago (within range).
+        date_from = (self.base_time - timedelta(days=7)).date()
+        date_to = self.base_time.date()
+
+        response = self.client.get(
+            (
+                f"/api/v1/form-data/{self.form.id}"
+                f"?sort_by=latest_activity&sort_type=descend"
+                f"&date_from={date_from}&date_to={date_to}"
+            ),
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        ids = [item["id"] for item in data["data"]]
+
+        # data_recent_monitoring created 9 days ago but child updated 1 day
+        # ago — must be included because its latest_activity is in range.
+        self.assertIn(self.data_recent_monitoring.id, ids)
+
+        # data_no_monitoring: created and updated 10 days ago — outside range.
+        self.assertNotIn(self.data_no_monitoring.id, ids)
+
+    def test_date_filter_uses_created_when_not_sorting_by_latest_activity(
+        self,
+    ):
+        """Date filters should use created field when sort_by is not
+        latest_activity, preserving existing behaviour."""
+        self.data_recent_monitoring.refresh_from_db()
+        created_date = self.data_recent_monitoring.created.date()
+
+        response = self.client.get(
+            (
+                f"/api/v1/form-data/{self.form.id}"
+                f"?sort_by=created&sort_type=descend"
+                f"&date_from={created_date}&date_to={created_date}"
+            ),
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        ids = [item["id"] for item in data["data"]]
+        self.assertIn(self.data_recent_monitoring.id, ids)
+
     def test_latest_activity_fallback_for_parent_query(self):
         """Test latest_activity falls back to updated when parent provided."""
         # When querying with parent (monitoring data), latest_activity
