@@ -55,8 +55,31 @@ export const columnsBatch = [
     align: "center",
     render: (approvers) => {
       if (approvers?.length) {
-        const isRejected = approvers.find((a) => a?.status_text === "Rejected");
-        const status_text = isRejected?.status_text || approvers[0].status_text;
+        /**
+         * Group approvers by administration, then check if there is any rejected status in each group,
+         * if there is, the status will be rejected, if not, the status will be the same as the approver's status (pending or approved)
+         */
+        const groups = Object.values(
+          approvers.reduce((acc, approver) => {
+            const admin = approver.administration;
+            if (!acc[admin]) {
+              acc[admin] = [];
+            }
+            acc[admin].push(approver);
+            return acc;
+          }, {})
+        );
+        const isRejected = groups.some((g) =>
+          g.some((a) => a.status_text === "Rejected")
+        );
+        const isApproved =
+          !isRejected &&
+          groups.every((g) => g.some((a) => a.status_text === "Approved"));
+        const status_text = isRejected
+          ? "Rejected"
+          : isApproved
+          ? "Approved"
+          : "Pending";
         return (
           <span>
             <Tag
