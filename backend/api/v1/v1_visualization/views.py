@@ -388,6 +388,7 @@ class GeolocationListView(APIView):
                     data=[],
                     status=status.HTTP_200_OK,
                 )
+            adm_path = f"{adm.id}."
             if adm.path:
                 adm_path = f"{adm.path}{adm.id}."
             queryset = queryset.filter(
