@@ -116,7 +116,7 @@ const Approvals = () => {
               onChange={handleChange}
               columns={
                 finalApproval
-                  ? columns.filter((c) => c.key !== "waiting_on")
+                  ? columns.filter((c) => c.key !== "approver")
                   : columns
               }
               loading={loading}
