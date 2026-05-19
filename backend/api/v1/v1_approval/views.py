@@ -145,6 +145,18 @@ def list_pending_batch(request, version):
                 if not is_valid:
                     break
             if is_valid:
+                # Exclude if a peer at the user's same Administration for THIS
+                # batch has already approved (OR semantics per level).
+                # DataApproval records are not mutated — filtering only.
+                user_approval = batch.batch_approval.filter(
+                    user=user
+                ).first()
+                if user_approval and batch.batch_approval.filter(
+                    administration=user_approval.administration,
+                    status=DataApprovalStatus.approved,
+                ).exclude(user=user).exists():
+                    is_valid = False
+            if is_valid:
                 valid_batch_ids.append(batch.id)
         # Set unique valid batch IDs
         valid_batch_ids = set(valid_batch_ids)
