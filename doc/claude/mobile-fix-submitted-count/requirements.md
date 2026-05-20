@@ -21,6 +21,10 @@ The user cannot distinguish "I submitted 5 forms" from "5 forms were pulled from
 
 Datapoints created through `FormPage.js` (`handleOnSaveAndExit` and `handleOnSubmitForm`) are the only ones that should count.
 
+### Problem 3 — Submitted data disappears after sync
+
+A server-downloaded draft submitted by the user gets a `draftId` assigned. After the sync job uploads it and sets `syncedAt`, the Phase 2 cleanup (`deleteDraftSynced`) deletes the row because it matches `draftId IS NOT NULL AND syncedAt IS NOT NULL` — the missing `submitted = 0` guard causes submitted records to be wiped.
+
 ---
 
 ## Functional Requirements
@@ -31,31 +35,46 @@ Datapoints created through `FormPage.js` (`handleOnSaveAndExit` and `handleOnSub
 - No other language string is touched (FR `'Brouillon: '` is already correct).
 - No other i18n key is changed (out of scope per user decision).
 
-### FR-2 — Submitted count: local submissions only
+### FR-2 — Submitted count: local submissions only, including child forms
 
 - The **Submitted** statistic on the Home form card MUST count only datapoints that were created on-device through `FormPage.js`.
 - Datapoints downloaded from the server via `sync-datapoints.js` (`downloadDatapointsJson`) MUST NOT be included in the submitted count.
+- Submitted count MUST also include locally-submitted monitoring (child) form datapoints for the registration form row.
 - The **Draft** count (`submitted = 0`) is unchanged — it already reflects only local state.
-- The **Synced** count (`syncedAt IS NOT NULL`) is unchanged.
+- The **Synced** count MUST be expanded to include:
+  - Server-re-downloaded drafts (`submitted = 0`, `syncedAt IS NOT NULL`) alongside locally-created synced rows.
+  - Monitoring (child) form locally-submitted synced datapoints.
 
 ### FR-3 — locallyCreated column
 
 - A new boolean column `locallyCreated` (`TINYINT`) MUST be added to the `datapoints` table.
 - Default value for all new rows is `0`.
-- `FormPage.js` MUST write `locallyCreated = 1` when saving a draft or submitting a form.
+- `FormPage.js` MUST write `locallyCreated = 1` when:
+  - Saving a **new** draft (`handleOnSaveAndExit`, `isNewSubmission = true` path).
+  - Submitting a form (`handleOnSubmitForm`), both new and existing (server-downloaded) submissions.
+- Saving an **existing** draft (`handleOnSaveAndExit`, `isNewSubmission = false` path) does NOT set `locallyCreated` — the existing DB value is preserved.
 - `sync-datapoints.js` does NOT write `locallyCreated`; it receives the column default `0`.
-- Existing rows in the database receive `locallyCreated = 0` via migration (preserving current semantics: prior counts treated as "unknown origin").
+- Existing rows in the database receive `locallyCreated = 1` via migration back-fill (treating all pre-existing data as locally created, preserving pre-migration counts).
 
-### FR-4 — Query update
+### FR-4 — Query update: selectLatestFormVersion
 
-- `selectLatestFormVersion` submitted count clause changes from:
-  ```sql
-  COUNT(DISTINCT CASE WHEN dp.submitted = 1 THEN dp.id END) AS submitted
-  ```
-  to:
-  ```sql
-  COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1 THEN dp.id END) AS submitted
-  ```
+`selectLatestFormVersion` submitted count changes from:
+```sql
+COUNT(DISTINCT CASE WHEN dp.submitted = 1 THEN dp.id END) AS submitted
+```
+to registration form count plus a correlated subquery for monitoring form submissions (joined on `mf.parentId = f.formId`).
+
+`selectLatestFormVersion` synced count changes from:
+```sql
+COUNT(DISTINCT CASE WHEN dp.syncedAt IS NOT NULL THEN dp.id END) AS synced
+```
+to `syncedAt IS NOT NULL AND (submitted = 0 OR locallyCreated = 1)` for registration forms, plus a correlated subquery for monitoring form synced submissions.
+
+See [design.md](design.md) for full SQL.
+
+### FR-5 — deleteDraftSynced bug fix
+
+`deleteDraftSynced` in `crud-datapoints.js` MUST add `submitted = 0` to its WHERE clause so that submitted records with a `draftId` are never deleted after sync completes.
 
 ---
 
@@ -64,7 +83,7 @@ Datapoints created through `FormPage.js` (`handleOnSaveAndExit` and `handleOnSub
 | ID | Requirement |
 |----|-------------|
 | NFR-1 | Migration runs automatically at app launch via the existing migration runner; no manual intervention needed |
-| NFR-2 | `locallyCreated` is write-once at insert time; `updateDataPoint` does not need to accept or modify it |
+| NFR-2 | `locallyCreated` is set once at creation for new submissions; `updateDataPoint` accepts it only for the submit path (converting a draft to submitted) |
 | NFR-3 | Existing unit tests for `crud-datapoints` and `Home` must continue to pass |
 | NFR-4 | No changes to the backend API or server-side models |
 
@@ -73,7 +92,5 @@ Datapoints created through `FormPage.js` (`handleOnSaveAndExit` and `handleOnSub
 ## Out of Scope
 
 - Changing any string other than EN `draftLabel`.
-- Modifying the Draft or Synced count logic.
 - Adding `locallyCreated` filtering to the Draft count.
-- Back-filling `locallyCreated = 1` for existing rows (user decision: treat existing data as unknown origin).
 - Any UI changes beyond the label string.
