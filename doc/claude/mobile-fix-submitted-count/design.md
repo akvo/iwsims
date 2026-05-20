@@ -24,7 +24,7 @@ locallyCreated  TINYINT  DEFAULT 0
 
 `05_add_locallyCreated_to_datapoints.js` adds the column via `ALTER TABLE`. Existing rows receive `locallyCreated = 0` (the column default).
 
-**Accepted regression**: all historical datapoints have `locallyCreated = 0` after migration. The `submitted` and `synced` counts on the Home screen reset to 0 on first app launch after the update. Only activity created after this migration accumulates in those counters. No back-fill is applied — pre-migration data has unknown origin (local vs server-downloaded is indistinguishable) and treating it as local would conflate the two sources from the very first run.
+**Back-fill applied**: the `up` function runs `UPDATE datapoints SET locallyCreated = 1` immediately after adding the column. All rows present at migration time are treated as locally created, preserving pre-migration `submitted` and `synced` counts. No server-download tracking existed before this column, so all existing data is either on-device or indistinguishably mixed — the back-fill is the only option that avoids a count regression on upgrade. Rows inserted after the migration by the server-sync path receive the column default `0`.
 
 The `down` migration throws an error rather than running `dropColumn`. The `dropColumn` implementation uses a `DROP TABLE` + `RENAME` pattern with no wrapping transaction; a crash between those steps would permanently destroy all datapoints. Adding a nullable column with a safe default has no valid rollback — removing the column must be done via a new forward migration.
 
