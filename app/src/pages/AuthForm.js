@@ -68,7 +68,7 @@ const AuthForm = ({ navigation }) => {
       if (status === 'fulfilled') {
         const { data: apiData } = value;
         await Promise.allSettled(
-          apiData.cascades.map((cascadeFile) => {
+          (apiData.cascades || []).map((cascadeFile) => {
             const downloadUrl = api.getConfig().baseURL + cascadeFile;
             return cascades.download(downloadUrl, cascadeFile);
           }),
