@@ -1,0 +1,138 @@
+# Design
+
+## Data Model
+
+### `datapoints` table — new column
+
+```
+locallyCreated  TINYINT  DEFAULT 0
+```
+
+#### Column semantics
+
+| `submitted` | `syncedAt` | `locallyCreated` | Meaning |
+|:-----------:|:----------:|:----------------:|---------|
+| `0` | `NULL` | `1` | Draft saved locally by user (FormPage `handleOnSaveAndExit`) |
+| `1` | `NULL` | `1` | Submitted locally, not yet uploaded (FormPage `handleOnSubmitForm`) |
+| `1` | `NOT NULL` | `1` | Submitted locally, upload complete |
+| `1` | `NOT NULL` | `0` | Datapoint downloaded from server (`downloadDatapointsJson`) |
+| `0` | `NOT NULL` | `0` | Draft downloaded from server (`fetchDraftDatapointsPageByPage`) |
+
+`submitted` and `syncedAt` semantics are **unchanged**. `locallyCreated` is a new, orthogonal axis.
+
+#### Migration
+
+`05_add_locallyCreated_to_datapoints.js` adds the column via `ALTER TABLE`. Existing rows receive `locallyCreated = 0` (the column default).
+
+**Accepted regression**: all historical datapoints have `locallyCreated = 0` after migration. The `submitted` and `synced` counts on the Home screen reset to 0 on first app launch after the update. Only activity created after this migration accumulates in those counters. No back-fill is applied — pre-migration data has unknown origin (local vs server-downloaded is indistinguishable) and treating it as local would conflate the two sources from the very first run.
+
+The `down` migration throws an error rather than running `dropColumn`. The `dropColumn` implementation uses a `DROP TABLE` + `RENAME` pattern with no wrapping transaction; a crash between those steps would permanently destroy all datapoints. Adding a nullable column with a safe default has no valid rollback — removing the column must be done via a new forward migration.
+
+---
+
+## Count Hierarchy
+
+All three counters form a strict hierarchy:
+
+```
+submitted = submitted=1  AND locallyCreated=1
+synced    = submitted=1  AND locallyCreated=1  AND syncedAt IS NOT NULL
+draft     = submitted=0  (all local drafts, regardless of origin)
+```
+
+Invariant: `synced ≤ submitted` is enforced at the SQL level. Server-downloaded data does not appear in `submitted` or `synced`.
+
+---
+
+## Query Changes
+
+### `selectLatestFormVersion` (Home screen — registration forms)
+
+**Before:**
+
+```sql
+COUNT(DISTINCT CASE WHEN dp.submitted = 1 THEN dp.id END) AS submitted,
+COUNT(DISTINCT CASE WHEN dp.submitted = 0 THEN dp.id END) AS draft,
+COUNT(DISTINCT CASE WHEN dp.syncedAt IS NOT NULL THEN dp.id END) AS synced
+```
+
+**After:**
+
+```sql
+COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1
+  THEN dp.id END) AS submitted,
+COUNT(DISTINCT CASE WHEN dp.submitted = 0
+  THEN dp.id END) AS draft,
+COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1 AND dp.syncedAt IS NOT NULL
+  THEN dp.id END) AS synced
+```
+
+### `getFormOptions` (Submission screen — monitoring forms)
+
+**Before:**
+
+```sql
+COUNT(DISTINCT CASE WHEN dp.submitted = 1 THEN dp.id END) AS submitted,
+COUNT(DISTINCT CASE WHEN dp.submitted = 0 AND dp.syncedAt IS NULL THEN dp.id END) AS draft,
+COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.syncedAt IS NOT NULL THEN dp.id END) AS synced
+```
+
+**After:**
+
+```sql
+COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1
+  THEN dp.id END) AS submitted,
+COUNT(DISTINCT CASE WHEN dp.submitted = 0 AND dp.syncedAt IS NULL
+  THEN dp.id END) AS draft,
+COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1 AND dp.syncedAt IS NOT NULL
+  THEN dp.id END) AS synced
+```
+
+The `draft` clause in `getFormOptions` intentionally keeps `AND dp.syncedAt IS NULL` — the monitoring screen only shows unsynced local drafts for the given registration UUID.
+
+---
+
+## Write Path
+
+### FormPage.js — sets `locallyCreated: 1`
+
+Both save and submit paths write `locallyCreated: 1` in the data object before passing to `saveDataPoint` or `updateDataPoint`:
+
+```
+handleOnSaveAndExit  → saveData   includes  locallyCreated: 1
+handleOnSubmitForm   → submitData includes  locallyCreated: 1
+```
+
+Both branches cover `isNewSubmission` (calls `saveDataPoint`) and existing edits (calls `updateDataPoint`). `updateDataPoint` does not accept `locallyCreated` — the value is immutable once set at creation.
+
+### sync-datapoints.js — does NOT set `locallyCreated`
+
+`downloadDatapointsJson` and `updateByUUID` do not pass `locallyCreated`. New inserts receive the column default `0`. Existing rows updated via `updateByUUID` are untouched.
+
+### crud-datapoints.js — normalises `locallyCreated` in `saveDataPoint`
+
+```javascript
+const locallyCreatedVal =
+  locallyCreated !== undefined ? { locallyCreated: locallyCreated === 1 ? 1 : 0 } : {};
+```
+
+Any truthy input becomes `1`; any falsy input becomes `0`. When `locallyCreated` is `undefined` the spread is empty and the column default applies.
+
+---
+
+## i18n Change
+
+File: `app/src/lib/i18n/ui-text.js`
+
+```diff
+-    draftLabel: 'Saved: ',
++    draftLabel: 'Draft: ',
+```
+
+Only the English (`en`) entry. French (`fr`) is already `'Brouillon: '`.
+
+---
+
+## Impact on Existing Tests
+
+`Home.test.js` and `crud-datapoints.test.js` mock the database. Tests that assert on the `submitted` or `synced` subtitle counts must add `locallyCreated: 1` to their mock datapoint fixtures to preserve expected values. Tests that do not exercise those count queries are unaffected.
