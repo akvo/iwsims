@@ -18,7 +18,7 @@ export const SUBMISSION_TYPES = {
 
 export const DATABASE_NAME = 'app.db';
 
-export const DATABASE_VERSION = 4;
+export const DATABASE_VERSION = 5;
 
 export const QUESTION_TYPES = {
   text: 'text',

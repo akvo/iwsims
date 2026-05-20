@@ -57,6 +57,7 @@ const tables = [
       json: 'TEXT',
       uuid: 'VARCHAR(191)',
       repeats: 'TEXT',
+      locallyCreated: 'TINYINT DEFAULT 0',
     },
   },
   {
