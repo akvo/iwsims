@@ -32,15 +32,13 @@ The `down` migration throws an error rather than running `dropColumn`. The `drop
 
 ## Count Hierarchy
 
-All three counters form a strict hierarchy:
-
 ```
 submitted = submitted=1  AND locallyCreated=1
-synced    = submitted=1  AND locallyCreated=1  AND syncedAt IS NOT NULL
+synced    = locallyCreated=1  AND syncedAt IS NOT NULL
 draft     = submitted=0  (all local drafts, regardless of origin)
 ```
 
-Invariant: `synced ≤ submitted` is enforced at the SQL level. Server-downloaded data does not appear in `submitted` or `synced`.
+`synced` counts all locally-created rows that have been uploaded, whether submitted or draft. `synced` may therefore exceed `submitted` (e.g. submitted=3, draft=3, synced=6). Server-downloaded data (`locallyCreated=0`) does not appear in `submitted` or `synced`.
 
 ---
 
@@ -63,9 +61,22 @@ COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1
   THEN dp.id END) AS submitted,
 COUNT(DISTINCT CASE WHEN dp.submitted = 0
   THEN dp.id END) AS draft,
-COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1 AND dp.syncedAt IS NOT NULL
-  THEN dp.id END) AS synced
+COUNT(DISTINCT CASE WHEN dp.locallyCreated = 1 AND dp.syncedAt IS NOT NULL
+  THEN dp.id END)
+  + COALESCE((
+    SELECT COUNT(DISTINCT mdp.id)
+    FROM datapoints mdp
+    INNER JOIN forms mf ON mdp.form = mf.id
+    WHERE mf.parentId = f.id
+      AND mdp.user = ?
+      AND mdp.locallyCreated = 1
+      AND mdp.submitted = 1
+      AND mdp.syncedAt IS NOT NULL
+  ), 0) AS synced
+-- params: [user, user, latest]
 ```
+
+The correlated subquery adds synced submitted datapoints from monitoring (child) forms for the same user. `locallyCreated=1 AND submitted=1` is safe because `handleOnSubmitForm` always writes `locallyCreated=1` via both `saveDataPoint` (new) and `updateDataPoint` (existing). `submitted` and `draft` count registration form datapoints only.
 
 ### `getFormOptions` (Submission screen — monitoring forms)
 
@@ -84,7 +95,7 @@ COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1
   THEN dp.id END) AS submitted,
 COUNT(DISTINCT CASE WHEN dp.submitted = 0 AND dp.syncedAt IS NULL
   THEN dp.id END) AS draft,
-COUNT(DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1 AND dp.syncedAt IS NOT NULL
+COUNT(DISTINCT CASE WHEN dp.locallyCreated = 1 AND dp.syncedAt IS NOT NULL
   THEN dp.id END) AS synced
 ```
 
