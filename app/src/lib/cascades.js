@@ -19,9 +19,7 @@ const download = async (downloadUrl, fileUrl, update = false) => {
   const pathSql = `${DIR_NAME}/${fileSql}`;
   const { exists } = await FileSystem.getInfoAsync(FileSystem.documentDirectory + pathSql);
   if (exists && update) {
-    const existingDB = SQLite.openDatabaseSync(fileSql);
-    existingDB.closeSync();
-    await existingDB.deleteAsync();
+    await SQLite.deleteDatabaseAsync(fileSql);
   }
   if (!exists || update) {
     await FileSystem.downloadAsync(downloadUrl, FileSystem.documentDirectory + pathSql, {

@@ -58,8 +58,8 @@ const FormPage = ({ navigation, route }) => {
       await cascadesFiles.reduce(async (prev, csFile) => {
         await prev;
         const [dbFile] = csFile?.split('/')?.slice(-1) || [];
-        const connDB = SQLite.openDatabaseSync(dbFile);
-        connDB.closeSync();
+        const connDB = await SQLite.openDatabaseAsync(dbFile, { useNewConnection: true });
+        await connDB.closeAsync();
       }, Promise.resolve());
     }
 
