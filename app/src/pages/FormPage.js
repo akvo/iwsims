@@ -103,6 +103,7 @@ const FormPage = ({ navigation, route }) => {
         json: jsonAnswers,
         uuid: route.params?.uuid || Crypto.randomUUID(),
         geo: dpGeo,
+        locallyCreated: 1,
       };
 
       const duration = getDurationInMinutes(surveyStart) + surveyDuration;
@@ -157,6 +158,7 @@ const FormPage = ({ navigation, route }) => {
         duration: surveyDuration,
         json: answers,
         uuid: route.params?.uuid || Crypto.randomUUID(),
+        locallyCreated: 1,
       };
       const duration = getDurationInMinutes(surveyStart) + surveyDuration;
       const payload = {

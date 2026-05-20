@@ -56,6 +56,7 @@ const dataPointsQuery = () => ({
       administrationId,
       draftId,
       id,
+      locallyCreated,
     },
   ) => {
     try {
@@ -67,6 +68,8 @@ const dataPointsQuery = () => ({
       const admVal = administrationId ? { administrationId } : {};
       const draftVal = draftId ? { draftId } : {};
       const idVal = id ? { id } : {};
+      const locallyCreatedVal =
+        locallyCreated !== undefined ? { locallyCreated: locallyCreated === 1 ? 1 : 0 } : {};
 
       const dataToInsert = {
         form,
@@ -84,6 +87,7 @@ const dataPointsQuery = () => ({
         ...admVal,
         ...draftVal,
         ...idVal,
+        ...locallyCreatedVal,
       };
 
       const res = await sql.insertRow(db, 'datapoints', dataToInsert);
