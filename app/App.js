@@ -15,7 +15,10 @@ import { UIState, AuthState, UserState, BuildParamsState } from './src/store';
 import { crudUsers, crudConfig, crudDataPoints } from './src/database/crud';
 import { api } from './src/lib';
 import { NetworkStatusBar, SyncService } from './src/components';
-import backgroundTask, { defineSyncFormVersionTask, defineSyncDatapointBackgroundTask } from './src/lib/background-task';
+import backgroundTask, {
+  defineSyncFormVersionTask,
+  defineSyncDatapointBackgroundTask,
+} from './src/lib/background-task';
 import crudJobs from './src/database/crud/crud-jobs';
 import {
   SYNC_DATAPOINT_BACKGROUND_TASK_NAME,
@@ -247,7 +250,13 @@ const App = () => {
       const allTasks = await TaskManager.getRegisteredTasksAsync();
 
       allTasks.forEach(async (a) => {
-        if ([SYNC_FORM_SUBMISSION_TASK_NAME, SYNC_FORM_VERSION_TASK_NAME, SYNC_DATAPOINT_BACKGROUND_TASK_NAME].includes(a.taskName)) {
+        if (
+          [
+            SYNC_FORM_SUBMISSION_TASK_NAME,
+            SYNC_FORM_VERSION_TASK_NAME,
+            SYNC_DATAPOINT_BACKGROUND_TASK_NAME,
+          ].includes(a.taskName)
+        ) {
           await backgroundTask.registerBackgroundTask(a.taskName);
         }
       });
