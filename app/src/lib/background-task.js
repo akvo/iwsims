@@ -66,7 +66,6 @@ const syncFormVersion = async (
     if (hasNewForms && showNotificationOnly) {
       sendPushNotification();
     }
-    await db.closeAsync();
   } catch (err) {
     Sentry.captureMessage('[background-task] syncFormVersion failed');
     Sentry.captureException(err);
@@ -74,20 +73,20 @@ const syncFormVersion = async (
 };
 
 const registerBackgroundTask = async (TASK_NAME, settingsValue = null) => {
+  const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
+    useNewConnection: true,
+  });
   try {
-    const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
-      useNewConnection: true,
-    });
     const config = await crudConfig.getConfig(db);
     const syncIntervalSec = settingsValue || parseInt(config?.syncInterval, 10) || 3600;
     const intervalMinutes = Math.max(Math.round(syncIntervalSec / 60), 15);
-    const res = await BackgroundTask.registerTaskAsync(TASK_NAME, {
+    return await BackgroundTask.registerTaskAsync(TASK_NAME, {
       minimumInterval: intervalMinutes,
     });
-    await db.closeAsync();
-    return res;
   } catch (err) {
     return Promise.reject(err);
+  } finally {
+    await db.closeAsync();
   }
 };
 
@@ -340,10 +339,10 @@ const backgroundTask = backgroundTaskHandler();
 
 export const defineSyncFormVersionTask = () =>
   TaskManager.defineTask(SYNC_FORM_VERSION_TASK_NAME, async () => {
+    const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
+      useNewConnection: true,
+    });
     try {
-      const db = await SQLite.openDatabaseAsync(DATABASE_NAME, {
-        useNewConnection: true,
-      });
       await syncFormVersion(db, {
         sendPushNotification: notification.sendPushNotification,
         showNotificationOnly: true,
@@ -353,6 +352,8 @@ export const defineSyncFormVersionTask = () =>
       Sentry.captureMessage(`[${SYNC_FORM_VERSION_TASK_NAME}] defineSyncFormVersionTask failed`);
       Sentry.captureException(err);
       return BackgroundTask.BackgroundTaskResult.Failed;
+    } finally {
+      await db.closeAsync();
     }
   });
 
@@ -367,14 +368,12 @@ const syncDatapointsBackground = async () => {
   try {
     const session = await crudUsers.getActiveUser(db);
     if (!session?.token) {
-      await db.closeAsync();
       return;
     }
     api.setToken(session.token);
 
     const activeJob = await crudJobs.getActiveJob(db, SYNC_DATAPOINT_JOB_NAME);
     if (!activeJob) {
-      await db.closeAsync();
       return;
     }
 
@@ -387,7 +386,6 @@ const syncDatapointsBackground = async () => {
       } catch (err) {
         Sentry.captureException(err);
       }
-      await db.closeAsync();
       return;
     }
 
@@ -439,9 +437,9 @@ const syncDatapointsBackground = async () => {
     );
 
     formCache.clear();
-    await db.closeAsync();
   } catch (err) {
     Sentry.captureException(err);
+  } finally {
     await db.closeAsync();
   }
 };
@@ -459,8 +457,9 @@ export const defineSyncDatapointBackgroundTask = () =>
 
 export const defineSyncFormSubmissionTask = () => {
   TaskManager.defineTask(SYNC_FORM_SUBMISSION_TASK_NAME, async () => {
+    const db = await SQLite.openDatabaseAsync(DATABASE_NAME, { useNewConnection: true });
     try {
-      await syncFormSubmission();
+      await syncFormSubmission(db);
       return BackgroundTask.BackgroundTaskResult.Success;
     } catch (err) {
       Sentry.captureMessage(
@@ -468,6 +467,8 @@ export const defineSyncFormSubmissionTask = () => {
       );
       Sentry.captureException(err);
       return BackgroundTask.BackgroundTaskResult.Failed;
+    } finally {
+      await db.closeAsync();
     }
   });
 };
