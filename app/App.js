@@ -31,7 +31,7 @@ import {
 } from './src/lib/constants';
 import { tables } from './src/database';
 import sql from './src/database/sql';
-import { m03, m04 } from './src/database/migrations';
+import { m03, m04, m05 } from './src/database/migrations';
 
 export const setNotificationHandler = () =>
   Notifications.setNotificationHandler({
@@ -198,38 +198,50 @@ const App = () => {
       await handleCheckSession(db);
       return;
     }
+
+    // WAL mode must be set outside a transaction — it is a connection-level pragma.
+    // user_version = 1 is set immediately after so a crash here is safely retried.
     if (currentDbVersion === 0) {
       await db.execAsync(`PRAGMA journal_mode = 'wal';`);
+      await db.execAsync('PRAGMA user_version = 1');
       currentDbVersion = 1;
     }
 
+    // Each subsequent step is wrapped in a transaction that sets user_version atomically.
+    // If the migration throws, the transaction rolls back and user_version stays at the
+    // previous value, so the same step is retried on next launch. Every migration's up()
+    // function must be idempotent (addNewColumn / createTable already check for existence).
     if (currentDbVersion === 1) {
-      await Promise.all(
-        tables.map(async (t) => {
-          await sql.createTable(db, t.name, t.fields);
-        }),
-      );
+      await sql.withTransaction(db, async (txDb) => {
+        await tables.reduce(async (prev, t) => {
+          await prev;
+          await sql.createTable(txDb, t.name, t.fields);
+        }, Promise.resolve());
+        await txDb.execAsync('PRAGMA user_version = 2');
+      });
       currentDbVersion = 2;
     }
-    /**
-     * This is the example of how to migrate the database
-     * if you need to add a new column to the table, you can use the migration file
-     * and add the migration function here.
-     * For example:
-     * if (currentDbVersion === 2) {
-     *  await m03.up(db);
-     *  currentDbVersion = 3;
-     * }
-     */
     if (currentDbVersion === 2) {
-      await m03.up(db);
+      await sql.withTransaction(db, async (txDb) => {
+        await m03.up(txDb);
+        await txDb.execAsync('PRAGMA user_version = 3');
+      });
       currentDbVersion = 3;
     }
     if (currentDbVersion === 3) {
-      await m04.up(db);
+      await sql.withTransaction(db, async (txDb) => {
+        await m04.up(txDb);
+        await txDb.execAsync('PRAGMA user_version = 4');
+      });
       currentDbVersion = 4;
     }
-    await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
+    if (currentDbVersion === 4) {
+      await sql.withTransaction(db, async (txDb) => {
+        await m05.up(txDb);
+        await txDb.execAsync('PRAGMA user_version = 5');
+      });
+      currentDbVersion = 5;
+    }
   };
 
   useEffect(() => {
