@@ -32,12 +32,13 @@ const loadDataSource = async (source, id = null) => {
   const { file: cascadeName } = source;
   const db = await SQLite.openDatabaseAsync(cascadeName, { useNewConnection: true });
   try {
-    const statement = await db.prepareAsync('SELECT * FROM nodes');
+    const sql = id ? 'SELECT * FROM nodes WHERE id = ?' : 'SELECT * FROM nodes';
+    const statement = await db.prepareAsync(sql);
     try {
-      const result = await statement.executeAsync();
+      const result = id ? await statement.executeAsync([id]) : await statement.executeAsync();
       const rows = await result.getAllAsync();
       await result.resetAsync();
-      return id ? rows?.find((r) => r?.id === id) : rows;
+      return id ? rows[0] ?? null : rows;
     } catch (error) {
       Sentry.captureMessage('[cascades] Unable to load cascade sqlite');
       Sentry.captureException(error, {
