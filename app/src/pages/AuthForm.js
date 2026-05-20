@@ -63,15 +63,16 @@ const AuthForm = ({ navigation }) => {
   const handleGetAllForms = async (formsUrl, userID) => {
     const formsReq = formsUrl?.map((f) => api.get(f.url));
     const formsRes = await Promise.allSettled(formsReq);
-    formsRes.forEach(async ({ value, status }, index) => {
+    await formsRes.reduce(async (prev, { value, status }, index) => {
+      await prev;
       if (status === 'fulfilled') {
         const { data: apiData } = value;
-        // download cascades files
-        apiData.cascades.forEach(async (cascadeFile) => {
-          const downloadUrl = api.getConfig().baseURL + cascadeFile;
-          await cascades.download(downloadUrl, cascadeFile);
-        });
-        // insert all forms to database
+        await Promise.allSettled(
+          apiData.cascades.map((cascadeFile) => {
+            const downloadUrl = api.getConfig().baseURL + cascadeFile;
+            return cascades.download(downloadUrl, cascadeFile);
+          }),
+        );
         const form = formsUrl?.[index];
         await crudForms.upsertForm(db, {
           ...form,
@@ -79,7 +80,7 @@ const AuthForm = ({ navigation }) => {
           formJSON: apiData,
         });
       }
-    });
+    }, Promise.resolve());
   };
 
   const handleOnPressLogin = () => {

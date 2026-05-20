@@ -52,16 +52,16 @@ const FormPage = ({ navigation, route }) => {
     return JSON.parse(selectedForm.json);
   }, [selectedForm]);
 
-  const refreshForm = useCallback(() => {
-    /**
-     * Close connection for all cascade SQLite
-     */
+  const refreshForm = useCallback(async () => {
     const { cascades: cascadesFiles } = formJSON || {};
-    cascadesFiles?.forEach((csFile) => {
-      const [dbFile] = csFile?.split('/')?.slice(-1) || [];
-      const connDB = SQLite.openDatabaseSync(dbFile);
-      connDB.closeAsync();
-    });
+    if (cascadesFiles?.length) {
+      await cascadesFiles.reduce(async (prev, csFile) => {
+        await prev;
+        const [dbFile] = csFile?.split('/')?.slice(-1) || [];
+        const connDB = SQLite.openDatabaseSync(dbFile);
+        connDB.closeSync();
+      }, Promise.resolve());
+    }
 
     FormState.update((s) => {
       s.surveyStart = null;
@@ -73,12 +73,12 @@ const FormPage = ({ navigation, route }) => {
     });
   }, [formJSON]);
 
-  const handleOnPressArrowBackButton = () => {
+  const handleOnPressArrowBackButton = async () => {
     if (Object.keys(currentValues).length) {
       setShowDialogMenu(true);
       return;
     }
-    refreshForm();
+    await refreshForm();
     navigation.goBack();
   };
 
@@ -121,7 +121,7 @@ const FormPage = ({ navigation, route }) => {
       if (Platform.OS === 'android') {
         ToastAndroid.show(trans.successSaveDatapoint, ToastAndroid.LONG);
       }
-      refreshForm();
+      await refreshForm();
       navigation.navigate('Home', { ...route?.params });
     } catch (error) {
       Sentry.captureMessage('[FormPage] Cannot save draft submissions');
@@ -138,8 +138,8 @@ const FormPage = ({ navigation, route }) => {
     setShowExitConfirmationDialog(true);
   };
 
-  const handleOnExit = () => {
-    refreshForm();
+  const handleOnExit = async () => {
+    await refreshForm();
     return navigation.navigate('Home');
   };
 
@@ -183,7 +183,7 @@ const FormPage = ({ navigation, route }) => {
       if (Platform.OS === 'android') {
         ToastAndroid.show(trans.successSubmitted, ToastAndroid.LONG);
       }
-      refreshForm();
+      await refreshForm();
       navigation.navigate('Home', { ...route?.params });
     } catch (error) {
       Sentry.captureMessage('[FormPage] Cannot submit submissions');

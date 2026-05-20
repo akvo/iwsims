@@ -50,23 +50,23 @@ const AddUser = ({ navigation }) => {
   };
 
   const handleGetAllForms = async (formsUrl, userID) => {
-    formsUrl.forEach(async (form) => {
-      // Fetch form detail
+    await formsUrl.reduce(async (prev, form) => {
+      await prev;
       const formRes = await api.get(form.url);
       await crudForms.upsertForm(db, {
         ...form,
         userId: userID,
         formJSON: formRes?.data,
       });
-
-      // download cascades files
       if (formRes?.data?.cascades?.length) {
-        formRes.data.cascades.forEach((cascadeFile) => {
-          const downloadUrl = api.getConfig().baseURL + cascadeFile;
-          cascades.download(downloadUrl, cascadeFile);
-        });
+        await Promise.allSettled(
+          formRes.data.cascades.map((cascadeFile) => {
+            const downloadUrl = api.getConfig().baseURL + cascadeFile;
+            return cascades.download(downloadUrl, cascadeFile);
+          }),
+        );
       }
-    });
+    }, Promise.resolve());
   };
 
   const submitData = async ({ name }) => {
