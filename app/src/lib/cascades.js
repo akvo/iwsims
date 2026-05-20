@@ -20,7 +20,7 @@ const download = async (downloadUrl, fileUrl, update = false) => {
   const { exists } = await FileSystem.getInfoAsync(FileSystem.documentDirectory + pathSql);
   if (exists && update) {
     const existingDB = SQLite.openDatabaseSync(fileSql);
-    existingDB.closeAsync();
+    existingDB.closeSync();
     await existingDB.deleteAsync();
   }
   if (!exists || update) {
@@ -33,34 +33,39 @@ const download = async (downloadUrl, fileUrl, update = false) => {
 const loadDataSource = async (source, id = null) => {
   const { file: cascadeName } = source;
   const db = await SQLite.openDatabaseAsync(cascadeName, { useNewConnection: true });
-  const statement = await db.prepareAsync('SELECT * FROM nodes');
   try {
-    const result = await statement.executeAsync();
-    const rows = await result.getAllAsync();
-    await result.resetAsync();
-    return id ? rows?.find((r) => r?.id === id) : rows;
-  } catch (error) {
-    Sentry.captureMessage('[cascades] Unable to load cascade sqlite');
-    Sentry.captureException(error, {
-      extra: {
-        source,
-        id,
-      },
-    });
-    return Promise.reject(error);
+    const statement = await db.prepareAsync('SELECT * FROM nodes');
+    try {
+      const result = await statement.executeAsync();
+      const rows = await result.getAllAsync();
+      await result.resetAsync();
+      return id ? rows?.find((r) => r?.id === id) : rows;
+    } catch (error) {
+      Sentry.captureMessage('[cascades] Unable to load cascade sqlite');
+      Sentry.captureException(error, {
+        extra: {
+          source,
+          id,
+        },
+      });
+      return Promise.reject(error);
+    } finally {
+      await statement.finalizeAsync();
+    }
   } finally {
-    await statement.finalizeAsync();
+    await db.closeAsync();
   }
 };
 
 const dropFiles = async () => {
   const Sqlfiles = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory + DIR_NAME);
-  Sqlfiles.forEach(async (file) => {
+  await Sqlfiles.reduce(async (prev, file) => {
+    await prev;
     if (file.includes('sqlite')) {
       const fileUri = `${FileSystem.documentDirectory}${DIR_NAME}/${file}`;
-      await FileSystem.deleteAsync(fileUri);
+      await FileSystem.deleteAsync(fileUri, { idempotent: true });
     }
-  });
+  }, Promise.resolve());
   return Sqlfiles;
 };
 
