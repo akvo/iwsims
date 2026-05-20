@@ -32,6 +32,7 @@ const SyncService = () => {
   const db = useSQLiteContext();
   const syncLockRef = useRef(false);
   const onSyncLockRef = useRef(false);
+  const syncFailureCount = useRef(0);
 
   const onSync = useCallback(async () => {
     if (onSyncLockRef.current) {
@@ -120,7 +121,23 @@ const SyncService = () => {
       return;
     }
     const syncTimer = setInterval(() => {
-      onSync().catch(Sentry.captureException);
+      onSync()
+        .then(() => {
+          syncFailureCount.current = 0;
+        })
+        .catch((err) => {
+          syncFailureCount.current += 1;
+          const count = syncFailureCount.current;
+          if (count === 1 || count % 10 === 0) {
+            Sentry.withScope((scope) => {
+              scope.setTag('component', 'SyncService');
+              scope.setTag('trigger', 'interval');
+              scope.setExtra('consecutiveFailures', count);
+              scope.setExtra('syncIntervalMs', syncInSecond);
+              Sentry.captureException(err);
+            });
+          }
+        });
     }, syncInSecond);
 
     // eslint-disable-next-line consistent-return
