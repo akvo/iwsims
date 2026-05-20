@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Switch } from '@rneui/themed';
 import * as Crypto from 'expo-crypto';
+import * as Sentry from '@sentry/react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { BaseLayout } from '../../components';
 import { config } from './config';
@@ -117,7 +118,7 @@ const SettingsForm = ({ route }) => {
     setEdit(null);
   };
 
-  const handleOnSwitch = (value, key) => {
+  const handleOnSwitch = async (value, key) => {
     const [stateName, stateKey] = key.split('.');
     const tinyIntVal = value ? 1 : 0;
     store[stateName].update((s) => {
@@ -127,7 +128,11 @@ const SettingsForm = ({ route }) => {
       ...settingsState,
       [stateKey]: tinyIntVal,
     });
-    handleUpdateOnDB(stateKey, tinyIntVal);
+    try {
+      await handleUpdateOnDB(stateKey, tinyIntVal);
+    } catch (err) {
+      Sentry.captureException(err);
+    }
   };
 
   const renderSubtitle = ({ type: inputType, name: fieldName, description }) => {

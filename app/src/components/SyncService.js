@@ -120,7 +120,7 @@ const SyncService = () => {
       return;
     }
     const syncTimer = setInterval(() => {
-      onSync();
+      onSync().catch(Sentry.captureException);
     }, syncInSecond);
 
     // eslint-disable-next-line consistent-return
