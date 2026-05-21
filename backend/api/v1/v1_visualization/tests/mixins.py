@@ -93,7 +93,6 @@ class VisualizationValuesTestMixin(ProfileTestHelperMixin):
 
         # Create registration records (2, different administrations)
         self.reg1 = FormData.objects.create(
-            id=7200,
             name="Site Alpha",
             form=self.registration,
             administration=self.adm_parent,
@@ -115,7 +114,6 @@ class VisualizationValuesTestMixin(ProfileTestHelperMixin):
         )
 
         self.reg2 = FormData.objects.create(
-            id=7201,
             name="Site Beta",
             form=self.registration,
             administration=self.adm_child,
