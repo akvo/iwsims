@@ -636,11 +636,6 @@ class CreateBatchSerializer(serializers.Serializer):
                 raise ValidationError(
                     "One or more data items are not pending."
                 )
-            # Check if the data item was created by the user
-            if item.created_by != self.context.get("user"):
-                raise ValidationError(
-                    "One or more data items were not submitted by the user."
-                )
             if item.parent and item.parent.is_pending:
                 if item.parent.id not in [d.id for d in data]:
                     raise ValidationError(
@@ -707,46 +702,51 @@ class CreateBatchSerializer(serializers.Serializer):
                 ),
                 first_data.administration.id
             ]
-        user_role = user.user_user_role.filter(
-            role__role_role_access__data_access=DataAccessTypes.submit,
-            administration__in=adm_ids
-        ).order_by(
-            "administration__level__level"
-        ).first()
-        if not user_role:
-            raise ValidationError({
-                "detail": {
-                    "data": [
-                        "All data must belong to the user's administrations."
-                    ]
-                }
-            })
-        # Make sure all data have starting with the same administration path
-        user_adm_level = user_role.administration.level.level
-        for data in validated_data.get("data"):
-            if (
-                data.administration.level.level > user_adm_level
-            ):
-                adm_path = user_role.administration.id
-                if user_role.administration.path:
-                    adm_path = "{0}{1}.".format(
-                        user_role.administration.path,
-                        user_role.administration.id
-                    )
-                if not data.administration.path.startswith(adm_path):
-                    raise ValidationError({
-                        "detail": {
-                            "data": [(
-                                "All data must belong to the same "
-                                "administration."
-                            )]
-                        }
-                    })
+        administration = first_data.administration
+        if not user.is_superuser:
+            user_role = user.user_user_role.filter(
+                role__role_role_access__data_access=DataAccessTypes.submit,
+                administration__in=adm_ids
+            ).order_by(
+                "administration__level__level"
+            ).first()
+            if not user_role:
+                raise ValidationError({
+                    "detail": {
+                        "data": [
+                            "All data must belong "
+                            "to the user's administrations."
+                        ]
+                    }
+                })
+            administration = user_role.administration
+            # Make sure all data
+            # have starting with the same administration path
+            user_adm_level = user_role.administration.level.level
+            for data in validated_data.get("data"):
+                if (
+                    data.administration.level.level > user_adm_level
+                ):
+                    adm_path = user_role.administration.id
+                    if user_role.administration.path:
+                        adm_path = "{0}{1}.".format(
+                            user_role.administration.path,
+                            user_role.administration.id
+                        )
+                    if not data.administration.path.startswith(adm_path):
+                        raise ValidationError({
+                            "detail": {
+                                "data": [(
+                                    "All data must belong to the same "
+                                    "administration."
+                                )]
+                            }
+                        })
         # try:
         with transaction.atomic():
             obj = DataBatch.objects.create(
                 form_id=form_id,
-                administration=user_role.administration,
+                administration=administration,
                 user=user,
                 name=validated_data.get("name"),
             )

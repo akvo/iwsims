@@ -112,39 +112,6 @@ class CreateDataBatchTestCase(TestCase, ProfileTestHelperMixin):
         )
         self.assertEqual(response.status_code, 201)
 
-    def test_create_batch_with_unauthorized_user(self):
-        unauthorized_user = self.create_user(
-            email="john.123@mail.com",
-            administration=self.data.administration,
-            role_level=self.IS_ADMIN,
-            form=self.data.form,
-        )
-        unauthorized_user.set_password("test")
-        unauthorized_user.save()
-        token = self.get_auth_token(unauthorized_user.email, "test")
-
-        payload = {
-            "name": "Test Batch",
-            "comment": "This is a test batch",
-            "data": [self.data.id],
-        }
-        response = self.client.post(
-            "/api/v1/batch",
-            payload,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("detail", response.json())
-        self.assertEqual(
-            response.json()["detail"],
-            {
-                "data": [
-                    "One or more data items were not submitted by the user."
-                ]
-            },
-        )
-
     def test_create_batch_with_multiple_data_entries(self):
         # Create additional data entries
         additional_data = []

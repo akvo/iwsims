@@ -703,11 +703,12 @@ class PendingFormDataView(APIView):
         # Query for pending form data across parent and child forms
         queryset = FormData.objects.filter(
             form_id__in=form_ids,
-            created_by=request.user,
             data_batch_list__isnull=True,
             is_pending=True,
             is_draft=False,
         )
+        if not request.user.is_superuser:
+            queryset = queryset.filter(created_by=request.user)
         # Apply search filter (search in name or parent's name for monitoring)
         if search:
             queryset = queryset.filter(
