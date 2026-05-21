@@ -25,6 +25,7 @@ const Card = ({ title = null, subTitles = [], syncing = false, syncProgress = 0 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    margin: 0,
   },
   syncingContainer: {
     borderColor: '#2563eb',

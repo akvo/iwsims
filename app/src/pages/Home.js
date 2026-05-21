@@ -360,7 +360,7 @@ const Home = ({ navigation, route }) => {
         </TouchableOpacity>
       }
     >
-      <BaseLayout.Content data={filteredData} action={goToSubmission} columns={2} />
+      <BaseLayout.Content data={filteredData} action={goToSubmission} columns={1} />
       <FAButton
         label={syncLoading ? trans.syncingText : trans.syncDataPointBtn}
         onPress={handleOnSync}

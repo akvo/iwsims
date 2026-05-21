@@ -12,6 +12,10 @@ const formsQuery = () => ({
           f.name,
           f.json,
           COUNT(
+            DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 0
+            THEN dp.id END
+          ) AS registered,
+          COUNT(
             DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1
             THEN dp.id END
           ) + COALESCE((

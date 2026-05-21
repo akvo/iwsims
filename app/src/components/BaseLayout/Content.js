@@ -10,7 +10,10 @@ const Content = ({ children = null, data = [], columns = 1, action = null }) => 
 
   if (data?.length) {
     return (
-      <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView
+        style={{ width: '100%' }}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 8, paddingTop: 8 }}
+      >
         <Stack row columns={columns}>
           {data?.map((d) => {
             const cardFormId = d?.formId ? Number(d.formId) : null;
@@ -28,7 +31,7 @@ const Content = ({ children = null, data = [], columns = 1, action = null }) => 
                 style={{ width: '100%' }}
               >
                 <Card
-                  title={d?.name}
+                  title={`${d?.name} ${d?.registered ? `(${d.registered})` : ''}`}
                   subTitles={d?.subtitles}
                   syncing={isSyncing}
                   syncProgress={syncPercent}
@@ -37,7 +40,7 @@ const Content = ({ children = null, data = [], columns = 1, action = null }) => 
             ) : (
               <View key={d?.id} testID={`card-non-touchable-${d?.id}`} style={{ width: '100%' }}>
                 <Card
-                  title={d?.name}
+                  title={`${d?.name} ${d?.registered ? `(${d.registered})` : ''}`}
                   subTitles={d?.subtitles}
                   syncing={isSyncing}
                   syncProgress={syncPercent}
