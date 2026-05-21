@@ -114,7 +114,7 @@ const FormPage = ({ navigation, route }) => {
         syncedAt: null,
       };
       if (isNewSubmission) {
-        await crudDataPoints.saveDataPoint(db, payload);
+        await crudDataPoints.saveDataPoint(db, { ...payload, locallyCreated: 1 });
       } else {
         await crudDataPoints.updateDataPoint(db, payload);
       }
@@ -157,6 +157,7 @@ const FormPage = ({ navigation, route }) => {
         duration: surveyDuration,
         json: answers,
         uuid: route.params?.uuid || Crypto.randomUUID(),
+        locallyCreated: 1,
       };
       const duration = getDurationInMinutes(surveyStart) + surveyDuration;
       const payload = {

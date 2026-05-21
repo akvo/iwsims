@@ -56,6 +56,7 @@ const dataPointsQuery = () => ({
       administrationId,
       draftId,
       id,
+      locallyCreated,
     },
   ) => {
     try {
@@ -67,6 +68,8 @@ const dataPointsQuery = () => ({
       const admVal = administrationId ? { administrationId } : {};
       const draftVal = draftId ? { draftId } : {};
       const idVal = id ? { id } : {};
+      const locallyCreatedVal =
+        locallyCreated !== undefined ? { locallyCreated: locallyCreated === 1 ? 1 : 0 } : {};
 
       const dataToInsert = {
         form,
@@ -84,6 +87,7 @@ const dataPointsQuery = () => ({
         ...admVal,
         ...draftVal,
         ...idVal,
+        ...locallyCreatedVal,
       };
 
       const res = await sql.insertRow(db, 'datapoints', dataToInsert);
@@ -94,12 +98,15 @@ const dataPointsQuery = () => ({
   },
   updateDataPoint: async (
     db,
-    { id, name, geo, submitted, duration, submittedAt, syncedAt, json, repeats },
+    { id, name, geo, submitted, duration, submittedAt, syncedAt, json, repeats, locallyCreated },
   ) => {
     try {
       const repeatsVal = repeats ? { repeats } : {};
       const submittedVal = submitted !== undefined ? { submitted } : {};
       const syncedAtVal = syncedAt !== undefined ? { syncedAt } : {};
+      const locallyCreatedVal =
+        locallyCreated !== undefined ? { locallyCreated: locallyCreated === 1 ? 1 : 0 } : {};
+
       const res = await sql.updateRow(
         db,
         'datapoints',
@@ -114,6 +121,7 @@ const dataPointsQuery = () => ({
           ...submittedVal,
           ...repeatsVal,
           ...syncedAtVal,
+          ...locallyCreatedVal,
         },
       );
       return res;
@@ -167,8 +175,8 @@ const dataPointsQuery = () => ({
   deleteDraftSynced: async (db) => {
     const res = await sql.safeExecuteQuery(
       db,
-      'DELETE FROM datapoints WHERE draftId IS NOT NULL AND syncedAt IS NOT NULL',
-      [],
+      'DELETE FROM datapoints WHERE submitted = ? AND draftId IS NOT NULL AND syncedAt IS NOT NULL',
+      [0],
       'deleteDraftSynced',
     );
     return res;

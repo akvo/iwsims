@@ -12,22 +12,40 @@ const formsQuery = () => ({
           f.name,
           f.json,
           COUNT(
-            DISTINCT CASE WHEN dp.submitted = 1
+            DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1
             THEN dp.id END
-          ) AS submitted,
+          ) + COALESCE((
+            SELECT COUNT(DISTINCT mdp.id)
+            FROM datapoints mdp
+            INNER JOIN forms mf ON mdp.form = mf.id
+            WHERE mf.parentId = f.formId
+              AND mdp.user = ?
+              AND mdp.locallyCreated = 1
+              AND mdp.submitted = 1
+          ), 0) AS submitted,
           COUNT(
             DISTINCT CASE WHEN dp.submitted = 0
             THEN dp.id END
           ) AS draft,
           COUNT(
             DISTINCT CASE WHEN dp.syncedAt IS NOT NULL
+              AND (dp.submitted = 0 OR dp.locallyCreated = 1)
             THEN dp.id END
-          ) AS synced
+          ) + COALESCE((
+            SELECT COUNT(DISTINCT mdp.id)
+            FROM datapoints mdp
+            INNER JOIN forms mf ON mdp.form = mf.id
+            WHERE mf.parentId = f.formId
+              AND mdp.user = ?
+              AND mdp.locallyCreated = 1
+              AND mdp.submitted = 1
+              AND mdp.syncedAt IS NOT NULL
+          ), 0) AS synced
         FROM forms f
         LEFT JOIN datapoints dp ON f.id = dp.form AND dp.user = ?
         WHERE f.latest = ? AND f.parentId IS NULL
         GROUP BY f.id, f.formId, f.version, f.name, f.json;`;
-    const rows = await sql.executeQuery(db, selectJoin, [user, latest]);
+    const rows = await sql.executeQuery(db, selectJoin, [user, user, user, latest]);
     return rows;
   },
   selectFormById: async (db, { id }) => {
@@ -102,7 +120,7 @@ const formsQuery = () => ({
           f.name,
           f.json,
           COUNT(
-            DISTINCT CASE WHEN dp.submitted = 1
+            DISTINCT CASE WHEN dp.submitted = 1 AND dp.locallyCreated = 1
             THEN dp.id END
           ) AS submitted,
           COUNT(
@@ -110,8 +128,8 @@ const formsQuery = () => ({
             AND dp.syncedAt IS NULL THEN dp.id END
           ) AS draft,
           COUNT(
-            DISTINCT CASE WHEN dp.submitted = 1
-            AND dp.syncedAt IS NOT NULL THEN dp.id END
+            DISTINCT CASE WHEN dp.locallyCreated = 1 AND dp.syncedAt IS NOT NULL
+            THEN dp.id END
           ) AS synced
         FROM forms f
         LEFT JOIN datapoints dp ON f.id = dp.form AND dp.uuid = ?
