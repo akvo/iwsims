@@ -856,6 +856,8 @@ Object {
     </React.Fragment>,
     "resetText": "Reset",
     "responseCol": "Response",
+    "retryFailed": "Failed to retry download. Please try again.",
+    "retryText": "Retry",
     "roleAccess": "Role Access",
     "roleAccessRequired": "Role access is required",
     "roleAdmLevel": "Administration Level",

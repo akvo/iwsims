@@ -50,7 +50,12 @@ class DownloadRetryAPITestCase(TestCase, ProfileTestHelperMixin):
             "date_to": None,
         }
 
-    def _make_job(self, job_status, user=None, result="download-test-240101-abc.xlsx"):
+    def _make_job(
+        self,
+        job_status,
+        user=None,
+        result="download-test-240101-abc.xlsx"
+    ):
         return Jobs.objects.create(
             type=JobTypes.download,
             user=user or self.user,
@@ -61,7 +66,8 @@ class DownloadRetryAPITestCase(TestCase, ProfileTestHelperMixin):
         )
 
     def test_retry_failed_job_returns_200(self):
-        # TC-3: retry a failed job → 200 with new task_id, job reset to on_progress
+        # TC-3: retry a failed job → 200
+        # with new task_id, job reset to on_progress
         job = self._make_job(JobStatus.failed)
         response = self.client.post(
             f"/api/v1/download/retry/{job.id}",
@@ -94,6 +100,15 @@ class DownloadRetryAPITestCase(TestCase, ProfileTestHelperMixin):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("message", response.data)
+
+    def test_retry_on_progress_job_returns_400(self):
+        job = self._make_job(JobStatus.on_progress)
+        response = self.client.post(
+            f"/api/v1/download/retry/{job.id}",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("on_progress", response.data["message"])
 
     def test_retry_other_users_job_returns_404(self):
         # TC-5: a user cannot retry another user's job

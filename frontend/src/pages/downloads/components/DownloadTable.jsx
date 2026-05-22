@@ -102,10 +102,16 @@ const DownloadTable = ({ type = "download" }) => {
     api
       .post(`download/retry/${row.id}`)
       .then((res) => {
+        const newResult = res.data.file_url.split("/download/file/").pop();
         setDataset((ds) =>
           ds.map((d) =>
             d.id === row.id
-              ? { ...d, status: "on_progress", task_id: res.data.task_id }
+              ? {
+                  ...d,
+                  status: "on_progress",
+                  task_id: res.data.task_id,
+                  result: newResult,
+                }
               : d
           )
         );
@@ -214,6 +220,13 @@ const DownloadTable = ({ type = "download" }) => {
           {row?.administration ? (
             <div className="download-filter">{row?.administration}</div>
           ) : null}
+          {(row?.date_from || row?.date_to) && (
+            <div className="download-filter">
+              {row.date_from && `${text.dateFromPlaceholder}: ${row.date_from}`}
+              {row.date_from && row.date_to && " – "}
+              {row.date_to && `${text.dateToPlaceholder}: ${row.date_to}, `}
+            </div>
+          )}
           {[...(row.attributes || [])]
             .filter((x) => x)
             .slice(0, MAX_ITEMS)

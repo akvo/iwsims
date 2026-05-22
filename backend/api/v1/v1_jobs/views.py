@@ -201,23 +201,43 @@ def download_status(request, version, task_id):
                 "task_id": serializers.CharField(),
                 "file_url": serializers.CharField(),
             },
-        )
+        ),
+        (400, "application/json"): inline_serializer(
+            "RetryDownloadError",
+            fields={"message": serializers.CharField()},
+        ),
+        (401, "application/json"): inline_serializer(
+            "RetryDownloadUnauthorized",
+            fields={"detail": serializers.CharField()},
+        ),
+        (404, "application/json"): inline_serializer(
+            "RetryDownloadNotFound",
+            fields={"detail": serializers.CharField()},
+        ),
     },
 )
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def download_retry(request, version, job_id):
     job = get_object_or_404(Jobs, pk=job_id, user=request.user)
-    if job.status == JobStatus.done:
+    retryable = {JobStatus.failed, JobStatus.pending}
+    if job.status not in retryable:
+        status_label = JobStatus.FieldStr.get(job.status, str(job.status))
         return Response(
-            {"message": "Job is already complete"},
+            {
+                "message": (
+                    "Job cannot be retried in status: {0}".format(
+                        status_label
+                    )
+                )
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
     if job.result and storage.check("download/{}".format(job.result)):
         storage.delete("download/{}".format(job.result))
     form = Forms.objects.get(pk=job.info["form_id"])
     form_name = form.name.replace(" ", "_").lower()
-    today = timezone.datetime.today().strftime("%y%m%d")
+    today = timezone.make_aware(timezone.datetime.today()).strftime("%y%m%d")
     ext = "zip" if job.info.get("child_form_ids") else "xlsx"
     new_file = "download-{0}-{1}-{2}.{3}".format(
         form_name, today, uuid4(), ext
