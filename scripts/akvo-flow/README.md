@@ -1,6 +1,6 @@
 # Akvo Flow Data Seeder Guide
 
-This guide provides comprehensive documentation for migrating data from Akvo Flow to Akvo MIS. The process involves downloading forms and data from Akvo Flow, mapping administration and question data, and seeding the final data into Akvo MIS via Docker.
+This guide provides comprehensive documentation for migrating data from Akvo Flow to IWSIMS. The process involves downloading forms and data from Akvo Flow, mapping administration and question data, and seeding the final data into IWSIMS via Docker.
 
 ## Table of Contents
 
@@ -65,7 +65,7 @@ Open the newly created [`.env`](./.env) file and populate the following variable
 
 - **`MIS_CIPHER_KEYS`**: A secret key used for encryption and decryption operations. This is required for securing sensitive data during the data migration process.
 
-- **`MIS_CIPHER_CHARS`**: Secret characters used in conjunction with the cipher keys for encryption operations. These values must match the configuration used by the Akvo MIS system to ensure proper data handling.
+- **`MIS_CIPHER_CHARS`**: Secret characters used in conjunction with the cipher keys for encryption operations. These values must match the configuration used by the IWSIMS system to ensure proper data handling.
 
 ### Step 3: Verify Configuration
 
@@ -131,21 +131,21 @@ flow_ids = {
 }
 ```
 
-**Purpose**: This dictionary maps Akvo Flow form IDs to their corresponding Akvo MIS form IDs. This mapping is essential for correctly associating questions between the two systems.
+**Purpose**: This dictionary maps Akvo Flow form IDs to their corresponding IWSIMS form IDs. This mapping is essential for correctly associating questions between the two systems.
 
 **Dictionary Structure**:
 - **Key**: Akvo Flow form ID (string) - The ID from your Akvo Flow instance
-- **Value**: Akvo MIS form ID (integer) - The corresponding form ID in Akvo MIS
+- **Value**: IWSIMS form ID (integer) - The corresponding form ID in IWSIMS
 
 **How to Find Form IDs**:
 - **Akvo Flow IDs**: Same as the survey IDs used in [`af_downloader.ipynb`](./af_downloader.ipynb)
-- **Akvo MIS IDs**: Log in to Akvo MIS, navigate to Forms, and find the form ID in the form details or URL
+- **IWSIMS IDs**: Log in to IWSIMS, navigate to Forms, and find the form ID in the form details or URL
 
 ### Configuration Requirements
 
 - **Consistency**: Ensure the Akvo Flow IDs in both notebooks match exactly
 - **Complete Mapping**: Every survey you download must have a corresponding entry in the mapping dictionary
-- **Valid MIS Forms**: The MIS form IDs must exist in your Akvo MIS instance
+- **Valid MIS Forms**: The MIS form IDs must exist in your IWSIMS instance
 - **Order Independence**: The order of entries in both variables does not matter
 
 ### Verification
@@ -154,7 +154,7 @@ After configuring both variables:
 
 1. Verify all Akvo Flow IDs are present in both notebooks
 2. Confirm each Akvo Flow ID has a corresponding MIS form ID in [`af_forms_mapping.ipynb`](./af_forms_mapping.ipynb)
-3. Check that the MIS form IDs reference valid forms in your Akvo MIS system
+3. Check that the MIS form IDs reference valid forms in your IWSIMS system
 4. Run the notebooks and review the output for any mapping errors
 
 ### Example Workflow
@@ -235,7 +235,7 @@ This will open JupyterLab in your default web browser, typically at `http://loca
 
 ### Purpose
 
-This step retrieves all forms and associated data from Akvo Flow, preparing them for mapping and subsequent seeding into Akvo MIS.
+This step retrieves all forms and associated data from Akvo Flow, preparing them for mapping and subsequent seeding into IWSIMS.
 
 ### Procedure
 
@@ -297,7 +297,7 @@ Both directories should contain files corresponding to your Akvo Flow surveys.
 
 ### Purpose
 
-This step maps the cascade (hierarchical) administration data from Akvo Flow to the corresponding administrative levels in Akvo MIS. This ensures that geographic and organizational data aligns correctly between the two systems.
+This step maps the cascade (hierarchical) administration data from Akvo Flow to the corresponding administrative levels in IWSIMS. This ensures that geographic and organizational data aligns correctly between the two systems.
 
 ### Procedure
 
@@ -319,10 +319,10 @@ ls -1 backend/source/akvo-flow
 
 #### 1. `administration_mapping.csv`
 
-**Description:** A comprehensive list of all administration data from Akvo Flow, indicating whether each administrative unit exists in Akvo MIS.
+**Description:** A comprehensive list of all administration data from Akvo Flow, indicating whether each administrative unit exists in IWSIMS.
 
 **Purpose:**
-- Provides a complete mapping between Akvo Flow and Akvo MIS administrative units
+- Provides a complete mapping between Akvo Flow and IWSIMS administrative units
 - Identifies which administrations have been successfully mapped
 - Used as a reference for data integrity verification
 
@@ -332,11 +332,11 @@ ls -1 backend/source/akvo-flow
 
 #### 2. `administration_missing.csv`
 
-**Description:** A list of administrative units from Akvo Flow that are **not** available in Akvo MIS.
+**Description:** A list of administrative units from Akvo Flow that are **not** available in IWSIMS.
 
 **Purpose:**
 - **Debugging tool** - Identifies gaps in the administration hierarchy
-- Highlights which administrative units need to be created in Akvo MIS before seeding
+- Highlights which administrative units need to be created in IWSIMS before seeding
 - Helps ensure data completeness and accuracy
 
 **Expected Contents:**
@@ -348,7 +348,7 @@ ls -1 backend/source/akvo-flow
 If [`administration_missing.csv`](backend/source/akvo-flow/administration_missing.csv) contains entries:
 
 1. Review the missing administrative units
-2. Create the missing administrations in Akvo MIS using the administration management interface
+2. Create the missing administrations in IWSIMS using the administration management interface
 3. Re-run the mapping notebook to verify all units are now mapped
 4. Proceed to the next step only when [`administration_missing.csv`](backend/source/akvo-flow/administration_missing.csv) is empty or contains only acceptable omissions
 
@@ -368,7 +368,7 @@ cat backend/source/akvo-flow/administration_missing.csv
 
 ### Purpose
 
-This step maps Akvo Flow questions to the corresponding form structure in Akvo MIS. It ensures that question types, options, and dependencies are correctly translated between the two systems.
+This step maps Akvo Flow questions to the corresponding form structure in IWSIMS. It ensures that question types, options, and dependencies are correctly translated between the two systems.
 
 ### Procedure
 
@@ -488,7 +488,7 @@ Ensure that mapping files exist for all forms you intend to seed.
 
 ### Purpose
 
-This step processes the downloaded Flow data and question mappings to generate final parent and child data CSV files. These files are structured for import into Akvo MIS and include proper transformations for different question types (geo, administration, caddisfly, etc.).
+This step processes the downloaded Flow data and question mappings to generate final parent and child data CSV files. These files are structured for import into IWSIMS and include proper transformations for different question types (geo, administration, caddisfly, etc.).
 
 ### Procedure
 
@@ -631,7 +631,7 @@ Ensure:
 
 ### Purpose
 
-This final step imports the generated parent and child data files into the Akvo MIS database using Django's management command. It processes the prepared data, validates it, and stores it in the appropriate database tables.
+This final step imports the generated parent and child data files into the IWSIMS database using Django's management command. It processes the prepared data, validates it, and stores it in the appropriate database tables.
 
 ### Prerequisites
 
@@ -740,7 +740,7 @@ backend/source/akvo-flow/output/
 
 #### 2. `invalid_values.csv`
 
-**Description:** Contains all Akvo Flow values that are not supported or valid in Akvo MIS.
+**Description:** Contains all Akvo Flow values that are not supported or valid in IWSIMS.
 
 **Purpose:**
 - **Debugging tool** - Identifies data compatibility issues
@@ -754,12 +754,12 @@ backend/source/akvo-flow/output/
 
 #### 3. `seeded.csv`
 
-**Description:** Contains all successfully seeded Akvo Flow datapoints that have been uploaded and stored in the Akvo MIS database.
+**Description:** Contains all successfully seeded Akvo Flow datapoints that have been uploaded and stored in the IWSIMS database.
 
 **Purpose:**
 - Confirmation of successful data migration
 - Reference for tracking which data has been imported
-- Basis for reconciliation between Akvo Flow and Akvo MIS
+- Basis for reconciliation between Akvo Flow and IWSIMS
 
 **Expected Contents:**
 - Datapoint IDs from Akvo Flow
@@ -856,7 +856,7 @@ jupyterlab . --port 8889
 
 **Solutions:**
 1. Review the missing administrations in the CSV file
-2. Create the missing administrative units in Akvo MIS
+2. Create the missing administrative units in IWSIMS
 3. Re-run the [`af_administration_mapping.ipynb`](./af_administration_mapping.ipynb) notebook
 4. Verify the CSV is now empty or contains only acceptable omissions
 
@@ -933,12 +933,12 @@ If you encounter issues not covered in this guide:
 1. Review the Jupyter notebook cell outputs for detailed error messages
 2. Check the backend container logs for runtime errors
 3. Verify all prerequisites and configuration values
-4. Consult the main [Akvo MIS README](../../README.md) for general setup information
+4. Consult the main [IWSIMS README](../../README.md) for general setup information
 
 ---
 
 ## Additional Resources
 
-- [Main Akvo MIS Documentation](../../README.md)
+- [Main IWSIMS Documentation](../../README.md)
 - [Django Management Commands](../../backend/api/v1/v1_data/management/commands/flow_data_seeder.py)
 - [Jupyter Notebooks](./)

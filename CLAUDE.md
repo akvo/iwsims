@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Akvo MIS (Management Information System) is a Real Time Monitoring Information Systems platform with three main components:
+IWSIMS (Integrated Water SIMS) is a Real Time Monitoring Information Systems platform with three main components:
 - **Backend**: Django REST Framework API (Python 3.8.5)
 - **Frontend**: React web application (Create React App)
 - **Mobile App**: React Native mobile application (Expo)
@@ -254,7 +254,7 @@ cp env.example .env
 
 2. Create Docker volume:
 ```bash
-docker volume create akvo-mis-docker-sync
+docker volume create iwsims-docker-sync
 ```
 
 3. Start services:
@@ -355,7 +355,7 @@ Configuration in `frontend/.eslintrc.json`
 #### Setup
 ```bash
 # Create mobile volume
-docker volume create akvo-mis-mobile-docker-sync
+docker volume create iwsims-mobile-docker-sync
 
 # Start mobile dev server
 ./dc-mobile.sh up -d
@@ -404,9 +404,9 @@ export CI_COMMIT='local'
 ```
 
 This generates Docker images:
-- `eu.gcr.io/akvo-lumen/akvo-mis/backend:latest`
-- `eu.gcr.io/akvo-lumen/akvo-mis/frontend:latest`
-- `eu.gcr.io/akvo-lumen/akvo-mis/worker:latest`
+- `eu.gcr.io/akvo-lumen/iwsims/backend:latest`
+- `eu.gcr.io/akvo-lumen/iwsims/frontend:latest`
+- `eu.gcr.io/akvo-lumen/iwsims/worker:latest`
 
 ### Running Production Build
 ```bash
@@ -467,7 +467,7 @@ Key variables in `.env`:
 
 - API documentation auto-generated with drf-spectacular
 - Database schema documentation at dbdocs.io (auto-updated on main/develop)
-- ReadTheDocs: https://akvo-mis.readthedocs.io/
+- ReadTheDocs: https://iwsims.readthedocs.io/
 
 ## Helper Scripts
 

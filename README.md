@@ -1,6 +1,6 @@
-# Akvo MIS
+# IWSIMS
 
-[![Build Status](https://github.com/akvo/akvo-mis/actions/workflows/main.yml/badge.svg)](https://github.com/akvo/akvo-mis/actions/workflows/main.yml?query=branch%3Amain) [![Build Status](https://github.com/akvo/akvo-mis/actions/workflows/apk-release.yml/badge.svg)](https://github.com/akvo/akvo-mis/actions/workflows/apk-release.yml?query=branch%3Amain) [![Repo Size](https://img.shields.io/github/repo-size/akvo/akvo-mis)](https://img.shields.io/github/repo-size/akvo/akvo-mis) [![Languages](https://img.shields.io/github/languages/count/akvo/akvo-mis)](https://img.shields.io/github/languages/count/akvo/akvo-mis) [![Issues](https://img.shields.io/github/issues/akvo/akvo-mis)](https://img.shields.io/github/issues/akvo/akvo-mis) [![Last Commit](https://img.shields.io/github/last-commit/akvo/akvo-mis/main)](https://img.shields.io/github/last-commit/akvo/akvo-mis/main) [![Coverage Status](https://coveralls.io/repos/github/akvo/akvo-mis/badge.svg)](https://coveralls.io/github/akvo/akvo-mis) [![Coverage Status](https://img.shields.io/readthedocs/akvo-mis?label=read%20the%20docs)](https://akvo-mis.readthedocs.io/en/latest)
+[![Build Status](https://github.com/akvo/iwsims/actions/workflows/main.yml/badge.svg)](https://github.com/akvo/iwsims/actions/workflows/main.yml?query=branch%3Amain) [![Build Status](https://github.com/akvo/iwsims/actions/workflows/apk-release.yml/badge.svg)](https://github.com/akvo/iwsims/actions/workflows/apk-release.yml?query=branch%3Amain) [![Repo Size](https://img.shields.io/github/repo-size/akvo/iwsims)](https://img.shields.io/github/repo-size/akvo/iwsims) [![Languages](https://img.shields.io/github/languages/count/akvo/iwsims)](https://img.shields.io/github/languages/count/akvo/iwsims) [![Issues](https://img.shields.io/github/issues/akvo/iwsims)](https://img.shields.io/github/issues/akvo/iwsims) [![Last Commit](https://img.shields.io/github/last-commit/akvo/iwsims/main)](https://img.shields.io/github/last-commit/akvo/iwsims/main) [![Coverage Status](https://coveralls.io/repos/github/akvo/iwsims/badge.svg)](https://coveralls.io/github/akvo/iwsims) [![Coverage Status](https://img.shields.io/readthedocs/iwsims?label=read%20the%20docs)](https://iwsims.readthedocs.io/en/latest) [![DBdocs](https://img.shields.io/website?url=http%3A%2F%2Fdbdocs.io%2Fakvo%2Fiwsims-main&style=flat&logo=docsdotrs&logoColor=%23fff&label=dbdocs&labelColor=%230246cc&color=%235e5e5e&link=http%3A%2F%2Fdbdocs.io%2Fakvo%2Fiwsims-main)](https://dbdocs.io/akvo/iwsims-main)
 
 Real Time Monitoring Information Systems
 
@@ -21,32 +21,27 @@ Copy `env.example` to create a `.env` file. Here’s what it should look like:
 .env
 
 ```bash
-APP_NAME="Akvo MIS"
-APP_SHORT_NAME="akvo-mis"
-APK_NAME="MIS Mobile"
-APK_SHORT_NAME="mis-mobile"
+APP_NAME="IWSIMS"
+APP_SHORT_NAME=iwsims
+APK_NAME="DWS DataPro"
+APK_SHORT_NAME="dws-datapro"
 DB_HOST=db
 DB_PASSWORD=password
 DB_SCHEMA=mis
 DB_USER=akvo
 DEBUG="True"
 DJANGO_SECRET=local-secret
-GOOGLE_APPLICATION_CREDENTIALS
-MAILJET_APIKEY
-MAILJET_SECRET
-WEBDOMAIN
-EXPO_TOKEN="<<your secret expo token>>"
-POSTGRES_PASSWORD=password
-PGADMIN_DEFAULT_EMAIL=dev@akvo.org
-PGADMIN_DEFAULT_PASSWORD=password
-PGADMIN_LISTEN_PORT="5050"
-IP_ADDRESS="http://<your_ip_address>:3000/api/v1/device"
-APK_UPLOAD_SECRET="123456789AU"
-STORAGE_PATH="./storage"
-SENTRY_DSN="<<your sentry DSN for BACKEND>>"
-SENTRY_MOBILE_ENV="<<your sentry env>>"
-SENTRY_MOBILE_DSN="<<your_sentry_mobile_DSN>>"
-SENTRY_MOBILE_AUTH_TOKEN="<<your_sentry_mobile_auth_token>>"
+MAILJET_APIKEY=secret
+MAILJET_SECRET=secret
+WEBDOMAIN="http://localhost:3000"
+IP_ADDRESS="http://<your_ip_address>/api/v1/device"
+APK_UPLOAD_SECRET="secret-apk-upload"
+STORAGE_PATH=
+EXPO_TOKEN=
+SENTRY_DSN=
+SENTRY_MOBILE_ENV=
+SENTRY_MOBILE_DSN=
+SENTRY_MOBILE_AUTH_TOKEN=
 ```
 
 
@@ -61,7 +56,7 @@ For initial run, you need to create a new docker volume.
 ```
 
 ```bash
-docker volume create akvo-mis-docker-sync
+docker volume create iwsims-docker-sync
 ```
 
 Note: On some linux systems, you may need to change the permissions of the directory where the volume is stored.
@@ -73,8 +68,8 @@ The development site should be running at: [localhost:3000](http://localhost:300
 
 Network Config:
 
-- [setupProxy.js](https://github.com/akvo/akvo-mis/blob/main/frontend/src/setupProxy.js)
-- [mainnetwork](https://github.com/akvo/akvo-mis/blob/docker-compose.override.yml#L4-L8) container setup
+- [setupProxy.js](https://github.com/akvo/iwsims/blob/main/frontend/src/setupProxy.js)
+- [mainnetwork](https://github.com/akvo/iwsims/blob/docker-compose.override.yml#L4-L8) container setup
 
 Add New User and Seed Master Data:
 
@@ -154,7 +149,7 @@ Available containers:
 
 ```bash
 ./dc.sh down -t1
-docker volume rm akvo-mis-docker-sync
+docker volume rm iwsims-docker-sync
 ```
 
 ## Mobile App Development
@@ -162,7 +157,7 @@ docker volume rm akvo-mis-docker-sync
 For initial run, you need to create a separate docker volume.
 
 ```bash
-docker volume create akvo-mis-mobile-docker-sync
+docker volume create iwsims-mobile-docker-sync
 ```
 
 ```bash
@@ -187,13 +182,13 @@ export CI_COMMIT='local'
 ./ci/build.sh
 ```
 
-Above command will generate two docker images with prefix `eu.gcr.io/akvo-lumen/akvo-mis` for backend and frontend
+Above command will generate two docker images with prefix `eu.gcr.io/akvo-lumen/iwsims` for backend and frontend
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 ```
 
-Network config: [nginx](https://github.com/akvo/akvo-mis/blob/main/frontend/nginx/conf.d/default.conf)
+Network config: [nginx](https://github.com/akvo/iwsims/blob/main/frontend/nginx/conf.d/default.conf)
 
 
 ## Dashboard Visualizations
@@ -222,7 +217,7 @@ References:
 
 ### Akvo Flow
 
-The Akvo Flow Data Seeder enables you to migrate data from Akvo Flow to Akvo MIS. The process involves downloading forms and data, mapping administration and question data, and seeding the final data via Docker.
+The Akvo Flow Data Seeder enables you to migrate data from Akvo Flow to IWSIMS. The process involves downloading forms and data, mapping administration and question data, and seeding the final data via Docker.
 
 **Quick Start Steps:**
 

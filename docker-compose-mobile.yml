@@ -9,7 +9,7 @@ services:
     image: akvo/akvo-node-20-alpine:20250923.063900.7ce4b53
     command: ["./start.sh"]
     volumes:
-      - akvo-mis-mobile-docker-sync:/app/node_modules:nocopy
+      - iwsims-mobile-docker-sync:/app/node_modules:nocopy
       - ./app:/app:delegated
       - ./.git:/app/.git:ro
     working_dir: /app
@@ -23,5 +23,5 @@ services:
       - SENTRY_AUTH_TOKEN=${SENTRY_MOBILE_AUTH_TOKEN}
     network_mode: service:mainnetwork
 volumes:
-  akvo-mis-mobile-docker-sync:
+  iwsims-mobile-docker-sync:
     external: true
