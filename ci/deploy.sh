@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 set -exuo pipefail
 
-#Detect tag for prod/staging deployment
+# Skip on tag builds (production deploy not yet configured for iwsims).
 tag_pattern="^[0-9]+\.[0-9]+\.[0-9]+$"
-if [[ "${CI_BRANCH}" =~ $tag_pattern && -z "${CI_TAG}" ]]; then
-    echo "This commit processed on Release CI. Skip all"
+if [[ "${CI_BRANCH}" =~ $tag_pattern || "${CI_TAG:=}" =~ $tag_pattern ]]; then
+    echo "Tag build detected. Production deploy not yet configured for iwsims. Skip deploy."
     exit 0
 fi
 
-[[ "${CI_BRANCH}" !=  "main" && ! "${CI_TAG:=}" =~ $tag_pattern ]] && { echo "Branch different than main and not a tag. Skip deploy"; exit 0; }
-[[ "${CI_PULL_REQUEST}" ==  "true" ]] && { echo "Pull request. Skip deploy"; exit 0; }
+[[ "${CI_BRANCH}" != "main" ]] && { echo "Branch is not main. Skip deploy."; exit 0; }
+[[ "${CI_PULL_REQUEST}" == "true" ]] && { echo "Pull request. Skip deploy."; exit 0; }
+
+NAMESPACE="iwsims-namespace"
+DEPLOYMENT="iwsims"
+IMAGE_PREFIX="eu.gcr.io/akvo-lumen/iwsims"
 
 auth () {
     gcloud auth activate-service-account --key-file=/home/runner/work/iwsims/credentials/gcp.json
@@ -18,51 +22,19 @@ auth () {
     gcloud config set compute/zone europe-west1-d
     gcloud config set container/use_client_certificate False
     gcloud auth configure-docker "eu.gcr.io"
+    gcloud container clusters get-credentials test
 }
 
 push_image () {
-    prefix="eu.gcr.io/akvo-lumen/akvo-mis"
-    docker push "${prefix}/${1}:${CI_COMMIT}"
-}
-
-prepare_deployment () {
-    cluster="test"
-
-    if [[ "${CI_TAG:=}" =~ $tag_pattern ]]; then
-        cluster="production"
-    fi
-
-    gcloud container clusters get-credentials "${cluster}"
-
-    sed -e "s/\${CI_COMMIT}/${CI_COMMIT}/g;" -e "s/\${APP_SHORT_NAME}/${APP_SHORT_NAME}/g;" \
-        ci/k8s/deployment.template.yml > ci/k8s/deployment.yml
-
-    sed -e "s/\${CI_COMMIT}/${CI_COMMIT}/g;" -e "s/\${APP_SHORT_NAME}/${APP_SHORT_NAME}/g;" \
-        ci/k8s/cronjobs.template.yml > ci/k8s/cronjobs.yml
-
-    sed -e "s/\${APP_SHORT_NAME}/${APP_SHORT_NAME}/g;" \
-        ci/k8s/service.yml > ci/k8s/service.yml.tmp && mv ci/k8s/service.yml.tmp ci/k8s/service.yml
-
-    sed -e "s/\${APP_SHORT_NAME}/${APP_SHORT_NAME}/g;" \
-        ci/k8s/volume-claim.template.yml > ci/k8s/volume-claim.template.yml.tmp && mv ci/k8s/volume-claim.template.yml.tmp ci/k8s/volume-claim.template.yml
-}
-
-apply_deployment () {
-    kubectl apply -f ci/k8s/volume-claim.template.yml
-    kubectl apply -f ci/k8s/deployment.yml
-    kubectl apply -f ci/k8s/cronjobs.yml
-    kubectl apply -f ci/k8s/service.yml
+    docker push "${IMAGE_PREFIX}/${1}:latest-test"
+    docker push "${IMAGE_PREFIX}/${1}:${CI_COMMIT}"
 }
 
 auth
 
-if [[ -z "${CI_TAG:=}" ]]; then
-    push_image backend
-    push_image worker
-    push_image frontend
-fi
+push_image backend
+push_image worker
+push_image frontend
 
-prepare_deployment
-apply_deployment
-
-ci/k8s/wait-for-k8s-deployment-to-be-ready.sh
+kubectl -n "${NAMESPACE}" rollout restart deployment/"${DEPLOYMENT}"
+kubectl -n "${NAMESPACE}" rollout status deployment/"${DEPLOYMENT}" --timeout=5m

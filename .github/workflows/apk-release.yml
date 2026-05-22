@@ -1,4 +1,4 @@
-name: Akvo MIS APK build
+name: IWSIMS APK build
 
 on:
   push:

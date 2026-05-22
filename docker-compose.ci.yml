@@ -2,14 +2,14 @@
 version: "3.9"
 services:
   backend:
-    image: eu.gcr.io/akvo-lumen/akvo-mis/backend:latest
+    image: eu.gcr.io/akvo-lumen/iwsims/backend:latest-test
     command: ["sh", "run.sh"]
     depends_on:
       db:
         condition: service_healthy
     environment:
-      - APP_NAME=akvo-mis
-      - APP_SHORT_NAME=akvo-mis
+      - APP_NAME=iwsims
+      - APP_SHORT_NAME=iwsims
       - APK_SHORT_NAME=mis-mobile
       - APK_NAME=mis-mobile
       - DB_SCHEMA=mis
@@ -60,7 +60,7 @@ services:
       timeout: 5s
       retries: 5
   frontend:
-    image: eu.gcr.io/akvo-lumen/akvo-mis/frontend:latest
+    image: eu.gcr.io/akvo-lumen/iwsims/frontend:latest-test
     command: ["nginx", "-g", "daemon off;"]
     depends_on:
       - backend
@@ -69,8 +69,8 @@ services:
       - ./frontend:/app:delegated
     working_dir: /app
     environment:
-      - APP_NAME=akvo-mis
-      - APP_SHORT_NAME=akvo-mis
+      - APP_NAME=iwsims
+      - APP_SHORT_NAME=iwsims
   mainnetwork:
     image: alpine:3.14
     command: ["tail", "-f", "/dev/null"]

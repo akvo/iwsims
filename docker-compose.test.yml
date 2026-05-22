@@ -2,14 +2,14 @@
 version: "3.9"
 services:
   backend:
-    image: eu.gcr.io/akvo-lumen/akvo-mis/backend:latest
+    image: eu.gcr.io/akvo-lumen/iwsims/backend:latest-test
     working_dir: /app/backend
     volumes:
       - ./:/app:delegated
       - ${SERVICE_ACCOUNT}:/credentials/:ro
     environment:
-      - APP_NAME=akvo-mis
-      - APP_SHORT_NAME=akvo-mis
+      - APP_NAME=iwsims
+      - APP_SHORT_NAME=iwsims
       - APK_SHORT_NAME=mis-mobile
       - DB_SCHEMA=mis
       - DB_USER=akvo

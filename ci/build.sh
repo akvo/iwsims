@@ -50,7 +50,7 @@ then
     exit 1
 fi
 
-image_prefix="eu.gcr.io/akvo-lumen/akvo-mis"
+image_prefix="eu.gcr.io/akvo-lumen/iwsims"
 
 dc () {
     docker compose \
@@ -83,7 +83,7 @@ frontend_build () {
        sh release.sh
 
     docker build \
-        --tag "${image_prefix}/frontend:latest" \
+        --tag "${image_prefix}/frontend:latest-test" \
         --tag "${image_prefix}/frontend:${CI_COMMIT}" frontend
 
 }
@@ -91,7 +91,7 @@ frontend_build () {
 backend_build () {
 
     docker build \
-        --tag "${image_prefix}/backend:latest" \
+        --tag "${image_prefix}/backend:latest-test" \
         --tag "${image_prefix}/backend:${CI_COMMIT}" backend
 
     # Code Quality
@@ -103,7 +103,7 @@ backend_build () {
 worker_build() {
 
     docker build \
-        --tag "${image_prefix}/worker:latest" \
+        --tag "${image_prefix}/worker:latest-test" \
         --tag "${image_prefix}/worker:${CI_COMMIT}" backend -f ./backend/Dockerfile.worker
 
 }
@@ -111,8 +111,8 @@ worker_build() {
 update_dbdocs() {
     if [[ "${CI_BRANCH}" ==  "main" || "${CI_BRANCH}" ==  "develop" ]]; then
         npm install -g dbdocs
-        # dbdocs build doc/dbml/schema.dbml --project akvo-mis
-        dbdocs build backend/db.dbml --project "akvo-mis-$CI_BRANCH"
+        # dbdocs build doc/dbml/schema.dbml --project iwsims
+        dbdocs build backend/db.dbml --project "iwsims-$CI_BRANCH"
     fi
 }
 
