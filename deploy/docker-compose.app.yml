@@ -43,7 +43,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     volumes:
-      - akvo-mis-data:/app/storage
+      - iwsims-data:/app/storage
     network_mode: service:mainnetwork
 
   worker:
@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     volumes:
-      - akvo-mis-data:/app/storage
+      - iwsims-data:/app/storage
     network_mode: service:mainnetwork
     depends_on:
       - backend
@@ -70,7 +70,7 @@ services:
     working_dir: /app
     command: /bin/sh -c "sed -i '/listen/s/80/81/g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     volumes:
-      - akvo-mis-data:/usr/share/nginx/html/storage
+      - iwsims-data:/usr/share/nginx/html/storage
     network_mode: service:mainnetwork
     depends_on:
       - backend
@@ -84,9 +84,9 @@ services:
     restart: unless-stopped
     working_dir: /app
     volumes:
-      - akvo-mis-data:/app/storage
+      - iwsims-data:/app/storage
     network_mode: service:mainnetwork
 
 volumes:
-  akvo-mis-data:
+  iwsims-data:
   traefik-certificates:
