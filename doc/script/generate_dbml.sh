@@ -8,6 +8,6 @@ then
     exit
 fi
 
-docker-compose exec backend python manage.py dbml > "$ROOT_DIR"/doc/dbml/current.dbml
-dbdocs build "$ROOT_DIR"/doc/dbml/schema.dbml --project akvo-mis
-dbdocs build "$ROOT_DIR"/doc/dbml/current.dbml --project akvo-mis-django
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+docker-compose exec backend python manage.py dbml > "$ROOT_DIR"/backend/db.dbml
+dbdocs build "$ROOT_DIR"/backend/db.dbml --project "iwsims-$BRANCH"

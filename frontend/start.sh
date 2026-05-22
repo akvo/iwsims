@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Set default APP_NAME if not provided
-export APP_NAME=${APP_NAME:-akvo-mis}
+export APP_NAME=${APP_NAME:-iwsims}
 echo "Starting development server with APP_NAME: ${APP_NAME}"
 
 # Create .env file with environment variables
