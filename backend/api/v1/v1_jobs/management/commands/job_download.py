@@ -1,6 +1,6 @@
 import uuid
 
-from django.core.management import BaseCommand
+from django.core.management import BaseCommand, CommandError
 from django.utils import timezone
 from django_q.tasks import async_task
 
@@ -52,12 +52,9 @@ class Command(BaseCommand):
         form = Forms.objects.get(pk=form_id)
         # validate form should have parent is null
         if form.parent is not None:
-            self.stdout.write(
-                self.style.ERROR(
-                    "Form id {0} is not a registration form".format(form.id)
-                )
+            raise CommandError(
+                "Form id {0} is not a registration form".format(form.id)
             )
-            return
 
         child_form_ids = options.get("child_form_ids", [])
         # validate child_form_ids is a child of form
@@ -65,14 +62,11 @@ class Command(BaseCommand):
             valid_child_form_ids = form.children.values_list("id", flat=True)
             for child_form_id in child_form_ids:
                 if child_form_id not in valid_child_form_ids:
-                    self.stdout.write(
-                        self.style.ERROR(
-                            "{0} is not a child of form id {1}".format(
-                                child_form_id, form.id
-                            )
+                    raise CommandError(
+                        "{0} is not a child of form id {1}".format(
+                            child_form_id, form.id
                         )
                     )
-                    return
         selection_ids = options.get("selection_ids", [])
         date_from = options.get("date_from")
         date_to = options.get("date_to")
@@ -87,7 +81,9 @@ class Command(BaseCommand):
             "date_to": date_to,
         }
         form_name = form.name.replace(" ", "_").lower()
-        today = timezone.datetime.today().strftime("%y%m%d")
+        today = timezone.make_aware(
+            timezone.datetime.today()
+        ).strftime("%y%m%d")
         ext = "zip" if child_form_ids else "xlsx"
         out_file = "download-{0}-{1}-{2}.{3}".format(
             form_name, today, uuid.uuid4(), ext
@@ -103,7 +99,8 @@ class Command(BaseCommand):
             "api.v1.v1_jobs.job.job_generate_data_download",
             job.id,
             **info,
-            hook="api.v1.v1_jobs.job.job_generate_data_download_result"
+            retry=0,
+            hook="api.v1.v1_jobs.job.job_generate_data_download_result",
         )
         job.task_id = task_id
         job.save()

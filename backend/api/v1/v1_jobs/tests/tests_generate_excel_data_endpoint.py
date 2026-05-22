@@ -131,3 +131,25 @@ class GenerateExcelDataAPITestCase(TestCase, ProfileTestHelperMixin):
             f"{self.url}?form_id={self.form.id}",
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_generate_400_for_monitoring_form_as_root(self):
+        # TC-1: passing a child/monitoring form as form_id must return 400
+        child_form = Forms.objects.get(pk=10001)
+        response = self.client.get(
+            f"{self.url}?form_id={child_form.id}",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("message", response.data)
+        self.assertIn("registration form", response.data["message"])
+
+    def test_generate_400_for_invalid_child_form(self):
+        # TC-2: child_form_ids that are not children of form_id must return 400
+        # form pk=1 exists but is not a child of itself
+        response = self.client.get(
+            self.url,
+            {"form_id": self.form.id, "child_form_ids": [self.form.id]},
+            HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("message", response.data)

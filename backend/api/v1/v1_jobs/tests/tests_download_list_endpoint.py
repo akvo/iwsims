@@ -91,6 +91,8 @@ class DownloadListTestCase(TestCase, ProfileTestHelperMixin):
                 "result",
                 "attributes",
                 "download_type",
+                "date_from",
+                "date_to",
             ],
         )
 

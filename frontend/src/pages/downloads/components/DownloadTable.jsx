@@ -16,6 +16,7 @@ import {
   FileWordFilled,
   FileZipFilled,
   FileExcelFilled,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import { api, store, uiText } from "../../../lib";
 import { useNotification } from "../../../util/hooks";
@@ -44,6 +45,7 @@ const DownloadTable = ({ type = "download" }) => {
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [page, setPage] = useState(1);
   const [downloading, setDownloading] = useState(false);
+  const [retrying, setRetrying] = useState(null);
   const { notify } = useNotification();
   const { language } = store.useState((s) => s);
   const { active: activeLang } = language;
@@ -92,6 +94,34 @@ const DownloadTable = ({ type = "download" }) => {
         document.body.appendChild(link);
         link.click();
         setDownloading(null);
+      });
+  };
+
+  const handleRetry = (row) => {
+    setRetrying(row.id);
+    api
+      .post(`download/retry/${row.id}`)
+      .then((res) => {
+        const newResult = res.data.file_url.split("/download/file/").pop();
+        setDataset((ds) =>
+          ds.map((d) =>
+            d.id === row.id
+              ? {
+                  ...d,
+                  status: "on_progress",
+                  task_id: res.data.task_id,
+                  result: newResult,
+                }
+              : d
+          )
+        );
+      })
+      .catch((e) => {
+        notify({ type: "error", message: text.retryFailed });
+        console.error(e);
+      })
+      .finally(() => {
+        setRetrying(null);
       });
   };
 
@@ -190,6 +220,13 @@ const DownloadTable = ({ type = "download" }) => {
           {row?.administration ? (
             <div className="download-filter">{row?.administration}</div>
           ) : null}
+          {(row?.date_from || row?.date_to) && (
+            <div className="download-filter">
+              {row.date_from && `${text.dateFromPlaceholder}: ${row.date_from}`}
+              {row.date_from && row.date_to && " – "}
+              {row.date_to && `${text.dateToPlaceholder}: ${row.date_to}, `}
+            </div>
+          )}
           {[...(row.attributes || [])]
             .filter((x) => x)
             .slice(0, MAX_ITEMS)
@@ -283,6 +320,18 @@ const DownloadTable = ({ type = "download" }) => {
               ? text.failed
               : text.download}
           </Button>
+          {["failed", "pending"].includes(row.status) && (
+            <Button
+              ghost
+              icon={<ReloadOutlined />}
+              loading={retrying === row.id}
+              onClick={() => {
+                handleRetry(row);
+              }}
+            >
+              {text.retryText}
+            </Button>
+          )}
           <Button ghost className="dev">
             {text.deleteText}
           </Button>

@@ -176,11 +176,22 @@ class DownloadListSerializer(serializers.ModelSerializer):
 
         return instance.info.get("attributes")
 
+    date_from = serializers.SerializerMethodField()
+    date_to = serializers.SerializerMethodField()
+
     @extend_schema_field(OpenApiTypes.STR)
     def get_download_type(self, instance):
         if instance.info.get("selection_ids"):
             return None
         return instance.info.get("download_type")
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_date_from(self, instance):
+        return instance.info.get("date_from")
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_date_to(self, instance):
+        return instance.info.get("date_to")
 
     class Meta:
         model = Jobs
@@ -196,6 +207,8 @@ class DownloadListSerializer(serializers.ModelSerializer):
             "result",
             "attributes",
             "download_type",
+            "date_from",
+            "date_to",
         ]
 
 

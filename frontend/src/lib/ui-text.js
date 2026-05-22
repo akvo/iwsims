@@ -310,6 +310,8 @@ const uiText = {
     generating: "Generating",
     failed: "Failed",
     download: "Download",
+    retryText: "Retry",
+    retryFailed: "Failed to retry download. Please try again.",
     uploadDataLabel: "Upload your data",
     uploadMasterDataLabel: "Upload your data",
     uploadAnotherFileLabel: "Upload Another File",

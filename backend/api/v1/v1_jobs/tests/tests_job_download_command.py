@@ -1,6 +1,6 @@
 from io import StringIO
 
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 from django.test import TestCase
 from django.test.utils import override_settings
 from api.v1.v1_forms.models import Forms
@@ -64,15 +64,16 @@ class JobDownloadUnitTestCase(TestCase):
         form = Forms.objects.get(pk=1)
         invalid_child_form_id = 9999
         admin = SystemUser.objects.first()
-        result = self.call_command(
-            form.id,
-            admin.id,
-            "-a",
-            0,
-            "-c",
-            invalid_child_form_id,
-        )
-        self.assertIn("9999 is not a child of form id 1", result)
+        with self.assertRaises(CommandError) as cm:
+            self.call_command(
+                form.id,
+                admin.id,
+                "-a",
+                0,
+                "-c",
+                invalid_child_form_id,
+            )
+        self.assertIn("9999 is not a child of form id 1", str(cm.exception))
 
     def test_download_data_with_no_child_form(self):
         form = Forms.objects.get(pk=1)
@@ -120,13 +121,16 @@ class JobDownloadUnitTestCase(TestCase):
     def test_download_data_with_invalid_registration_form(self):
         form = Forms.objects.get(pk=10001)  # child form
         admin = SystemUser.objects.first()
-        result = self.call_command(
-            form.id,
-            admin.id,
-            "-a",
-            0,
+        with self.assertRaises(CommandError) as cm:
+            self.call_command(
+                form.id,
+                admin.id,
+                "-a",
+                0,
+            )
+        self.assertIn(
+            "Form id 10001 is not a registration form", str(cm.exception)
         )
-        self.assertIn("Form id 10001 is not a registration form", result)
         # should not create job
         self.assertEqual(Jobs.objects.count(), 0)
 
