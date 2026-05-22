@@ -16,6 +16,7 @@ import {
   FileWordFilled,
   FileZipFilled,
   FileExcelFilled,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import { api, store, uiText } from "../../../lib";
 import { useNotification } from "../../../util/hooks";
@@ -44,6 +45,7 @@ const DownloadTable = ({ type = "download" }) => {
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [page, setPage] = useState(1);
   const [downloading, setDownloading] = useState(false);
+  const [retrying, setRetrying] = useState(null);
   const { notify } = useNotification();
   const { language } = store.useState((s) => s);
   const { active: activeLang } = language;
@@ -92,6 +94,28 @@ const DownloadTable = ({ type = "download" }) => {
         document.body.appendChild(link);
         link.click();
         setDownloading(null);
+      });
+  };
+
+  const handleRetry = (row) => {
+    setRetrying(row.id);
+    api
+      .post(`download/retry/${row.id}`)
+      .then((res) => {
+        setDataset((ds) =>
+          ds.map((d) =>
+            d.id === row.id
+              ? { ...d, status: "on_progress", task_id: res.data.task_id }
+              : d
+          )
+        );
+      })
+      .catch((e) => {
+        notify({ type: "error", message: text.retryFailed });
+        console.error(e);
+      })
+      .finally(() => {
+        setRetrying(null);
       });
   };
 
@@ -283,6 +307,18 @@ const DownloadTable = ({ type = "download" }) => {
               ? text.failed
               : text.download}
           </Button>
+          {["failed", "pending"].includes(row.status) && (
+            <Button
+              ghost
+              icon={<ReloadOutlined />}
+              loading={retrying === row.id}
+              onClick={() => {
+                handleRetry(row);
+              }}
+            >
+              {text.retryText}
+            </Button>
+          )}
           <Button ghost className="dev">
             {text.deleteText}
           </Button>
