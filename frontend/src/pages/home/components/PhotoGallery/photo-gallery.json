@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "url": "/assets/photos/1_office-briefing-digital-coordination.png",
+    "caption": "Team members gather indoors to review operations and coordinate tasks using digital tools."
+  },
+  {
+    "id": 2,
+    "url": "/assets/photos/2_field-data-collection-at-site-facility.png",
+    "caption": "Staff conduct on-site inspections and record operational data using tablets outdoors."
+  },
+  {
+    "id": 3,
+    "url": "/assets/photos/3_project-review-system-presentation.png",
+    "caption": "A collaborative meeting session focused on reviewing submissions and monitoring project progress."
+  },
+  {
+    "id": 4,
+    "url": "/assets/photos/4_mobile-app-training-team-assistance.png",
+    "caption": "Colleagues receive hands-on guidance while learning to use a mobile reporting application."
+  },
+  {
+    "id": 5,
+    "url": "/assets/photos/5_on-site-monitoring-real-time-reporting.png",
+    "caption": "Field officers verify facility conditions and submit reports directly from the inspection area."
+  }
+]
