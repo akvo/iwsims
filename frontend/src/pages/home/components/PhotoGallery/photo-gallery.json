@@ -1,27 +1,27 @@
 [
   {
     "id": 1,
-    "url": "https://images.unsplash.com/photo-1642450909999-7106494ef779?q=80&w=2070&auto=format&fit=crop",
-    "caption": "Water resources across Fiji"
+    "url": "/assets/photos/1_office-briefing-digital-coordination.png",
+    "caption": "Team members gather indoors to review operations and coordinate tasks using digital tools."
   },
   {
     "id": 2,
-    "url": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop",
-    "caption": "Policy and legislation development"
+    "url": "/assets/photos/2_field-data-collection-at-site-facility.png",
+    "caption": "Staff conduct on-site inspections and record operational data using tablets outdoors."
   },
   {
     "id": 3,
-    "url": "https://images.unsplash.com/photo-1708807472445-d33589e6b090?q=80&w=1974&auto=format&fit=crop",
-    "caption": "Compliance monitoring operations"
+    "url": "/assets/photos/3_project-review-system-presentation.png",
+    "caption": "A collaborative meeting session focused on reviewing submissions and monitoring project progress."
   },
   {
     "id": 4,
-    "url": "https://plus.unsplash.com/premium_photo-1661964131234-fda88ca041c5?q=80&w=2071&auto=format&fit=crop",
-    "caption": "Water Authority of Fiji oversight"
+    "url": "/assets/photos/4_mobile-app-training-team-assistance.png",
+    "caption": "Colleagues receive hands-on guidance while learning to use a mobile reporting application."
   },
   {
     "id": 5,
-    "url": "/assets/technical-advisory.jpg",
-    "caption": "Technical and policy advisory"
+    "url": "/assets/photos/5_on-site-monitoring-real-time-reporting.png",
+    "caption": "Field officers verify facility conditions and submit reports directly from the inspection area."
   }
 ]
