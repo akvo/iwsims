@@ -13,6 +13,39 @@ import { GradationLegend, MapView, MarkerLegend } from "../../../components";
 import { api, store, uiText, geo, QUESTION_TYPES, config } from "../../../lib";
 import { color } from "../../../util";
 const { getBounds } = geo;
+const { colorRange = [] } = config.mapConfig ?? {};
+
+/**
+ * Return the coarsest "nice" domainMax >= maxValue such that maxValue still
+ * lands in the last scaleQuantize bucket.
+ *
+ * Policy: for n buckets, the last bucket starts at (n-1)/n * domainMax.
+ * maxValue must satisfy: maxValue >= (n-1)/n * domainMax
+ * => domainMax <= maxValue * n / (n-1)  (= 1.25 * maxValue for n=5)
+ *
+ * We search step sizes derived from the order-of-magnitude of maxValue
+ * (e.g. for maxValue=21: magnitude=10, steps=[50, 25, 10, 5, 2.5, 1]).
+ * The first (coarsest) step whose ceil-rounded candidate satisfies the
+ * constraint is returned, giving the nicest possible round-number domain.
+ */
+const computeDomainMax = (maxValue) => {
+  const n = colorRange.length;
+  if (!Number.isFinite(maxValue) || maxValue <= 0 || n < 2) {
+    return 1;
+  }
+  const magnitude = 10 ** Math.floor(Math.log10(maxValue));
+  for (const m of [5, 2.5, 1, 0.5, 0.25, 0.1]) {
+    const step = magnitude * m;
+    const candidate = Math.ceil(maxValue / step) * step;
+    if (maxValue >= ((n - 1) / n) * candidate) {
+      return candidate;
+    }
+  }
+  return maxValue;
+};
+
+const buildColorScale = (domainMax) =>
+  scaleQuantize().domain([0, domainMax]).range(colorRange);
 
 const ManageDataMap = () => {
   const [loading, setLoading] = useState(true);
@@ -120,30 +153,15 @@ const ManageDataMap = () => {
     }));
   }, [geoDataset, activeQuestion, statsByQuestion]);
 
-  // Calculate color scale based on numeric data values for shape coloring
+  // Derive color scale from the domainMax stored at fetch time so legend
+  // thresholds always match the colors already assigned to data points.
   const colorScale = useMemo(() => {
-    const numericValues = activeStats
-      .map((d) => d.value)
-      .filter((v) => typeof v === "number" && !isNaN(v) && v > 0);
-
-    if (numericValues.length === 0 || !isNumeric || !activeStats.length) {
-      return scaleQuantize().domain([0, 1]).range(config.mapConfig.colorRange);
-    }
-
-    const maxValue = Math.max(...numericValues);
-    let domainMax = maxValue;
-
-    if (maxValue <= 10) {
-      domainMax = Math.ceil(maxValue / 5) * 5;
-    } else if (maxValue <= 100) {
-      domainMax = Math.ceil(maxValue / 10) * 10;
-    } else {
-      domainMax = Math.ceil(maxValue / 50) * 50;
-    }
-    return scaleQuantize()
-      .domain([0, domainMax])
-      .range(config.mapConfig.colorRange);
-  }, [activeStats, isNumeric]);
+    const domainMax =
+      isNumeric && activeQuestion
+        ? statsByQuestion[activeQuestion]?.domainMax ?? 1
+        : 1;
+    return buildColorScale(domainMax);
+  }, [activeQuestion, isNumeric, statsByQuestion]);
 
   // Compute filtered dataset based on legend selections
   const filteredDataset = useMemo(() => {
@@ -171,7 +189,6 @@ const ManageDataMap = () => {
       }
 
       if (selectedGradationIndex !== null) {
-        const colorRange = config.mapConfig.colorRange;
         return d.color === colorRange[selectedGradationIndex];
       }
 
@@ -214,6 +231,7 @@ const ManageDataMap = () => {
               color: {},
               value: {},
               values: {},
+              domainMax: 1,
             },
           }));
           flashLoading();
@@ -226,26 +244,11 @@ const ManageDataMap = () => {
             ?.map((item) => item.value)
             ?.filter((v) => typeof v === "number" && !isNaN(v) && v > 0) || [];
 
-        let currentColorScale;
-        if (numericValues.length === 0) {
-          currentColorScale = scaleQuantize()
-            .domain([0, 1])
-            .range(config.mapConfig.colorRange);
-        } else {
-          const maxValue = Math.max(...numericValues);
-          let domainMax = maxValue;
-
-          if (maxValue <= 10) {
-            domainMax = Math.ceil(maxValue / 5) * 5;
-          } else if (maxValue <= 100) {
-            domainMax = Math.ceil(maxValue / 10) * 10;
-          } else {
-            domainMax = Math.ceil(maxValue / 50) * 50;
-          }
-          currentColorScale = scaleQuantize()
-            .domain([0, domainMax])
-            .range(config.mapConfig.colorRange);
-        }
+        const numericMax =
+          numericValues.length > 0 ? Math.max(...numericValues) : null;
+        const domainMax =
+          numericMax !== null ? computeDomainMax(numericMax) : 1;
+        const currentColorScale = buildColorScale(domainMax);
 
         const dataByID = Object.fromEntries(
           (apiData?.data || []).map((item) => [item.id, item])
@@ -270,6 +273,7 @@ const ManageDataMap = () => {
               color: colorMap,
               value: valueMap,
               values: {},
+              domainMax,
             },
           }));
           flashLoading();
@@ -332,6 +336,7 @@ const ManageDataMap = () => {
               color: colorMap,
               value: valueMap,
               values: valuesMap,
+              domainMax: null,
             },
           }));
           flashLoading();
