@@ -213,7 +213,7 @@ class CreateDataBatchTestCase(TestCase, ProfileTestHelperMixin):
         self.assertIn("detail", response.json())
         self.assertEqual(
             response.json()["detail"],
-            {"data": ["All data must belong to the same administration."]},
+            {"data": ["All data must belong to the user's administrations."]},
         )
 
     def test_create_batch_with_different_forms(self):

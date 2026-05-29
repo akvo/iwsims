@@ -1,8 +1,11 @@
 """
-TDD: Batch creation — approver validation
+TDD: Batch creation — approver validation + administration LCA assignment
 
-Feature: Approvers with the same or higher administration level can create
-batches from pending submissions within their approval scope.
+Features:
+  A. Approvers with the same or higher administration level can create
+     batches from pending submissions within their approval scope.
+  B. Batch.administration is set to the LCA (lowest common ancestor) of
+     all data items' administrations, not the user's role administration.
 
 Scenarios:
   1. Approver creates a batch from another user's data within scope — succeeds
@@ -10,15 +13,20 @@ Scenarios:
   3. Approver at higher level can batch data from lower-level submissions
   4. Regular submitter (no approve role) cannot batch others' data
   5. Existing happy path (submitter batches own data) is preserved
+  6. Batch with items from different level-3 admins → administration is
+     their common parent (level 2), not the user's role administration
+  7. Batch with items all at the same administration → administration is
+     that administration (no change)
 """
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.core.management import call_command
 from api.v1.v1_data.models import FormData
 from api.v1.v1_forms.models import Forms
-from api.v1.v1_profile.models import Administration
+from api.v1.v1_profile.models import Administration, Levels
 from api.v1.v1_profile.tests.mixins import ProfileTestHelperMixin
 from api.v1.v1_data.functions import add_fake_answers
+from api.v1.v1_approval.models import DataBatch
 
 
 def _pending(form, created_by, administration, name="Pending"):
@@ -131,6 +139,16 @@ class CreateBatchByApproverTestCase(TestCase, ProfileTestHelperMixin):
             self.other_admin.email, "test"
         )
 
+        # A second level-3 admin that is a SIBLING of level3_adm
+        # (different level-3 admin, but same level-2 parent)
+        self.level3_adm_sibling = (
+            Administration.objects
+            .filter(level__level=3, parent=self.level2_adm)
+            .exclude(id=self.level3_adm.id)
+            .order_by("id")
+            .first()
+        )
+
         # Pending data at level 3, submitted by submitter
         self.data_in_scope = _pending(
             self.form, self.submitter, self.level3_adm,
@@ -140,6 +158,13 @@ class CreateBatchByApproverTestCase(TestCase, ProfileTestHelperMixin):
         self.data_out_of_scope = _pending(
             self.form, self.submitter, self.sibling_adm,
             "Out-of-scope pending data"
+        )
+        # Pending data at sibling level-3 admin (different level-3 but same
+        # level-2 parent) — still within level-2 approver's scope
+        self.data_in_scope_sibling_level3 = _pending(
+            self.form, self.submitter,
+            self.level3_adm_sibling or self.level3_adm,
+            "In-scope sibling level-3 data"
         )
 
     def _create_batch(self, token, data_ids, name="Test Batch"):
@@ -221,4 +246,62 @@ class CreateBatchByApproverTestCase(TestCase, ProfileTestHelperMixin):
             response.status_code, 201,
             f"Regression: submitter batching own data should still work: "
             f"{response.json()}"
+        )
+
+    # --- Scenario 6: LCA administration when items span multiple level-3 ---
+
+    def test_batch_administration_is_lca_of_data_items(self):
+        """
+        When items are from two different level-3 administrations (siblings
+        under the same level-2 parent), the batch administration should be
+        set to level2_adm (the LCA), not the approver's role administration.
+        """
+        # If test data only has one level-3 under this parent, create one
+        sibling = self.level3_adm_sibling
+        if not sibling:
+            level3 = Levels.objects.get(level=3)
+            sibling = Administration.objects.create(
+                parent=self.level2_adm,
+                level=level3,
+                name="Test Level3 Sibling",
+            )
+
+        data2 = _pending(
+            self.form, self.submitter, sibling,
+            "Sibling level-3 data for LCA test"
+        )
+        response = self._create_batch(
+            self.approver_token,
+            [self.data_in_scope.id, data2.id],
+            "LCA Admin Batch",
+        )
+        self.assertEqual(
+            response.status_code, 201,
+            f"Expected 201, got {response.status_code}: {response.json()}"
+        )
+        batch = DataBatch.objects.get(name="LCA Admin Batch")
+        self.assertEqual(
+            batch.administration_id, self.level2_adm.id,
+            f"Batch administration should be level2_adm (LCA), "
+            f"got: {batch.administration.name}"
+        )
+
+    # --- Scenario 7: Single administration — keep same administration ---
+
+    def test_batch_administration_is_item_admin_when_same(self):
+        """
+        When all items are from the same administration, the batch
+        administration should be that administration.
+        """
+        response = self._create_batch(
+            self.approver_token,
+            [self.data_in_scope.id],
+            "Same Admin Batch",
+        )
+        self.assertEqual(response.status_code, 201)
+        batch = DataBatch.objects.get(name="Same Admin Batch")
+        self.assertEqual(
+            batch.administration_id, self.level3_adm.id,
+            f"Single-admin batch should keep level3_adm, "
+            f"got: {batch.administration.name}"
         )

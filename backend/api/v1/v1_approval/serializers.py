@@ -28,6 +28,7 @@ from api.v1.v1_forms.models import (
     Forms,
 )
 from api.v1.v1_profile.models import (
+    Administration,
     DataAccessTypes,
 )
 from api.v1.v1_users.models import SystemUser
@@ -618,6 +619,45 @@ class CreateBatchSerializer(serializers.Serializer):
         )
 
     @staticmethod
+    def _compute_batch_administration(data_items):
+        """
+        Return the LCA (lowest common ancestor) of all data items'
+        administrations.
+
+        - Single distinct administration → return it unchanged.
+        - Multiple administrations at different levels → return the deepest
+          node that is an ancestor of (or equal to) all of them.
+        - No common ancestor found → return the DB root node.
+        """
+        adms = list({item.administration for item in data_items})
+        if len(adms) == 1:
+            return adms[0]
+
+        def ancestor_chain(adm):
+            if adm.path:
+                ids = [
+                    int(x) for x in adm.path.strip(".").split(".") if x
+                ]
+            else:
+                ids = []
+            ids.append(adm.id)
+            return ids
+
+        chains = [ancestor_chain(adm) for adm in adms]
+        lca_id = None
+        for ids in zip(*chains):
+            if len(set(ids)) == 1:
+                lca_id = set(ids).pop()
+            else:
+                break
+
+        if lca_id is None:
+            return Administration.objects.filter(
+                parent__isnull=True
+            ).first()
+        return Administration.objects.get(id=lca_id)
+
+    @staticmethod
     def _user_has_approval_scope(user, administration):
         """True if user has an approve role covering administration."""
         approval_roles = user.user_user_role.filter(
@@ -720,27 +760,34 @@ class CreateBatchSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         form_id = validated_data.get("data")[0].form_id
-        user: SystemUser = validated_data.get("user")
-        ordered_data = sorted(
-            validated_data.get("data"),
-            key=lambda x: x.administration.level.level
-        )
-        first_data = ordered_data[0]
         user = self.context.get("user")
-        adm_ids = [first_data.administration.id]
-        if first_data.administration.ancestors:
-            adm_ids = [
-                *first_data.administration.ancestors.values_list(
-                    "id", flat=True
-                ),
-                first_data.administration.id
+
+        # Batch administration = LCA of all data items' administrations.
+        # For a single item this is simply the item's own administration;
+        # for items spread across sibling-level admins it is their common
+        # parent — matching the user's expectation for display in the list.
+        batch_administration = self._compute_batch_administration(
+            validated_data.get("data")
+        )
+
+        # Build the ancestor chain up to (and including) batch_administration
+        # so we can confirm the acting user has a role somewhere in that chain.
+        if batch_administration.path:
+            adm_chain_ids = [
+                int(x)
+                for x in batch_administration.path.strip(".").split(".")
+                if x
             ]
+        else:
+            adm_chain_ids = []
+        adm_chain_ids.append(batch_administration.id)
+
         user_role = user.user_user_role.filter(
             role__role_role_access__data_access__in=[
                 DataAccessTypes.submit,
                 DataAccessTypes.approve,
             ],
-            administration__in=adm_ids
+            administration__in=adm_chain_ids
         ).order_by(
             "administration__level__level"
         ).first()
@@ -752,32 +799,11 @@ class CreateBatchSerializer(serializers.Serializer):
                     ]
                 }
             })
-        # Make sure all data have starting with the same administration path
-        user_adm_level = user_role.administration.level.level
-        for data in validated_data.get("data"):
-            if (
-                data.administration.level.level > user_adm_level
-            ):
-                adm_path = user_role.administration.id
-                if user_role.administration.path:
-                    adm_path = "{0}{1}.".format(
-                        user_role.administration.path,
-                        user_role.administration.id
-                    )
-                if not data.administration.path.startswith(adm_path):
-                    raise ValidationError({
-                        "detail": {
-                            "data": [(
-                                "All data must belong to the same "
-                                "administration."
-                            )]
-                        }
-                    })
-        # try:
+
         with transaction.atomic():
             obj = DataBatch.objects.create(
                 form_id=form_id,
-                administration=user_role.administration,
+                administration=batch_administration,
                 user=user,
                 name=validated_data.get("name"),
             )
