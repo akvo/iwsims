@@ -703,11 +703,27 @@ class PendingFormDataView(APIView):
         # Query for pending form data across parent and child forms
         queryset = FormData.objects.filter(
             form_id__in=form_ids,
-            created_by=request.user,
             data_batch_list__isnull=True,
             is_pending=True,
             is_draft=False,
         )
+        # Filter by created_by current user, or by approval role:
+        # approvers see data at their own administration and all
+        # descendant administrations.
+        approval_filter = Q(created_by=request.user)
+        approval_roles = request.user.user_user_role.filter(
+            role__role_role_access__data_access=DataAccessTypes.approve
+        )
+        for role in approval_roles:
+            admin = role.administration
+            admin_subtree_path = (
+                f"{admin.path}{admin.pk}." if admin.path else f"{admin.pk}."
+            )
+            approval_filter |= (
+                Q(administration_id=admin.pk) |
+                Q(administration__path__startswith=admin_subtree_path)
+            )
+        queryset = queryset.filter(approval_filter)
         # Apply search filter (search in name or parent's name for monitoring)
         if search:
             queryset = queryset.filter(
