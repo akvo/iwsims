@@ -617,6 +617,27 @@ class CreateBatchSerializer(serializers.Serializer):
             is_pending=True
         )
 
+    @staticmethod
+    def _user_has_approval_scope(user, administration):
+        """True if user has an approve role covering administration."""
+        approval_roles = user.user_user_role.filter(
+            role__role_role_access__data_access=DataAccessTypes.approve
+        )
+        for role in approval_roles:
+            approver_adm = role.administration
+            if approver_adm.pk == administration.pk:
+                return True
+            subtree_path = (
+                f"{approver_adm.path}{approver_adm.pk}."
+                if approver_adm.path else f"{approver_adm.pk}."
+            )
+            if (
+                administration.path and
+                administration.path.startswith(subtree_path)
+            ):
+                return True
+        return False
+
     def validate_name(self, name):
         if DataBatch.objects.filter(name__iexact=name).exists():
             raise ValidationError("name has already been taken")
@@ -625,6 +646,7 @@ class CreateBatchSerializer(serializers.Serializer):
     def validate_data(self, data):
         if len(data) == 0:
             raise ValidationError("No data found for this batch")
+        user = self.context.get("user")
         for item in data:
             # Check if the data item has approval
             if not item.has_approval:
@@ -636,8 +658,14 @@ class CreateBatchSerializer(serializers.Serializer):
                 raise ValidationError(
                     "One or more data items are not pending."
                 )
-            # Check if the data item was created by the user
-            if item.created_by != self.context.get("user"):
+            # Creator can always batch own data;
+            # approvers can batch data within their scope.
+            if (
+                item.created_by != user and
+                not self._user_has_approval_scope(
+                    user, item.administration
+                )
+            ):
                 raise ValidationError(
                     "One or more data items were not submitted by the user."
                 )
@@ -708,7 +736,10 @@ class CreateBatchSerializer(serializers.Serializer):
                 first_data.administration.id
             ]
         user_role = user.user_user_role.filter(
-            role__role_role_access__data_access=DataAccessTypes.submit,
+            role__role_role_access__data_access__in=[
+                DataAccessTypes.submit,
+                DataAccessTypes.approve,
+            ],
             administration__in=adm_ids
         ).order_by(
             "administration__level__level"
