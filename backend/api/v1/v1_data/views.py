@@ -930,11 +930,24 @@ class DraftFormDataListView(APIView):
             )
         page = serializer.validated_data.get("page", 1)
 
-        # Filter draft data for this form and user
+        # Filter draft data: own drafts plus all drafts within the user's
+        # submit-role administration scope (same admin or descendant).
+        draft_filter = Q(created_by=request.user)
+        submit_roles = request.user.user_user_role.filter(
+            role__role_role_access__data_access=DataAccessTypes.submit
+        )
+        for role in submit_roles:
+            admin = role.administration
+            admin_subtree_path = (
+                f"{admin.path}{admin.pk}." if admin.path else f"{admin.pk}."
+            )
+            draft_filter |= (
+                Q(administration_id=admin.pk) |
+                Q(administration__path__startswith=admin_subtree_path)
+            )
         queryset = FormData.objects_draft.filter(
             form=form,
-            created_by=request.user
-        ).annotate(total_children=Count(
+        ).filter(draft_filter).annotate(total_children=Count(
             'children',
             filter=Q(children__is_pending=False, children__is_draft=False)
         )).order_by("-created")
