@@ -11,6 +11,7 @@ import {
   Space,
   Select,
   Modal,
+  Tooltip,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -294,12 +295,19 @@ const ManageDraft = () => {
               <Table
                 columns={[
                   {
-                    title: "Last Updated",
+                    title: text.lastUpdatedCol,
                     dataIndex: "updated",
-                    render: (cell, row) => cell || row.created,
+                    render: (cell, row) => (
+                      <Tooltip
+                        placement="top"
+                        title={row?.updated_by || row?.created_by || ""}
+                      >
+                        <span>{cell || row.created}</span>
+                      </Tooltip>
+                    ),
                   },
                   {
-                    title: "Name",
+                    title: text.nameCol,
                     dataIndex: "name",
                     key: "name",
                     filtered: true,
@@ -308,8 +316,13 @@ const ManageDraft = () => {
                       filters.name.toLowerCase().includes(value.toLowerCase()),
                   },
                   {
-                    title: "Region",
+                    title: text.regionCol,
                     dataIndex: "administration",
+                  },
+                  {
+                    title: text.createdByCol,
+                    dataIndex: "created_by",
+                    render: (submitter) => submitter || "-",
                   },
                   Table.EXPAND_COLUMN,
                 ]}

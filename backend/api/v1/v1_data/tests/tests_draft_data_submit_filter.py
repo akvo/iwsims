@@ -64,6 +64,7 @@ class DraftDataSubmitFilterTestCase(TestCase, ProfileTestHelperMixin):
             "Need a level-2 admin with level-3 children"
         )
         self.level1_adm = self.level2_adm.parent
+        self.root_adm = self.level1_adm.parent
         self.level3_adm = (
             Administration.objects
             .filter(level__level=3, parent=self.level2_adm)
@@ -219,4 +220,45 @@ class DraftDataSubmitFilterTestCase(TestCase, ProfileTestHelperMixin):
         self.assertIn(
             own_draft.id, ids,
             "Supervisor should always see drafts they created"
+        )
+
+    # --- Scenario 7: Draft at ancestor admin visible via creator's role ---
+
+    def test_creator_sees_own_root_admin_draft(self):
+        root_draft = _draft(
+            self.form, self.submitter, self.root_adm,
+            "Root-level draft by submitter"
+        )
+        ids = self._get_ids(self.submitter_token)
+        self.assertIn(
+            root_draft.id, ids,
+            "Creator should always see their own drafts"
+        )
+
+    # --- Scenario 8: Supervisor sees root-level draft via creator's role ---
+
+    def test_supervisor_sees_root_draft_from_in_scope_creator(self):
+        root_draft = _draft(
+            self.form, self.submitter, self.root_adm,
+            "Root-level draft by in-scope submitter"
+        )
+        ids = self._get_ids(self.supervisor_token)
+        self.assertIn(
+            root_draft.id, ids,
+            "Supervisor should see root-level draft from creator within scope"
+        )
+
+    # --- Scenario 9: Root-level draft not visible via out-of-scope creator ---
+
+    def test_supervisor_does_not_see_root_draft_from_out_of_scope_creator(
+        self,
+    ):
+        root_draft = _draft(
+            self.form, self.sibling_submitter, self.root_adm,
+            "Root-level draft by out-of-scope submitter"
+        )
+        ids = self._get_ids(self.supervisor_token)
+        self.assertNotIn(
+            root_draft.id, ids,
+            "Supervisor should NOT see root draft from out-of-scope creator"
         )

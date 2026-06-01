@@ -18,6 +18,7 @@ from api.v1.v1_forms.models import (
     Questions,
 )
 from api.v1.v1_profile.models import Administration, EntityData
+from api.v1.v1_profile.constants import DataAccessTypes
 from api.v1.v1_users.models import Organisation
 from utils.custom_serializer_fields import (
     CustomPrimaryKeyRelatedField,
@@ -391,6 +392,19 @@ class ListFormDataSerializer(serializers.ModelSerializer):
     administration = serializers.SerializerMethodField()
     pending_data = serializers.SerializerMethodField()
     total_children = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_can_delete(self, instance: FormData):
+        request = self.context.get("request")
+        if not request:
+            return False
+        user = request.user
+        if user.is_superuser or instance.created_by_id == user.id:
+            return True
+        return user.user_user_role.filter(
+            role__role_role_access__data_access=DataAccessTypes.delete
+        ).exists()
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_created_by(self, instance: FormData):
@@ -468,6 +482,7 @@ class ListFormDataSerializer(serializers.ModelSerializer):
             "pending_data",
             "submitter",
             "total_children",
+            "can_delete",
         ]
 
 
