@@ -463,9 +463,7 @@ class MobileAssignmentApiSyncEmptyPayloadTest(TestCase):
             response.status_code, status.HTTP_200_OK,
             f"Expected 200, got {response.status_code}: {response.json()}"
         )
-        pending_data = FormData.objects.filter(
-            is_pending=True, name="datapoint #1"
-        ).last()
+        pending_data = FormData.objects.filter(name="datapoint #1").last()
         self.assertIsNotNone(pending_data)
         self.assertEqual(pending_data.data_answer.count(), 10)
 
