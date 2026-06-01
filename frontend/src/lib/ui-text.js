@@ -896,6 +896,7 @@ const uiText = {
     channelCol: "Channel",
     userCol: "User",
     regionCol: "Region",
+    createdByCol: "Created By",
     mobileAppText: "Mobile App",
     webformText: "Webform",
     manageRoles: "Manage Roles",

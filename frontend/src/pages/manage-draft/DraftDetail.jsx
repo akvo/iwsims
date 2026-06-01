@@ -148,14 +148,16 @@ const DraftDetail = ({
 
       <div className="data-detail-actions">
         <Space>
-          <Button
-            type="danger"
-            shape="round"
-            onClick={() => onDelete(record, setDeleting)}
-            loading={deleting}
-          >
-            {text.deleteText}
-          </Button>
+          {record?.can_delete && (
+            <Button
+              type="danger"
+              shape="round"
+              onClick={() => onDelete(record, setDeleting)}
+              loading={deleting}
+            >
+              {text.deleteText}
+            </Button>
+          )}
           <Button
             type="primary"
             shape="round"

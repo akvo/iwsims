@@ -151,6 +151,7 @@ Object {
     "controlCenter": "Control Center",
     "createDraftMonitoring": "Create Draft Monitoring Data",
     "createNewBatch": "Create a new batch",
+    "createdByCol": "Created By",
     "dashboards": "Dashboards",
     "dataAdministrationDownloadText": <React.Fragment>
       This is where you :
