@@ -1,27 +1,42 @@
 [
   {
     "id": 1,
-    "url": "/assets/photos/1_office-briefing-digital-coordination.png",
-    "caption": "Team members gather indoors to review operations and coordinate tasks using digital tools."
+    "url": "/assets/photos/dws-image-from-field-1.jpg",
+    "caption": "Getting hands-on before heading out — field officers try the app together at the office before their first site visit."
   },
   {
     "id": 2,
-    "url": "/assets/photos/2_field-data-collection-at-site-facility.png",
-    "caption": "Staff conduct on-site inspections and record operational data using tablets outdoors."
+    "url": "/assets/photos/dws-image-from-field-2.jpg",
+    "caption": "Learning the system as a team — everyone working through the platform together, questions and all."
   },
   {
     "id": 3,
-    "url": "/assets/photos/3_project-review-system-presentation.png",
-    "caption": "A collaborative meeting session focused on reviewing submissions and monitoring project progress."
+    "url": "/assets/photos/dws-image-from-field-3.jpg",
+    "caption": "Pointing out what needs attention — a site walk is where the real picture starts to come together."
   },
   {
     "id": 4,
-    "url": "/assets/photos/4_mobile-app-training-team-assistance.png",
-    "caption": "Colleagues receive hands-on guidance while learning to use a mobile reporting application."
+    "url": "/assets/photos/dws-image-from-field-4.jpg",
+    "caption": "The whole team in the field, each capturing what they see — data collection doesn't happen behind a desk."
   },
   {
     "id": 5,
-    "url": "/assets/photos/5_on-site-monitoring-real-time-reporting.png",
-    "caption": "Field officers verify facility conditions and submit reports directly from the inspection area."
+    "url": "/assets/photos/dws-image-from-field-5.jpg",
+    "caption": "Comparing notes right at the treatment plant — the work doesn't stop at the edge of the water."
+  },
+  {
+    "id": 6,
+    "url": "/assets/photos/dws-image-from-field-6.jpg",
+    "caption": "Every detail captured on the spot — filling in the inspection form right where the answers are."
+  },
+  {
+    "id": 7,
+    "url": "/assets/photos/dws-image-from-field-7.jpg",
+    "caption": "Office and field, side by side — checking what's come in on the system while keeping the tablet close."
+  },
+  {
+    "id": 8,
+    "url": "/assets/photos/dws-image-from-field-8.jpg",
+    "caption": "The people making it happen — the DWS team at the start of something worth building together."
   }
 ]
