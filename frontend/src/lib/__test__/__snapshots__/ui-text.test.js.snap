@@ -543,6 +543,7 @@ Object {
     "isSuperAdminLabel": "Is Superadmin?",
     "lastLoginLabel": "Last login",
     "lastResponseCol": "Last Response",
+    "lastUpdatedByCol": "Last Updated By",
     "lastUpdatedCol": "Last Updated",
     "latestData": "Latest Data",
     "latestUpdateText": "Latest Updates",

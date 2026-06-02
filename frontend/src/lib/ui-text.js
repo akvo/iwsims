@@ -890,6 +890,7 @@ const uiText = {
     selectFormPlaceholder: "Select Form",
     selectIndicatorPlaceholder: "Select Indicator",
     lastUpdatedCol: "Last Updated",
+    lastUpdatedByCol: "Last Updated By",
     recentActivityCol: "Recent Activity",
     initialRegistration: "Initial Registration",
     nameCol: "Name",

@@ -148,7 +148,9 @@ const CreateBatchModal = ({
                 type="primary"
                 shape="round"
                 onClick={sendBatch}
-                disabled={!batchName?.trim()?.length}
+                disabled={
+                  !batchName?.trim()?.length || !comment?.trim()?.length
+                }
                 loading={loading}
               >
                 {text.createNewBatch}

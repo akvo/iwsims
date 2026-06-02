@@ -11,7 +11,6 @@ import {
   Space,
   Select,
   Modal,
-  Tooltip,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -297,13 +296,13 @@ const ManageDraft = () => {
                   {
                     title: text.lastUpdatedCol,
                     dataIndex: "updated",
+                    render: (cell, row) => <span>{cell || row.created}</span>,
+                  },
+                  {
+                    title: text.lastUpdatedByCol,
+                    dataIndex: "updated_by",
                     render: (cell, row) => (
-                      <Tooltip
-                        placement="top"
-                        title={row?.updated_by || row?.created_by || ""}
-                      >
-                        <span>{cell || row.created}</span>
-                      </Tooltip>
+                      <span>{cell || row.created_by || "-"}</span>
                     ),
                   },
                   {
