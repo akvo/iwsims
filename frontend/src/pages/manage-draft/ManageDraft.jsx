@@ -294,12 +294,19 @@ const ManageDraft = () => {
               <Table
                 columns={[
                   {
-                    title: "Last Updated",
+                    title: text.lastUpdatedCol,
                     dataIndex: "updated",
-                    render: (cell, row) => cell || row.created,
+                    render: (cell, row) => <span>{cell || row.created}</span>,
                   },
                   {
-                    title: "Name",
+                    title: text.lastUpdatedByCol,
+                    dataIndex: "updated_by",
+                    render: (cell, row) => (
+                      <span>{cell || row.created_by || "-"}</span>
+                    ),
+                  },
+                  {
+                    title: text.nameCol,
                     dataIndex: "name",
                     key: "name",
                     filtered: true,
@@ -308,8 +315,13 @@ const ManageDraft = () => {
                       filters.name.toLowerCase().includes(value.toLowerCase()),
                   },
                   {
-                    title: "Region",
+                    title: text.regionCol,
                     dataIndex: "administration",
+                  },
+                  {
+                    title: text.createdByCol,
+                    dataIndex: "created_by",
+                    render: (submitter) => submitter || "-",
                   },
                   Table.EXPAND_COLUMN,
                 ]}

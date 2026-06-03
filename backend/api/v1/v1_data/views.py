@@ -228,6 +228,7 @@ class FormDataAddListView(APIView):
                 "data": ListFormDataSerializer(
                     instance=instance,
                     many=True,
+                    context={"request": request},
                 ).data,
             }
             return Response(data, status=status.HTTP_200_OK)
@@ -703,11 +704,27 @@ class PendingFormDataView(APIView):
         # Query for pending form data across parent and child forms
         queryset = FormData.objects.filter(
             form_id__in=form_ids,
-            created_by=request.user,
             data_batch_list__isnull=True,
             is_pending=True,
             is_draft=False,
         )
+        # Filter by created_by current user, or by approval role:
+        # approvers see data at their own administration and all
+        # descendant administrations.
+        approval_filter = Q(created_by=request.user)
+        approval_roles = request.user.user_user_role.filter(
+            role__role_role_access__data_access=DataAccessTypes.approve
+        )
+        for role in approval_roles:
+            admin = role.administration
+            admin_subtree_path = (
+                f"{admin.path}{admin.pk}." if admin.path else f"{admin.pk}."
+            )
+            approval_filter |= (
+                Q(administration_id=admin.pk) |
+                Q(administration__path__startswith=admin_subtree_path)
+            )
+        queryset = queryset.filter(approval_filter)
         # Apply search filter (search in name or parent's name for monitoring)
         if search:
             queryset = queryset.filter(
@@ -859,6 +876,46 @@ class PendingFormDataView(APIView):
         )
 
 
+def _build_draft_scope_filter(user, access_type=None):
+    """
+    Return a Q object for draft FormData accessible to user for the given
+    access_type (DataAccessTypes.submit, .delete, etc.).
+
+    Matches:
+    - own drafts (created_by = user)
+    - drafts whose administration is within the user's scope subtree
+    - drafts from creators whose role administration is within scope
+    """
+    if access_type is None:
+        access_type = DataAccessTypes.submit
+    draft_filter = Q(created_by=user)
+    roles = user.user_user_role.filter(
+        role__role_role_access__data_access=access_type
+    )
+    scope_admin_pks = set()
+    for role in roles:
+        admin = role.administration
+        admin_subtree_path = (
+            f"{admin.path}{admin.pk}." if admin.path else f"{admin.pk}."
+        )
+        draft_filter |= (
+            Q(administration_id=admin.pk) |
+            Q(administration__path__startswith=admin_subtree_path)
+        )
+        scope_admin_pks.update(
+            Administration.objects.filter(
+                Q(pk=admin.pk) |
+                Q(path__startswith=admin_subtree_path)
+            ).values_list("pk", flat=True)
+        )
+    if scope_admin_pks:
+        creator_scope_lookup = (
+            "created_by__user_user_role__administration__pk__in"
+        )
+        draft_filter |= Q(**{creator_scope_lookup: scope_admin_pks})
+    return draft_filter
+
+
 class DraftFormDataListView(APIView):
     permission_classes = [IsAuthenticated, IsSubmitter]
 
@@ -914,11 +971,10 @@ class DraftFormDataListView(APIView):
             )
         page = serializer.validated_data.get("page", 1)
 
-        # Filter draft data for this form and user
+        draft_filter = _build_draft_scope_filter(request.user)
         queryset = FormData.objects_draft.filter(
             form=form,
-            created_by=request.user
-        ).annotate(total_children=Count(
+        ).filter(draft_filter).distinct().annotate(total_children=Count(
             'children',
             filter=Q(children__is_pending=False, children__is_draft=False)
         )).order_by("-created")
@@ -935,7 +991,8 @@ class DraftFormDataListView(APIView):
             adm_path = adm.path if adm.path else f"{adm.pk}."
             queryset = queryset.filter(
                 Q(administration__path__startswith=adm_path) |
-                Q(administration=adm)
+                Q(administration=adm) |
+                Q(administration__isnull=True)
             )
 
         paginator = PageNumberPagination()
@@ -946,7 +1003,9 @@ class DraftFormDataListView(APIView):
             "total": queryset.count(),
             "total_page": ceil(queryset.count() / page_size),
             "data": ListFormDataSerializer(
-                instance=instance, many=True
+                instance=instance,
+                many=True,
+                context={"request": request},
             ).data,
         }
         return Response(data, status=status.HTTP_200_OK)
@@ -992,14 +1051,11 @@ class DraftFormDataDetailView(APIView):
         summary="Get draft form data by ID",
     )
     def get(self, request, data_id, version):
+        draft_filter = _build_draft_scope_filter(request.user)
         draft_data = get_object_or_404(
-            FormData, pk=data_id, is_draft=True
+            FormData.objects_draft.filter(draft_filter).distinct(),
+            pk=data_id,
         )
-        if draft_data.created_by_id != request.user.id:
-            return Response(
-                {"message": "You are not allowed to perform this action"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         return Response(
             FormDataSerializer(
                 instance=draft_data,
@@ -1015,14 +1071,11 @@ class DraftFormDataDetailView(APIView):
         summary="Edit draft form data",
     )
     def put(self, request, data_id, version):
+        draft_filter = _build_draft_scope_filter(request.user)
         draft_data = get_object_or_404(
-            FormData, pk=data_id, is_draft=True
+            FormData.objects_draft.filter(draft_filter).distinct(),
+            pk=data_id,
         )
-        if draft_data.created_by_id != request.user.id:
-            return Response(
-                {"message": "You are not allowed to perform this action"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
         serializer = SubmitUpdateDraftFormSerializer(
             instance=draft_data,
@@ -1052,16 +1105,21 @@ class DraftFormDataDetailView(APIView):
         summary="Delete draft form data",
     )
     def delete(self, request, data_id, version):
-        draft_data = get_object_or_404(
-            FormData, pk=data_id, is_draft=True
+        delete_filter = _build_draft_scope_filter(
+            request.user, DataAccessTypes.delete
         )
-        if draft_data.created_by_id != request.user.id:
+        draft_data = get_object_or_404(FormData, pk=data_id, is_draft=True)
+        if not FormData.objects_draft.filter(
+            delete_filter, pk=data_id
+        ).distinct().exists():
             return Response(
-                {"detail": "You do not have permission to perform this action."},  # noqa: E501
+                {
+                    "detail": (
+                        "You do not have permission to perform this action."
+                    )
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
-
-        # Hard delete the draft data
         draft_data.hard_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

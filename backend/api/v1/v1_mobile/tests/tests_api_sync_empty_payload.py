@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from api.v1.v1_profile.models import Levels
 from api.v1.v1_forms.models import Forms
 from api.v1.v1_users.models import SystemUser
@@ -8,6 +8,7 @@ from rest_framework import status
 from utils.custom_helper import CustomPasscode
 
 
+@override_settings(USE_TZ=False)
 class MobileAssignmentApiSyncEmptyPayloadTest(TestCase):
     def setUp(self):
         call_command("administration_seeder", "--test")
@@ -19,7 +20,7 @@ class MobileAssignmentApiSyncEmptyPayloadTest(TestCase):
         self.form = Forms.objects.get(pk=1)
         user = SystemUser.objects.filter(
             user_user_role__administration__level=adm_level,
-        ).first()
+        ).order_by("id").first()
 
         # Create a mobile assignment for the user
         mobile_user = user.mobile_assignments.create(
@@ -28,7 +29,7 @@ class MobileAssignmentApiSyncEmptyPayloadTest(TestCase):
         )
         # Assign administration to the mobile assignment
         mobile_user.administrations.add(
-            user.user_user_role.order_by("?").first().administration
+            user.user_user_role.order_by("id").first().administration
         )
         # Assign form to the mobile assignment
         mobile_user.forms.add(self.form)
@@ -458,9 +459,12 @@ class MobileAssignmentApiSyncEmptyPayloadTest(TestCase):
             content_type="application/json",
             **{"HTTP_AUTHORIZATION": f"Bearer {self.token}"},
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        pending_data = FormData.objects.last()
-        self.assertTrue(pending_data.id)
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK,
+            f"Expected 200, got {response.status_code}: {response.json()}"
+        )
+        pending_data = FormData.objects.filter(name="datapoint #1").last()
+        self.assertIsNotNone(pending_data)
         self.assertEqual(pending_data.data_answer.count(), 10)
 
         a_101 = pending_data.data_answer.filter(

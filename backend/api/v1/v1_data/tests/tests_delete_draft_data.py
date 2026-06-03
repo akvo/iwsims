@@ -64,10 +64,11 @@ class DeleteDraftFormDataTestCase(TestCase, ProfileTestHelperMixin):
         self.assertEqual(response.status_code, 401)
 
     def test_delete_draft_form_data_forbidden(self):
-        # Create a different user and try to delete the data
+        # A user without delete access (Approver role) cannot delete
+        # others' drafts even at the same administration.
         other_user = self.create_user(
             email="other.123@test.com",
-            role_level=self.IS_ADMIN,
+            role_level=self.IS_APPROVER,
             administration=self.administration,
             form=self.form,
         )

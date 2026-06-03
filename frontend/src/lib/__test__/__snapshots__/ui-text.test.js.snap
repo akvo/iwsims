@@ -151,6 +151,7 @@ Object {
     "controlCenter": "Control Center",
     "createDraftMonitoring": "Create Draft Monitoring Data",
     "createNewBatch": "Create a new batch",
+    "createdByCol": "Created By",
     "dashboards": "Dashboards",
     "dataAdministrationDownloadText": <React.Fragment>
       This is where you :
@@ -542,6 +543,7 @@ Object {
     "isSuperAdminLabel": "Is Superadmin?",
     "lastLoginLabel": "Last login",
     "lastResponseCol": "Last Response",
+    "lastUpdatedByCol": "Last Updated By",
     "lastUpdatedCol": "Last Updated",
     "latestData": "Latest Data",
     "latestUpdateText": "Latest Updates",
