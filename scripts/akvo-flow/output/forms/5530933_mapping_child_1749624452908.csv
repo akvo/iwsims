@@ -7,17 +7,17 @@ Signature of Officer",1749631698734,100.0,high,text_similarity,12003
 5530933,Location of Village,Are you able to capture the locality Plan?,1035730921,,,,,73.47,none,none,
 5530933,Location of Village,Locality Plan,1550935,,,,,60.87,none,none,
 5530933,Location of Village,Are you able to take the water sample,398350953,1749624452908,Project Info,"Project Info |
-Are you able to take a sample?",1749630785254,82.35,low,text_similarity,1006
+Are you able to take a sample?",1749630785254,82.35,low,text_similarity,1009
 5530933,Location of Village,Water test conducted?,4420940,1749624452908,Project Info,"Project Info |
-Water test conducted?",1749630785253,100.0,high,text_similarity,1008
+Water test conducted?",1749630785253,100.0,high,text_similarity,1011
 5530933,Location of Village,WSMP Submitted?,4460920,,,,,52.17,none,none,
 5530933,Location of Village,GPS Location,480936,,,,,63.16,none,none,
 5530933,Location of Village,Level of contamination of H2S Results?,6510931,,,,,79.37,none,none,
-5530933,Location of Village,Village Name,8510923,,,,,50.0,none,none,
+5530933,Location of Village,Village Name,8510923,,,,,75.0,none,none,
 5530933,Location of Village,Project Background,9510938,,,,,76.19,none,none,
 5530933,Location of Village,Which Division-Province-Tikina,9530926,,,,,51.85,none,none,
 5530933,Project Photos,Take Photo,2490943,1749624452908,Project Info,"Project Info |
-Take photo of the sampling point",1749630785257,100.0,high,text_similarity,1007
+Take photo of the sampling point",1749630785257,100.0,high,text_similarity,1010
 5530933,Project Photos,Comment on Photo taken,6620936,1749624452908,Project Photos,"Project Photos |
 Comment on Photo Taken",1749631662652,100.0,high,text_similarity,11002
 5530933,Project Scope,Media Placing,2490941,,,,,61.54,none,none,
