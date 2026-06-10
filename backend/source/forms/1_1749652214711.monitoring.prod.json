@@ -17,10 +17,19 @@
       "repeatable": false,
       "questions": [
         {
+          "id": 1900000000101,
+          "name": "date_of_inspection",
+          "label": "Date of inspection?",
+          "order": 1,
+          "type": "date",
+          "required": true,
+          "meta": true
+        },
+        {
           "id": 1749652214713,
           "name": "contact_person_name",
           "label": "Name of Contact Person",
-          "order": 1,
+          "order": 2,
           "type": "input",
           "required": true,
           "meta": false
@@ -29,7 +38,7 @@
           "id": 1749652384103,
           "name": "contact_person_number",
           "label": "Contact number for contact person",
-          "order": 2,
+          "order": 3,
           "type": "input",
           "required": true,
           "meta": false
@@ -38,7 +47,7 @@
           "id": 1749652417794,
           "name": "daily_production_megalitres",
           "label": "What is the average daily production of the plant in megalitres?",
-          "order": 3,
+          "order": 4,
           "type": "number",
           "required": true,
           "meta": false,
@@ -48,7 +57,7 @@
           "id": 1749635348201,
           "name": "has_dwsp",
           "label": "Do you have Drinking Water Safety Plan (DWSP) for the Treatment Plant?",
-          "order": 4,
+          "order": 5,
           "type": "option",
           "required": true,
           "meta": false,
@@ -73,7 +82,7 @@
           "id": 1749652517417,
           "name": "has_sop",
           "label": "Do you have the relevant Standard Operating Procedures(SOPs) for the treatment plant?",
-          "order": 5,
+          "order": 6,
           "type": "option",
           "required": true,
           "meta": false,
@@ -99,7 +108,7 @@
           "id": 1749652562185,
           "name": "sops_available",
           "label": "Which SOPs do you have?",
-          "order": 6,
+          "order": 7,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -195,7 +204,7 @@
           "id": 1749652830341,
           "name": "other_sop",
           "label": "Please specify other SOPs",
-          "order": 7,
+          "order": 8,
           "type": "text",
           "required": true,
           "meta": false,
@@ -4693,11 +4702,45 @@
       "repeat_text": null
     },
     {
+      "id": 1900000000110,
+      "name": "photos_of_inspection",
+      "label": "Photos of Inspection",
+      "description": null,
+      "order": 11,
+      "repeatable": true,
+      "questions": [
+        {
+          "id": 1900000000111,
+          "name": "inspection_photo",
+          "label": "Take Photo",
+          "order": 1,
+          "type": "photo",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "dependency": null,
+          "limit": 5.0
+        },
+        {
+          "id": 1900000000112,
+          "name": "inspection_photo_comment",
+          "label": "Comment on Photo Taken",
+          "order": 2,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "dependency": null
+        }
+      ],
+      "repeat_text": "Add another"
+    },
+    {
       "id": 1749700156601,
       "name": "constraints_and_recommendation",
       "label": "Constraints and Recommendation",
       "description": null,
-      "order": 11,
+      "order": 12,
       "repeatable": false,
       "questions": [
         {

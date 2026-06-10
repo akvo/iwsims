@@ -29,7 +29,7 @@
           "id": 1749622695675,
           "name": "proposed_completion_date",
           "label": "Proposed Completion Date?",
-          "order": 2,
+          "order": 4,
           "type": "date",
           "required": true,
           "meta": false
@@ -38,7 +38,7 @@
           "id": 1749622774567,
           "name": "weather_condition",
           "label": "Weather Condition",
-          "order": 3,
+          "order": 5,
           "type": "option",
           "required": true,
           "meta": false,
@@ -70,7 +70,7 @@
           "id": 1749622785185,
           "name": "can_take_sample",
           "label": "Are you able to take the sample?",
-          "order": 4,
+          "order": 6,
           "type": "option",
           "required": true,
           "meta": false,
@@ -95,7 +95,7 @@
           "id": 1849622785200,
           "name": "sampling_point_photo",
           "label": "Take photo of sampling point",
-          "order": 5,
+          "order": 7,
           "type": "photo",
           "required": true,
           "meta": false,
@@ -110,7 +110,7 @@
           "id": 1749622849604,
           "name": "water_test_type",
           "label": "Water Quality Test Conducted",
-          "order": 6,
+          "order": 9,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -141,7 +141,7 @@
           "id": 1749621050010,
           "name": "parameters_tested",
           "label": "Which parameters were you able to test?",
-          "order": 7,
+          "order": 10,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -214,7 +214,7 @@
           "id": 1749622982588,
           "name": "cbt_ecoli",
           "label": "E.coli Level using CBT?",
-          "order": 8,
+          "order": 11,
           "type": "number",
           "required": true,
           "meta": false,
@@ -232,7 +232,7 @@
           "id": 1849622785201,
           "name": "e_coli_risk_level_cbt",
           "label": "What is the risk level of E.Coli (using CBT)?",
-          "order": 9,
+          "order": 12,
           "type": "option",
           "required": true,
           "meta": false,
@@ -277,7 +277,7 @@
           "id": 1749623001234,
           "name": "cbt_photo",
           "label": "Take photo of CBT Bag",
-          "order": 10,
+          "order": 13,
           "type": "photo",
           "required": true,
           "meta": false,
@@ -292,7 +292,7 @@
           "id": 1749622991234,
           "name": "lab_ecoli",
           "label": "E.coli Level using Lab Test?",
-          "order": 11,
+          "order": 14,
           "type": "number",
           "required": true,
           "meta": false,
@@ -310,7 +310,7 @@
           "id": 1749623024122,
           "name": "total_coliform_count",
           "label": "What is the Total Coliform count?",
-          "order": 12,
+          "order": 15,
           "type": "number",
           "required": true,
           "meta": false,
@@ -328,7 +328,7 @@
           "id": 1749623074194,
           "name": "fecal_coliform_count",
           "label": "What is the Fecal Coliform Count?",
-          "order": 13,
+          "order": 16,
           "type": "number",
           "required": true,
           "meta": false,
@@ -346,7 +346,7 @@
           "id": 1749623109418,
           "name": "turbidity_ntu",
           "label": "What is the Turbidity in NTU?",
-          "order": 14,
+          "order": 17,
           "type": "number",
           "required": true,
           "meta": false,
@@ -364,7 +364,7 @@
           "id": 1723459200023,
           "name": "temperature_c",
           "label": "Temperature \u00b0C - 2550B (APHA Method Code)",
-          "order": 15,
+          "order": 18,
           "type": "number",
           "required": true,
           "meta": false,
@@ -382,7 +382,7 @@
           "id": 1723459200024,
           "name": "ph",
           "label": "pH - 4500-H+B (APHA Method Code)",
-          "order": 16,
+          "order": 19,
           "type": "number",
           "required": true,
           "meta": false,
@@ -402,7 +402,7 @@
           "id": 1723459200025,
           "name": "physical_analysis_conductivity",
           "label": "Conductivity \u00b5S/cm - 2510B (APHA Method Code)",
-          "order": 17,
+          "order": 20,
           "type": "number",
           "required": true,
           "meta": false,
@@ -420,7 +420,7 @@
           "id": 1723459200026,
           "name": "salinity",
           "label": "Salinity PPT 2520B 0.2 (APHA Method Code)",
-          "order": 18,
+          "order": 21,
           "type": "number",
           "required": true,
           "meta": false,
@@ -438,7 +438,7 @@
           "id": 1749621374500,
           "name": "water_source_type",
           "label": "Type of Water Source?",
-          "order": 19,
+          "order": 22,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -491,7 +491,7 @@
           "id": 1749621851234,
           "name": "type_of_project",
           "label": "Type of Project?",
-          "order": 20,
+          "order": 23,
           "type": "option",
           "required": true,
           "meta": false,
@@ -530,7 +530,7 @@
           "id": 1749622726348,
           "name": "accessible_surface_water_construction_site",
           "label": "Which part of the Surface Water Project construction sites you can visit?",
-          "order": 21,
+          "order": 24,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -596,7 +596,7 @@
           "id": 1749622726349,
           "name": "accessible_borehole_construction_site",
           "label": "Which part of the Borehole construction sites you can visit?",
-          "order": 22,
+          "order": 25,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -669,7 +669,7 @@
           "id": 1749622726350,
           "name": "accessible_desalination_construction_site",
           "label": "Which part of the Desalination construction sites you can visit?",
-          "order": 23,
+          "order": 26,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -742,7 +742,7 @@
           "id": 1749622726351,
           "name": "accessible_rainwater_harvesting_construction_site",
           "label": "Which part of the Rainwater Harvesting construction sites you can visit?",
-          "order": 24,
+          "order": 27,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -782,6 +782,88 @@
               "options": ["rainwater_harvesting"]
             }
           ]
+        },
+        {
+          "id": 1900000000301,
+          "name": "contact_person_name",
+          "label": "Name of Contact Person",
+          "order": 2,
+          "type": "input",
+          "required": true,
+          "meta": false,
+          "options": null
+        },
+        {
+          "id": 1900000000302,
+          "name": "contact_person_phone",
+          "label": "Phone number of Contact Person",
+          "order": 3,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "rule": null
+        },
+        {
+          "id": 1900000000303,
+          "name": "water_committee_training",
+          "label": "Did the Implementers conduct Water Committee Training after the project?",
+          "order": 28,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1900000000304,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1900000000305,
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 1900000000306,
+          "name": "toolkits_provided",
+          "label": "Was there any toolkits provided by the Implementing Agency?",
+          "order": 29,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1900000000307,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1900000000308,
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 1900000000309,
+          "name": "sampling_point_desc",
+          "label": "Description of sampling point",
+          "order": 8,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "dependency": [{ "id": 1749622785185, "options": ["yes"] }]
         }
       ],
       "repeat_text": null
@@ -3853,7 +3935,7 @@
           ]
         },
         {
-          "id": 1849622785210,
+          "id": 1900000000329,
           "name": "reticulation air_valve_total_count",
           "label": "Total Number of Air Valves to be Installed",
           "order": 10,
@@ -5989,18 +6071,110 @@
       ]
     },
     {
+      "id": 1900000000310,
+      "name": "inspection_photos",
+      "label": "Inspection Photos",
+      "description": null,
+      "order": 26,
+      "repeatable": true,
+      "questions": [
+        {
+          "id": 1900000000311,
+          "name": "infrastructure_photo",
+          "label": "Take a photo",
+          "order": 1,
+          "type": "photo",
+          "required": true,
+          "meta": false,
+          "options": null
+        },
+        {
+          "id": 1900000000312,
+          "name": "photo_description",
+          "label": "Description of the photo",
+          "order": 2,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "options": null
+        }
+      ],
+      "repeat_text": "Add another"
+    },
+    {
       "id": 1749623648242,
       "name": "final_comments",
       "label": "Final Comments",
       "description": null,
-      "order": 26,
+      "order": 27,
       "repeatable": false,
       "questions": [
+        {
+          "id": 1900000000320,
+          "name": "infrastructure_status",
+          "label": "Status of Infrastructure for this project?",
+          "order": 1,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "operational",
+              "label": "Operational",
+              "id": 1900000000321,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "non_operational",
+              "label": "Non-Operational",
+              "id": 1900000000322,
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 1900000000323,
+          "name": "major_issues",
+          "label": "Are there any major issues that need to be discussed with the Implementer?",
+          "order": 2,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "id": 1900000000324,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "id": 1900000000325,
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 1900000000326,
+          "name": "issue_list",
+          "label": "List down the major issues",
+          "order": 3,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "dependency": [{ "id": 1900000000323, "options": ["yes"] }]
+        },
         {
           "id": 1749623648243,
           "name": "final_comments",
           "label": "Final Comments and Recommendations",
-          "order": 1,
+          "order": 4,
           "type": "text",
           "required": true,
           "meta": false
@@ -6009,7 +6183,7 @@
           "id": 1749623661234,
           "name": "improvement_action",
           "label": "Is there any improvement action to be taken by the implementing agency from the last inspection?",
-          "order": 2,
+          "order": 5,
           "type": "option",
           "required": true,
           "meta": false,
@@ -6034,7 +6208,7 @@
           "id": 1749623674044,
           "name": "improvement_action_details",
           "label": "What are some required actions?",
-          "order": 3,
+          "order": 6,
           "type": "text",
           "required": true,
           "meta": false,
@@ -6049,7 +6223,7 @@
           "id": 1849622785212,
           "name": "project_completion_percentage",
           "label": "What percentage of project is complete?",
-          "order": 4,
+          "order": 7,
           "type": "number",
           "required": true,
           "meta": false,
@@ -6060,10 +6234,30 @@
           }
         },
         {
+          "id": 1900000000327,
+          "name": "final_signature",
+          "label": "Signature of TNK/Water Committee/Contact Person",
+          "order": 8,
+          "type": "signature",
+          "required": true,
+          "meta": false,
+          "options": null
+        },
+        {
+          "id": 1900000000328,
+          "name": "final_name",
+          "label": "Name of TNK/Water Committee/Contact Person",
+          "order": 9,
+          "type": "input",
+          "required": true,
+          "meta": false,
+          "options": null
+        },
+        {
           "id": 1749623674045,
           "name": "implementing_agency_signature",
           "label": "Signature of Implementing Agency Representative",
-          "order": 5,
+          "order": 10,
           "type": "signature",
           "required": true,
           "meta": false
@@ -6072,7 +6266,7 @@
           "id": 1749623681234,
           "name": "implementing_agency_rep_name",
           "label": "Name of Implementing Agency Representative",
-          "order": 6,
+          "order": 11,
           "type": "input",
           "required": true,
           "meta": false
@@ -6081,7 +6275,7 @@
           "id": 1749623691256,
           "name": "dws_officer_signature",
           "label": "Signature of DWS Officer",
-          "order": 7,
+          "order": 12,
           "type": "signature",
           "required": true,
           "meta": false
@@ -6090,7 +6284,7 @@
           "id": 1749623704567,
           "name": "dws_officer_name",
           "label": "Name of DWS Officer",
-          "order": 8,
+          "order": 13,
           "type": "input",
           "required": true,
           "meta": true
