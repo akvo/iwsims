@@ -357,6 +357,17 @@
           "dependency": [
             { "id": 1748904158071, "options": ["effluent_pump_station"] }
           ]
+        },
+        {
+          "id": 1900000000201,
+          "name": "total_population_connected",
+          "label": "What is the total population connected to this plant?",
+          "order": 12,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "rule": null
         }
       ],
       "repeat_text": null
@@ -3100,6 +3111,13 @@
               "id": 1748917712582,
               "order": 2,
               "color": "#d95f02"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "id": 1900000000203,
+              "order": 3,
+              "color": "#1f78b4"
             }
           ],
           "dependency": [{ "id": 1748917751257, "options": ["yes"] }],
@@ -3548,16 +3566,63 @@
             { "id": 1748917751258, "options": ["lab_test"] },
             { "id": 1748917792041, "options": ["bod"] }
           ]
+        },
+        {
+          "id": 1900000000204,
+          "name": "other_effluent_test_method",
+          "label": "Please specify other method of testing for plant effluent",
+          "order": 27,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "dependency": [{ "id": 1748917751258, "options": ["other"] }],
+          "rule": null
         }
       ],
       "repeat_text": null
+    },
+    {
+      "id": 1900000000210,
+      "name": "photos_of_inspection",
+      "label": "Photos of Inspection",
+      "description": null,
+      "order": 27,
+      "repeatable": true,
+      "translations": null,
+      "questions": [
+        {
+          "id": 1900000000211,
+          "name": "inspection_photo",
+          "label": "Take Photo",
+          "order": 1,
+          "type": "photo",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "dependency": null,
+          "limit": 5.0
+        },
+        {
+          "id": 1900000000212,
+          "name": "inspection_photo_comment",
+          "label": "Comment on Photo Taken",
+          "order": 2,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "options": null,
+          "dependency": null
+        }
+      ],
+      "repeat_text": "Add another"
     },
     {
       "id": 1748907223534,
       "name": "constraints_and_recommendations",
       "label": "Constraints and Recommendations",
       "description": null,
-      "order": 27,
+      "order": 28,
       "repeatable": false,
       "translations": null,
       "questions": [
