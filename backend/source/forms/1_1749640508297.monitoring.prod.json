@@ -152,7 +152,7 @@
         },
         {
           "id": 1749641023051,
-          "name": "photo_of_sampling_point",
+          "name": "sampling_point_photo",
           "label": "Take Photo of Sampling Point",
           "order": 4,
           "type": "photo",
@@ -163,7 +163,7 @@
         },
         {
           "id": 1749641057577,
-          "name": "description_of_sampling_point",
+          "name": "sampling_point_description",
           "label": "Description of Sampling Point",
           "order": 5,
           "type": "text",
@@ -173,7 +173,7 @@
         },
         {
           "id": 1749641099265,
-          "name": "photo_of_cbt_bag",
+          "name": "cbt_bag_photo",
           "label": "Take Photo of CBT Bag",
           "order": 6,
           "type": "photo",
@@ -422,7 +422,7 @@
         },
         {
           "id": 1805756143042,
-          "name": "e_coli_count_lab",
+          "name": "e_coli_cfu_100ml",
           "label": "What is the number of E.Coli (using Lab test)?",
           "order": 18,
           "type": "number",
@@ -1482,7 +1482,7 @@
         },
         {
           "id": 1749652108043,
-          "name": "signature_of_dws_officer",
+          "name": "dws_officer_signature",
           "label": "Signature of DWS Officer",
           "order": 5,
           "type": "signature",

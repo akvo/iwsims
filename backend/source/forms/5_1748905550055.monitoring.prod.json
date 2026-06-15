@@ -171,7 +171,7 @@
         },
         {
           "id": 1748905754732,
-          "name": "plant_inspection_date",
+          "name": "inspection_date",
           "label": "Plant inspection date?",
           "order": 2,
           "type": "date",
@@ -383,7 +383,7 @@
       "questions": [
         {
           "id": 1748906474270,
-          "name": "name_of_plant_supervisor",
+          "name": "plant_supervisor_name",
           "label": "Name of Plant Supervisor",
           "order": 1,
           "type": "input",
@@ -403,7 +403,7 @@
         },
         {
           "id": 1748910159332,
-          "name": "number_of_staffs_at_the_plant",
+          "name": "num_staff_at_plant",
           "label": "Number of staffs at the plant?",
           "order": 3,
           "type": "number",
@@ -413,7 +413,7 @@
         },
         {
           "id": 1748910184998,
-          "name": "ohs_policy_for_the_plant",
+          "name": "has_ohs_policy",
           "label": "Do you have a OHS Policy for the Plant?",
           "order": 4,
           "type": "option",
@@ -3064,7 +3064,7 @@
         },
         {
           "id": 1748917751257,
-          "name": "take_the_sample",
+          "name": "can_take_sample",
           "label": "Are you able to take the sample?",
           "order": 3,
           "type": "option",
@@ -3091,7 +3091,7 @@
         },
         {
           "id": 1748917751258,
-          "name": "method_of_testing_for_plant_effluent",
+          "name": "effluent_test_method",
           "label": "Method of Testing for plant effluent",
           "order": 4,
           "type": "multiple_option",
@@ -3655,7 +3655,7 @@
         },
         {
           "id": 1748907223535,
-          "name": "provide_details_for_constraints",
+          "name": "constraints_details",
           "label": "Please provide details for constraints",
           "order": 2,
           "type": "text",
@@ -3786,7 +3786,7 @@
         },
         {
           "id": 1748918835968,
-          "name": "signature_of_dws_staff",
+          "name": "dws_staff_signature",
           "label": "Signature of DWS Staff",
           "order": 7,
           "type": "signature",
