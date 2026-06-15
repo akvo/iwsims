@@ -44,6 +44,7 @@ Task 1 ──→ Task 2 ──→ Task 3 ──→ Task 4
 | Document | Description |
 |----------|-------------|
 | [Materialized Views Reference](./materialized-views-reference.md) | Schema, example data, queries, and Django ORM usage for each view |
+| [Frontend Config Context](./frontend-config-context.md) | How frontend uses visualization configs, compute patterns, and future `question_name` support |
 
 ## Quick Start
 
