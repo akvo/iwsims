@@ -11,6 +11,10 @@ from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_forms.models import Questions
 from api.v1.v1_profile.models import Administration
 from api.v1.v1_visualization.constants import MATERIALIZED_VIEWS
+from api.v1.v1_visualization.models import (
+    MVAnswerDenormalized,
+    MVLatestMonitoring,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -87,6 +91,97 @@ def apply_administration_filter(queryset, administration_id):
         Q(administration_id=administration_id)
         | Q(administration__path__startswith=adm_path)
     )
+
+
+def apply_administration_filter_mv(
+    qs, administration_id, field='parent_administration_id'
+):
+    """Filter MV queryset by administration hierarchy.
+
+    Like apply_administration_filter but works with MV models that store
+    administration IDs as plain integers rather than FK fields.
+
+    Args:
+        qs: QuerySet of an MV model
+        administration_id: Target administration ID to filter on
+        field: Name of the integer administration field to filter against
+    """
+    try:
+        adm = Administration.objects.get(pk=administration_id)
+    except Administration.DoesNotExist:
+        return qs.none()
+
+    adm_path = (
+        f"{adm.path}{adm.id}." if adm.path
+        else f"{adm.id}."
+    )
+    child_admin_ids = list(
+        Administration.objects.filter(
+            Q(pk=administration_id)
+            | Q(path__startswith=adm_path)
+        ).values_list('pk', flat=True)
+    )
+    return qs.filter(**{f'{field}__in': child_admin_ids})
+
+
+def get_latest_monitoring_from_mv(
+    form_id, administration_id=None, date_filters=None
+):
+    """Get latest monitoring rows using mv_latest_monitoring.
+
+    Replaces the correlated subquery in latest_monitoring_subquery().
+    Returns a QuerySet of MVLatestMonitoring rows.
+
+    Args:
+        form_id: Monitoring form ID
+        administration_id: Optional administration filter
+        date_filters: Optional dict with from_date, to_date, date_question_id
+    """
+    qs = MVLatestMonitoring.objects.filter(form_id=form_id)
+
+    if administration_id:
+        qs = apply_administration_filter_mv(
+            qs, administration_id, 'parent_administration_id'
+        )
+
+    if date_filters:
+        from_date = date_filters.get("from_date")
+        to_date = date_filters.get("to_date")
+        date_qid = date_filters.get("date_question_id")
+
+        if date_qid:
+            matching = MVAnswerDenormalized.objects.filter(
+                question_id=date_qid,
+                answer_name__isnull=False,
+            )
+            if from_date:
+                matching = matching.filter(answer_name__gte=str(from_date))
+            if to_date:
+                matching = matching.filter(
+                    answer_name__lte=_to_date_upper_bound(to_date)
+                )
+            qs = qs.filter(latest_data_id__in=matching.values("data_id"))
+        else:
+            if from_date:
+                qs = qs.filter(created__date__gte=from_date)
+            if to_date:
+                qs = qs.filter(created__date__lte=to_date)
+
+    return qs
+
+
+def get_latest_data_ids_from_mv(
+    form_id, administration_id=None, date_filters=None
+):
+    """Return latest monitoring data IDs from mv_latest_monitoring.
+
+    Convenience wrapper around get_latest_monitoring_from_mv() that returns
+    a flat list of IDs for use in Answers queries.
+    """
+    qs = get_latest_monitoring_from_mv(
+        form_id, administration_id, date_filters
+    )
+    return list(qs.values_list('latest_data_id', flat=True))
 
 
 def resolve_default_administration_id(administration_id):

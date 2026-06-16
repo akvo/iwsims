@@ -6,6 +6,7 @@ from django.db.models.functions import TruncMonth, Substr
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_forms.models import QuestionOptions
 from api.v1.v1_visualization.constants import AGG_FUNCS
+from api.v1.v1_visualization.models import MVParentAggregates
 from api.v1.v1_visualization.functions import (
     get_base_monitoring_qs,
     get_monitoring_data_ids,
@@ -969,11 +970,42 @@ def _stack_option_by_month(
     }
 
 
-def _stack_option_by_parent(
+def _stack_option_by_parent_from_mv(
+    agg_data, parent_ids, qs, options, opt_labels, opt_colors
+):
+    """Build stack data from mv_parent_aggregates.
+
+    Single query — O(1) instead of O(P × M) queries.
+    """
+    parent_options = {
+        row['parent_id']: row['option_values'] or []
+        for row in agg_data
+    }
+    parent_names = {p.id: p.name for p in qs.only('id', 'name')}
+
+    data = []
+    for parent_id in parent_ids:
+        opts = parent_options.get(parent_id, [])
+        row = {"label": parent_names.get(parent_id, ""), "group": parent_id}
+        for opt in options:
+            row[opt.label] = opts.count(opt.value)
+        data.append(row)
+
+    return {
+        "data": data,
+        "labels": [d["label"] for d in data],
+        "stack_labels": opt_labels,
+        "colors": opt_colors,
+    }
+
+
+def _stack_option_by_parent_legacy(
     question, options, data_ids,
     qs, is_latest, opt_labels, opt_colors
 ):
-    """Stack by option, grouped by parent_id.
+    """Original _stack_option_by_parent implementation.
+
+    Used as fallback when MV is not available or empty.
 
     Handles three data shapes:
       - is_latest=True: qs rows are parent FormData with a `latest_id`
@@ -986,7 +1018,6 @@ def _stack_option_by_parent(
         ARE registration submissions themselves (parent__isnull=True).
         Parents = qs directly; p_data_ids = [parent.id].
     """
-    # Distinguish monitoring vs registration by probing for a parent_id.
     is_registration_form = False
     if is_latest:
         parents = qs
@@ -998,7 +1029,6 @@ def _stack_option_by_parent(
         if parent_ids:
             parents = FormData.objects.filter(id__in=parent_ids)
         else:
-            # Registration-form path: qs IS the list of registrations.
             parents = qs
             is_registration_form = True
 
@@ -1034,6 +1064,44 @@ def _stack_option_by_parent(
         "stack_labels": opt_labels,
         "colors": opt_colors,
     }
+
+
+def _stack_option_by_parent(
+    question, options, data_ids,
+    qs, is_latest, opt_labels, opt_colors
+):
+    """Stack by option, grouped by parent_id.
+
+    OPTIMIZED: Uses mv_parent_aggregates when is_latest=True to replace
+    the N+1 query pattern (P parents × M options) with a single MV lookup.
+    Falls back to _stack_option_by_parent_legacy when MV has no data or
+    when is_latest=False (all-submissions path, not covered by the MV).
+    """
+    if is_latest and data_ids:
+        first_data = (
+            FormData.objects
+            .filter(id__in=data_ids[:1])
+            .values('form_id')
+            .first()
+        )
+        if first_data:
+            form_id = first_data['form_id']
+            parent_ids = list(qs.values_list('id', flat=True))
+            agg_data = list(
+                MVParentAggregates.objects.filter(
+                    form_id=form_id,
+                    question_id=question.id,
+                    parent_id__in=parent_ids,
+                ).values('parent_id', 'option_values')
+            )
+            if agg_data:
+                return _stack_option_by_parent_from_mv(
+                    agg_data, parent_ids, qs, options, opt_labels, opt_colors
+                )
+
+    return _stack_option_by_parent_legacy(
+        question, options, data_ids, qs, is_latest, opt_labels, opt_colors
+    )
 
 
 def handle_stack_by_parent(
