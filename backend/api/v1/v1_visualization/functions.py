@@ -1,4 +1,6 @@
-from django.db import transaction, connection
+import logging
+
+from django.db import connection
 from django.db.models import (
     Q, Subquery, OuterRef,
 )
@@ -8,16 +10,56 @@ from rest_framework.exceptions import ValidationError
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_forms.models import Questions
 from api.v1.v1_profile.models import Administration
+from api.v1.v1_visualization.constants import MATERIALIZED_VIEWS
 
 
-@transaction.atomic
-def refresh_materialized_data():
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            REFRESH MATERIALIZED VIEW view_data_options;
-            """
-        )
+logger = logging.getLogger(__name__)
+
+
+def refresh_materialized_data(views=None, concurrent=False):
+    """Refresh materialized views.
+
+    Args:
+        views: List of view names to refresh. Defaults to all views.
+        concurrent: Use REFRESH CONCURRENTLY (non-blocking, requires
+                    unique index). Falls back to regular refresh on error.
+
+    Note: Not wrapped in @transaction.atomic — REFRESH CONCURRENTLY
+    cannot run inside a transaction. Django's default autocommit mode
+    makes each cursor context an independent transaction.
+    """
+    views_to_refresh = views or MATERIALIZED_VIEWS
+
+    for view in views_to_refresh:
+        if concurrent:
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view};"
+                    )
+                logger.info(f"Refreshed materialized view: {view}")
+            except Exception as e:
+                logger.warning(
+                    f"Concurrent refresh failed for {view}: {e} — "
+                    f"falling back to regular refresh"
+                )
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            f"REFRESH MATERIALIZED VIEW {view};"
+                        )
+                    logger.info(
+                        f"Refreshed {view} (fallback to non-concurrent)"
+                    )
+                except Exception as e2:
+                    logger.error(
+                        f"Fallback refresh also failed for {view}: {e2}"
+                    )
+                    raise
+        else:
+            with connection.cursor() as cursor:
+                cursor.execute(f"REFRESH MATERIALIZED VIEW {view};")
+            logger.info(f"Refreshed materialized view: {view}")
 
 
 # -- Shared helpers --

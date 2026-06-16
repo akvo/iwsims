@@ -73,3 +73,12 @@ VALID_PROGRESS_FORMULAS = {
     "ratio",
     "multi_select_proportion",
 }
+
+# All materialized views managed by this module, in refresh order
+MATERIALIZED_VIEWS = [
+    'mv_latest_monitoring',
+    'mv_answer_denormalized',
+    'mv_cross_form_latest',
+    'mv_parent_aggregates',
+    'view_data_options',
+]

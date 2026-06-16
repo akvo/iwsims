@@ -18,6 +18,7 @@ def seed_approved_data(data: FormData):
         # If the form is a parent form, save to file
         data.save_to_file
     # Refresh materialized view after saving data
-    refresh_materialized_data()
+    concurrency = not settings.TEST_ENV
+    refresh_materialized_data(concurrent=concurrency)
 
     return data
