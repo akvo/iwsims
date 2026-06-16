@@ -1,8 +1,10 @@
 from django.test import TestCase
 from django.test.utils import override_settings
-from django.db import connection
 
-from api.v1.v1_visualization.tests.mixins import VisualizationValuesTestMixin
+from api.v1.v1_visualization.tests.mixins import (
+    VisualizationValuesTestMixin,
+    refresh_all_mvs,
+)
 from api.v1.v1_visualization.models import (
     MVLatestMonitoring,
     MVAnswerDenormalized,
@@ -12,20 +14,12 @@ from api.v1.v1_visualization.models import (
 from api.v1.v1_forms.constants import QuestionTypes
 
 
-def _refresh_all_mvs():
-    with connection.cursor() as cursor:
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_latest_monitoring")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_answer_denormalized")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_cross_form_latest")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_parent_aggregates")
-
-
 @override_settings(USE_TZ=False, TEST_ENV=True)
 class MVLatestMonitoringTest(VisualizationValuesTestMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_one_row_per_parent_form_pair(self):
         rows = MVLatestMonitoring.objects.filter(
@@ -73,7 +67,7 @@ class MVAnswerDenormalizedTest(VisualizationValuesTestMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_contains_monitoring_answers(self):
         rows = MVAnswerDenormalized.objects.filter(
@@ -145,7 +139,7 @@ class MVCrossFormLatestTest(VisualizationValuesTestMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_one_row_per_parent_question_name(self):
         rows = MVCrossFormLatest.objects.filter(
@@ -191,7 +185,7 @@ class MVParentAggregatesTest(VisualizationValuesTestMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_rows_exist_for_monitoring_form(self):
         rows = MVParentAggregates.objects.filter(

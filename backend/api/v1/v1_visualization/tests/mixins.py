@@ -1,10 +1,50 @@
-from django.core.management import call_command
-from django.utils.timezone import make_aware
 from datetime import datetime
-from api.v1.v1_profile.models import Administration
+
+from django.core.management import call_command
+from django.db import connection
+from django.utils.timezone import make_aware
+
+from api.v1.v1_data.models import Answers, FormData
 from api.v1.v1_forms.models import Forms, Questions
-from api.v1.v1_data.models import FormData, Answers
+from api.v1.v1_profile.models import Administration
 from api.v1.v1_profile.tests.mixins import ProfileTestHelperMixin
+
+
+def refresh_all_mvs():
+    """Refresh all visualization materialized views.
+
+    Call in test setUp() after creating FormData/Answers so MV-based
+    queries see the test data. Works inside TestCase transactions
+    (regular REFRESH, not CONCURRENTLY).
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "REFRESH MATERIALIZED VIEW mv_latest_monitoring"
+        )
+        cursor.execute(
+            "REFRESH MATERIALIZED VIEW mv_answer_denormalized"
+        )
+        cursor.execute(
+            "REFRESH MATERIALIZED VIEW mv_cross_form_latest"
+        )
+        cursor.execute(
+            "REFRESH MATERIALIZED VIEW mv_parent_aggregates"
+        )
+
+
+class MVRefreshMixin:
+    """Mixin that refreshes all materialized views after setUp.
+
+    Include before TestCase/APITestCase in the MRO for test classes
+    whose assertions rely on MV-backed queries:
+
+        class MyTest(MVRefreshMixin, VisualizationValuesTestMixin, TestCase):
+            ...
+    """
+
+    def setUp(self):
+        super().setUp()
+        refresh_all_mvs()
 
 
 class VisualizationValuesTestMixin(ProfileTestHelperMixin):
@@ -176,6 +216,8 @@ class VisualizationValuesTestMixin(ProfileTestHelperMixin):
             multi_vals=["feature_x", "feature_y", "feature_z"],
             date_val="2025-03-15T00:00:00.000Z",
         )
+
+        refresh_all_mvs()
 
     def _create_monitoring(
         self,

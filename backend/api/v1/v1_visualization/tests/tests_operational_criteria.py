@@ -14,12 +14,12 @@ Comprehensive Monitoring (Q 1749652417794) both contribute to the latest
 daily_production_megalitres value — whichever submission is more recent wins.
 """
 
+from datetime import datetime
+
 from django.core.management import call_command
-from django.db import connection
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils.timezone import make_aware
-from datetime import datetime
 
 from api.v1.v1_data.models import Answers, FormData
 from api.v1.v1_forms.constants import FormTypes, QuestionTypes
@@ -27,14 +27,7 @@ from api.v1.v1_forms.models import Forms, QuestionGroup, Questions
 from api.v1.v1_profile.models import Administration
 from api.v1.v1_users.models import SystemUser
 from api.v1.v1_visualization.models import MVCrossFormLatest
-
-
-def _refresh_all_mvs():
-    with connection.cursor() as cursor:
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_latest_monitoring")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_answer_denormalized")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_cross_form_latest")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_parent_aggregates")
+from api.v1.v1_visualization.tests.mixins import refresh_all_mvs
 
 
 def _is_operational(
@@ -328,7 +321,7 @@ class OperationalCriteriaBasicTest(_WTPTestBase):
             has_constraints="no",
         )
 
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_alpha_operational_no_pump_risks_no_constraints(self):
         self.assertTrue(
@@ -421,7 +414,7 @@ class OperationalCriteriaPumpVariantsTest(_WTPTestBase):
             gallery_risks="yes",
         )
 
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_gravity_plant_operational_without_pump_risk_check(self):
         self.assertTrue(
@@ -491,7 +484,7 @@ class CrossFormLatestTest(_WTPTestBase):
             has_constraints="no",
         )
 
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_latest_production_from_comprehensive_form(self):
         """March Comprehensive (8.0) beats January Quick (1.0)."""
@@ -545,7 +538,7 @@ class MonitoringHistoryLatestWinsTest(_WTPTestBase):
             has_constraints="no",
         )
 
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_latest_constraints_value_is_no(self):
         row = MVCrossFormLatest.objects.get(

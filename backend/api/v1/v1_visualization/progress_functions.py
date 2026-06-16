@@ -1,11 +1,12 @@
-from api.v1.v1_data.models import FormData, Answers
+from api.v1.v1_data.models import FormData
 from api.v1.v1_visualization.functions import (
     apply_administration_filter,
     apply_criteria_to_monitoring_qs,
     apply_parent_criteria_to_qs,
     build_date_filters,
-    latest_monitoring_subquery,
+    get_latest_monitoring_subquery,
 )
+from api.v1.v1_visualization.models import MVAnswerDenormalized
 
 
 def compute_any_yes(latest_data_id, question_ids, answers_map, **kwargs):
@@ -130,12 +131,19 @@ def build_progress_answers_map(latest_ids, components):
     }
     if not qids or not latest_ids:
         return {}
-    rows = Answers.objects.filter(
+    rows = MVAnswerDenormalized.objects.filter(
         data_id__in=latest_ids,
         question_id__in=qids,
-    ).values("data_id", "question_id", "options", "value")
+    ).values(
+        "data_id", "question_id",
+        "answer_options", "answer_value",
+    )
     return {
-        (r["data_id"], r["question_id"]): r for r in rows
+        (r["data_id"], r["question_id"]): {
+            "options": r["answer_options"],
+            "value": r["answer_value"],
+        }
+        for r in rows
     }
 
 
@@ -193,7 +201,7 @@ def handle_progress(
         is_pending=False,
         is_draft=False,
     ).annotate(
-        latest_id=latest_monitoring_subquery(
+        latest_id=get_latest_monitoring_subquery(
             monitoring_form_id, date_filters or None
         ),
     ).filter(latest_id__isnull=False)
@@ -216,10 +224,10 @@ def handle_progress(
         latest_ids = parents.values_list(
             "latest_id", flat=True
         )
-        matching_ids = Answers.objects.filter(
+        matching_ids = MVAnswerDenormalized.objects.filter(
             data_id__in=latest_ids,
             question_id=filter_qid,
-            options__contains=[filter_value],
+            answer_options__contains=[filter_value],
         ).values_list("data_id", flat=True)
         parents = parents.filter(
             latest_id__in=matching_ids
@@ -236,12 +244,12 @@ def handle_progress(
     # Build scope lookup: latest_id -> scope option value
     scope_map = {}
     if scope_qid:
-        scope_rows = Answers.objects.filter(
+        scope_rows = MVAnswerDenormalized.objects.filter(
             data_id__in=latest_ids,
             question_id=scope_qid,
-        ).values("data_id", "options")
+        ).values("data_id", "answer_options")
         for row in scope_rows:
-            opts = row.get("options") or []
+            opts = row.get("answer_options") or []
             if opts:
                 scope_map[row["data_id"]] = opts[0]
 

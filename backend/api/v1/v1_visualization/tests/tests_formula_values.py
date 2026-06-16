@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase
 from api.v1.v1_data.models import Answers, FormData
 from api.v1.v1_visualization.tests.mixins import (
     VisualizationValuesTestMixin,
+    refresh_all_mvs,
 )
 
 
@@ -208,6 +209,7 @@ class FormulaValuesViewTests(
             options=["active"],
             created_by=self.user,
         )
+        refresh_all_mvs()
         # Filter to monitorings where operational_status == active.
         # Both mon1a and mon1b are 'active' (from the mixin), and
         # we just made sure mon1b also has it. mon2b is 'pending'.
@@ -259,6 +261,7 @@ class FormulaValuesRegistrationFormTests(
             options=["no"],
             created_by=self.user,
         )
+        refresh_all_mvs()
 
     def _formula(self):
         return {

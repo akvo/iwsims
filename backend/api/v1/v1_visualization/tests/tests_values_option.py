@@ -2,6 +2,7 @@ from django.test.utils import override_settings
 from rest_framework.test import APITestCase
 from api.v1.v1_visualization.tests.mixins import (
     VisualizationValuesTestMixin,
+    refresh_all_mvs,
 )
 
 
@@ -599,6 +600,7 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             options=["urban"],
             created_by=self.user,
         )
+        refresh_all_mvs()
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.registration.id}"
             f"&question_id={self.q_reg_option.id}"

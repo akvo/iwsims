@@ -230,6 +230,32 @@ def _to_date_upper_bound(value):
     return f"{value}T23:59:59.999Z"
 
 
+def get_latest_monitoring_subquery(form_id, date_filters=None):
+    """Return the right subquery for latest monitoring ID per parent.
+
+    Uses mv_latest_monitoring (indexed lookup on (parent_id, form_id))
+    when safe. Falls back to the correlated subquery otherwise.
+
+    MV is skipped when:
+    - date_filters is set: MV stores the absolute latest, not the most
+      recent within a date range, so date-filtered queries need the
+      data table scan to find the latest WITHIN range.
+    - connection.in_atomic_block: TestCase wraps tests in a transaction
+      so the MV is never refreshed after test data is created.
+
+    Drop-in replacement for latest_monitoring_subquery() in any
+    .annotate(latest_id=...) call.
+    """
+    if not date_filters and not connection.in_atomic_block:
+        return Subquery(
+            MVLatestMonitoring.objects.filter(
+                parent_id=OuterRef('pk'),
+                form_id=form_id,
+            ).values('latest_data_id')[:1]
+        )
+    return latest_monitoring_subquery(form_id, date_filters)
+
+
 def latest_monitoring_subquery(form_id, date_filters=None):
     """Subquery: latest monitoring FormData ID per parent."""
     qs = FormData.objects.filter(
@@ -487,7 +513,7 @@ def get_base_monitoring_qs(form, monitoring_form_id, params):
             is_pending=False,
             is_draft=False,
         ).annotate(
-            latest_id=latest_monitoring_subquery(
+            latest_id=get_latest_monitoring_subquery(
                 monitoring_form_id,
                 date_filters or None,
             ),

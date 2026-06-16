@@ -1,21 +1,28 @@
+from datetime import date
 from urllib.parse import urlencode
 
 from django.db.models import Q
 
-from api.v1.v1_data.models import FormData, Answers
+from api.v1.v1_data.models import FormData
 from api.v1.v1_visualization.functions import (
     apply_administration_filter,
     apply_criteria_to_monitoring_qs,
     apply_parent_criteria_to_qs,
     build_date_filters,
-    latest_monitoring_subquery,
+    get_latest_monitoring_subquery,
     format_date_group,
     split_criteria_by_form,
 )
+from api.v1.v1_visualization.models import MVAnswerDenormalized
 
 
 def build_escalation_criteria_filter(criteria, latest_ids):
     """Build OR query from parsed escalation criteria.
+
+    Uses mv_answer_denormalized exclusively — GIN index on answer_options
+    and indexed answer_value/answer_name fields replace the direct Answers
+    table scans. Tests must call _refresh_all_mvs() in setUp so the MV
+    contains the test data before this function is called.
 
     Args:
         criteria: List of parsed criteria dicts with
@@ -26,6 +33,7 @@ def build_escalation_criteria_filter(criteria, latest_ids):
         Q object combining all criteria with OR logic.
     """
     or_condition = Q()
+
     for criterion in criteria:
         ctype = criterion["type"]
         parts = criterion["parts"]
@@ -33,49 +41,53 @@ def build_escalation_criteria_filter(criteria, latest_ids):
         if ctype == "option_equals":
             qid = int(parts[0])
             value = parts[1]
-            matching = Answers.objects.filter(
+            matching = MVAnswerDenormalized.objects.filter(
                 data_id__in=latest_ids,
                 question_id=qid,
-                options__contains=[value],
+                answer_options__contains=[value],
             ).values_list("data_id", flat=True)
             or_condition |= Q(latest_id__in=matching)
 
         elif ctype == "threshold_gt":
             qid = int(parts[0])
             threshold = float(parts[1])
-            matching = Answers.objects.filter(
+            matching = MVAnswerDenormalized.objects.filter(
                 data_id__in=latest_ids,
                 question_id=qid,
-                value__gt=threshold,
+                answer_value__gt=threshold,
             ).values_list("data_id", flat=True)
             or_condition |= Q(latest_id__in=matching)
 
         elif ctype == "threshold_lt":
             qid = int(parts[0])
             threshold = float(parts[1])
-            matching = Answers.objects.filter(
+            matching = MVAnswerDenormalized.objects.filter(
                 data_id__in=latest_ids,
                 question_id=qid,
-                value__lt=threshold,
+                answer_value__lt=threshold,
             ).values_list("data_id", flat=True)
             or_condition |= Q(latest_id__in=matching)
 
         elif ctype == "overdue":
-            from datetime import date
             completion_qid = int(parts[0])
             deadline_qid = int(parts[1])
-            incomplete = set(Answers.objects.filter(
-                data_id__in=latest_ids,
-                question_id=completion_qid,
-                options__contains=["no"],
-            ).values_list("data_id", flat=True))
-            overdue = set(Answers.objects.filter(
-                data_id__in=latest_ids,
-                question_id=deadline_qid,
-                name__lt=date.today().isoformat(),
-            ).values_list("data_id", flat=True))
+            today = date.today().isoformat()
+            incomplete = set(
+                MVAnswerDenormalized.objects.filter(
+                    data_id__in=latest_ids,
+                    question_id=completion_qid,
+                    answer_options__contains=["no"],
+                ).values_list("data_id", flat=True)
+            )
+            overdue_ids = set(
+                MVAnswerDenormalized.objects.filter(
+                    data_id__in=latest_ids,
+                    question_id=deadline_qid,
+                    answer_name__lt=today,
+                ).values_list("data_id", flat=True)
+            )
             or_condition |= Q(
-                latest_id__in=incomplete & overdue
+                latest_id__in=incomplete & overdue_ids
             )
 
     return or_condition
@@ -121,27 +133,35 @@ def build_column_caches(paginated, columns):
 
     answer_map = {}
     if answer_qids or latest_date_qids:
-        rows = Answers.objects.filter(
+        rows = MVAnswerDenormalized.objects.filter(
             data_id__in=latest_ids,
             question_id__in=answer_qids | latest_date_qids,
         ).values(
             "data_id", "question_id",
-            "name", "value", "options",
+            "answer_name", "answer_value", "answer_options",
         )
         for r in rows:
-            answer_map[(r["data_id"], r["question_id"])] = r
+            answer_map[(r["data_id"], r["question_id"])] = {
+                "name": r["answer_name"],
+                "value": r["answer_value"],
+                "options": r["answer_options"],
+            }
 
     parent_answer_map = {}
     if parent_answer_qids:
-        rows = Answers.objects.filter(
+        rows = MVAnswerDenormalized.objects.filter(
             data_id__in=parent_ids,
             question_id__in=parent_answer_qids,
         ).values(
             "data_id", "question_id",
-            "name", "value", "options",
+            "answer_name", "answer_value", "answer_options",
         )
         for r in rows:
-            parent_answer_map[(r["data_id"], r["question_id"])] = r
+            parent_answer_map[(r["data_id"], r["question_id"])] = {
+                "name": r["answer_name"],
+                "value": r["answer_value"],
+                "options": r["answer_options"],
+            }
 
     created_map = {}
     if need_created_fallback:
@@ -233,7 +253,7 @@ def handle_escalation(
         is_pending=False,
         is_draft=False,
     ).annotate(
-        latest_id=latest_monitoring_subquery(
+        latest_id=get_latest_monitoring_subquery(
             monitoring_form_id, date_filters or None
         ),
     ).filter(latest_id__isnull=False)

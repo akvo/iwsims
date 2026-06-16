@@ -2,6 +2,7 @@ from django.test.utils import override_settings
 from rest_framework.test import APITestCase
 from api.v1.v1_visualization.tests.mixins import (
     VisualizationValuesTestMixin,
+    refresh_all_mvs,
 )
 
 
@@ -175,6 +176,7 @@ class ValuesCriteriaTestCases(
             options=["type_b"],
             created_by=self.user,
         )
+        refresh_all_mvs()
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             "&monitoring=all"
@@ -201,6 +203,7 @@ class ValuesCriteriaTestCases(
             options=["type_b"],
             created_by=self.user,
         )
+        refresh_all_mvs()
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&criteria=option_equals:{self.q_reg_option.id}:type_a"

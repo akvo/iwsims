@@ -6,7 +6,6 @@ get_latest_data_ids_from_mv, and the concurrent refresh path.
 """
 
 from django.core.management import call_command
-from django.db import connection
 from django.test import TestCase, TransactionTestCase
 from django.test.utils import override_settings
 
@@ -17,15 +16,10 @@ from api.v1.v1_visualization.functions import (
     refresh_materialized_data,
 )
 from api.v1.v1_visualization.models import MVLatestMonitoring
-from api.v1.v1_visualization.tests.mixins import VisualizationValuesTestMixin
-
-
-def _refresh_all_mvs():
-    with connection.cursor() as cursor:
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_latest_monitoring")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_answer_denormalized")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_cross_form_latest")
-        cursor.execute("REFRESH MATERIALIZED VIEW mv_parent_aggregates")
+from api.v1.v1_visualization.tests.mixins import (
+    VisualizationValuesTestMixin,
+    refresh_all_mvs,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +35,7 @@ class ApplyAdministrationFilterMVTest(VisualizationValuesTestMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_root_administration_returns_all_rows(self):
         qs = MVLatestMonitoring.objects.filter(
@@ -97,7 +91,7 @@ class GetLatestMonitoringFromMVTest(VisualizationValuesTestMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_returns_one_row_per_parent_for_form(self):
         qs = get_latest_monitoring_from_mv(self.monitoring.id)
@@ -174,7 +168,7 @@ class GetLatestDataIdsFromMVTest(VisualizationValuesTestMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        _refresh_all_mvs()
+        refresh_all_mvs()
 
     def test_returns_list_of_integers(self):
         ids = get_latest_data_ids_from_mv(self.monitoring.id)
