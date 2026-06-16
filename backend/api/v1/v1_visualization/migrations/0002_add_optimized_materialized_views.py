@@ -1,6 +1,6 @@
 # Generated manually for materialized view optimization
 
-from django.db import migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -11,6 +11,88 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Django model state only (managed=False — no DB changes)
+        migrations.CreateModel(
+            name='MVAnswerDenormalized',
+            fields=[
+                ('answer_id', models.BigIntegerField(primary_key=True, serialize=False)),
+                ('data_id', models.BigIntegerField()),
+                ('question_id', models.BigIntegerField()),
+                ('question_name', models.TextField()),
+                ('question_type', models.IntegerField()),
+                ('answer_name', models.TextField(null=True)),
+                ('answer_value', models.FloatField(null=True)),
+                ('answer_options', models.JSONField(null=True)),
+                ('answer_index', models.IntegerField(default=0)),
+                ('form_id', models.BigIntegerField()),
+                ('parent_id', models.BigIntegerField(null=True)),
+                ('administration_id', models.BigIntegerField()),
+                ('data_created', models.DateTimeField()),
+            ],
+            options={
+                'db_table': 'mv_answer_denormalized',
+                'managed': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='MVCrossFormLatest',
+            fields=[
+                ('id', models.BigIntegerField(primary_key=True, serialize=False)),
+                ('parent_id', models.BigIntegerField()),
+                ('administration_id', models.BigIntegerField()),
+                ('question_name', models.TextField()),
+                ('question_type', models.IntegerField()),
+                ('latest_text_value', models.TextField(null=True)),
+                ('latest_numeric_value', models.FloatField(null=True)),
+                ('latest_option_values', models.JSONField(null=True)),
+                ('latest_created', models.DateTimeField()),
+            ],
+            options={
+                'db_table': 'mv_cross_form_latest',
+                'managed': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='MVLatestMonitoring',
+            fields=[
+                ('latest_data_id', models.BigIntegerField(primary_key=True, serialize=False)),
+                ('parent_id', models.BigIntegerField()),
+                ('form_id', models.BigIntegerField()),
+                ('form_name', models.TextField()),
+                ('administration_id', models.BigIntegerField()),
+                ('parent_administration_id', models.BigIntegerField()),
+                ('created', models.DateTimeField()),
+                ('data_name', models.TextField()),
+                ('parent_name', models.TextField()),
+            ],
+            options={
+                'db_table': 'mv_latest_monitoring',
+                'managed': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='MVParentAggregates',
+            fields=[
+                ('id', models.BigIntegerField(primary_key=True, serialize=False)),
+                ('parent_id', models.BigIntegerField()),
+                ('form_id', models.BigIntegerField()),
+                ('administration_id', models.BigIntegerField()),
+                ('question_id', models.BigIntegerField()),
+                ('question_name', models.TextField()),
+                ('question_type', models.IntegerField()),
+                ('option_values', models.JSONField(null=True)),
+                ('avg_value', models.FloatField(null=True)),
+                ('sum_value', models.FloatField(null=True)),
+                ('max_value', models.FloatField(null=True)),
+                ('min_value', models.FloatField(null=True)),
+                ('answer_count', models.IntegerField()),
+            ],
+            options={
+                'db_table': 'mv_parent_aggregates',
+                'managed': False,
+            },
+        ),
+
         # 1. mv_latest_monitoring - Pre-computes latest monitoring per parent
         migrations.RunSQL(
             sql="""
