@@ -413,7 +413,7 @@
         },
         {
           "id": 1754995200103,
-          "name": "physical_analysis_conductivity",
+          "name": "conductivity",
           "label": "Conductivity \u00b5S/cm - 2510B (APHA Method Code)",
           "order": 22,
           "type": "number",

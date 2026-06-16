@@ -52,7 +52,7 @@
         },
         {
           "id": 1749612149744,
-          "name": "ground_condition",
+          "name": "ground_conditions",
           "label": "Ground Conditions",
           "order": 3,
           "type": "option",

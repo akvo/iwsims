@@ -180,7 +180,7 @@
         {
           "id": 1749631041137,
           "type": "text",
-          "name": "sampling_point_desc",
+          "name": "sampling_point_description",
           "label": "Description of sampling point",
           "required": true,
           "order": 4,

@@ -275,7 +275,7 @@
         },
         {
           "id": 1749623001234,
-          "name": "cbt_photo",
+          "name": "cbt_bag_photo",
           "label": "Take photo of CBT Bag",
           "order": 13,
           "type": "photo",
@@ -400,7 +400,7 @@
         },
         {
           "id": 1723459200025,
-          "name": "physical_analysis_conductivity",
+          "name": "conductivity",
           "label": "Conductivity \u00b5S/cm - 2510B (APHA Method Code)",
           "order": 20,
           "type": "number",
@@ -856,7 +856,7 @@
         },
         {
           "id": 1900000000309,
-          "name": "sampling_point_desc",
+          "name": "sampling_point_description",
           "label": "Description of sampling point",
           "order": 8,
           "type": "text",
