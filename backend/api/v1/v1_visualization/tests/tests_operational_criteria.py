@@ -87,16 +87,26 @@ class _WTPTestBase(TestCase):
             last_name="Test",
         )
 
+        # Use explicit high IDs to avoid advancing the PostgreSQL sequence
+        # into the low range (e.g. 101, 103) used explicitly by other test
+        # files — sequences don't roll back with TestCase transactions.
+        REG_FORM_ID = 9700
+        COMP_FORM_ID = 9701
+        QUICK_FORM_ID = 9702
+
         # Registration form
         self.reg_form = Forms.objects.create(
+            id=REG_FORM_ID,
             name="WAF Water Treatment Plant",
             type=FormTypes.registration,
         )
         reg_qg = QuestionGroup.objects.create(
+            id=97000,
             form=self.reg_form,
             name="registration",
         )
         Questions.objects.create(
+            id=9700001,
             form=self.reg_form,
             question_group=reg_qg,
             name="plant_name",
@@ -106,15 +116,18 @@ class _WTPTestBase(TestCase):
 
         # Comprehensive Monitoring form (type=2)
         self.comp_form = Forms.objects.create(
+            id=COMP_FORM_ID,
             name="WAF WTP - Monitoring",
             parent=self.reg_form,
             type=FormTypes.monitoring,
         )
         comp_qg = QuestionGroup.objects.create(
+            id=97001,
             form=self.comp_form,
             name="general_information",
         )
         self.q_daily_prod = Questions.objects.create(
+            id=9700002,
             form=self.comp_form,
             question_group=comp_qg,
             name="daily_production_megalitres",
@@ -122,6 +135,7 @@ class _WTPTestBase(TestCase):
             type=QuestionTypes.number,
         )
         self.q_constraints = Questions.objects.create(
+            id=9700003,
             form=self.comp_form,
             question_group=comp_qg,
             name="has_production_constraints",
@@ -129,6 +143,7 @@ class _WTPTestBase(TestCase):
             type=QuestionTypes.option,
         )
         self.q_transport = Questions.objects.create(
+            id=9700004,
             form=self.comp_form,
             question_group=comp_qg,
             name="raw_water_transport_method",
@@ -136,6 +151,7 @@ class _WTPTestBase(TestCase):
             type=QuestionTypes.multiple_option,
         )
         self.q_pumps_risks = Questions.objects.create(
+            id=9700005,
             form=self.comp_form,
             question_group=comp_qg,
             name="pumps_rising_main_has_risks",
@@ -143,6 +159,7 @@ class _WTPTestBase(TestCase):
             type=QuestionTypes.option,
         )
         self.q_borehole_risks = Questions.objects.create(
+            id=9700006,
             form=self.comp_form,
             question_group=comp_qg,
             name="borehole_pump_has_risks",
@@ -150,6 +167,7 @@ class _WTPTestBase(TestCase):
             type=QuestionTypes.option,
         )
         self.q_gallery_risks = Questions.objects.create(
+            id=9700007,
             form=self.comp_form,
             question_group=comp_qg,
             name="borehole_gallery_pumps_has_risks",
@@ -159,15 +177,18 @@ class _WTPTestBase(TestCase):
 
         # Quick Monitoring form — shares question names with Comprehensive
         self.quick_form = Forms.objects.create(
+            id=QUICK_FORM_ID,
             name="WAF WTP - Quick Monitoring",
             parent=self.reg_form,
             type=FormTypes.monitoring,
         )
         quick_qg = QuestionGroup.objects.create(
+            id=97002,
             form=self.quick_form,
             name="general_information",
         )
         self.q_quick_daily_prod = Questions.objects.create(
+            id=9700008,
             form=self.quick_form,
             question_group=quick_qg,
             name="daily_production_megalitres",  # same name → merged in MV
@@ -175,6 +196,7 @@ class _WTPTestBase(TestCase):
             type=QuestionTypes.number,
         )
         self.q_quick_constraints = Questions.objects.create(
+            id=9700009,
             form=self.quick_form,
             question_group=quick_qg,
             name="has_production_constraints",
