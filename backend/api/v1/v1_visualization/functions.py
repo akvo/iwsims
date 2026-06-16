@@ -31,7 +31,12 @@ def refresh_materialized_data(views=None, concurrent=False):
     views_to_refresh = views or MATERIALIZED_VIEWS
 
     for view in views_to_refresh:
-        if concurrent:
+        # REFRESH CONCURRENTLY cannot run inside a transaction block.
+        # Django's TestCase wraps tests in a transaction, so downgrade
+        # to a regular refresh when in_atomic_block is True.
+        use_concurrent = concurrent and not connection.in_atomic_block
+
+        if use_concurrent:
             try:
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -58,7 +63,9 @@ def refresh_materialized_data(views=None, concurrent=False):
                     raise
         else:
             with connection.cursor() as cursor:
-                cursor.execute(f"REFRESH MATERIALIZED VIEW {view};")
+                cursor.execute(
+                    f"REFRESH MATERIALIZED VIEW {view};"
+                )
             logger.info(f"Refreshed materialized view: {view}")
 
 
