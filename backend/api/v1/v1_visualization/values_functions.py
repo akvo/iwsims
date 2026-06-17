@@ -8,6 +8,7 @@ from api.v1.v1_forms.models import QuestionOptions
 from api.v1.v1_visualization.constants import AGG_FUNCS
 from api.v1.v1_visualization.models import (
     MVAnswerDenormalized,
+    MVLatestMonitoring,
     MVParentAggregates,
 )
 from api.v1.v1_visualization.functions import (
@@ -163,12 +164,12 @@ def _count_group_by_month(qs, is_latest, params):
                 for r in results
             ]
         else:
-            results = FormData.objects.filter(
-                id__in=data_ids,
+            results = MVAnswerDenormalized.objects.filter(
+                data_id__in=data_ids,
             ).annotate(
-                month=TruncMonth("created"),
+                month=TruncMonth("data_created"),
             ).values("month").annotate(
-                count=Count("id"),
+                count=Count("data_id", distinct=True),
             ).order_by("month")
             data = [
                 {
@@ -303,12 +304,12 @@ def _count_group_by_date(qs, is_latest, params):
             for r in results
         ]
     else:
-        results = FormData.objects.filter(
-            id__in=data_ids,
-        ).values(
-            day=F("created__date"),
+        results = MVAnswerDenormalized.objects.filter(
+            data_id__in=data_ids,
         ).annotate(
-            count=Count("id"),
+            day=TruncDate("data_created"),
+        ).values("day").annotate(
+            count=Count("data_id", distinct=True),
         ).order_by("day")
         data = [
             {
@@ -506,18 +507,18 @@ def _option_value_group_by_month(
             for r in answer_qs
         ]
     else:
-        fd_qs = FormData.objects.filter(
-            id__in=matching_ids,
+        mv_qs = MVAnswerDenormalized.objects.filter(
+            data_id__in=matching_ids,
         ).annotate(
-            month=TruncMonth("created"),
+            month=TruncMonth("data_created"),
         ).values("month")
         if sum_by == "parent_id":
-            fd_qs = fd_qs.annotate(
+            mv_qs = mv_qs.annotate(
                 count=Count("parent_id", distinct=True),
             ).order_by("month")
         else:
-            fd_qs = fd_qs.annotate(
-                count=Count("id"),
+            mv_qs = mv_qs.annotate(
+                count=Count("data_id", distinct=True),
             ).order_by("month")
         data = [
             {
@@ -525,7 +526,7 @@ def _option_value_group_by_month(
                 "label": format_month_label(r["month"]),
                 "group": format_month_group(r["month"]),
             }
-            for r in fd_qs
+            for r in mv_qs
         ]
 
     if _should_fill_gaps(params):
@@ -714,11 +715,13 @@ def _number_group_by_parent(
         )
     )
 
-    # Fetch parent names in a single lookup (parent_id → name)
+    # Fetch parent names from mv_latest_monitoring (parent_name is
+    # pre-joined from the registration FormData)
     parent_ids = [r["parent_id"] for r in agg_rows if r["parent_id"]]
     name_map = dict(
-        FormData.objects.filter(id__in=parent_ids)
-        .values_list("id", "name")
+        MVLatestMonitoring.objects.filter(parent_id__in=parent_ids)
+        .values_list("parent_id", "parent_name")
+        .distinct()
     )
 
     data = sorted(
@@ -1031,16 +1034,26 @@ def _stack_option_by_parent_legacy(
     """
     is_registration_form = False
     if is_latest:
-        parents = qs
+        parents = qs  # FormData qs with .latest_id and .name
     else:
-        parent_ids = list(FormData.objects.filter(
-            id__in=data_ids,
-            parent__isnull=False,
-        ).values_list("parent_id", flat=True).distinct())
+        parent_ids = list(
+            MVAnswerDenormalized.objects.filter(
+                data_id__in=data_ids,
+                parent_id__isnull=False,
+            ).values_list("parent_id", flat=True).distinct()
+        )
         if parent_ids:
-            parents = FormData.objects.filter(id__in=parent_ids)
+            name_map = dict(
+                MVLatestMonitoring.objects.filter(
+                    parent_id__in=parent_ids
+                ).values_list("parent_id", "parent_name").distinct()
+            )
+            parents = [
+                {"id": pid, "name": name_map.get(pid, "")}
+                for pid in parent_ids
+            ]
         else:
-            parents = qs
+            parents = qs  # registration-form path
             is_registration_form = True
 
     data = []
@@ -1048,17 +1061,23 @@ def _stack_option_by_parent_legacy(
         if is_latest:
             p_data_ids = [parent.latest_id]
             p_name = parent.name
+            parent_id_val = parent.id
         elif is_registration_form:
             p_data_ids = [parent.id]
             p_name = parent.name
+            parent_id_val = parent.id
         else:
-            p_data_ids = list(FormData.objects.filter(
-                id__in=data_ids,
-                parent_id=parent.id,
-            ).values_list("id", flat=True))
-            p_name = parent.name
+            # parent is a dict {"id": ..., "name": ...}
+            p_data_ids = list(
+                MVAnswerDenormalized.objects.filter(
+                    data_id__in=data_ids,
+                    parent_id=parent["id"],
+                ).values_list("data_id", flat=True).distinct()
+            )
+            p_name = parent["name"]
+            parent_id_val = parent["id"]
 
-        row = {"label": p_name, "group": parent.id}
+        row = {"label": p_name, "group": parent_id_val}
         for opt in options:
             count = MVAnswerDenormalized.objects.filter(
                 data_id__in=p_data_ids,
@@ -1090,8 +1109,8 @@ def _stack_option_by_parent(
     """
     if is_latest and data_ids:
         first_data = (
-            FormData.objects
-            .filter(id__in=data_ids[:1])
+            MVAnswerDenormalized.objects
+            .filter(data_id__in=data_ids[:1])
             .values('form_id')
             .first()
         )
@@ -1128,27 +1147,29 @@ def handle_stack_by_parent(
             qs.values("id", "name", "latest_id")
         )
     else:
-        parent_ids = FormData.objects.filter(
-            id__in=data_ids,
-            parent__isnull=False,
-        ).values_list(
-            "parent_id", flat=True
-        ).distinct()
-        parent_data = FormData.objects.filter(
-            id__in=parent_ids,
-        ).values("id", "name")
+        parent_id_list = list(
+            MVAnswerDenormalized.objects.filter(
+                data_id__in=data_ids,
+                parent_id__isnull=False,
+            ).values_list("parent_id", flat=True).distinct()
+        )
+        name_map = dict(
+            MVLatestMonitoring.objects.filter(
+                parent_id__in=parent_id_list
+            ).values_list("parent_id", "parent_name").distinct()
+        )
         parents = [
             {
-                "id": p["id"],
-                "name": p["name"],
+                "id": pid,
+                "name": name_map.get(pid, ""),
                 "data_ids": list(
-                    FormData.objects.filter(
-                        id__in=data_ids,
-                        parent_id=p["id"],
-                    ).values_list("id", flat=True)
+                    MVAnswerDenormalized.objects.filter(
+                        data_id__in=data_ids,
+                        parent_id=pid,
+                    ).values_list("data_id", flat=True).distinct()
                 ),
             }
-            for p in parent_data
+            for pid in parent_id_list
         ]
 
     parent_names = [p["name"] for p in parents]
@@ -1197,12 +1218,12 @@ def _stack_parent_by_date(
             for r in date_rows
         }
     else:
-        fd_rows = FormData.objects.filter(
-            id__in=all_data_ids,
-        ).values("id", "created")
+        mv_rows = MVAnswerDenormalized.objects.filter(
+            data_id__in=all_data_ids,
+        ).values("data_id", "data_created").distinct()
         date_map = {
-            r["id"]: format_date_group(r["created"])
-            for r in fd_rows
+            r["data_id"]: format_date_group(r["data_created"])
+            for r in mv_rows
         }
 
     val_rows = MVAnswerDenormalized.objects.filter(
