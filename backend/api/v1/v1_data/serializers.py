@@ -261,7 +261,7 @@ class SubmitFormSerializer(serializers.Serializer):
                 created_by=self.context.get("user"),
             )
         # Refresh materialized view via async task
-        async_task("api.v1.v1_data.tasks.seed_approved_data", obj_data)
+        async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
 
         return object
 
@@ -739,7 +739,7 @@ class SubmitPendingFormSerializer(serializers.Serializer):
             not obj_data.is_pending
         ):
             # Refresh materialized view via async task
-            async_task("api.v1.v1_data.tasks.seed_approved_data", obj_data)
+            async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
 
         return obj_data
 
