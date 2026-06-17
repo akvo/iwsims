@@ -452,7 +452,7 @@ class FormDataAddListView(APIView):
         data.updated_by = user
         data.save()
         # Refresh materialized view via async task
-        async_task("api.v1.v1_data.tasks.seed_approved_data", data)
+        async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
         return Response(
             {"message": "direct update success"}, status=status.HTTP_200_OK
         )
@@ -1159,7 +1159,7 @@ class PublishDraftFormDataView(APIView):
 
         # Save to file if it's published and not pending
         if direct_to_data:
-            async_task("api.v1.v1_data.tasks.seed_approved_data", draft_data)
+            async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
 
         return Response(
             {"message": "Draft published successfully"},

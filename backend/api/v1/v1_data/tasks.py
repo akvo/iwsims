@@ -4,6 +4,18 @@ from django.conf import settings
 from api.v1.v1_visualization.functions import refresh_materialized_data
 
 
+def refresh_mv_concurrency():
+    """
+    This function is designed to be called
+    asynchronously after a direct update to FormData.
+    It checks if the environment is a test environment and
+    refreshes the materialized views accordingly,
+    using concurrency in non-test environments for better performance.
+    """
+    concurrency = not settings.TEST_ENV
+    refresh_materialized_data(concurrent=concurrency)
+
+
 def seed_approved_data(data: FormData):
     """
     Update FormData object from pending status to approved status
@@ -18,7 +30,6 @@ def seed_approved_data(data: FormData):
         # If the form is a parent form, save to file
         data.save_to_file
     # Refresh materialized view after saving data
-    concurrency = not settings.TEST_ENV
-    refresh_materialized_data(concurrent=concurrency)
+    refresh_mv_concurrency()
 
     return data
