@@ -113,51 +113,51 @@ def build_column_caches(paginated, columns):
     latest_ids = [p.latest_id for p in paginated]
     parent_ids = [p.id for p in paginated]
 
-    answer_qids = set()
-    parent_answer_qids = set()
-    latest_date_qids = set()
+    answer_qnames = set()
+    parent_answer_qnames = set()
+    latest_date_qnames = set()
     need_created_fallback = False
 
     for c in columns:
         src = c["source"]
-        qid = c.get("question_id")
-        if src == "answer" and qid:
-            answer_qids.add(qid)
-        elif src == "parent_answer" and qid:
-            parent_answer_qids.add(qid)
+        qname = c.get("question_name")
+        if src == "answer" and qname:
+            answer_qnames.add(qname)
+        elif src == "parent_answer" and qname:
+            parent_answer_qnames.add(qname)
         elif src == "latest_date":
-            if qid:
-                latest_date_qids.add(qid)
+            if qname:
+                latest_date_qnames.add(qname)
             else:
                 need_created_fallback = True
 
     answer_map = {}
-    if answer_qids or latest_date_qids:
+    if answer_qnames or latest_date_qnames:
         rows = MVAnswerDenormalized.objects.filter(
             data_id__in=latest_ids,
-            question_id__in=answer_qids | latest_date_qids,
+            question_name__in=answer_qnames | latest_date_qnames,
         ).values(
-            "data_id", "question_id",
+            "data_id", "question_name",
             "answer_name", "answer_value", "answer_options",
         )
         for r in rows:
-            answer_map[(r["data_id"], r["question_id"])] = {
+            answer_map[(r["data_id"], r["question_name"])] = {
                 "name": r["answer_name"],
                 "value": r["answer_value"],
                 "options": r["answer_options"],
             }
 
     parent_answer_map = {}
-    if parent_answer_qids:
+    if parent_answer_qnames:
         rows = MVAnswerDenormalized.objects.filter(
             data_id__in=parent_ids,
-            question_id__in=parent_answer_qids,
+            question_name__in=parent_answer_qnames,
         ).values(
-            "data_id", "question_id",
+            "data_id", "question_name",
             "answer_name", "answer_value", "answer_options",
         )
         for r in rows:
-            parent_answer_map[(r["data_id"], r["question_id"])] = {
+            parent_answer_map[(r["data_id"], r["question_name"])] = {
                 "name": r["answer_name"],
                 "value": r["answer_value"],
                 "options": r["answer_options"],
@@ -195,25 +195,25 @@ def extract_column_value(parent, latest_id, col, caches):
         return adm.name if adm else None
 
     if source == "answer":
-        qid = col.get("question_id")
-        if not qid:
+        qname = col.get("question_name")
+        if not qname:
             return None
         return _answer_cell_value(
-            caches["answer"].get((latest_id, qid))
+            caches["answer"].get((latest_id, qname))
         )
 
     if source == "parent_answer":
-        qid = col.get("question_id")
-        if not qid:
+        qname = col.get("question_name")
+        if not qname:
             return None
         return _answer_cell_value(
-            caches["parent_answer"].get((parent.id, qid))
+            caches["parent_answer"].get((parent.id, qname))
         )
 
     if source == "latest_date":
-        qid = col.get("question_id")
-        if qid:
-            answer = caches["answer"].get((latest_id, qid))
+        qname = col.get("question_name")
+        if qname:
+            answer = caches["answer"].get((latest_id, qname))
             if answer and answer.get("name"):
                 return format_date_group(answer["name"])
         created = caches["created"].get(latest_id)

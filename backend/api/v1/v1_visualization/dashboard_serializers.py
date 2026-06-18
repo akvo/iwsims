@@ -299,15 +299,10 @@ class EscalationFilterSerializer(serializers.Serializer):
             if source in qid_required_sources and len(parts) < 3:
                 raise serializers.ValidationError(
                     f"Column source '{source}' requires a"
-                    f" question_id: '{item}'"
+                    f" question_name: '{item}'"
                 )
             if len(parts) > 2:
-                try:
-                    col["question_id"] = int(parts[2])
-                except ValueError:
-                    raise serializers.ValidationError(
-                        f"Invalid question_id in column: '{item}'."
-                    )
+                col["question_name"] = validate_qname(parts[2])
             parsed.append(col)
         return parsed
 

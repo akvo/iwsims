@@ -75,7 +75,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
             f"?monitoring_form_id={self.monitoring.id}"
             f"&criteria=option_equals:{self.q_option.name}:pending"
             "&columns=name:parent_name,status:answer:"
-            f"{self.Q_OPTION_ID}"
+            f"{self.q_option.name}"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -184,8 +184,8 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
             f"?monitoring_form_id={self.monitoring.id}"
             f"&criteria=option_equals:{self.q_option.name}:active"
             f"&columns=name:parent_name"
-            f",status:answer:{self.Q_OPTION_ID}"
-            f",last_visit:latest_date:{self.Q_DATE_ID}"
+            f",status:answer:{self.q_option.name}"
+            f",last_visit:latest_date:{self.q_date.name}"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -208,8 +208,8 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
             f"?monitoring_form_id={self.monitoring.id}"
             f"&criteria=option_equals:{self.q_option.name}:active"
             f"&columns=name:parent_name"
-            f",reg_admin:parent_answer:{self.Q_REG_ADMIN_ID}"
-            f",mon_admin:answer:{self.Q_REG_ADMIN_ID}"
+            f",reg_admin:parent_answer:{self.q_reg_admin.name}"
+            f",mon_admin:answer:{self.q_reg_admin.name}"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -228,7 +228,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
             f"?monitoring_form_id={self.monitoring.id}"
             f"&criteria=option_equals:{self.q_option.name}:active"
             f"&columns=name:parent_name"
-            f",missing:parent_answer:99999999"
+            ",missing:parent_answer:nonexistent_qname"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
