@@ -39,6 +39,7 @@ Task 1 ──→ Task 2 ──→ Task 3 ──→ Task 4 ──→ Task 5
 | [Task 3](./task-3-update-refresh-function.md) | `functions.py` | Update refresh to include all views | Easy |
 | [Task 4](./task-4-optimize-query-functions.md) | `functions.py`, `values_functions.py` | Rewrite queries to use MVs | Medium |
 | [Task 5](./task-5-question-name-api-parameter.md) | `views.py`, `functions.py` | Add `question_name` API parameter | Medium |
+| [Task 6](./task-6-full-question-name-support.md) | `dashboard_*`, `*_functions.py`, `formula.py`, frontend hooks, notebook | Full `question_name` support across all endpoints (values rich path, escalation, progress, formula/map) + config conversion | Large |
 
 ## Reference Documentation
 

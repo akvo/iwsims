@@ -107,17 +107,22 @@ class Migration(migrations.Migration):
                 SELECT
                     d.id AS data_id,
                     d.parent_id,
+                    parent.form_id AS parent_form_id,
                     d.form_id,
                     d.administration_id,
                     d.created
                 FROM data d
+                INNER JOIN data parent ON parent.id = d.parent_id
                 WHERE d.parent_id IS NOT NULL
                     AND d.is_pending = FALSE
                     AND d.is_draft = FALSE
+                    AND parent.is_pending = FALSE
+                    AND parent.is_draft = FALSE
             ),
             answers_with_meta AS (
                 SELECT
                     m.parent_id,
+                    m.parent_form_id,
                     m.administration_id,
                     m.created AS data_created,
                     a.question_id,
@@ -137,6 +142,7 @@ class Migration(migrations.Migration):
             SELECT
                 row_number() OVER () AS id,
                 parent_id,
+                parent_form_id,
                 administration_id,
                 question_name,
                 question_type,
@@ -151,6 +157,8 @@ class Migration(migrations.Migration):
                 ON mv_cross_form_latest (id);
             CREATE INDEX idx_mv_cross_form_parent_qname
                 ON mv_cross_form_latest (parent_id, question_name);
+            CREATE INDEX idx_mv_cross_form_parent_form_qname
+                ON mv_cross_form_latest (parent_form_id, question_name);
             CREATE INDEX idx_mv_cross_form_qname
                 ON mv_cross_form_latest (question_name);
             CREATE INDEX idx_mv_cross_form_admin
@@ -255,3 +263,12 @@ class Migration(migrations.Migration):
 - `atomic = False` is required because we use `CREATE INDEX` (concurrent index creation needs this)
 - The reverse SQL drops views with `CASCADE` to handle any dependencies
 - Question types: 4 = number, 5 = option, 6 = multiple_option
+- **`mv_cross_form_latest.parent_form_id`** is the **registration form** the parent
+  datapoint belongs to (`parent.form_id`, via the join `data parent ON parent.id =
+  d.parent_id`). It scopes a cross-form `question_name` query to a single registration
+  family — without it, a colliding name like `ph` (present in 4+ forms) would aggregate
+  across every family's parents. The composite index
+  `idx_mv_cross_form_parent_form_qname (parent_form_id, question_name)` serves the
+  `WHERE parent_form_id = ? AND question_name = ?` lookup. The added
+  `parent.is_pending = FALSE AND parent.is_draft = FALSE` filters keep the join from
+  pulling monitoring under draft/pending registrations (matching `mv_latest_monitoring`).

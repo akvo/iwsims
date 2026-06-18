@@ -188,6 +188,7 @@ functional = MVAnswerDenormalized.objects.filter(
 |--------|------|-------------|
 | `id` | BIGINT (PK) | Row ID (auto-generated) |
 | `parent_id` | BIGINT | Parent registration ID |
+| `parent_form_id` | BIGINT | Registration form the parent belongs to (`parent.form_id`). Filter by this to scope a `question_name` query to one registration family; omit for a national / cross-family overview |
 | `administration_id` | BIGINT | Administration of the latest submission |
 | `question_name` | TEXT | Question name/identifier |
 | `question_type` | INT | Question type |
@@ -200,6 +201,7 @@ functional = MVAnswerDenormalized.objects.filter(
 
 - `idx_mv_cross_form_pk` (UNIQUE): `(id)`
 - `idx_mv_cross_form_parent_qname`: `(parent_id, question_name)`
+- `idx_mv_cross_form_parent_form_qname`: `(parent_form_id, question_name)`
 - `idx_mv_cross_form_qname`: `(question_name)`
 - `idx_mv_cross_form_admin`: `(administration_id)`
 
@@ -255,8 +257,15 @@ WHERE question_name = 'ph'
 ```python
 from api.v1.v1_visualization.models import MVCrossFormLatest
 
-# Get latest pH for all parents
-latest_ph = MVCrossFormLatest.objects.filter(
+# Family-scoped: latest pH only for parents of ONE registration form
+# (e.g. EPS family 1749623934933 -> only its monitoring forms contribute)
+latest_ph_eps = MVCrossFormLatest.objects.filter(
+    question_name='ph',
+    parent_form_id=1749623934933,
+).values('parent_id', 'latest_numeric_value', 'latest_created')
+
+# National / cross-family overview: omit parent_form_id to span every family
+latest_ph_national = MVCrossFormLatest.objects.filter(
     question_name='ph'
 ).values('parent_id', 'latest_numeric_value', 'latest_created')
 
