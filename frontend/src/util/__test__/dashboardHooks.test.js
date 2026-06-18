@@ -230,11 +230,11 @@ describe("useDashboardProgress", () => {
     axios.mockResolvedValue({ data: { histogram: [], details: [] } });
 
     const block = {
-      deadline_question_id: 1749630516825,
+      deadline_question_name: "proposed_completion_date",
       api: {
         form_id: 1749623934933,
         monitoring_form_id: 1749624452908,
-        filter_question_id: 1749630516826,
+        filter_question_name: "is_project_completed",
         filter_option_value: "no",
       },
       components: [
@@ -253,7 +253,9 @@ describe("useDashboardProgress", () => {
       "urf:completed_binary:urf,pipes:ratio:impl:plan"
     );
     expect(call.params.filter_option_value).toBe("no");
-    expect(call.params.deadline_question_id).toBe(1749630516825);
+    expect(call.params.deadline_question_name).toBe(
+      "proposed_completion_date"
+    );
   });
 });
 

@@ -10,7 +10,9 @@ export const serializeComponents = (components = []) =>
   components
     .filter((c) => !c.hide)
     .map((c) => {
-      const base = `${c.key}:${c.formula}:${(c.question_names || []).join(":")}`;
+      const base = `${c.key}:${c.formula}:${(c.question_names || []).join(
+        ":"
+      )}`;
       const withExtra =
         c.formula === "multi_select_proportion" && c.total_items
           ? `${base}:${c.total_items}`
@@ -48,22 +50,22 @@ export const useDashboardProgress = (
     if (!progressBlock || !enabled) {
       return null;
     }
-    const { monitoring_form_id, filter_question_id, filter_option_value } =
+    const { monitoring_form_id, filter_question_name, filter_option_value } =
       progressBlock.api || {};
 
     const out = {
       monitoring_form_id,
-      filter_question_id,
+      filter_question_name,
       filter_option_value,
       components: serializeComponents(progressBlock.components || []),
     };
 
-    if (progressBlock.deadline_question_id) {
-      out.deadline_question_id = progressBlock.deadline_question_id;
+    if (progressBlock.deadline_question_name) {
+      out.deadline_question_name = progressBlock.deadline_question_name;
     }
 
-    if (progressBlock.scope_question_id) {
-      out.scope_question_id = progressBlock.scope_question_id;
+    if (progressBlock.scope_question_name) {
+      out.scope_question_name = progressBlock.scope_question_name;
     }
 
     if (filterState?.from_date) {

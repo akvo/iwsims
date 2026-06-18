@@ -83,7 +83,9 @@ const EscalationTable = ({
         key: c.key,
         render: (_value, row) => {
           const display = renderValue(c, row, cellComputers);
-          const question = allQuestions?.find((q) => q?.id === c?.question_id);
+          const question = allQuestions?.find(
+            (q) => q?.name === c?.question_name
+          );
           if (display === null) {
             return <span style={{ color: "#bbb" }}>—</span>;
           }
