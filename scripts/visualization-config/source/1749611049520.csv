@@ -1,0 +1,96 @@
+#,Group,Indicator,Feasible?,Used questionnaire(s),Used questions,Guidance,Logic,Calculation Comprehensive monitoring,Remarks,Verify with Ima / DWS / Tech,checked lotte
+1,Total Overview (Cards),Total Pump Stations,Yes,Registration,"1749611657406 (Name)
+1749611742881 (GPS)",,Count unique pump-station registration records.,"COUNTDISTINCT(COALESCE([pump_station_name],[gps_location]))",,Verify with IMA whether a station should be deduplicated on Name OR GPS — Name typos are common.,
+2,,Inspected (12 mo),Yes,Monitoring,1749611905374 (Inspection date),,IF (inspection_date < 12 months) -> Inspected; count of Inspected.,"RECENT([inspection_date],12)",,,
+3,,% Operational,Yes,Monitoring,1749613710063 (Pump Station Status),,Pump Station Status = Operational -> counts as operational. % = operational / total.,"PERCENT(OR([station_status]=""Operational"",AND([electrical_panel]=""Satisfactory"",[pump_station_lid]=""Covered"",[non_return_valve]=""Operational"",[sluice_valve]=""Operational"",[guardrails_pump_station]=""Secured"")))","should Operational status be taken directly from this single field, or derived from a checklist (electrical panel + lid + valves + standby)? Form value can be set independently of the field-level statuses, which means a 'Pump Station Status = Operational' could co-exist with 'Electrical Panel = Broken'.",,"Halimata, i agree with you. it should be the combination from the checklist, can you update the calculation Halimata Sawadogo"
+4,,Critical issues,Yes,Monitoring -> Derived,"1749613710063 (Status)
+1749612965593 (Elec panel)
+1749613029710 (Lid)
+1749612781881 (Non-return valve)
+1749612827907 (Sluice valve)
+1749613433763 (Guardrails)
+1749613958725 (OHS)",,Count of stations where risk = red.,"COUNT(OR(IN([station_status],""Not Operational"",""Overflowing"",""Blocked""),AND(IN([electrical_panel],""Broken"",""Electrical hazard""),[pump_station_lid]=""Missing"",[non_return_valve]=""Faulty"",[sluice_valve]=""Faulty"",[guardrails_pump_station]=""Missing"",[ohs_equipment]=""Not available"")))",,, 
+5,,Standby Facility,,Monitoring,1749613513292 (Number of pumps standby),,IF (Number of pumps standby > 0) -> Has standby. Count of stations with standby.,COUNT stations where 1749613513292 ≥ 1.,the form does not capture the CONDITION of the standby pump (working / faulty / under maintenance). The dashboard currently shows a Good/Fair/No-standby split — that 'Fair' bucket is fabricated. Recommend adding a 'Standby pump condition' option-question to the Monitoring form.,,good suggestion! We wont be able to udpate the form but important to visualise this in the dashboard too. Halimata Sawadogo
+6,Pump Stations Operational Map,Operationality,Yes,Registration + Monitoring,"1749611742881 (GPS)
+1749613710063 (Status)",,Pin colour from Pump Station Status.,MAP([station_status]),Stations without GPS in Registration cannot be placed on the map; they need to be flagged separately.,,
+7,,Electrical issues,Yes,Monitoring,"1749612965593
+1749613144170
+1749613187910
+1749613395029
+1749613872416
+1749613534231",,Pin highlighted if any electrical-linked form field reports fault.,MAP([electrical_panel]),"should 'Need Maintenance' for electrical panel count as an issue, or only Broken / Electrical hazard? Current dashboard logic includes 'Need Maintenance'.",,yes it should count as an issue Halimata Sawadogo
+8,,Standby facility,Yes,Monitoring,"1749613513292
+1749627528651",,Pin colour by presence of operable standby pump.,MAP([num_pumps_standby]),,,
+9,Pumps at a glance,Pumps Functioning,,Monitoring,1749613489958 (Number of pumps in operation),,Bucket each station by (designPumps - functioning): 0 / 1 / 2+.,"Per station: pumps_offline = (design pumps − 1749613489958).
+Bucket: 0 pumps offline, 1 offline, 2+ offline.",FORM GAP: the form does NOT capture the TOTAL number of pumps designed for the station. Without 'Design pump count' we cannot compute (design − operating). Option (a) add a Registration field for design pump count; option (b) drop the buckets and just show 'Number of pumps in operation' as a numeric value.,,"lets indeed go with option b, can you update the fomula accordingly Halimata Sawadogo"
+10,,Standby Pump Availability (amount),,Monitoring,"1749613513292
+1749627528651",,Donut: Good vs Fair vs No standby. Counts shown next to chart.,Bucket stations by 1749613513292 (0 / 1 / 2+).,⚠ Same gap as the KPI — no 'standby condition' field. The Good / Fair / No-standby donut shown today is fabricated.,,
+11,Pumps at a glance - Structural & Site Condition,Ground conditions,Yes,Monitoring,1749612149744,,Options: Good / Satisfactory / Maintenance in progress / Poor.,DISTRIBUTION([ground_conditions]),,,
+12,,Facility condition,Yes,Monitoring,1749612390514,,Options: Good / Satisfactory / Maintenance in progress / Poor.,DISTRIBUTION([facility_condition]),,,
+13,,Security gate & fencing,Yes,Monitoring,1749612437237,,Options: Good / Maintenance in progress / Poor.,DISTRIBUTION([security_gate_fencing]),Form lacks the 'Satisfactory' option here (3 options instead of 4). Verify whether DWS wants this aligned with Ground/Facility (4 options).,"form is not consistent in the options, do we want to implement this and let DWS know we have updated it? Or do we stick with what is","lets flag this with the tech team, and propose to update the form. this is also the case for : Non return Valve
+Sluice valve Halimata Sawadogo"
+14,,Non-return valve,Yes,Monitoring,1749612781881,,Options: Operational / Maintenance in progress / Faulty.,DISTRIBUTION([non_return_valve]),,,
+15,,Sluice valve,Yes,Monitoring,1749612827907,,Options: Operational / Maintenance in progress / Faulty.,DISTRIBUTION([sluice_valve]),,,
+16,,Ventilation,Yes,Monitoring,1749612881122,,Options: Exhaust Fan in Operation / Poor / Not available.,DISTRIBUTION([ventilation]),,,
+17,,Electrical panel,Yes,Monitoring,1749612965593,,Options: Satisfactory / Need Maintenance / Broken / Electrical hazard.,DISTRIBUTION([electrical_panel]),Option ORDER in the form is Broken / Need Maintenance / Electrical hazard / Satisfactory. For the dashboard we re-order to Satisfactory → Need Maintenance → Broken → Electrical hazard (good → bad).,,doesnt matter
+18,,Pump station lid,Yes,Monitoring,1749613029710,,Options: Covered / Broken / Missing.,DISTRIBUTION([pump_station_lid]),,,
+19,,Gantry,Yes,Monitoring,1749613073320,,Options: Electrical Hoist / Mechanical Hoist / Portable Hoist / Not available.,DISTRIBUTION([gantry]),"Note that 'Not available' is the only failing option here — the three hoist types are all acceptable, just at different capacity levels.",,doest matter
+20,,Hour run meter,Yes,Monitoring,1749613144170,,Options: Operational / Maintenance in progress / Faulty.,DISTRIBUTION([hour_run_meter]),Form has typo 'Oprational' — should be 'Operational',Typo should be updated in the form,
+21,,Amp meter,Yes,Monitoring,1749613187910,,Options: Operational / Maintenance in progress / Faulty.,DISTRIBUTION([amp_meter]),,,
+22,,Volt meter,Yes,Monitoring,1749613395029,,Options: Operational / Maintenance in progress / Faulty.,DISTRIBUTION([volt_meter]),,,
+23,,Guardrails,Yes,Monitoring,1749613433763,,Options: Secured / Missing / Maintenance in progress / Needs Upgrade.,DISTRIBUTION([guardrails_pump_station]),,,
+24,,Power backup system,,Monitoring,1749613534231,,Options: Generator / None.,COUNT per option of 1749613534231: Generator / None.,Only two options. Consider adding 'Solar + Battery' as a third option — already used at some Fiji WAF sites.,,wont do
+25,,Odour,Yes,Monitoring,1749613625174,,Options: None / Mild / Strong.,DISTRIBUTION([odour]),,,
+26,,Fats / grease balls,Yes,Monitoring,1749613671183,,Options: None / Some / Plenty.,DISTRIBUTION([fats_grease_balls]),,,
+27,,Lights,Yes,Monitoring,1749613872416,,Options: Operational / Faulty / Not available.,DISTRIBUTION([lights]),,,
+28,,Water supply,Yes,Monitoring,1749613907567,,Options: Available / Intermittent supply / Not available.,DISTRIBUTION([water_supply]),,,
+29,,OHS equipment,,Monitoring,1749613958725,,Options: Available / Not used / Not available.,COUNT per option of 1749613958725: Available / Not used / Not available.,MAJOR GAP for the histogram below — see row 31.,,
+30,Pumps at a glance,OHS Equipment Compliance,,Monitoring,1749613958725,,Binary score (equipment present + no hazard) per DWS. Histogram of stations by # items compliant out of 6.,% with 1749613958725 = 'Available' across the fleet.,"MAJOR GAP — DOUBLE-CHECK WITH DWS:
+The dashboard currently renders an OHS histogram with 0–6 buckets, suggesting a 6-item OHS checklist (confined-space kit, harness, gas detector, hi-vis, signage, first-aid). The WAF Pump Station form has only ONE OHS question with 3 options (Available / Not available / Not used). The histogram cannot be built from this single field.
+Options:
+  (A) Replace the histogram with a 3-segment donut over the 3 options of 1749613958725.
+  (B) Extend the form with a multi-item OHS checklist matching DWS PPE standards.",,"lets follow option A. Iwan Firmawan is it okey if we do not update the prototype accordingly, but right it down here in this way? "
+31,,Electrical Safety Issues,,Monitoring,"1749612965593
+1749613144170
+1749613187910
+1749613395029
+1749613872416
+1749613534231",,Form-derived bar: # stations affected per electrical-linked form field (Electrical panel / Hour run / Amp / Volt meter / Lights / No power backup).,"For each electrical-linked field, COUNT stations reporting a fault:
+  • Electrical panel (1749612965593) ∈ {Broken, Need Maintenance, Electrical hazard}
+  • Hour run meter (1749613144170) = Faulty
+  • Amp meter (1749613187910) = Faulty
+  • Volt meter (1749613395029) = Faulty
+  • Lights (1749613872416) ∈ {Faulty, Not available}
+  • Power backup (1749613534231) = None
+Render as horizontal bar.","DOUBLE-CHECK whether 'Need Maintenance' on electrical panel should count as an issue, or only Broken / Electrical hazard. Also confirm whether 'No power backup' is a critical issue or just a flag (depends on site criticality).",,add need maintenance as an issue in the calculationHalimata Sawadogo
+32,,Compliance Trend,,Monitoring,"1749611905374 + all condition fields
+1749627302950",,Last 12 months · % stations passing each domain (pumps functioning / standby / electrical OK / OHS pass).,"Group inspections by month of 1749611905374. Per month compute % stations passing each domain:
+  • Operational % (Pump Station Status = Operational)
+  • Standby available %
+  • Electrical OK % (no electrical-field faults)
+  • OHS pass % (OHS Equipment = Available).",Requires accumulated historical data. For the first months after rollout there will be sparse data — chart should label series with 'partial data'.,,perfect
+33,Individual Monitoring,Search & inline station card,,Registration + Monitoring,ALL Registration + Monitoring + Quick Monitoring questions,,"Selectable picker. Renders mini site-hero plus grouped tables that mirror the WAF Pump Station monitoring form (General Information, Structural & Site Condition, Environment / Hygiene, Hydraulic & Valves, Electrical & Instrumentation, Comments & Recommendations).","Display the latest Monitoring submission per station, structured as:
+  • General: 1749611905374, 1749611990753, 1749613710063, 1749613489958, 1749613513292, 1749613958725
+  • Structural: 1749612149744, 1749612390514, 1749612437237, 1749613029710, 1749613433763, 1749612881122, 1749613073320, 1749613907567
+  • Environment: 1749613625174, 1749613671183
+  • Hydraulic / Valves: 1749612781881, 1749612827907
+  • Electrical: 1749612965593, 1749613144170, 1749613187910, 1749613395029, 1749613872416, 1749613534231
+  • Comments: 1749612019055, 1749614058464",Per DWS — show form' history in chronological order. ,,agreed
+34,All Pump Stations,All Pump Stations,,Registration + Monitoring,"1749611657406
+1749611049541
+1749611905374
+1749613710063
+1749613489958
+1749613513292
+1749613958725
+1749612965593",,Click-through table - Station / Division / District / Pump type / Pumps online / Standby / Electrical / OHS / Last inspected / Status.,"One row per registered station (1749611657406). Columns:
+  • Station — 1749611657406
+  • Division — 1749611049541
+  • District — derived (not yet in form)
+  • Pump type — NOT IN FORM
+  • Pumps online — 1749613489958 (or 1749627499538)
+  • Standby — 1749613513292 (or 1749627528651)
+  • Electrical — derived from electrical-field set
+  • OHS — 1749613958725
+  • Last inspected — latest of 1749611905374 / 1749627302950
+  • Status — 1749613710063 (or 1749627552609).","Form does NOT capture District or Pump type. Either: (a) add District to Registration alongside Division, (b) add Pump type (submersible / centrifugal / inline / booster / lift station) to Registration. ⚠ DOUBLE-CHECK with DWS.",this is also not in extensive monitoring and only in quick monitoring,agreed

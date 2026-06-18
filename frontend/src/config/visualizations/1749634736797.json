@@ -1,0 +1,625 @@
+{
+  "parent_form_id": 1749634736797,
+  "slug": "waf_water_treatment_plant-overview",
+  "name": "WAF Water Treatment Plant",
+  "description": "Overview dashboard for WAF Water Treatment Plant.",
+  "fiscal_year_start_month": 1,
+  "items": [
+    {
+      "id": "filters_main",
+      "chart_type": "filter_bar",
+      "order": 1,
+      "col_span": 24,
+      "items": [
+        {
+          "id": "filter_date",
+          "chart_type": "filter_date",
+          "order": 1,
+          "label": "Monitoring Period",
+          "date_question_names": {
+            "monitoring": "__TODO_inspection_date_qname__"
+          }
+        },
+        {
+          "id": "filter_administration",
+          "chart_type": "filter_administration",
+          "order": 2,
+          "label": "Location"
+        }
+      ]
+    },
+    {
+      "id": "kpi_total_wtps",
+      "chart_type": "card",
+      "order": 2,
+      "col_span": 6,
+      "label": "Total WTPs",
+      "api": {
+        "form_id": 1749634736797,
+        "monitoring": "latest"
+      }
+    },
+    {
+      "id": "kpi_inspected_12_mo",
+      "chart_type": "card",
+      "order": 3,
+      "col_span": 6,
+      "label": "Inspected (12 mo)",
+      "api": {
+        "question_name": "date_of_inspection",
+        "sum_by": "parent_id",
+        "rolling_months": 12
+      }
+    },
+    {
+      "id": "kpi_operational",
+      "chart_type": "metric_card",
+      "order": 4,
+      "col_span": 6,
+      "label": "% Operational",
+      "api": {
+        "question_name": "has_production_constraints",
+        "group_by": "option",
+        "include_unanswered": true
+      },
+      "show_percentage": true,
+      "target_group": "No"
+    },
+    {
+      "id": "kpi_dw_compliance",
+      "chart_type": "card",
+      "order": 5,
+      "col_span": 6,
+      "label": "DW Compliance",
+      "color": "#64A73B",
+      "compute": "compliance_kpi",
+      "params_ref": [
+        "__TODO_list_param_ids__"
+      ],
+      "globals_ref": "__TODO_wq_globals_ref__",
+      "denominator_api": {
+        "form_id": "__TODO_reg_form_id__"
+      }
+    },
+    {
+      "id": "kpi_critical_red",
+      "chart_type": "card",
+      "order": 6,
+      "col_span": 6,
+      "label": "Critical (RED)",
+      "api": {
+        "question_name": "e_coli_cfu_100ml",
+        "sum_by": "parent_id",
+        "monitoring": "latest",
+        "option_value": "Yes"
+      }
+    },
+    {
+      "id": "map_main",
+      "chart_type": "map",
+      "title": "Monitored Wtp Sites",
+      "order": 7,
+      "col_span": 24,
+      "height": 400,
+      "source_form_id": 1749634736797,
+      "filters": [
+        {
+          "type": "select",
+          "key": "geolocation",
+          "label": "Drinking water compliance",
+          "question_name": "geolocation",
+          "color_map": {
+            "__TODO_option__": "#64A73B",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "select",
+          "key": "disinfection_technique",
+          "label": "Disinfection technique",
+          "question_name": "disinfection_technique",
+          "color_map": {
+            "__TODO_option__": "#64A73B",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "toggle",
+          "key": "monitored_last_year",
+          "label": "Monitored last year",
+          "default": true,
+          "rolling_months": 12
+        }
+      ],
+      "click_action": "popup",
+      "click_url_template": "/control-center/data/1749634736797/monitoring/{data_id}"
+    },
+    {
+      "id": "title_wtp_at_a_glance",
+      "chart_type": "section_title",
+      "order": 8,
+      "col_span": 24,
+      "text": "WTP at a glance"
+    },
+    {
+      "id": "chart_drinking_water_compliance_by_parameter",
+      "chart_type": "stack_bar",
+      "order": 9,
+      "col_span": 24,
+      "config": {
+        "title": "Drinking Water Compliance by Parameter"
+      },
+      "compute": "compliance",
+      "include_unanswered": true,
+      "params_ref": [
+        "__TODO_list_param_ids__"
+      ],
+      "globals_ref": "__TODO_wq_globals_ref__"
+    },
+    {
+      "id": "chart_sample_method",
+      "chart_type": "half_doughnut",
+      "order": 10,
+      "col_span": 12,
+      "config": {
+        "title": "Sample Method"
+      },
+      "api": {
+        "question_name": "water_testing_method",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_production_vs_design_capacity",
+      "chart_type": "bar",
+      "order": 11,
+      "col_span": 12,
+      "config": {
+        "title": "Production vs Design Capacity",
+        "xAxisLabel": "__TODO_unit__",
+        "yAxisLabel": "count"
+      },
+      "api": {
+        "question_name": "daily_production_megalitres",
+        "group_by": "parent_id",
+        "monitoring": "latest"
+      }
+    },
+    {
+      "id": "chart_treatment_processes_in_use",
+      "chart_type": "half_doughnut",
+      "order": 12,
+      "col_span": 12,
+      "config": {
+        "title": "Treatment Processes in Use"
+      },
+      "api": {
+        "question_name": "floc_tanks_used_in_the_plant",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "kpi_ohs_policy_flow",
+      "chart_type": "metric_card",
+      "order": 13,
+      "col_span": 12,
+      "label": "OHS Policy Flow",
+      "api": {
+        "question_name": "has_ohs_policy",
+        "group_by": "option",
+        "include_unanswered": true
+      },
+      "show_percentage": true,
+      "target_group": "Yes"
+    },
+    {
+      "id": "main_tabs",
+      "chart_type": "tabs",
+      "order": 14,
+      "col_span": 24,
+      "items": [
+        {
+          "id": "tab_monitoring_overview",
+          "label": "Monitoring overview",
+          "items": [
+            {
+              "id": "kpi_monitored_12_mo",
+              "chart_type": "card",
+              "order": 1,
+              "col_span": 12,
+              "label": "Monitored (12 mo)",
+              "api": {
+                "question_name": "date_of_inspection",
+                "sum_by": "parent_id",
+                "rolling_months": 12
+              }
+            },
+            {
+              "id": "kpi_critical_issues",
+              "chart_type": "card",
+              "order": 2,
+              "col_span": 12,
+              "label": "Critical issues",
+              "api": {
+                "question_name": "e_coli_cfu_100ml",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "Yes"
+              }
+            },
+            {
+              "id": "kpi_no_waterquality_check",
+              "chart_type": "card",
+              "order": 3,
+              "col_span": 12,
+              "label": "No water-quality check",
+              "api": {
+                "question_name": "can_take_water_sample",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "No"
+              }
+            },
+            {
+              "id": "chart_inspectiondate_histogram",
+              "chart_type": "bar",
+              "order": 4,
+              "col_span": 12,
+              "config": {
+                "title": "Inspection-date histogram",
+                "xAxisLabel": "__TODO_unit__",
+                "yAxisLabel": "count"
+              },
+              "api": {
+                "question_name": "date_of_inspection",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "rank_most_recently_monitored",
+              "chart_type": "ranking",
+              "order": 5,
+              "col_span": 12,
+              "label": "Most recently monitored",
+              "api": {
+                "question_name": "date_of_inspection",
+                "sort": "desc",
+                "limit": 8,
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "rank_needs_monitoring",
+              "chart_type": "ranking",
+              "order": 6,
+              "col_span": 12,
+              "label": "Needs monitoring",
+              "api": {
+                "question_name": "date_of_inspection",
+                "sort": "asc",
+                "limit": 8,
+                "monitoring": "latest"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab_water_quality",
+          "label": "Water quality",
+          "items": [
+            {
+              "id": "kpi_sampled_12_mo",
+              "chart_type": "metric_card",
+              "order": 1,
+              "col_span": 12,
+              "label": "Sampled (12 mo)",
+              "api": {
+                "question_name": "can_take_water_sample",
+                "group_by": "option",
+                "include_unanswered": true
+              },
+              "show_percentage": true,
+              "target_group": "Yes"
+            },
+            {
+              "id": "kpi_lab_tested",
+              "chart_type": "card",
+              "order": 2,
+              "col_span": 12,
+              "label": "Lab tested",
+              "api": {
+                "question_name": "water_testing_method",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "Lab Test"
+              }
+            },
+            {
+              "id": "kpi_cbt_tested",
+              "chart_type": "card",
+              "order": 3,
+              "col_span": 12,
+              "label": "CBT tested",
+              "api": {
+                "question_name": "water_testing_method",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "CBT Bag Test"
+              }
+            },
+            {
+              "id": "param_total_coliform",
+              "chart_type": "dot_strip",
+              "order": 4,
+              "col_span": 12,
+              "label": "Total coliform",
+              "description": "Acceptance threshold ≤ 0 CFU/100mL",
+              "config": {
+                "title": "Total coliform",
+                "xAxisLabel": "CFU/100mL",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 0
+              },
+              "api": {
+                "question_name": "total_coliform_cfu_100ml",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_turbidity",
+              "chart_type": "dot_strip",
+              "order": 5,
+              "col_span": 12,
+              "label": "Turbidity",
+              "description": "Acceptance threshold < 5 NTU",
+              "config": {
+                "title": "Turbidity",
+                "xAxisLabel": "NTU",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 5
+              },
+              "api": {
+                "question_name": "turbidity_ntu",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_residual_chlorine",
+              "chart_type": "dot_strip",
+              "order": 6,
+              "col_span": 12,
+              "label": "Residual chlorine",
+              "description": "Acceptable range 0.2–0.5 mg/L",
+              "config": {
+                "title": "Residual chlorine",
+                "xAxisLabel": "mg/L",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "min": 0.2,
+                "max": 0.5
+              },
+              "api": {
+                "question_name": "residual_chlorine_mg_l",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_ph",
+              "chart_type": "dot_strip",
+              "order": 7,
+              "col_span": 12,
+              "label": "pH",
+              "description": "Acceptable range 6.5–8.5 pH",
+              "config": {
+                "title": "pH",
+                "xAxisLabel": "pH",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "min": 6.5,
+                "max": 8.5
+              },
+              "api": {
+                "question_name": "ph",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_conductivity",
+              "chart_type": "dot_strip",
+              "order": 8,
+              "col_span": 12,
+              "label": "Conductivity",
+              "description": "Acceptance threshold < 1000 µS/cm",
+              "config": {
+                "title": "Conductivity",
+                "xAxisLabel": "µS/cm",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 1000
+              },
+              "api": {
+                "question_name": "conductivity",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab_treatment_condition",
+          "label": "Treatment & Condition",
+          "items": [
+            {
+              "id": "chart_treatment_chemicals",
+              "chart_type": "half_doughnut",
+              "order": 1,
+              "col_span": 12,
+              "config": {
+                "title": "Treatment Chemicals"
+              },
+              "api": {
+                "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                "group_by": "option",
+                "monitoring": "latest",
+                "include_unanswered": true
+              }
+            },
+            {
+              "id": "chart_sedimentation_floc_tank_count",
+              "chart_type": "bar",
+              "order": 2,
+              "col_span": 12,
+              "config": {
+                "title": "Sedimentation — Floc Tank Count",
+                "xAxisLabel": "__TODO_unit__",
+                "yAxisLabel": "count"
+              },
+              "api": {
+                "question_name": "floc_tanks_are_there_at_the_plant",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "chart_sedimentation_tank_type",
+              "chart_type": "half_doughnut",
+              "order": 3,
+              "col_span": 12,
+              "config": {
+                "title": "Sedimentation Tank Type"
+              },
+              "api": {
+                "question_name": "types_of_clarifiers_sedimentation_tanks_at_the_plant",
+                "group_by": "option",
+                "monitoring": "latest",
+                "include_unanswered": true
+              }
+            },
+            {
+              "id": "chart_sedimentation_active_risks",
+              "chart_type": "half_doughnut",
+              "order": 4,
+              "col_span": 12,
+              "config": {
+                "title": "Sedimentation — Active Risks"
+              },
+              "api": {
+                "question_name": "these_risks",
+                "group_by": "option",
+                "monitoring": "latest",
+                "include_unanswered": true
+              }
+            },
+            {
+              "id": "chart_disinfection_technique",
+              "chart_type": "half_doughnut",
+              "order": 5,
+              "col_span": 12,
+              "config": {
+                "title": "Disinfection Technique"
+              },
+              "api": {
+                "question_name": "disinfection_technique",
+                "group_by": "option",
+                "monitoring": "latest",
+                "include_unanswered": true
+              }
+            },
+            {
+              "id": "chart_disinfection_active_risks",
+              "chart_type": "half_doughnut",
+              "order": 6,
+              "col_span": 12,
+              "config": {
+                "title": "Disinfection — Active Risks"
+              },
+              "api": {
+                "question_name": "chlorine_gas_risks_description",
+                "group_by": "option",
+                "monitoring": "latest",
+                "include_unanswered": true
+              }
+            },
+            {
+              "id": "chart_magnetic_flow_meters",
+              "chart_type": "half_doughnut",
+              "order": 7,
+              "col_span": 12,
+              "config": {
+                "title": "Magnetic Flow Meters"
+              },
+              "api": {
+                "question_name": "type_of_flow_meters",
+                "group_by": "option",
+                "monitoring": "latest",
+                "include_unanswered": true
+              }
+            },
+            {
+              "id": "chart_flow_meter_risks",
+              "chart_type": "half_doughnut",
+              "order": 8,
+              "col_span": 12,
+              "config": {
+                "title": "Flow Meter Risks"
+              },
+              "api": {
+                "question_name": "these_risks_associated_with_the_flow_meters",
+                "group_by": "option",
+                "monitoring": "latest",
+                "include_unanswered": true
+              }
+            },
+            {
+              "id": "chart_reservoirs_highlift_pumps",
+              "chart_type": "bar",
+              "order": 9,
+              "col_span": 12,
+              "config": {
+                "title": "Reservoirs — High-Lift Pumps",
+                "xAxisLabel": "__TODO_unit__",
+                "yAxisLabel": "count"
+              },
+              "api": {
+                "question_name": "number_of_high_lift_pumps",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "chart_backup_power_supply",
+              "chart_type": "half_doughnut",
+              "order": 10,
+              "col_span": 12,
+              "config": {
+                "title": "Back-up Power Supply"
+              },
+              "api": {
+                "question_name": "has_backup_generator",
+                "group_by": "option",
+                "monitoring": "latest",
+                "include_unanswered": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

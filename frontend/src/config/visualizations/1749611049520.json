@@ -1,0 +1,394 @@
+{
+  "parent_form_id": 1749611049520,
+  "slug": "wastewater_pump_station-overview",
+  "name": "Wastewater Pump Station",
+  "description": "Overview dashboard for Wastewater Pump Station.",
+  "fiscal_year_start_month": 1,
+  "items": [
+    {
+      "id": "filters_main",
+      "chart_type": "filter_bar",
+      "order": 1,
+      "col_span": 24,
+      "items": [
+        {
+          "id": "filter_date",
+          "chart_type": "filter_date",
+          "order": 1,
+          "label": "Monitoring Period",
+          "date_question_names": {
+            "monitoring": "__TODO_inspection_date_qname__"
+          }
+        },
+        {
+          "id": "filter_administration",
+          "chart_type": "filter_administration",
+          "order": 2,
+          "label": "Location"
+        }
+      ]
+    },
+    {
+      "id": "kpi_total_pump_stations",
+      "chart_type": "card",
+      "order": 2,
+      "col_span": 6,
+      "label": "Total Pump Stations",
+      "api": {
+        "form_id": 1749611049520,
+        "monitoring": "latest"
+      }
+    },
+    {
+      "id": "kpi_inspected_12_mo",
+      "chart_type": "card",
+      "order": 3,
+      "col_span": 6,
+      "label": "Inspected (12 mo)",
+      "api": {
+        "question_name": "inspection_date",
+        "sum_by": "parent_id",
+        "rolling_months": 12
+      }
+    },
+    {
+      "id": "kpi_operational",
+      "chart_type": "metric_card",
+      "order": 4,
+      "col_span": 6,
+      "label": "% Operational",
+      "api": {
+        "question_name": "station_status",
+        "group_by": "option",
+        "include_unanswered": true
+      },
+      "show_percentage": true,
+      "target_group": "Operational"
+    },
+    {
+      "id": "kpi_critical_issues",
+      "chart_type": "card",
+      "order": 5,
+      "col_span": 6,
+      "label": "Critical issues",
+      "api": {
+        "question_name": "station_status",
+        "sum_by": "parent_id",
+        "monitoring": "latest",
+        "option_value": "Missing"
+      }
+    },
+    {
+      "id": "map_main",
+      "chart_type": "map",
+      "title": "Monitored Pump Station Sites",
+      "order": 6,
+      "col_span": 24,
+      "height": 400,
+      "source_form_id": 1749611049520,
+      "filters": [
+        {
+          "type": "select",
+          "key": "station_status",
+          "label": "Operationality",
+          "question_name": "station_status",
+          "color_map": {
+            "__TODO_option__": "#64A73B",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "select",
+          "key": "electrical_panel",
+          "label": "Electrical issues",
+          "question_name": "electrical_panel",
+          "color_map": {
+            "__TODO_option__": "#64A73B",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "select",
+          "key": "num_pumps_standby",
+          "label": "Standby facility",
+          "question_name": "num_pumps_standby",
+          "color_map": {
+            "__TODO_option__": "#64A73B",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "toggle",
+          "key": "monitored_last_year",
+          "label": "Monitored last year",
+          "default": true,
+          "rolling_months": 12
+        }
+      ],
+      "click_action": "popup",
+      "click_url_template": "/control-center/data/1749611049520/monitoring/{data_id}"
+    },
+    {
+      "id": "title_pumps_at_a_glance_structural_site_condit",
+      "chart_type": "section_title",
+      "order": 7,
+      "col_span": 24,
+      "text": "Pumps at a glance - Structural & Site Condition"
+    },
+    {
+      "id": "chart_ground_conditions",
+      "chart_type": "half_doughnut",
+      "order": 8,
+      "col_span": 12,
+      "config": {
+        "title": "Ground conditions"
+      },
+      "api": {
+        "question_name": "ground_conditions",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_facility_condition",
+      "chart_type": "half_doughnut",
+      "order": 9,
+      "col_span": 12,
+      "config": {
+        "title": "Facility condition"
+      },
+      "api": {
+        "question_name": "facility_condition",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_security_gate_fencing",
+      "chart_type": "half_doughnut",
+      "order": 10,
+      "col_span": 12,
+      "config": {
+        "title": "Security gate & fencing"
+      },
+      "api": {
+        "question_name": "security_gate_fencing",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_nonreturn_valve",
+      "chart_type": "half_doughnut",
+      "order": 11,
+      "col_span": 12,
+      "config": {
+        "title": "Non-return valve"
+      },
+      "api": {
+        "question_name": "non_return_valve",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_sluice_valve",
+      "chart_type": "half_doughnut",
+      "order": 12,
+      "col_span": 12,
+      "config": {
+        "title": "Sluice valve"
+      },
+      "api": {
+        "question_name": "sluice_valve",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_ventilation",
+      "chart_type": "half_doughnut",
+      "order": 13,
+      "col_span": 12,
+      "config": {
+        "title": "Ventilation"
+      },
+      "api": {
+        "question_name": "ventilation",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_electrical_panel",
+      "chart_type": "half_doughnut",
+      "order": 14,
+      "col_span": 12,
+      "config": {
+        "title": "Electrical panel"
+      },
+      "api": {
+        "question_name": "electrical_panel",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_pump_station_lid",
+      "chart_type": "half_doughnut",
+      "order": 15,
+      "col_span": 12,
+      "config": {
+        "title": "Pump station lid"
+      },
+      "api": {
+        "question_name": "pump_station_lid",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_gantry",
+      "chart_type": "half_doughnut",
+      "order": 16,
+      "col_span": 12,
+      "config": {
+        "title": "Gantry"
+      },
+      "api": {
+        "question_name": "gantry",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_hour_run_meter",
+      "chart_type": "half_doughnut",
+      "order": 17,
+      "col_span": 12,
+      "config": {
+        "title": "Hour run meter"
+      },
+      "api": {
+        "question_name": "hour_run_meter",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_amp_meter",
+      "chart_type": "half_doughnut",
+      "order": 18,
+      "col_span": 12,
+      "config": {
+        "title": "Amp meter"
+      },
+      "api": {
+        "question_name": "amp_meter",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_volt_meter",
+      "chart_type": "half_doughnut",
+      "order": 19,
+      "col_span": 12,
+      "config": {
+        "title": "Volt meter"
+      },
+      "api": {
+        "question_name": "volt_meter",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_guardrails",
+      "chart_type": "half_doughnut",
+      "order": 20,
+      "col_span": 12,
+      "config": {
+        "title": "Guardrails"
+      },
+      "api": {
+        "question_name": "guardrails_pump_station",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_odour",
+      "chart_type": "half_doughnut",
+      "order": 21,
+      "col_span": 12,
+      "config": {
+        "title": "Odour"
+      },
+      "api": {
+        "question_name": "odour",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_fats_grease_balls",
+      "chart_type": "half_doughnut",
+      "order": 22,
+      "col_span": 12,
+      "config": {
+        "title": "Fats / grease balls"
+      },
+      "api": {
+        "question_name": "fats_grease_balls",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_lights",
+      "chart_type": "half_doughnut",
+      "order": 23,
+      "col_span": 12,
+      "config": {
+        "title": "Lights"
+      },
+      "api": {
+        "question_name": "lights",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_water_supply",
+      "chart_type": "half_doughnut",
+      "order": 24,
+      "col_span": 12,
+      "config": {
+        "title": "Water supply"
+      },
+      "api": {
+        "question_name": "water_supply",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    }
+  ]
+}
