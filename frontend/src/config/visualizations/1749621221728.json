@@ -456,8 +456,7 @@
         }
       },
       "api": {
-        "form_id": 1749621962296,
-        "question_id": 1749622849604,
+        "question_name": "water_test_type",
         "group_by": "option",
         "monitoring": "latest",
         "include_unanswered": true

@@ -290,8 +290,7 @@
         }
       },
       "api": {
-        "form_id": 1749632545233,
-        "question_id": 1749633373968,
+        "question_name": "system_status",
         "group_by": "option",
         "monitoring": "latest",
         "include_unanswered": true
@@ -380,8 +379,7 @@
         }
       },
       "api": {
-        "form_id": 1749632545233,
-        "question_id": 1749633001462,
+        "question_name": "water_testing_method",
         "group_by": "option",
         "monitoring": "latest",
         "include_unanswered": true

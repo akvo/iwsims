@@ -1,18 +1,21 @@
 import logging
+from collections import defaultdict
 
 from django.db import connection
 from django.db.models import (
-    Q, Subquery, OuterRef,
+    Avg, Count, Q, Subquery, OuterRef,
 )
 from datetime import datetime as dt_datetime, timedelta, date
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from api.v1.v1_data.models import FormData, Answers
-from api.v1.v1_forms.models import Questions
+from api.v1.v1_forms.models import Questions, QuestionOptions
 from api.v1.v1_profile.models import Administration
 from api.v1.v1_visualization.constants import MATERIALIZED_VIEWS
 from api.v1.v1_visualization.models import (
     MVAnswerDenormalized,
+    MVCrossFormLatest,
     MVLatestMonitoring,
 )
 
@@ -675,3 +678,245 @@ def fill_date_gaps(data, from_date, to_date):
             })
         cursor = cursor + timedelta(days=1)
     return filled
+
+
+# -- question_name cross-form helpers --
+
+def get_values_by_question_name(question_name, params):
+    """Get visualization values by question_name across all monitoring forms.
+
+    Uses mv_cross_form_latest to find the latest value for each parent,
+    regardless of which monitoring form the answer came from.
+
+    Args:
+        question_name: Question name/identifier (e.g., "ph", "status").
+        params: Dict with administration_id, group_by, value_type, and
+            optionally sum_by, option_value, rolling_months, from_date,
+            to_date.
+
+    Returns:
+        Tuple of (data, labels) matching existing API response format.
+    """
+    administration_id = params.get("administration_id")
+    group_by = params.get("group_by")
+    value_type = params.get("value_type", "number")
+    sum_by = params.get("sum_by")
+    option_value = params.get("option_value")
+    rolling_months = params.get("rolling_months")
+    from_date = params.get("from_date")
+    to_date = params.get("to_date")
+
+    qs = MVCrossFormLatest.objects.filter(question_name=question_name)
+
+    if administration_id:
+        qs = apply_administration_filter_mv(
+            qs, administration_id, field='administration_id'
+        )
+
+    # Recency / date-window filter on the latest submission timestamp.
+    qs = _apply_qname_date_filter(
+        qs, rolling_months, from_date, to_date
+    )
+
+    # Card / count mode: a single parent count, optionally narrowed to a
+    # specific option value. Triggered by sum_by=parent_id or option_value
+    # so the number/option aggregation defaults below stay unchanged.
+    if sum_by == "parent_id" or option_value:
+        return _count_parents_by_qname(qs, option_value, value_type)
+
+    # Pick the most common question_type across all rows (mode).
+    # A well-formed dataset has one type per question_name; when forms
+    # disagree (rare), the majority wins with question_type as tiebreak.
+    type_row = (
+        qs.values("question_type")
+        .annotate(cnt=Count("id"))
+        .order_by("-cnt", "question_type")
+        .first()
+    )
+    if not type_row:
+        return [], []
+
+    question_type = type_row["question_type"]
+
+    if question_type == 4:  # number
+        return _values_by_qname_number(qs, group_by, value_type)
+    if question_type in (5, 6):  # option, multiple_option
+        return _values_by_qname_option(qs, question_name, group_by, value_type)
+    return _values_by_qname_text(qs)
+
+
+def _apply_qname_date_filter(qs, rolling_months, from_date, to_date):
+    """Filter a cross-form queryset by submission recency / date window.
+
+    - rolling_months: keep rows whose latest answer is within the last N
+      months (approximated as N * 30 days from now).
+    - from_date / to_date: inclusive bounds on the latest answer date.
+    """
+    if rolling_months:
+        cutoff = timezone.now() - timedelta(days=30 * rolling_months)
+        qs = qs.filter(latest_created__gte=cutoff)
+    if from_date:
+        qs = qs.filter(latest_created__date__gte=from_date)
+    if to_date:
+        qs = qs.filter(latest_created__date__lte=to_date)
+    return qs
+
+
+def _count_parents_by_qname(qs, option_value, value_type):
+    """Count distinct parents for a question_name (card / KPI mode).
+
+    When option_value is given, count only parents whose latest option
+    values contain it. With value_type=percentage, return that count as a
+    share of all parents that answered the question.
+    """
+    total = qs.values("parent_id").distinct().count()
+    if option_value:
+        matched = (
+            qs.filter(latest_option_values__contains=[option_value])
+            .values("parent_id")
+            .distinct()
+            .count()
+        )
+    else:
+        matched = total
+
+    if value_type == "percentage":
+        value = round(matched / total * 100, 2) if total else 0
+    else:
+        value = matched
+
+    label = option_value or "Total"
+    group = option_value or "total"
+    return [{"value": value, "label": label, "group": group}], [label]
+
+
+def _values_by_qname_number(qs, group_by, value_type):
+    """Handle number question aggregation by question_name."""
+    if group_by == "parent_id":
+        rows = list(
+            qs.filter(latest_numeric_value__isnull=False)
+            .values("parent_id", "latest_numeric_value")
+        )
+        if not rows:
+            return [], []
+        parent_ids = [r["parent_id"] for r in rows]
+        name_map = dict(
+            FormData.objects.filter(id__in=parent_ids)
+            .values_list("id", "name")
+        )
+        data = [
+            {
+                "value": round(r["latest_numeric_value"], 2),
+                "label": name_map.get(r["parent_id"], str(r["parent_id"])),
+                "group": str(r["parent_id"]),
+            }
+            for r in rows
+        ]
+    else:
+        result = qs.filter(latest_numeric_value__isnull=False).aggregate(
+            avg_value=Avg("latest_numeric_value"),
+            total=Count("id"),
+        )
+        avg = (
+            round(result["avg_value"], 2)
+            if result["avg_value"] is not None else 0
+        )
+        data = [{"value": avg, "label": "Total", "group": "total"}]
+
+    if value_type == "percentage" and data:
+        total = sum(
+            d["value"] for d in data
+            if isinstance(d["value"], (int, float))
+        )
+        if total > 0:
+            data = [
+                {**d, "value": round(d["value"] / total * 100, 2)}
+                for d in data
+            ]
+
+    labels = [d["label"] for d in data]
+    return data, labels
+
+
+def _values_by_qname_option(qs, question_name, group_by, value_type):
+    """Handle option question aggregation by question_name."""
+    # Deduplicate options by value. Order by (order, value, question_id)
+    # so the tiebreak between forms sharing the same option value is
+    # deterministic (lowest question_id wins).
+    raw_opts = QuestionOptions.objects.filter(
+        question__name=question_name,
+        value__isnull=False,
+    ).order_by(
+        "order", "value", "question_id",
+    ).values("value", "label", "color")
+    seen = set()
+    options = []
+    for opt in raw_opts:
+        if opt["value"] not in seen:
+            seen.add(opt["value"])
+            options.append(opt)
+
+    if group_by == "parent_id":
+        rows = list(qs.values("parent_id", "latest_option_values"))
+        if not rows:
+            return [], []
+        parent_ids = [r["parent_id"] for r in rows]
+        name_map = dict(
+            FormData.objects.filter(id__in=parent_ids)
+            .values_list("id", "name")
+        )
+        data = [
+            {
+                "value": row["latest_option_values"] or [],
+                "label": name_map.get(
+                    row["parent_id"], str(row["parent_id"])
+                ),
+                "group": str(row["parent_id"]),
+            }
+            for row in rows
+        ]
+        labels = [d["label"] for d in data]
+        return data, labels
+
+    # default: group_by == "option"
+    tallies = defaultdict(int)
+    total_parents = 0
+    for row in qs.values("latest_option_values"):
+        opts = row["latest_option_values"] or []
+        for opt_value in opts:
+            tallies[opt_value] += 1
+        if opts:
+            total_parents += 1
+
+    data = []
+    for opt in options:
+        count = tallies.get(opt["value"], 0)
+        if value_type == "percentage" and total_parents > 0:
+            value = round(count / total_parents * 100, 2)
+        else:
+            value = count
+        data.append({
+            "value": value,
+            "label": opt["label"] or opt["value"],
+            "group": opt["value"],
+            "color": opt.get("color"),
+        })
+
+    labels = [d["label"] for d in data]
+    return data, labels
+
+
+def _values_by_qname_text(qs):
+    """Handle text/date question by question_name."""
+    data = [
+        {
+            "value": row["latest_text_value"] or "",
+            "label": str(row["parent_id"]),
+            "group": str(row["parent_id"]),
+        }
+        for row in qs.filter(
+            latest_text_value__isnull=False
+        ).values("parent_id", "latest_text_value")
+    ]
+    labels = [d["label"] for d in data]
+    return data, labels

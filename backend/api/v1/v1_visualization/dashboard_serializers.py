@@ -18,8 +18,9 @@ from api.v1.v1_forms.models import Forms, Questions
 class ValuesFilterSerializer(serializers.Serializer):
     """Validates query parameters for /visualization/values endpoint."""
 
-    form_id = serializers.IntegerField(required=True)
+    form_id = serializers.IntegerField(required=False)
     question_id = serializers.IntegerField(required=False)
+    question_name = serializers.CharField(required=False, max_length=255)
     monitoring = serializers.ChoiceField(
         choices=list(VALID_MONITORING),
         default="latest",
@@ -46,6 +47,9 @@ class ValuesFilterSerializer(serializers.Serializer):
     repeat_agg = serializers.ChoiceField(
         choices=list(VALID_REPEAT_AGG),
         default="average",
+    )
+    rolling_months = serializers.IntegerField(
+        required=False, min_value=1,
     )
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
@@ -78,7 +82,18 @@ class ValuesFilterSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
+        question_name = data.get("question_name")
         form_id = data.get("form_id")
+
+        if not question_name and not form_id:
+            raise serializers.ValidationError(
+                "Either question_name or form_id is required."
+            )
+
+        # question_name path: skip form/question validation
+        if question_name:
+            return data
+
         question_id = data.get("question_id")
         stack_by = data.get("stack_by")
         group_by = data.get("group_by")

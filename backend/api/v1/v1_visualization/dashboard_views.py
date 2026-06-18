@@ -31,6 +31,7 @@ from api.v1.v1_visualization.progress_functions import (
     handle_progress,
 )
 from api.v1.v1_visualization.functions import (
+    get_values_by_question_name,
     resolve_default_administration_id,
     split_criteria_by_form,
 )
@@ -61,14 +62,28 @@ from utils.custom_serializer_fields import (
     examples=VALUES_EXAMPLES,
     parameters=[
         OpenApiParameter(
-            name="form_id", required=True,
+            name="form_id", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
+            description=(
+                "Registration or monitoring form ID. "
+                "Required unless question_name is provided."
+            ),
         ),
         OpenApiParameter(
             name="question_id", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="question_name", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "Query by question name across all monitoring forms "
+                "using mv_cross_form_latest. "
+                "Either question_name OR form_id is required."
+            ),
         ),
         OpenApiParameter(
             name="monitoring", required=False,
@@ -135,6 +150,19 @@ from utils.custom_serializer_fields import (
             name="option_value", required=False,
             type=OpenApiTypes.STR,
             location=OpenApiParameter.QUERY,
+            description=(
+                "With question_name + sum_by=parent_id, count only "
+                "parents whose latest option value matches."
+            ),
+        ),
+        OpenApiParameter(
+            name="rolling_months", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "With question_name, keep only parents whose latest "
+                "answer is within the last N months."
+            ),
         ),
         OpenApiParameter(
             name="criteria", required=False,
@@ -168,6 +196,27 @@ def visualization_values(request, version):
         )
 
     validated = serializer.validated_data
+    question_name = validated.get("question_name")
+
+    if question_name:
+        params = {
+            "administration_id": resolve_default_administration_id(
+                validated.get("administration_id"),
+            ),
+            "group_by": validated.get("group_by"),
+            "value_type": validated.get("value_type", "number"),
+            "sum_by": validated.get("sum_by"),
+            "option_value": validated.get("option_value"),
+            "rolling_months": validated.get("rolling_months"),
+            "from_date": validated.get("from_date"),
+            "to_date": validated.get("to_date"),
+        }
+        data, labels = get_values_by_question_name(question_name, params)
+        return Response(
+            {"data": data, "labels": labels},
+            status=status.HTTP_200_OK,
+        )
+
     form = get_object_or_404(
         Forms, pk=validated["form_id"]
     )
