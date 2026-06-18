@@ -31,6 +31,37 @@ def _should_fill_gaps(params):
     )
 
 
+def _date_answer_sq(date_qname):
+    """Subquery: the date-question answer_name for the same data_id.
+
+    Used to bucket value/option rows by the month of a separate date
+    question (rather than the submission's own created timestamp).
+    """
+    return MVAnswerDenormalized.objects.filter(
+        data_id=OuterRef("data_id"),
+        question_name=date_qname,
+        answer_name__isnull=False,
+    ).values("answer_name")[:1]
+
+
+def _finalize_month(data, params):
+    """Apply month gap-fill (when bounded) and return (data, labels)."""
+    if _should_fill_gaps(params):
+        data = fill_month_gaps(
+            data, params["from_date"], params["to_date"]
+        )
+    return data, [d["label"] for d in data]
+
+
+def _finalize_date(data, params):
+    """Apply day gap-fill (when bounded) and return (data, labels)."""
+    if _should_fill_gaps(params):
+        data = fill_date_gaps(
+            data, params["from_date"], params["to_date"]
+        )
+    return data, [d["label"] for d in data]
+
+
 def _total_parents_in_scope(form, params):
     """Count all parent registrations in scope, respecting filters."""
     scope_form = form.parent if form.parent else form
@@ -216,12 +247,7 @@ def _count_group_by_month(qs, is_latest, params):
                 for r in results
             ]
 
-    if _should_fill_gaps(params):
-        data = fill_month_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_month(data, params)
 
 
 def _count_group_by_parent(qs, is_latest):
@@ -319,12 +345,7 @@ def _count_group_by_date(qs, is_latest, params):
             }
             for r in results
         ]
-    if _should_fill_gaps(params):
-        data = fill_date_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_date(data, params)
 
 
 # -- Option question handler --
@@ -529,12 +550,7 @@ def _option_value_group_by_month(
             for r in mv_qs
         ]
 
-    if _should_fill_gaps(params):
-        data = fill_month_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_month(data, params)
 
 
 def _extract_criteria_option_values(params, question_name):
@@ -800,12 +816,7 @@ def _number_group_by_date(question, data_ids, params):
         ]
 
     data.sort(key=lambda x: x["group"])
-    if _should_fill_gaps(params):
-        data = fill_date_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_date(data, params)
 
 
 def _number_group_by_month(
@@ -826,11 +837,7 @@ def _number_group_by_month(
     )
 
     if date_qname:
-        date_sq = MVAnswerDenormalized.objects.filter(
-            data_id=OuterRef("data_id"),
-            question_name=date_qname,
-            answer_name__isnull=False,
-        ).values("answer_name")[:1]
+        date_sq = _date_answer_sq(date_qname)
         results = base.annotate(
             date_name=Subquery(date_sq),
         ).filter(
@@ -871,13 +878,7 @@ def _number_group_by_month(
                     d["value"] / total * 100, 2
                 )
 
-    if _should_fill_gaps(params):
-        data = fill_month_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_month(data, params)
 
 
 # -- Stack handlers --
@@ -930,11 +931,7 @@ def _stack_option_by_month(
     )
 
     if date_qname:
-        date_sq = MVAnswerDenormalized.objects.filter(
-            data_id=OuterRef("data_id"),
-            question_name=date_qname,
-            answer_name__isnull=False,
-        ).values("answer_name")[:1]
+        date_sq = _date_answer_sq(date_qname)
         rows = base.annotate(
             date_name=Subquery(date_sq),
         ).filter(
@@ -1288,11 +1285,7 @@ def _stack_parent_by_month(
         )
 
         if date_qname:
-            date_sq = MVAnswerDenormalized.objects.filter(
-                data_id=OuterRef("data_id"),
-                question_name=date_qname,
-                answer_name__isnull=False,
-            ).values("answer_name")[:1]
+            date_sq = _date_answer_sq(date_qname)
             results = base.annotate(
                 date_name=Subquery(date_sq),
             ).filter(
