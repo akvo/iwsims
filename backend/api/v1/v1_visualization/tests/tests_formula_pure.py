@@ -1,7 +1,8 @@
 """Pure-function unit tests for the formula evaluator.
 
 No DB, no Django setup — just the logic in
-``api.v1.v1_visualization.formula``.
+``api.v1.v1_visualization.formula``. Conditions and the answers map are
+keyed by ``question_name`` (the dashboard endpoints are name-only).
 """
 import unittest
 
@@ -15,8 +16,8 @@ from api.v1.v1_visualization.formula import (
 
 class _Answer:
     """Minimal Answers stand-in for tests."""
-    def __init__(self, question_id, value=None, options=None, index=0):
-        self.question_id = question_id
+    def __init__(self, question_name, value=None, options=None, index=0):
+        self.question_name = question_name
         self.value = value
         self.options = options
         self.index = index
@@ -25,87 +26,89 @@ class _Answer:
 class FormulaMatchTests(unittest.TestCase):
     def test_lte_pass(self):
         self.assertTrue(_match(
-            {"question_id": 1, "op": "<=", "value": 5},
-            {1: _Answer(1, value=5)},
+            {"question_name": "ph", "op": "<=", "value": 5},
+            {"ph": _Answer("ph", value=5)},
         ))
 
     def test_lte_fail(self):
         self.assertFalse(_match(
-            {"question_id": 1, "op": "<=", "value": 5},
-            {1: _Answer(1, value=6)},
+            {"question_name": "ph", "op": "<=", "value": 5},
+            {"ph": _Answer("ph", value=6)},
         ))
 
     def test_lt_strict(self):
         self.assertFalse(_match(
-            {"question_id": 1, "op": "<", "value": 5},
-            {1: _Answer(1, value=5)},
+            {"question_name": "ph", "op": "<", "value": 5},
+            {"ph": _Answer("ph", value=5)},
         ))
 
     def test_gt_pass(self):
         self.assertTrue(_match(
-            {"question_id": 1, "op": ">", "value": 5},
-            {1: _Answer(1, value=6)},
+            {"question_name": "ph", "op": ">", "value": 5},
+            {"ph": _Answer("ph", value=6)},
         ))
 
     def test_eq_pass(self):
         self.assertTrue(_match(
-            {"question_id": 1, "op": "==", "value": 7},
-            {1: _Answer(1, value=7)},
+            {"question_name": "ph", "op": "==", "value": 7},
+            {"ph": _Answer("ph", value=7)},
         ))
 
     def test_neq_pass(self):
         self.assertTrue(_match(
-            {"question_id": 1, "op": "!=", "value": 7},
-            {1: _Answer(1, value=8)},
+            {"question_name": "ph", "op": "!=", "value": 7},
+            {"ph": _Answer("ph", value=8)},
         ))
 
     def test_between_inclusive_min(self):
         self.assertTrue(_match(
-            {"question_id": 1, "op": "between", "min": 6.5, "max": 8.5},
-            {1: _Answer(1, value=6.5)},
+            {"question_name": "ph", "op": "between", "min": 6.5, "max": 8.5},
+            {"ph": _Answer("ph", value=6.5)},
         ))
 
     def test_between_inclusive_max(self):
         self.assertTrue(_match(
-            {"question_id": 1, "op": "between", "min": 6.5, "max": 8.5},
-            {1: _Answer(1, value=8.5)},
+            {"question_name": "ph", "op": "between", "min": 6.5, "max": 8.5},
+            {"ph": _Answer("ph", value=8.5)},
         ))
 
     def test_between_outside(self):
         self.assertFalse(_match(
-            {"question_id": 1, "op": "between", "min": 6.5, "max": 8.5},
-            {1: _Answer(1, value=9.0)},
+            {"question_name": "ph", "op": "between", "min": 6.5, "max": 8.5},
+            {"ph": _Answer("ph", value=9.0)},
         ))
 
     def test_option_equals_pass(self):
         self.assertTrue(_match(
-            {"question_id": 1, "op": "option_equals", "value": "yes"},
-            {1: _Answer(1, options=["yes"])},
+            {"question_name": "status", "op": "option_equals",
+             "value": "yes"},
+            {"status": _Answer("status", options=["yes"])},
         ))
 
     def test_option_equals_fail(self):
         self.assertFalse(_match(
-            {"question_id": 1, "op": "option_equals", "value": "yes"},
-            {1: _Answer(1, options=["no"])},
+            {"question_name": "status", "op": "option_equals",
+             "value": "yes"},
+            {"status": _Answer("status", options=["no"])},
         ))
 
     def test_option_in_pass(self):
         self.assertTrue(_match(
-            {"question_id": 1, "op": "option_in",
+            {"question_name": "status", "op": "option_in",
              "values": ["a", "b"]},
-            {1: _Answer(1, options=["b"])},
+            {"status": _Answer("status", options=["b"])},
         ))
 
     def test_missing_answer_is_false(self):
         self.assertFalse(_match(
-            {"question_id": 99, "op": "<=", "value": 5},
-            {1: _Answer(1, value=5)},
+            {"question_name": "missing", "op": "<=", "value": 5},
+            {"ph": _Answer("ph", value=5)},
         ))
 
     def test_unknown_op_is_false(self):
         self.assertFalse(_match(
-            {"question_id": 1, "op": "@@", "value": 5},
-            {1: _Answer(1, value=5)},
+            {"question_name": "ph", "op": "@@", "value": 5},
+            {"ph": _Answer("ph", value=5)},
         ))
 
 
@@ -117,8 +120,8 @@ class FormulaEvaluateTests(unittest.TestCase):
                     "value": "compliant",
                     "label": "Yes",
                     "all_of": [
-                        {"question_id": 1, "op": "<=", "value": 5},
-                        {"question_id": 2, "op": "between",
+                        {"question_name": "e_coli", "op": "<=", "value": 5},
+                        {"question_name": "ph", "op": "between",
                          "min": 6.5, "max": 8.5},
                     ],
                 },
@@ -128,22 +131,22 @@ class FormulaEvaluateTests(unittest.TestCase):
 
     def test_first_bucket_wins(self):
         answers = {
-            1: _Answer(1, value=3),
-            2: _Answer(2, value=7),
+            "e_coli": _Answer("e_coli", value=3),
+            "ph": _Answer("ph", value=7),
         }
         self.assertEqual(evaluate(self._formula(), answers), "compliant")
 
     def test_default_when_condition_fails(self):
         answers = {
-            1: _Answer(1, value=10),
-            2: _Answer(2, value=7),
+            "e_coli": _Answer("e_coli", value=10),
+            "ph": _Answer("ph", value=7),
         }
         self.assertEqual(
             evaluate(self._formula(), answers), "non_compliant"
         )
 
     def test_default_when_answer_missing(self):
-        answers = {1: _Answer(1, value=3)}
+        answers = {"e_coli": _Answer("e_coli", value=3)}
         self.assertEqual(
             evaluate(self._formula(), answers), "non_compliant"
         )
@@ -155,48 +158,48 @@ class FormulaEvaluateTests(unittest.TestCase):
                     "value": "high",
                     "label": "High",
                     "all_of": [
-                        {"question_id": 1, "op": ">=", "value": 100},
+                        {"question_name": "score", "op": ">=", "value": 100},
                     ],
                 },
                 {
                     "value": "medium",
                     "label": "Medium",
                     "all_of": [
-                        {"question_id": 1, "op": ">=", "value": 50},
+                        {"question_name": "score", "op": ">=", "value": 50},
                     ],
                 },
             ],
             "default": {"value": "low", "label": "Low"},
         }
-        answers = {1: _Answer(1, value=75)}
+        answers = {"score": _Answer("score", value=75)}
         self.assertEqual(evaluate(formula, answers), "medium")
 
 
 class PickLatestRepeatTests(unittest.TestCase):
     def test_latest_repeat_wins(self):
         answers = [
-            _Answer(1, value=3, index=0),
-            _Answer(1, value=99, index=2),
-            _Answer(1, value=10, index=1),
+            _Answer("ph", value=3, index=0),
+            _Answer("ph", value=99, index=2),
+            _Answer("ph", value=10, index=1),
         ]
         out = pick_latest_repeat(answers)
-        self.assertEqual(out[1].value, 99)
+        self.assertEqual(out["ph"].value, 99)
 
     def test_separate_questions(self):
         answers = [
-            _Answer(1, value=1, index=0),
-            _Answer(2, value=2, index=0),
+            _Answer("ph", value=1, index=0),
+            _Answer("e_coli", value=2, index=0),
         ]
         out = pick_latest_repeat(answers)
-        self.assertEqual(set(out.keys()), {1, 2})
+        self.assertEqual(set(out.keys()), {"ph", "e_coli"})
 
     def test_dict_inputs(self):
         answers = [
-            {"question_id": 1, "value": 5, "index": 0},
-            {"question_id": 1, "value": 9, "index": 3},
+            {"question_name": "ph", "value": 5, "index": 0},
+            {"question_name": "ph", "value": 9, "index": 3},
         ]
         out = pick_latest_repeat(answers)
-        self.assertEqual(out[1]["value"], 9)
+        self.assertEqual(out["ph"]["value"], 9)
 
 
 class ValidateShapeTests(unittest.TestCase):
@@ -207,7 +210,7 @@ class ValidateShapeTests(unittest.TestCase):
                     "value": "x",
                     "label": "X",
                     "all_of": [
-                        {"question_id": 1, "op": "<=", "value": 5},
+                        {"question_name": "ph", "op": "<=", "value": 5},
                     ],
                 },
             ],
@@ -234,7 +237,7 @@ class ValidateShapeTests(unittest.TestCase):
                 "buckets": [{
                     "label": "X",
                     "all_of": [
-                        {"question_id": 1, "op": "<=", "value": 5},
+                        {"question_name": "ph", "op": "<=", "value": 5},
                     ],
                 }],
                 "default": {"value": "y", "label": "Y"},
@@ -247,7 +250,7 @@ class ValidateShapeTests(unittest.TestCase):
                     "value": "x",
                     "label": "X",
                     "all_of": [
-                        {"question_id": 1, "op": "@@", "value": 5},
+                        {"question_name": "ph", "op": "@@", "value": 5},
                     ],
                 }],
                 "default": {"value": "y", "label": "Y"},
@@ -260,7 +263,7 @@ class ValidateShapeTests(unittest.TestCase):
                     "value": "x",
                     "label": "X",
                     "all_of": [
-                        {"question_id": 1, "op": "between", "min": 1},
+                        {"question_name": "ph", "op": "between", "min": 1},
                     ],
                 }],
                 "default": {"value": "y", "label": "Y"},
@@ -277,7 +280,7 @@ class ValidateShapeTests(unittest.TestCase):
                     "value": "x",
                     "label": "X",
                     "all_of": [
-                        {"question_id": 1, "op": "<=", "value": "abc"},
+                        {"question_name": "ph", "op": "<=", "value": "abc"},
                     ],
                 }],
                 "default": {"value": "y", "label": "Y"},
@@ -292,7 +295,7 @@ class ValidateShapeTests(unittest.TestCase):
                     "label": "X",
                     "all_of": [
                         {
-                            "question_id": 1,
+                            "question_name": "ph",
                             "op": "between",
                             "min": "low",
                             "max": "high",
@@ -310,7 +313,7 @@ class ValidateShapeTests(unittest.TestCase):
                 "label": "X",
                 "all_of": [
                     {
-                        "question_id": 1,
+                        "question_name": "status",
                         "op": "option_equals",
                         "value": "some_option",
                     },
@@ -320,6 +323,20 @@ class ValidateShapeTests(unittest.TestCase):
         })
         self.assertIsNotNone(result)
 
+    def test_question_name_required(self):
+        """A condition without question_name is rejected."""
+        with self.assertRaises(ValueError):
+            validate_shape({
+                "buckets": [{
+                    "value": "x",
+                    "label": "X",
+                    "all_of": [
+                        {"op": "<=", "value": 5},
+                    ],
+                }],
+                "default": {"value": "y", "label": "Y"},
+            })
+
     def test_default_required(self):
         with self.assertRaises(ValueError):
             validate_shape({
@@ -327,7 +344,7 @@ class ValidateShapeTests(unittest.TestCase):
                     "value": "x",
                     "label": "X",
                     "all_of": [
-                        {"question_id": 1, "op": "<=", "value": 5},
+                        {"question_name": "ph", "op": "<=", "value": 5},
                     ],
                 }],
             })

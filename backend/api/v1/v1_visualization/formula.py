@@ -2,10 +2,10 @@
 
 Each formula has a list of ``buckets``; for each bucket we test that
 **all** conditions in ``all_of`` pass against the supplied
-``answers_by_qid`` mapping. The first bucket whose conditions all pass
+``answers_by_qname`` mapping. The first bucket whose conditions all pass
 wins; otherwise the formula's ``default`` bucket is returned.
 
-``answers_by_qid`` maps ``question_id`` to whatever Answers row should
+``answers_by_qname`` maps ``question_name`` to whatever Answers row should
 be considered the "current" value — for repeatable groups the caller
 selects the latest repeat (highest ``index``) per question and passes
 *that* row in.
@@ -39,11 +39,11 @@ def _answer_options(answer):
     return options or []
 
 
-def _match(condition, answers_by_qid):
+def _match(condition, answers_by_qname):
     """Return True iff the condition passes against the answers map."""
-    qid = condition.get("question_id")
+    qname = condition.get("question_name")
     op = condition.get("op")
-    answer = answers_by_qid.get(qid)
+    answer = answers_by_qname.get(qname)
     if answer is None:
         return False
 
@@ -69,7 +69,7 @@ def _match(condition, answers_by_qid):
     return False
 
 
-def evaluate(formula, answers_by_qid):
+def evaluate(formula, answers_by_qname):
     """Return the bucket value matching the answers, or the default.
 
     ``formula`` shape::
@@ -84,36 +84,39 @@ def evaluate(formula, answers_by_qid):
     """
     for bucket in formula.get("buckets", []):
         conditions = bucket.get("all_of") or []
-        if all(_match(c, answers_by_qid) for c in conditions):
+        if all(_match(c, answers_by_qname) for c in conditions):
             return bucket["value"]
     return formula.get("default", {}).get("value")
 
 
 def pick_latest_repeat(answers):
-    """Pick the highest-index Answers row per ``question_id``.
+    """Pick the highest-index Answers row per ``question_name``.
 
-    Accepts either a list of Answers model instances or a list of dicts
-    with at least ``question`` (or ``question_id``) and ``index`` keys.
-    Returns ``dict[question_id -> answer_row]``.
+    Accepts either a list of Answers-shaped objects (with a
+    ``question_name`` attribute) or a list of dicts with at least
+    ``question_name`` and ``index`` keys. The rows must therefore carry
+    ``question_name`` — source them from ``mv_answer_denormalized``, not
+    the base ``Answers`` table.
+    Returns ``dict[question_name -> answer_row]``.
     """
     out = {}
     best_idx = {}
     for ans in answers:
-        if hasattr(ans, "question_id"):
-            qid = ans.question_id
+        if hasattr(ans, "question_name"):
+            qname = ans.question_name
         elif isinstance(ans, dict):
-            qid = ans.get("question") or ans.get("question_id")
+            qname = ans.get("question_name")
         else:
-            qid = None
-        if qid is None:
+            qname = None
+        if qname is None:
             continue
         idx = getattr(ans, "index", None)
         if idx is None and isinstance(ans, dict):
             idx = ans.get("index", 0)
         idx = idx or 0
-        if qid not in best_idx or idx > best_idx[qid]:
-            best_idx[qid] = idx
-            out[qid] = ans
+        if qname not in best_idx or idx > best_idx[qname]:
+            best_idx[qname] = idx
+            out[qname] = ans
     return out
 
 
@@ -145,10 +148,10 @@ def validate_shape(formula):
                 raise ValueError(
                     f"buckets[{i}].all_of[{j}] must be an object"
                 )
-            if "question_id" not in cond or "op" not in cond:
+            if "question_name" not in cond or "op" not in cond:
                 raise ValueError(
                     f"buckets[{i}].all_of[{j}] requires "
-                    "'question_id' and 'op'"
+                    "'question_name' and 'op'"
                 )
             op = cond["op"]
             if op == "between":

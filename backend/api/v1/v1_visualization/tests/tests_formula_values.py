@@ -34,7 +34,7 @@ class FormulaValuesViewTests(
                 "value": "low",
                 "label": "Low",
                 "all_of": [{
-                    "question_id": self.Q_NUMBER_ID,
+                    "question_name": self.q_number.name,
                     "op": "<=",
                     "value": 25,
                 }],
@@ -63,7 +63,7 @@ class FormulaValuesViewTests(
                 "value": "in_range",
                 "label": "In",
                 "all_of": [{
-                    "question_id": self.Q_NUMBER_ID,
+                    "question_name": self.q_number.name,
                     "op": "between",
                     "min": 6.5,
                     "max": 25.0,
@@ -97,7 +97,7 @@ class FormulaValuesViewTests(
                 "value": "small",
                 "label": "Small",
                 "all_of": [{
-                    "question_id": self.Q_NUMBER_REPEAT_ID,
+                    "question_name": self.q_number_repeat.name,
                     "op": "<=",
                     "value": 5,
                 }],
@@ -146,7 +146,7 @@ class FormulaValuesViewTests(
                 "value": "impossible",
                 "label": "Never",
                 "all_of": [{
-                    "question_id": self.Q_NUMBER_ID,
+                    "question_name": self.q_number.name,
                     "op": ">", "value": 9999,
                 }],
             }],
@@ -269,7 +269,7 @@ class FormulaValuesRegistrationFormTests(
                 "value": "yes",
                 "label": "Yes",
                 "all_of": [{
-                    "question_id": self.Q_REG_OPTION_ID,
+                    "question_name": self.q_reg_option.name,
                     "op": "option_equals",
                     "value": "yes",
                 }],

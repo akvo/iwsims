@@ -17,6 +17,7 @@ from api.v1.v1_visualization.serializers import (
 )
 from api.v1.v1_visualization.models import (
     ViewDataOptions,
+    MVAnswerDenormalized,
 )
 from api.v1.v1_visualization.functions import (
     apply_criteria_to_monitoring_qs,
@@ -548,13 +549,25 @@ def visualization_values_formula(request, version):
         id_to_group = {v: k for k, v in latest_by_parent.items()}
         data_ids = list(id_to_group.keys())
 
-    answers = Answers.objects.filter(
+    # Source answers from the denormalized MV so each row carries
+    # question_name (the base Answers table has no name; filtering its
+    # unindexed question__name would also be slower). Map MV columns to
+    # the dict shape the formula evaluator expects (value/options/index).
+    answers = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids
-    ).values("data_id", "question_id", "value", "options", "index")
+    ).values(
+        "data_id", "question_name",
+        "answer_value", "answer_options", "answer_index",
+    )
 
     answers_by_data = {}
     for ans in answers:
-        answers_by_data.setdefault(ans["data_id"], []).append(ans)
+        answers_by_data.setdefault(ans["data_id"], []).append({
+            "question_name": ans["question_name"],
+            "value": ans["answer_value"],
+            "options": ans["answer_options"],
+            "index": ans["answer_index"],
+        })
 
     data = []
     for data_id, group in id_to_group.items():
