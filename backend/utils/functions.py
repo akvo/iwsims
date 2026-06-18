@@ -32,16 +32,28 @@ def update_date_time_format(date):
     return None
 
 
-def get_answer_value(answer: Answers, webform: bool = False):
-    if answer.question.type in [
+def _typed_value(question_type, options, value, name):
+    """Shared typed extraction for get_answer_value / get_answer_history.
+
+    Handles the branches both functions agree on: geo / option /
+    multiple_option return the options list, number returns the numeric
+    value, everything else (text, date, cascade, …) returns the name.
+    The administration type is handled by the callers, which differ on
+    webform expansion and None handling.
+    """
+    if question_type in (
         QuestionTypes.geo,
         QuestionTypes.option,
         QuestionTypes.multiple_option,
-    ]:
-        return answer.options
-    elif answer.question.type == QuestionTypes.number:
-        return answer.value
-    elif answer.question.type == QuestionTypes.administration:
+    ):
+        return options
+    if question_type == QuestionTypes.number:
+        return value
+    return name
+
+
+def get_answer_value(answer: Answers, webform: bool = False):
+    if answer.question.type == QuestionTypes.administration:
         if webform:
             adm = Administration.objects.filter(id=answer.value).first()
             if adm:
@@ -51,24 +63,21 @@ def get_answer_value(answer: Answers, webform: bool = False):
                 ] + [adm.id]
             return answer.value
         return int(float(answer.value)) if answer.value else None
-    else:
-        return answer.name
+    return _typed_value(
+        answer.question.type, answer.options, answer.value, answer.name
+    )
 
 
 def get_answer_history(answer_history: AnswerHistory):
-    value = None
     created = update_date_time_format(answer_history.created)
     created_by = answer_history.created_by.get_full_name()
-    if answer_history.question.type in [
-        QuestionTypes.geo,
-        QuestionTypes.option,
-        QuestionTypes.multiple_option,
-    ]:
-        value = answer_history.options
-    elif answer_history.question.type == QuestionTypes.number:
-        value = answer_history.value
-    elif answer_history.question.type == QuestionTypes.administration:
+    if answer_history.question.type == QuestionTypes.administration:
         value = int(float(answer_history.value))
     else:
-        value = answer_history.name
+        value = _typed_value(
+            answer_history.question.type,
+            answer_history.options,
+            answer_history.value,
+            answer_history.name,
+        )
     return {"value": value, "created": created, "created_by": created_by}
