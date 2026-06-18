@@ -12,9 +12,9 @@
       "order": 1,
       "key": "construction",
       "label": "Construction progress",
-      "start_date_question_id": 1749622701234,
-      "deadline_question_id": 1749622695675,
-      "scope_question_id": 1749621851234,
+      "start_date_question_name": "construction_start_date",
+      "deadline_question_name": "proposed_completion_date",
+      "scope_question_name": "type_of_project",
       "api": {
         "form_id": 1749621221728,
         "monitoring_form_id": 1749621962296
@@ -25,7 +25,7 @@
           "label": "Dam",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1723459210015],
+          "question_names": ["dam_construction_implementation"],
           "applicable_types": ["surface_water_project"]
         },
         {
@@ -33,7 +33,7 @@
           "label": "Raw Water Main",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1723459310020],
+          "question_names": ["raw_water_main_implementation"],
           "applicable_types": [
             "surface_water_project",
             "borehole",
@@ -45,7 +45,7 @@
           "label": "Reservoir",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1723459310033],
+          "question_names": ["reservoir_implementation"],
           "applicable_types": [
             "surface_water_project",
             "borehole",
@@ -57,7 +57,7 @@
           "label": "Distribution Main",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1723459310036],
+          "question_names": ["distribution_main_implementation"],
           "applicable_types": [
             "surface_water_project",
             "borehole",
@@ -69,7 +69,7 @@
           "label": "Reticulation",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1723459310040],
+          "question_names": ["reticulation_implementation"],
           "applicable_types": [
             "surface_water_project",
             "borehole",
@@ -81,7 +81,7 @@
           "label": "Pump",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1749622191234],
+          "question_names": ["pumps_implementation"],
           "applicable_types": [
             "surface_water_project",
             "borehole",
@@ -93,7 +93,7 @@
           "label": "Borehole",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1749622111239],
+          "question_names": ["borehole_implementation"],
           "applicable_types": ["borehole"]
         },
         {
@@ -101,7 +101,7 @@
           "label": "Tanks",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1749622266234],
+          "question_names": ["tanks_implementation"],
           "applicable_types": ["borehole", "desalination"]
         },
         {
@@ -109,7 +109,7 @@
           "label": "Desalination Unit",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1749622163234],
+          "question_names": ["desalination_implementation"],
           "applicable_types": ["desalination"]
         },
         {
@@ -117,7 +117,10 @@
           "label": "Rainwater Tanks",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1723459250020, 1723459240022],
+          "question_names": [
+            "installation_of_household_rwh_system",
+            "installation_of_communal_rwh_system"
+          ],
           "applicable_types": ["rainwater_harvesting"]
         },
         {
@@ -125,7 +128,7 @@
           "label": "Gutters",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1749622229234],
+          "question_names": ["gutters_implementation"],
           "applicable_types": ["rainwater_harvesting"]
         },
         {
@@ -133,7 +136,7 @@
           "label": "Base Construction",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1749622301234],
+          "question_names": ["base_construction_status"],
           "applicable_types": ["rainwater_harvesting"]
         }
       ]
@@ -143,8 +146,8 @@
       "chart_type": "water_quality_globals",
       "hide": true,
       "order": 2,
-      "sample_question_id": 1749631041135,
-      "test_method_question_id": 1749631041138,
+      "sample_question_name": "water_sample_collected",
+      "test_method_question_name": "water_testing_method",
       "monitoring_form_id": 1749631041125
     },
     {
@@ -158,9 +161,9 @@
           "chart_type": "filter_date",
           "order": 1,
           "label": "Monitoring Period",
-          "date_question_ids": {
-            "water_quality": 1749631041127,
-            "construction": 1749621962298
+          "date_question_names": {
+            "water_quality": "inspection_date",
+            "construction": "inspection_date"
           }
         },
         {
@@ -174,7 +177,7 @@
           "chart_type": "filter_multi_option",
           "order": 3,
           "key": "implementing_agency",
-          "question_id": 1749622571775,
+          "question_name": "implementing_agencies",
           "form_id": 1749621221728,
           "label": "Implementing Agency"
         },
@@ -183,7 +186,7 @@
           "chart_type": "filter_option",
           "order": 4,
           "key": "water_committee",
-          "question_id": 1749622715678,
+          "question_name": "water_committee",
           "form_id": 1749621221728,
           "label": "Water Committee"
         }
@@ -210,7 +213,7 @@
       "color": "#fa8c16",
       "api": {
         "form_id": 1749631041125,
-        "question_id": 1749631041155,
+        "question_name": "infrastructure_status",
         "option_value": "non_operational",
         "monitoring": "latest",
         "sum_by": "parent_id"
@@ -225,7 +228,7 @@
       "color": "#64A73B",
       "api": {
         "form_id": 1749631041125,
-        "question_id": 1749631041155,
+        "question_name": "infrastructure_status",
         "option_value": "operational",
         "monitoring": "latest",
         "sum_by": "parent_id"
@@ -240,7 +243,7 @@
       "color": "#e41a1c",
       "api": {
         "form_id": 1749631041125,
-        "question_id": 1749631041156,
+        "question_name": "major_issues",
         "option_value": "yes",
         "monitoring": "latest",
         "sum_by": "parent_id"
@@ -255,7 +258,7 @@
       "color": "#1890ff",
       "api": {
         "form_id": 1749631041125,
-        "question_id": 1749631041155,
+        "question_name": "infrastructure_status",
         "group_by": "option",
         "include_unanswered": true
       },
@@ -294,7 +297,7 @@
       "color": "#fa8c16",
       "api": {
         "form_id": 1749621221728,
-        "question_id": 1749622715678,
+        "question_name": "water_committee",
         "group_by": "option",
         "include_unanswered": true
       },
@@ -306,19 +309,19 @@
       "chart_type": "card",
       "order": 13,
       "col_span": 6,
-      "label": "Accessibility Issues — No Issues",
+      "label": "Accessibility Issues \u2014 No Issues",
       "color": "#13c2c2",
       "compute": "accessibility_no_issues_kpi",
       "sample_api": {
         "form_id": 1749621962296,
-        "question_id": 1749622785185,
+        "question_name": "can_take_sample",
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
       },
       "issues_api": {
         "form_id": 1749621962296,
-        "question_id": 1749623661234,
+        "question_name": "improvement_action",
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
@@ -341,7 +344,7 @@
           "key": "infrastructure_status",
           "label": "Infrastructure status",
           "form_id": 1749631041125,
-          "question_id": 1749631041155,
+          "question_name": "infrastructure_status",
           "color_map": {
             "operational": "#64A73B",
             "non_operational": "#e41a1c",
@@ -359,23 +362,54 @@
                 "value": "compliant",
                 "label": "Yes",
                 "all_of": [
-                  { "question_id": 1749631041143, "op": "<=", "value": 0 },
-                  { "question_id": 1749631041144, "op": "<=", "value": 5 },
-                  { "question_id": 1749631041145, "op": "<=", "value": 0 },
-                  { "question_id": 1749631041146, "op": "<=", "value": 0 },
-                  { "question_id": 1749631041147, "op": "<=", "value": 30 },
                   {
-                    "question_id": 1749631041148,
+                    "question_name": "lab_ecoli_count",
+                    "op": "<=",
+                    "value": 0
+                  },
+                  {
+                    "question_name": "lab_turbidity_ntu",
+                    "op": "<=",
+                    "value": 5
+                  },
+                  {
+                    "question_name": "lab_total_coliform",
+                    "op": "<=",
+                    "value": 0
+                  },
+                  {
+                    "question_name": "lab_fecal_coliform",
+                    "op": "<=",
+                    "value": 0
+                  },
+                  {
+                    "question_name": "lab_temperature_c",
+                    "op": "<=",
+                    "value": 30
+                  },
+                  {
+                    "question_name": "lab_ph",
                     "op": "between",
                     "min": 6.5,
                     "max": 8.5
                   },
-                  { "question_id": 1749631041149, "op": "<=", "value": 1000 },
-                  { "question_id": 1749631041150, "op": "<=", "value": 1 }
+                  {
+                    "question_name": "lab_conductivity",
+                    "op": "<=",
+                    "value": 1000
+                  },
+                  {
+                    "question_name": "lab_salinity_ppt",
+                    "op": "<=",
+                    "value": 1
+                  }
                 ]
               }
             ],
-            "default": { "value": "non_compliant", "label": "No" }
+            "default": {
+              "value": "non_compliant",
+              "label": "No"
+            }
           },
           "color_map": {
             "compliant": "#64A73B",
@@ -388,7 +422,7 @@
           "key": "presence_water_committee",
           "label": "Presence of active water committee",
           "form_id": 1749621221728,
-          "question_id": 1749622715678,
+          "question_name": "water_committee",
           "color_map": {
             "yes": "#64A73B",
             "not_active": "#999999",
@@ -431,14 +465,14 @@
       "orientation": "horizontal",
       "category_api": {
         "form_id": 1749621962296,
-        "question_id": 1749621851234,
+        "question_name": "type_of_project",
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
       },
       "series_api": {
         "form_id": 1749621221728,
-        "question_id": 1749622571775,
+        "question_name": "implementing_agencies",
         "group_by": "parent_id",
         "stack_by": "option"
       }
@@ -471,7 +505,9 @@
         "title": "Beneficiaries",
         "xAxisLabel": "Target group",
         "yAxisLabel": "Number of RWS",
-        "yAxis": { "minInterval": 1 },
+        "yAxis": {
+          "minInterval": 1
+        },
         "xAxis": {
           "axisLabel": {
             "rotate": 20
@@ -481,7 +517,7 @@
       },
       "api": {
         "form_id": 1749621221728,
-        "question_id": 1749622291234,
+        "question_name": "project_target_group",
         "group_by": "option",
         "include_unanswered": true
       }
@@ -498,7 +534,7 @@
       "compute": "kpi_stack",
       "api": {
         "form_id": 1749631041125,
-        "question_id": 1749631041155,
+        "question_name": "infrastructure_status",
         "group_by": "option",
         "include_unanswered": true
       }
@@ -516,14 +552,14 @@
       "compute": "accessibility_bucket",
       "sample_api": {
         "form_id": 1749621962296,
-        "question_id": 1749622785185,
+        "question_name": "can_take_sample",
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
       },
       "issues_api": {
         "form_id": 1749631041125,
-        "question_id": 1749631041156,
+        "question_name": "major_issues",
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
@@ -591,7 +627,7 @@
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "value_type": "percentage",
-                "date_question_id": 1749631041127,
+                "date_question_name": "inspection_date",
                 "rolling_months": 12
               }
             },
@@ -604,7 +640,7 @@
               "color": "#e41a1c",
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041156,
+                "question_name": "major_issues",
                 "option_value": "yes",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -618,7 +654,7 @@
               "label": "RWS where water sample collection was not possible",
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041135,
+                "question_name": "water_sample_collected",
                 "option_value": "no",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
@@ -638,77 +674,77 @@
                 "criteria": [
                   {
                     "type": "option_equals",
-                    "question_id": 1749631041135,
+                    "question_name": "water_sample_collected",
                     "value": "no",
                     "label": "No water sample",
                     "hide": false
                   },
                   {
                     "type": "option_equals",
-                    "question_id": 1749631041156,
+                    "question_name": "major_issues",
                     "value": "yes",
                     "label": "Major issues",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749631041143,
+                    "question_name": "lab_ecoli_count",
                     "value": 0,
                     "label": "E.coli above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749631041145,
+                    "question_name": "lab_total_coliform",
                     "value": 0,
                     "label": "Total coliform above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749631041146,
+                    "question_name": "lab_fecal_coliform",
                     "value": 0,
                     "label": "Fecal coliform above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749631041144,
+                    "question_name": "lab_turbidity_ntu",
                     "value": 5,
                     "label": "Turbidity above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749631041147,
+                    "question_name": "lab_temperature_c",
                     "value": 30,
                     "label": "Temperature above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_lt",
-                    "question_id": 1749631041148,
+                    "question_name": "lab_ph",
                     "value": 6.5,
                     "label": "pH below acceptable range",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749631041148,
+                    "question_name": "lab_ph",
                     "value": 8.5,
                     "label": "pH above acceptable range",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749631041149,
+                    "question_name": "lab_conductivity",
                     "value": 1000,
                     "label": "Conductivity above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749631041150,
+                    "question_name": "lab_salinity_ppt",
                     "value": 1,
                     "label": "Salinity above threshold",
                     "hide": false
@@ -720,35 +756,35 @@
                   "key": "rws_name",
                   "label": "RWS name",
                   "source": "parent_answer",
-                  "question_id": 1749621221731,
+                  "question_name": "project_name",
                   "hide": false
                 },
                 {
                   "key": "village_name",
                   "label": "Village Name",
                   "source": "parent_answer",
-                  "question_id": 1749621329696,
+                  "question_name": "village_name",
                   "hide": false
                 },
                 {
                   "key": "last_monitoring",
                   "label": "Last Monitoring",
                   "source": "latest_date",
-                  "question_id": 1749631041127,
+                  "question_name": "inspection_date",
                   "hide": false
                 },
                 {
                   "key": "operational_status",
                   "label": "Operational Status",
                   "source": "answer",
-                  "question_id": 1749631041155,
+                  "question_name": "infrastructure_status",
                   "hide": false
                 },
                 {
                   "key": "water_collection",
                   "label": "Not able to collect the water sample",
                   "source": "answer",
-                  "question_id": 1749631041135,
+                  "question_name": "water_sample_collected",
                   "hide": false
                 },
                 {
@@ -772,7 +808,7 @@
               "api": {
                 "form_id": 1749631041125,
                 "group_by": "month",
-                "date_question_id": 1749631041127,
+                "date_question_name": "inspection_date",
                 "monitoring": "all",
                 "fiscal_year": true
               }
@@ -792,12 +828,12 @@
               "description": "Rolling 12-month window; numerator is RWS whose latest water-sample answer is yes.",
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041135,
+                "question_name": "water_sample_collected",
                 "option_value": "yes",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "value_type": "percentage",
-                "date_question_id": 1749631041127,
+                "date_question_name": "inspection_date",
                 "rolling_months": 12
               }
             },
@@ -809,7 +845,7 @@
               "label": "Lab tested RWS",
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041138,
+                "question_name": "water_testing_method",
                 "option_value": "lab_test",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -823,7 +859,7 @@
               "label": "CBT tested RWS",
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041138,
+                "question_name": "water_testing_method",
                 "option_value": "cbt_test",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -854,7 +890,7 @@
               },
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041143,
+                "question_name": "lab_ecoli_count",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -878,7 +914,7 @@
               },
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041145,
+                "question_name": "lab_total_coliform",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -903,7 +939,7 @@
               },
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041146,
+                "question_name": "lab_fecal_coliform",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -934,7 +970,7 @@
               },
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041144,
+                "question_name": "lab_turbidity_ntu",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -947,10 +983,10 @@
               "col_span": 12,
               "group": "physical",
               "label": "Water Temperature",
-              "description": "Acceptance threshold < 30 °C",
+              "description": "Acceptance threshold < 30 \u00b0C",
               "config": {
                 "title": "Water Temperature",
-                "xAxisLabel": "°C",
+                "xAxisLabel": "\u00b0C",
                 "entity_label": "RWS"
               },
               "threshold": {
@@ -958,7 +994,7 @@
               },
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041147,
+                "question_name": "lab_temperature_c",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -990,7 +1026,7 @@
               },
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041148,
+                "question_name": "lab_ph",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -1003,10 +1039,10 @@
               "col_span": 8,
               "group": "chemical",
               "label": "Conductivity",
-              "description": "Acceptance threshold < 1000 µS/cm",
+              "description": "Acceptance threshold < 1000 \u00b5S/cm",
               "config": {
                 "title": "Conductivity",
-                "xAxisLabel": "µS/cm",
+                "xAxisLabel": "\u00b5S/cm",
                 "entity_label": "RWS"
               },
               "threshold": {
@@ -1014,7 +1050,7 @@
               },
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041149,
+                "question_name": "lab_conductivity",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -1038,7 +1074,7 @@
               },
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041150,
+                "question_name": "lab_salinity_ppt",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -1060,7 +1096,7 @@
               "color": "#fa8c16",
               "api": {
                 "form_id": 1749631041125,
-                "question_id": 1749631041155,
+                "question_name": "infrastructure_status",
                 "option_value": "non_operational",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
@@ -1078,9 +1114,9 @@
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "past_due": true,
-                "completion_question_id": 1749631041155,
+                "completion_question_name": "infrastructure_status",
                 "completion_incomplete_value": "non_operational",
-                "deadline_question_id": 1749622695675
+                "deadline_question_name": "proposed_completion_date"
               }
             },
             {
@@ -1093,7 +1129,9 @@
                 "description": "Distribution of RWS across overall-progress buckets (0-10%, 11-20%, ..., 91-100%).",
                 "xAxisLabel": "Progress bucket",
                 "yAxisLabel": "Number of RWS",
-                "yAxis": { "minInterval": 1 }
+                "yAxis": {
+                  "minInterval": 1
+                }
               },
               "source": "progress",
               "progress_ref": "progress_construction",
@@ -1109,13 +1147,15 @@
                 "description": "RWS counted by month of their planned completion date. Incomplete projects only; TODAY reference line drawn on x-axis.",
                 "xAxisLabel": "Month",
                 "yAxisLabel": "Number of RWS",
-                "yAxis": { "minInterval": 1 }
+                "yAxis": {
+                  "minInterval": 1
+                }
               },
               "api": {
                 "form_id": 1749621962296,
                 "sum_by": "parent_id",
                 "group_by": "month",
-                "date_question_id": 1749622695675,
+                "date_question_name": "proposed_completion_date",
                 "monitoring": "latest",
                 "fiscal_year": true
               },
@@ -1143,9 +1183,9 @@
                 "criteria": [
                   {
                     "type": "overdue",
-                    "completion_qid": 1749631041155,
+                    "completion_qname": "infrastructure_status",
                     "completion_incomplete_value": "non_operational",
-                    "deadline_qid": 1749622695675,
+                    "deadline_qname": "proposed_completion_date",
                     "hide": false
                   }
                 ]
@@ -1155,21 +1195,21 @@
                   "key": "rws_name",
                   "label": "RWS name",
                   "source": "parent_answer",
-                  "question_id": 1749621221731,
+                  "question_name": "project_name",
                   "hide": false
                 },
                 {
                   "key": "last_monitoring",
                   "label": "Last Monitoring",
                   "source": "latest_date",
-                  "question_id": 1749621962298,
+                  "question_name": "inspection_date",
                   "hide": false
                 },
                 {
                   "key": "project_type",
                   "label": "Type of project",
                   "source": "answer",
-                  "question_id": 1749621851234,
+                  "question_name": "type_of_project",
                   "hide": false
                 },
                 {
@@ -1190,14 +1230,14 @@
                   "key": "_start_date",
                   "label": "Start date",
                   "source": "parent_answer",
-                  "question_id": 1749622701234,
+                  "question_name": "construction_start_date",
                   "hide": true
                 },
                 {
                   "key": "deadline",
                   "label": "Deadline",
                   "source": "latest_date",
-                  "question_id": 1749622695675,
+                  "question_name": "proposed_completion_date",
                   "hide": false
                 }
               ]

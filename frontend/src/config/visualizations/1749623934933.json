@@ -12,13 +12,13 @@
       "order": 1,
       "key": "construction",
       "label": "Construction progress",
-      "start_date_question_id": 1749624452910,
-      "deadline_question_id": 1749630516825,
-      "scope_question_id": 1749624505915,
+      "start_date_question_name": "construction_start_date",
+      "deadline_question_name": "proposed_completion_date",
+      "scope_question_name": "project_scope",
       "api": {
         "form_id": 1749623934933,
         "monitoring_form_id": 1749624452908,
-        "filter_question_id": 1749630516826,
+        "filter_question_name": "is_project_completed",
         "filter_option_value": "no"
       },
       "components": [
@@ -27,49 +27,56 @@
           "label": "Concrete Base Construction",
           "formula": "any_yes",
           "hide": false,
-          "question_ids": [1849633499999, 1849633498888, 1849633497777]
+          "question_names": [
+            "concrete_base_construction_2m_x_2m_square_base",
+            "concrete_base_construction_300mm_vertical_offset_between_urf_and_eps",
+            "concrete_base_construction_300mm_vertical_offset_between_eps_and_storage"
+          ]
         },
         {
           "key": "urf_tank",
           "label": "URF Tank",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1849633720001]
+          "question_names": ["urf_tank_current_status"]
         },
         {
           "key": "eps_tank",
           "label": "EPS Tank Installation",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1849633900003]
+          "question_names": ["eps_tank_current_status"]
         },
         {
           "key": "balance_tank",
           "label": "Balance Tank",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1849634300002]
+          "question_names": ["balance_tank_current_status"]
         },
         {
           "key": "storage_tank",
           "label": "Storage Tank",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1849634690001]
+          "question_names": ["storage_tank_current_status"]
         },
         {
           "key": "standpipes",
           "label": "Standpipes",
           "formula": "ratio",
           "hide": false,
-          "question_ids": [1849635200001, 1849634950001]
+          "question_names": [
+            "existing_number_of_implemented_standpipes",
+            "number_of_standpipes_to_be_implemented"
+          ]
         },
         {
           "key": "drainage",
           "label": "Drainage",
           "formula": "completed_binary",
           "hide": true,
-          "question_ids": [],
+          "question_names": [],
           "note": "Formula pending definition"
         },
         {
@@ -78,7 +85,7 @@
           "formula": "multi_select_proportion",
           "total_items": 3,
           "hide": false,
-          "question_ids": [1849635500001]
+          "question_names": ["site_security_and_perimeter_details"]
         }
       ]
     },
@@ -87,8 +94,8 @@
       "chart_type": "water_quality_globals",
       "hide": true,
       "order": 2,
-      "sample_question_id": 1749632647507,
-      "test_method_question_id": 1749633001462,
+      "sample_question_name": "can_collect_water_sample",
+      "test_method_question_name": "water_testing_method",
       "monitoring_form_id": 1749632545233
     },
     {
@@ -102,9 +109,9 @@
           "chart_type": "filter_date",
           "order": 1,
           "label": "Monitoring Period",
-          "date_question_ids": {
-            "water_quality": 1749632545235,
-            "construction": 1749624452911
+          "date_question_names": {
+            "water_quality": "inspection_date",
+            "construction": "inspection_date"
           }
         },
         {
@@ -118,7 +125,7 @@
           "chart_type": "filter_multi_option",
           "order": 3,
           "key": "implementing_agency",
-          "question_id": 1749624452993,
+          "question_name": "implementing_agency",
           "form_id": 1749623934933,
           "label": "Implementing Agency"
         },
@@ -127,7 +134,7 @@
           "chart_type": "filter_option",
           "order": 4,
           "key": "water_committee",
-          "question_id": 1749624452105,
+          "question_name": "water_committee",
           "form_id": 1749623934933,
           "label": "Water Committee"
         }
@@ -153,7 +160,7 @@
       "color": "#fa8c16",
       "api": {
         "form_id": 1749624452908,
-        "question_id": 1749630516826,
+        "question_name": "is_project_completed",
         "option_value": "no",
         "monitoring": "latest",
         "sum_by": "parent_id",
@@ -169,7 +176,7 @@
       "color": "#64A73B",
       "api": {
         "form_id": 1749632545233,
-        "question_id": 1749633373968,
+        "question_name": "system_status",
         "option_value": "operational",
         "monitoring": "latest",
         "sum_by": "parent_id"
@@ -184,7 +191,7 @@
       "color": "#e41a1c",
       "api": {
         "form_id": 1749632545233,
-        "question_id": 1749633373968,
+        "question_name": "system_status",
         "option_value": "issue_with_system",
         "monitoring": "latest",
         "sum_by": "parent_id"
@@ -204,7 +211,7 @@
           "key": "operational_status",
           "label": "Operational status",
           "form_id": 1749632545233,
-          "question_id": 1749633373968,
+          "question_name": "system_status",
           "color_map": {
             "operational": "#64A73B",
             "issue_with_system": "#e41a1c",
@@ -222,23 +229,54 @@
                 "value": "compliant",
                 "label": "Yes",
                 "all_of": [
-                  { "question_id": 1749633220746, "op": "<=", "value": 0 },
-                  { "question_id": 1749633220745, "op": "<=", "value": 5 },
-                  { "question_id": 1749633259392, "op": "<=", "value": 0 },
-                  { "question_id": 1749633295165, "op": "<=", "value": 0 },
-                  { "question_id": 1797307852531, "op": "<=", "value": 30 },
                   {
-                    "question_id": 1797307852532,
+                    "question_name": "e_coli_lab_count",
+                    "op": "<=",
+                    "value": 0
+                  },
+                  {
+                    "question_name": "turbidity_ntu",
+                    "op": "<=",
+                    "value": 5
+                  },
+                  {
+                    "question_name": "total_coliform_cfu_100ml",
+                    "op": "<=",
+                    "value": 0
+                  },
+                  {
+                    "question_name": "fecal_coliform_cfu_100ml",
+                    "op": "<=",
+                    "value": 0
+                  },
+                  {
+                    "question_name": "temperature_c",
+                    "op": "<=",
+                    "value": 30
+                  },
+                  {
+                    "question_name": "ph",
                     "op": "between",
                     "min": 6.5,
                     "max": 8.5
                   },
-                  { "question_id": 1797307852533, "op": "<=", "value": 1000 },
-                  { "question_id": 1797307852534, "op": "<=", "value": 1 }
+                  {
+                    "question_name": "conductivity",
+                    "op": "<=",
+                    "value": 1000
+                  },
+                  {
+                    "question_name": "salinity",
+                    "op": "<=",
+                    "value": 1
+                  }
                 ]
               }
             ],
-            "default": { "value": "non_compliant", "label": "No" }
+            "default": {
+              "value": "non_compliant",
+              "label": "No"
+            }
           },
           "color_map": {
             "compliant": "#64A73B",
@@ -251,7 +289,7 @@
           "key": "presence_water_committee",
           "label": "Presence of active water committee",
           "form_id": 1749623934933,
-          "question_id": 1749624452105,
+          "question_name": "water_committee",
           "color_map": {
             "yes": "#64A73B",
             "not_active": "#999999",
@@ -346,7 +384,7 @@
       },
       "api": {
         "form_id": 1749623934933,
-        "question_id": 1749624452105,
+        "question_name": "water_committee",
         "group_by": "option",
         "include_unanswered": true
       }
@@ -361,7 +399,7 @@
       },
       "api": {
         "form_id": 1749623934933,
-        "question_id": 1749624452993,
+        "question_name": "implementing_agency",
         "group_by": "option",
         "include_unanswered": true
       }
@@ -407,7 +445,7 @@
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "value_type": "percentage",
-                "date_question_id": 1749632545235,
+                "date_question_name": "inspection_date",
                 "rolling_months": 12
               }
             },
@@ -420,7 +458,7 @@
               "color": "#e41a1c",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633373968,
+                "question_name": "system_status",
                 "option_value": "issue_with_system",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -434,7 +472,7 @@
               "label": "EPS where water sample collection was not possible",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749632647507,
+                "question_name": "can_collect_water_sample",
                 "option_value": "no",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
@@ -454,77 +492,77 @@
                 "criteria": [
                   {
                     "type": "option_equals",
-                    "question_id": 1749632647507,
+                    "question_name": "can_collect_water_sample",
                     "value": "no",
                     "label": "No water sample",
                     "hide": false
                   },
                   {
                     "type": "option_equals",
-                    "question_id": 1749633373968,
+                    "question_name": "system_status",
                     "value": "issue_with_system",
                     "label": "System issue",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749633220746,
+                    "question_name": "e_coli_lab_count",
                     "value": 0,
                     "label": "E.coli above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749633259392,
+                    "question_name": "total_coliform_cfu_100ml",
                     "value": 0,
                     "label": "Total coliform above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749633295165,
+                    "question_name": "fecal_coliform_cfu_100ml",
                     "value": 0,
                     "label": "Fecal coliform above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749633220745,
+                    "question_name": "turbidity_ntu",
                     "value": 5,
                     "label": "Turbidity above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1797307852531,
+                    "question_name": "temperature_c",
                     "value": 30,
                     "label": "Temperature above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_lt",
-                    "question_id": 1797307852532,
+                    "question_name": "ph",
                     "value": 6.5,
                     "label": "pH below acceptable range",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1797307852532,
+                    "question_name": "ph",
                     "value": 8.5,
                     "label": "pH above acceptable range",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1797307852533,
+                    "question_name": "conductivity",
                     "value": 1000,
                     "label": "Conductivity above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1797307852534,
+                    "question_name": "salinity",
                     "value": 1,
                     "label": "Salinity above threshold",
                     "hide": false
@@ -536,35 +574,35 @@
                   "key": "eps_name",
                   "label": "EPS name",
                   "source": "parent_answer",
-                  "question_id": 1749624452994,
+                  "question_name": "eps_name",
                   "hide": false
                 },
                 {
                   "key": "village_name",
                   "label": "Village Name",
                   "source": "parent_answer",
-                  "question_id": 1749624452991,
+                  "question_name": "village_name",
                   "hide": false
                 },
                 {
                   "key": "last_monitoring",
                   "label": "Last Monitoring",
                   "source": "latest_date",
-                  "question_id": 1749632545235,
+                  "question_name": "inspection_date",
                   "hide": false
                 },
                 {
                   "key": "operational_status",
                   "label": "Operational Status",
                   "source": "answer",
-                  "question_id": 1749633373968,
+                  "question_name": "system_status",
                   "hide": false
                 },
                 {
                   "key": "water_collection",
                   "label": "Not able to collect the water sample",
                   "source": "answer",
-                  "question_id": 1749632647507,
+                  "question_name": "can_collect_water_sample",
                   "hide": false
                 },
                 {
@@ -588,7 +626,7 @@
               "api": {
                 "form_id": 1749632545233,
                 "group_by": "month",
-                "date_question_id": 1749632545235,
+                "date_question_name": "inspection_date",
                 "monitoring": "all",
                 "fiscal_year": true
               }
@@ -608,12 +646,12 @@
               "description": "Same rolling 12-month window as monitored_last_12_months; numerator is EPS whose latest water-sample answer is yes.",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749632647507,
+                "question_name": "can_collect_water_sample",
                 "option_value": "yes",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "value_type": "percentage",
-                "date_question_id": 1749632545235,
+                "date_question_name": "inspection_date",
                 "rolling_months": 12,
                 "include_unanswered": true
               }
@@ -626,7 +664,7 @@
               "label": "Lab tested EPS",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633001462,
+                "question_name": "water_testing_method",
                 "option_value": "lab_test",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -640,7 +678,7 @@
               "label": "CBT tested EPS",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633001462,
+                "question_name": "water_testing_method",
                 "option_value": "cbt_test",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -671,7 +709,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633220746,
+                "question_name": "e_coli_lab_count",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -695,7 +733,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633259392,
+                "question_name": "total_coliform_cfu_100ml",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -720,7 +758,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633295165,
+                "question_name": "fecal_coliform_cfu_100ml",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -751,7 +789,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633220745,
+                "question_name": "turbidity_ntu",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -764,10 +802,10 @@
               "col_span": 12,
               "group": "physical",
               "label": "Water Temperature",
-              "description": "Acceptance threshold < 30 °C",
+              "description": "Acceptance threshold < 30 \u00b0C",
               "config": {
                 "title": "Water Temperature",
-                "xAxisLabel": "°C",
+                "xAxisLabel": "\u00b0C",
                 "entity_label": "EPS"
               },
               "threshold": {
@@ -775,7 +813,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1797307852531,
+                "question_name": "temperature_c",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -807,7 +845,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1797307852532,
+                "question_name": "ph",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -820,10 +858,10 @@
               "col_span": 8,
               "group": "chemical",
               "label": "Conductivity",
-              "description": "Acceptance threshold < 1000 µS/cm",
+              "description": "Acceptance threshold < 1000 \u00b5S/cm",
               "config": {
                 "title": "Conductivity",
-                "xAxisLabel": "µS/cm",
+                "xAxisLabel": "\u00b5S/cm",
                 "entity_label": "EPS"
               },
               "threshold": {
@@ -831,7 +869,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1797307852533,
+                "question_name": "conductivity",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -855,7 +893,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1797307852534,
+                "question_name": "salinity",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -877,7 +915,7 @@
               "color": "#fa8c16",
               "api": {
                 "form_id": 1749624452908,
-                "question_id": 1749630516826,
+                "question_name": "is_project_completed",
                 "option_value": "no",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
@@ -896,8 +934,8 @@
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "past_due": true,
-                "completion_question_id": 1749630516826,
-                "deadline_question_id": 1749630516825
+                "completion_question_name": "is_project_completed",
+                "deadline_question_name": "proposed_completion_date"
               }
             },
             {
@@ -910,7 +948,9 @@
                 "description": "Distribution of EPS across overall-progress buckets (0-10%, 11-20%, ..., 91-100%).",
                 "xAxisLabel": "Progress bucket",
                 "yAxisLabel": "Number of EPS",
-                "yAxis": { "minInterval": 1 }
+                "yAxis": {
+                  "minInterval": 1
+                }
               },
               "source": "progress",
               "progress_ref": "progress_construction",
@@ -926,15 +966,17 @@
                 "description": "EPS counted by month of their planned completion date. Incomplete projects only; TODAY reference line drawn on x-axis.",
                 "xAxisLabel": "Month",
                 "yAxisLabel": "Number of EPS",
-                "yAxis": { "minInterval": 1 }
+                "yAxis": {
+                  "minInterval": 1
+                }
               },
               "api": {
                 "form_id": 1749624452908,
-                "question_id": 1749630516826,
+                "question_name": "is_project_completed",
                 "option_value": "no",
                 "sum_by": "parent_id",
                 "group_by": "month",
-                "date_question_id": 1749630516825,
+                "date_question_name": "proposed_completion_date",
                 "monitoring": "latest",
                 "fiscal_year": true
               },
@@ -962,8 +1004,8 @@
                 "criteria": [
                   {
                     "type": "overdue",
-                    "completion_qid": 1749630516826,
-                    "deadline_qid": 1749630516825,
+                    "completion_qname": "is_project_completed",
+                    "deadline_qname": "proposed_completion_date",
                     "hide": false
                   }
                 ]
@@ -973,14 +1015,14 @@
                   "key": "eps_name",
                   "label": "EPS name",
                   "source": "parent_answer",
-                  "question_id": 1749624452994,
+                  "question_name": "eps_name",
                   "hide": false
                 },
                 {
                   "key": "last_monitoring",
                   "label": "Last Monitoring",
                   "source": "latest_date",
-                  "question_id": 1749624452911,
+                  "question_name": "inspection_date",
                   "hide": false
                 },
                 {
@@ -1065,14 +1107,14 @@
                   "key": "_start_date",
                   "label": "Start date",
                   "source": "parent_answer",
-                  "question_id": 1749624452910,
+                  "question_name": "construction_start_date",
                   "hide": true
                 },
                 {
                   "key": "deadline",
                   "label": "Deadline",
                   "source": "latest_date",
-                  "question_id": 1749630516825,
+                  "question_name": "proposed_completion_date",
                   "hide": false
                 }
               ]
