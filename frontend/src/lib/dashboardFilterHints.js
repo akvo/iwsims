@@ -83,8 +83,8 @@ export const expandApiHints = (apiBlock, ctx = {}) => {
     rolling_months,
     fiscal_year,
     past_due,
-    completion_question_id,
-    deadline_question_id,
+    completion_question_name,
+    deadline_question_name,
     ...rest
   } = apiBlock || {};
 
@@ -102,12 +102,12 @@ export const expandApiHints = (apiBlock, ctx = {}) => {
   }
 
   if (past_due === true) {
-    if (completion_question_id) {
-      out.question_id = completion_question_id;
+    if (completion_question_name) {
+      out.question_name = completion_question_name;
       out.option_value = "no";
     }
-    if (deadline_question_id) {
-      out.date_question_id = deadline_question_id;
+    if (deadline_question_name) {
+      out.date_question_name = deadline_question_name;
     }
     out.to_date = toIsoDate(subtractOneDay(today));
   }
@@ -157,7 +157,7 @@ export const applyDashboardFilters = (
   const criteria = [];
   (filterState?.custom || []).forEach((entry) => {
     const def = customFilterDefs.find((d) => d.key === entry.key);
-    if (!def || !def.question_id) {
+    if (!def || !def.question_name) {
       return;
     }
     const raw = Array.isArray(entry.value) ? entry.value : [entry.value];
@@ -170,14 +170,14 @@ export const applyDashboardFilters = (
     const isMulti = def.chart_type === "filter_multi_option";
     if (isMulti) {
       if (values.length === 1) {
-        criteria.push(`option_contains:${def.question_id}:${values[0]}`);
+        criteria.push(`option_contains:${def.question_name}:${values[0]}`);
       } else {
-        criteria.push(`option_in:${def.question_id}:${values.join("|")}`);
+        criteria.push(`option_in:${def.question_name}:${values.join("|")}`);
       }
     } else if (values.length === 1) {
-      criteria.push(`option_equals:${def.question_id}:${values[0]}`);
+      criteria.push(`option_equals:${def.question_name}:${values[0]}`);
     } else {
-      criteria.push(`option_in:${def.question_id}:${values.join("|")}`);
+      criteria.push(`option_in:${def.question_name}:${values.join("|")}`);
     }
   });
   if (criteria.length > 0) {

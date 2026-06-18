@@ -55,14 +55,14 @@ describe("expandApiHints", () => {
       {
         form_id: 1749632545233,
         rolling_months: 12,
-        date_question_id: 1749632545235,
+        date_question_name: "inspection_date",
       },
       { today }
     );
     expect(out.from_date).toBe("2025-04-14");
     expect(out.to_date).toBe("2026-04-14");
     expect(out.rolling_months).toBeUndefined();
-    expect(out.date_question_id).toBe(1749632545235);
+    expect(out.date_question_name).toBe("inspection_date");
   });
 
   test("fiscal_year expands using the fiscal_year_start_month", () => {
@@ -80,28 +80,28 @@ describe("expandApiHints", () => {
       {
         form_id: 1749624452908,
         past_due: true,
-        completion_question_id: 1749630516826,
-        deadline_question_id: 1749630516825,
+        completion_question_name: "is_project_completed",
+        deadline_question_name: "proposed_completion_date",
         monitoring: "latest",
         sum_by: "parent_id",
         value_type: "percentage",
       },
       { today }
     );
-    expect(out.question_id).toBe(1749630516826);
+    expect(out.question_name).toBe("is_project_completed");
     expect(out.option_value).toBe("no");
-    expect(out.date_question_id).toBe(1749630516825);
+    expect(out.date_question_name).toBe("proposed_completion_date");
     expect(out.to_date).toBe("2026-04-13");
     expect(out.past_due).toBeUndefined();
-    expect(out.completion_question_id).toBeUndefined();
-    expect(out.deadline_question_id).toBeUndefined();
+    expect(out.completion_question_name).toBeUndefined();
+    expect(out.deadline_question_name).toBeUndefined();
     expect(out.value_type).toBe("percentage");
   });
 
   test("no-hint block is passed through unchanged", () => {
     const input = {
       form_id: 1,
-      question_id: 2,
+      question_name: "q2",
       option_value: "x",
       monitoring: "latest",
     };
@@ -116,13 +116,13 @@ describe("applyDashboardFilters", () => {
     {
       key: "water_committee",
       chart_type: "filter_option",
-      question_id: 1749624452105,
+      question_name: "water_committee",
       form_id: 1749623934933,
     },
     {
       key: "implementing_agency",
       chart_type: "filter_multi_option",
-      question_id: 1749624452993,
+      question_name: "implementing_agency",
       form_id: 1749623934933,
     },
   ];
@@ -171,7 +171,7 @@ describe("applyDashboardFilters", () => {
       { custom: [{ key: "water_committee", value: "yes" }] },
       customDefs
     );
-    expect(out.criteria).toBe("option_equals:1749624452105:yes");
+    expect(out.criteria).toBe("option_equals:water_committee:yes");
     expect(out.option_value).toBeUndefined();
   });
 
@@ -181,7 +181,7 @@ describe("applyDashboardFilters", () => {
       { custom: [{ key: "implementing_agency", value: ["akvo"] }] },
       customDefs
     );
-    expect(out.criteria).toBe("option_contains:1749624452993:akvo");
+    expect(out.criteria).toBe("option_contains:implementing_agency:akvo");
   });
 
   test("multi_option filter with multiple values uses option_in", () => {
@@ -192,7 +192,7 @@ describe("applyDashboardFilters", () => {
       },
       customDefs
     );
-    expect(out.criteria).toBe("option_in:1749624452993:akvo|oxfam");
+    expect(out.criteria).toBe("option_in:implementing_agency:akvo|oxfam");
   });
 
   test("multiple custom filters AND-join into single criteria param", () => {
@@ -207,7 +207,8 @@ describe("applyDashboardFilters", () => {
       customDefs
     );
     expect(out.criteria).toBe(
-      "option_contains:1749624452993:akvo," + "option_equals:1749624452105:yes"
+      "option_contains:implementing_agency:akvo," +
+        "option_equals:water_committee:yes"
     );
   });
 
@@ -217,7 +218,7 @@ describe("applyDashboardFilters", () => {
       { custom: [{ key: "water_committee", value: "yes" }] },
       customDefs
     );
-    expect(out.criteria).toBe("option_equals:1749624452105:yes");
+    expect(out.criteria).toBe("option_equals:water_committee:yes");
   });
 
   test("empty custom selection is ignored", () => {
