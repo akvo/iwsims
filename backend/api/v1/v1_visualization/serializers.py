@@ -163,6 +163,7 @@ class FormulaValuesSerializer(serializers.Serializer):
     to_date = serializers.DateField(required=False)
 
     def validate_formula(self, value):
+        from api.v1.v1_visualization.functions import validate_qname
         try:
             parsed = json.loads(value)
         except (TypeError, ValueError) as exc:
@@ -170,9 +171,15 @@ class FormulaValuesSerializer(serializers.Serializer):
                 f"formula is not valid JSON: {exc}"
             )
         try:
-            return validate_shape(parsed)
+            validated = validate_shape(parsed)
         except ValueError as exc:
             raise serializers.ValidationError(str(exc))
+        # Conditions are question_name-only: reject a numeric question_name
+        # (a leaked question_id) with a 400 (Part A guard).
+        for bucket in validated.get("buckets", []):
+            for cond in bucket.get("all_of", []):
+                validate_qname(cond.get("question_name"))
+        return validated
 
     def validate_criteria(self, value):
         from api.v1.v1_visualization.constants import (

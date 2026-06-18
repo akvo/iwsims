@@ -191,6 +191,28 @@ class FormulaValuesViewTests(
         response = self.client.get(url)
         self.assertEqual(response.status_code, 400)
 
+    def test_numeric_question_name_in_formula_rejected(self):
+        """A numeric question_name in a condition is a 400 (Part A guard)."""
+        formula = {
+            "buckets": [{
+                "value": "x",
+                "label": "X",
+                "all_of": [{
+                    "question_name": str(self.Q_NUMBER_ID),
+                    "op": "<=", "value": 25,
+                }],
+            }],
+            "default": {"value": "y", "label": "Y"},
+        }
+        url = (
+            f"{self.BASE_URL}"
+            f"?form_id={self.MONITORING_FORM_ID}"
+            f"&group_by=parent_id"
+            f"&formula={_encode(formula)}"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+
     def test_malformed_formula_rejected(self):
         url = (
             f"{self.BASE_URL}"
