@@ -372,7 +372,7 @@ def handle_option_question(form, question, params):
 
     if group_by == "option":
         restricted = _extract_criteria_option_values(
-            params, question.id
+            params, question.name
         )
         return _option_group_by_option(
             question, options, data_ids, qs,
@@ -405,7 +405,7 @@ def _option_value_filter(
     """
     count = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
+        question_name=question.name,
         answer_options__contains=[option_value],
     )
     if sum_by == "parent_id":
@@ -431,7 +431,7 @@ def _option_value_filter(
         all_answered_ids = set(
             MVAnswerDenormalized.objects.filter(
                 data_id__in=data_ids,
-                question_id=question.id,
+                question_name=question.name,
                 answer_options__isnull=False,
             ).values_list("parent_id", flat=True).distinct()
         )
@@ -472,7 +472,7 @@ def _option_value_group_by_month(
 
     matching_ids = list(MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
+        question_name=question.name,
         answer_options__contains=[option_value],
     ).values_list("data_id", flat=True))
 
@@ -537,7 +537,7 @@ def _option_value_group_by_month(
     return data, labels
 
 
-def _extract_criteria_option_values(params, question_id):
+def _extract_criteria_option_values(params, question_name):
     """Extract option values that criteria restricts for a given qid.
 
     When criteria includes option_equals/option_contains/option_in
@@ -551,7 +551,7 @@ def _extract_criteria_option_values(params, question_id):
     for c in all_criteria:
         ctype = c["type"]
         parts = c["parts"]
-        if parts[0] != question_id:
+        if parts[0] != question_name:
             continue
         if ctype in ("option_equals", "option_contains"):
             values.add(parts[1])
@@ -596,7 +596,7 @@ def _option_group_by_option(
     )
     for tracking_id, opts in MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
+        question_name=question.name,
         answer_options__isnull=False,
     ).values_list(tracking_field, "answer_options"):
         matched = False
@@ -690,7 +690,7 @@ def handle_number_question(form, question, params):
 
     result = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
+        question_name=question.name,
         answer_value__isnull=False,
     ).aggregate(agg_value=agg_func("answer_value"))
 
@@ -708,7 +708,7 @@ def _number_group_by_parent(
     agg_rows = list(
         MVAnswerDenormalized.objects.filter(
             data_id__in=data_ids,
-            question_id=question.id,
+            question_name=question.name,
             answer_value__isnull=False,
         ).values("parent_id").annotate(
             agg_value=agg_func("answer_value"),
@@ -766,7 +766,7 @@ def _number_group_by_date(question, data_ids, params):
                 continue
             val_result = MVAnswerDenormalized.objects.filter(
                 data_id=data_id,
-                question_id=question.id,
+                question_name=question.name,
                 answer_value__isnull=False,
             ).aggregate(agg_value=agg_func("answer_value"))
             if val_result["agg_value"] is not None:
@@ -783,7 +783,7 @@ def _number_group_by_date(question, data_ids, params):
     else:
         results = MVAnswerDenormalized.objects.filter(
             data_id__in=data_ids,
-            question_id=question.id,
+            question_name=question.name,
             answer_value__isnull=False,
         ).annotate(
             date=TruncDate("data_created"),
@@ -821,7 +821,7 @@ def _number_group_by_month(
 
     base = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
+        question_name=question.name,
         answer_value__isnull=False,
     )
 
@@ -926,7 +926,7 @@ def _stack_option_by_month(
 
     base = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
+        question_name=question.name,
     )
 
     if date_qname:
@@ -1081,7 +1081,7 @@ def _stack_option_by_parent_legacy(
         for opt in options:
             count = MVAnswerDenormalized.objects.filter(
                 data_id__in=p_data_ids,
-                question_id=question.id,
+                question_name=question.name,
                 answer_options__contains=[opt.value],
             ).count()
             row[opt.label] = count
@@ -1120,7 +1120,7 @@ def _stack_option_by_parent(
             agg_data = list(
                 MVParentAggregates.objects.filter(
                     form_id=form_id,
-                    question_id=question.id,
+                    question_name=question.name,
                     parent_id__in=parent_ids,
                 ).values('parent_id', 'option_values')
             )
@@ -1228,7 +1228,7 @@ def _stack_parent_by_date(
 
     val_rows = MVAnswerDenormalized.objects.filter(
         data_id__in=all_data_ids,
-        question_id=question.id,
+        question_name=question.name,
         answer_value__isnull=False,
     ).values("data_id").annotate(
         agg_value=agg_func("answer_value"),
@@ -1283,7 +1283,7 @@ def _stack_parent_by_month(
 
         base = MVAnswerDenormalized.objects.filter(
             data_id__in=p_ids,
-            question_id=question.id,
+            question_name=question.name,
             answer_value__isnull=False,
         )
 
