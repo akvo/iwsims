@@ -10,7 +10,7 @@ export const serializeComponents = (components = []) =>
   components
     .filter((c) => !c.hide)
     .map((c) => {
-      const base = `${c.key}:${c.formula}:${(c.question_ids || []).join(":")}`;
+      const base = `${c.key}:${c.formula}:${(c.question_names || []).join(":")}`;
       const withExtra =
         c.formula === "multi_select_proportion" && c.total_items
           ? `${base}:${c.total_items}`

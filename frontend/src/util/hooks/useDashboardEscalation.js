@@ -14,9 +14,9 @@ export const serializeCriteria = (criteria = []) =>
     .filter((c) => !c.hide)
     .map((c) => {
       if (c.type === "overdue") {
-        return `overdue:${c.completion_qid}:${c.deadline_qid}`;
+        return `overdue:${c.completion_qname}:${c.deadline_qname}`;
       }
-      return `${c.type}:${c.question_id}:${c.value}`;
+      return `${c.type}:${c.question_name}:${c.value}`;
     })
     .join(",");
 
@@ -35,7 +35,7 @@ export const serializeColumns = (columns = []) =>
       if (c.source === "parent_name" || c.source === "administration") {
         return `${c.key}:${c.source}`;
       }
-      return `${c.key}:${c.source}:${c.question_id}`;
+      return `${c.key}:${c.source}:${c.question_name}`;
     })
     .join(",");
 
