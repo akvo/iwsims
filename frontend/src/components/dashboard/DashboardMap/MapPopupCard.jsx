@@ -26,10 +26,10 @@ const resolveDynamic = (activeFilter, byParent, pointId, sourceFormId) => {
     }
     return raw;
   }
-  if (activeFilter.question_id) {
+  if (activeFilter.question_name) {
     const opts = getQuestionOptions(
       activeFilter.form_id,
-      activeFilter.question_id
+      activeFilter.question_name
     );
     const found = opts.find((o) => String(o.value) === String(raw));
     return found ? found.label : raw;

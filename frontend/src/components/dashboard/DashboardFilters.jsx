@@ -12,11 +12,11 @@ const { RangePicker } = DatePicker;
  * startup) for the matching form_id, then walking its question groups.
  * Returns an empty array if the form, question, or its options aren't found.
  */
-const extractOptionsFromWindow = (formId, questionId) => {
+const extractOptionsFromWindow = (formId, questionName) => {
   const form = (window.forms || []).find((f) => f.id === Number(formId));
   const groups = form?.content?.question_group || [];
   for (let i = 0; i < groups.length; i += 1) {
-    const q = (groups[i].question || []).find((x) => x.id === questionId);
+    const q = (groups[i].question || []).find((x) => x.name === questionName);
     if (q) {
       return (q.option || []).map((o) => ({
         label: o.label,
@@ -73,7 +73,7 @@ const DashboardFilters = ({ filterItems, filters, onChange }) => {
   const customOptions = useMemo(() => {
     const out = {};
     customDefs.forEach((d) => {
-      out[d.key] = extractOptionsFromWindow(d.form_id, d.question_id);
+      out[d.key] = extractOptionsFromWindow(d.form_id, d.question_name);
     });
     return out;
   }, [customDefs]);

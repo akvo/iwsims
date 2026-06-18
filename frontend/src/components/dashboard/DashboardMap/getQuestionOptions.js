@@ -6,11 +6,11 @@
  * `DashboardFilters.jsx`; kept module-local to avoid scope-creeping
  * an extraction across the dashboard tree in this PR.
  */
-const getQuestionOptions = (formId, questionId) => {
+const getQuestionOptions = (formId, questionName) => {
   const form = (window.forms || []).find((f) => f.id === Number(formId));
   const groups = form?.content?.question_group || [];
   for (let i = 0; i < groups.length; i += 1) {
-    const q = (groups[i].question || []).find((x) => x.id === questionId);
+    const q = (groups[i].question || []).find((x) => x.name === questionName);
     if (q) {
       return (q.option || []).map((o) => ({
         label: o.label,

@@ -43,10 +43,10 @@ const useMapByParent = ({ activeFilter, filterState }) => {
     let formula;
     if (activeFilter.formula) {
       formula = activeFilter.formula;
-    } else if (activeFilter.question_id) {
+    } else if (activeFilter.question_name) {
       const options = getQuestionOptions(
         activeFilter.form_id,
-        activeFilter.question_id
+        activeFilter.question_name
       );
       formula = {
         buckets: options.map((opt) => ({
@@ -54,7 +54,7 @@ const useMapByParent = ({ activeFilter, filterState }) => {
           label: opt.label,
           all_of: [
             {
-              question_id: activeFilter.question_id,
+              question_name: activeFilter.question_name,
               op: "option_equals",
               value: opt.value,
             },

@@ -33,8 +33,8 @@ export const resolveBuckets = (filter) => {
         color: map[fallback.value] || "#1890ff",
       });
     }
-  } else if (filter.question_id) {
-    const opts = getQuestionOptions(filter.form_id, filter.question_id);
+  } else if (filter.question_name) {
+    const opts = getQuestionOptions(filter.form_id, filter.question_name);
     opts.forEach((o) => {
       out.push({
         value: o.value,
