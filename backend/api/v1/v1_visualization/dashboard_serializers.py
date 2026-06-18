@@ -322,13 +322,13 @@ class ProgressFilterSerializer(serializers.Serializer):
         required=True
     )
     components = serializers.CharField(required=True)
-    filter_question_id = serializers.IntegerField(
+    filter_question_name = serializers.CharField(
         required=False
     )
     filter_option_value = serializers.CharField(
         required=False
     )
-    scope_question_id = serializers.IntegerField(
+    scope_question_name = serializers.CharField(
         required=False
     )
     from_date = serializers.DateField(required=False)
@@ -391,8 +391,8 @@ class ProgressFilterSerializer(serializers.Serializer):
                         f"{formula} requires total_items:"
                         f" '{item}'"
                     )
-                comp["question_ids"] = [
-                    int(q) for q in parts[2:-1]
+                comp["question_names"] = [
+                    validate_qname(q) for q in parts[2:-1]
                 ]
                 try:
                     total_items = int(parts[-1])
@@ -414,12 +414,12 @@ class ProgressFilterSerializer(serializers.Serializer):
                         " (implemented:planned):"
                         f" '{item}'"
                     )
-                comp["question_ids"] = [
-                    int(parts[2]), int(parts[3]),
+                comp["question_names"] = [
+                    validate_qname(parts[2]), validate_qname(parts[3]),
                 ]
             else:
-                comp["question_ids"] = [
-                    int(q) for q in parts[2:]
+                comp["question_names"] = [
+                    validate_qname(q) for q in parts[2:]
                 ]
 
             if applicable_types:

@@ -14,39 +14,39 @@ from api.v1.v1_visualization.models import (
 )
 
 
-def compute_any_yes(latest_data_id, question_ids, answers_map, **kwargs):
+def compute_any_yes(latest_data_id, question_names, answers_map, **kwargs):
     """100% if ANY listed question answered 'Yes'."""
-    for qid in question_ids:
-        a = answers_map.get((latest_data_id, qid))
+    for qname in question_names:
+        a = answers_map.get((latest_data_id, qname))
         if a and a.get("options") and "yes" in a["options"]:
             return 100.0
     return 0.0
 
 
 def compute_completed_binary(
-    latest_data_id, question_ids, answers_map, **kwargs
+    latest_data_id, question_names, answers_map, **kwargs
 ):
     """100% if answered 'Completed'."""
-    for qid in question_ids:
-        a = answers_map.get((latest_data_id, qid))
+    for qname in question_names:
+        a = answers_map.get((latest_data_id, qname))
         if a and a.get("options") and "completed" in a["options"]:
             return 100.0
     return 0.0
 
 
 def compute_ratio(
-    latest_data_id, question_ids, answers_map, **kwargs
+    latest_data_id, question_names, answers_map, **kwargs
 ):
     """(Implemented / Planned) * 100, clamped to [0, 100].
 
-    Expects question_ids = [implemented_qid, planned_qid].
+    Expects question_names = [implemented_qname, planned_qname].
     Returns 0.0 if either value is missing or planned <= 0.
     """
-    if len(question_ids) < 2:
+    if len(question_names) < 2:
         return 0.0
-    implemented_qid, planned_qid = question_ids[0], question_ids[1]
-    impl_row = answers_map.get((latest_data_id, implemented_qid))
-    plan_row = answers_map.get((latest_data_id, planned_qid))
+    implemented_qname, planned_qname = question_names[0], question_names[1]
+    impl_row = answers_map.get((latest_data_id, implemented_qname))
+    plan_row = answers_map.get((latest_data_id, planned_qname))
     implemented = impl_row.get("value") if impl_row else None
     planned = plan_row.get("value") if plan_row else None
     if implemented is None or planned is None:
@@ -62,13 +62,13 @@ def compute_ratio(
 
 
 def compute_multi_select_proportion(
-    latest_data_id, question_ids, answers_map,
+    latest_data_id, question_names, answers_map,
     total_items=1, **kwargs
 ):
     """Percentage based on number of selected options."""
     selected = None
-    for qid in question_ids:
-        a = answers_map.get((latest_data_id, qid))
+    for qname in question_names:
+        a = answers_map.get((latest_data_id, qname))
         if a and a.get("options"):
             selected = a["options"]
             break
@@ -118,7 +118,7 @@ def compute_component_scores(
             kwargs["total_items"] = comp["total_items"]
         scores[comp["key"]] = handler(
             latest_id,
-            comp["question_ids"],
+            comp["question_names"],
             answers_map,
             **kwargs,
         )
@@ -128,23 +128,23 @@ def compute_component_scores(
 def build_progress_answers_map(latest_ids, components):
     """Bulk-fetch answers needed to score all components for all parents.
 
-    Returns dict keyed by (data_id, question_id) carrying the fields
+    Returns dict keyed by (data_id, question_name) carrying the fields
     formula handlers read (options, value).
     """
-    qids = {
-        q for c in components for q in c.get("question_ids", [])
+    qnames = {
+        q for c in components for q in c.get("question_names", [])
     }
-    if not qids or not latest_ids:
+    if not qnames or not latest_ids:
         return {}
     rows = MVAnswerDenormalized.objects.filter(
         data_id__in=latest_ids,
-        question_id__in=qids,
+        question_name__in=qnames,
     ).values(
-        "data_id", "question_id",
+        "data_id", "question_name",
         "answer_options", "answer_value",
     )
     return {
-        (r["data_id"], r["question_id"]): {
+        (r["data_id"], r["question_name"]): {
             "options": r["answer_options"],
             "value": r["answer_value"],
         }
@@ -203,11 +203,11 @@ def handle_progress(
         Dict with histogram and details.
     """
     administration_id = params.get("administration_id")
-    filter_qid = params.get("filter_question_id")
+    filter_qname = params.get("filter_question_name")
     filter_value = params.get("filter_option_value")
     criteria = params.get("criteria")
     parent_criteria = params.get("parent_criteria")
-    scope_qid = params.get("scope_question_id")
+    scope_qname = params.get("scope_question_name")
 
     date_filters = build_date_filters(params)
 
@@ -241,10 +241,10 @@ def handle_progress(
             )
             mv_qs = mv_qs.filter(parent_id__in=narrowed)
 
-        if filter_qid and filter_value:
+        if filter_qname and filter_value:
             matching = MVAnswerDenormalized.objects.filter(
                 data_id__in=mv_qs.values("latest_data_id"),
-                question_id=filter_qid,
+                question_name=filter_qname,
                 answer_options__contains=[filter_value],
             ).values_list("data_id", flat=True)
             mv_qs = mv_qs.filter(latest_data_id__in=matching)
@@ -281,10 +281,10 @@ def handle_progress(
             fd_qs, True, parent_criteria,
         )
 
-        if filter_qid and filter_value:
+        if filter_qname and filter_value:
             matching = MVAnswerDenormalized.objects.filter(
                 data_id__in=fd_qs.values("latest_id"),
-                question_id=filter_qid,
+                question_name=filter_qname,
                 answer_options__contains=[filter_value],
             ).values_list("data_id", flat=True)
             fd_qs = fd_qs.filter(latest_id__in=matching)
@@ -302,10 +302,10 @@ def handle_progress(
     answers_map = build_progress_answers_map(latest_ids, components)
 
     scope_map = {}
-    if scope_qid:
+    if scope_qname:
         scope_rows = MVAnswerDenormalized.objects.filter(
             data_id__in=latest_ids,
-            question_id=scope_qid,
+            question_name=scope_qname,
         ).values("data_id", "answer_options")
         for row in scope_rows:
             opts = row.get("answer_options") or []

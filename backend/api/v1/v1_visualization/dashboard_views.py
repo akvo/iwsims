@@ -515,14 +515,14 @@ def visualization_progress(request, form_id, version):
         monitoring_form_id=validated["monitoring_form_id"],
         components=validated["components"],
         params={
-            "filter_question_id": validated.get(
-                "filter_question_id"
+            "filter_question_name": validated.get(
+                "filter_question_name"
             ),
             "filter_option_value": validated.get(
                 "filter_option_value"
             ),
-            "scope_question_id": validated.get(
-                "scope_question_id"
+            "scope_question_name": validated.get(
+                "scope_question_name"
             ),
             "administration_id": resolve_default_administration_id(
                 validated.get("administration_id"),
