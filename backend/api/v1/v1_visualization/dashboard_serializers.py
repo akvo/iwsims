@@ -96,16 +96,33 @@ class ValuesFilterSerializer(serializers.Serializer):
                 "Either question_name or form_id is required."
             )
 
-        # question_name path: skip form/question validation
-        if question_name:
+        # Global cross-form path: question_name without form_id.
+        if question_name and not form_id:
+            validate_qname(question_name)  # numeric id -> 400
             return data
 
         question_id = data.get("question_id")
         stack_by = data.get("stack_by")
         group_by = data.get("group_by")
 
-        # Validate question belongs to form and is supported type
-        if question_id:
+        # Resolve the target question — by name (form-scoped name path)
+        # or by id (legacy rich path). Both must belong to the form and
+        # be a supported type.
+        question = None
+        if question_name:
+            validate_qname(question_name)  # numeric id -> 400
+            question = Questions.objects.filter(
+                name=question_name,
+                form_id=form_id,
+            ).first()
+            if not question:
+                raise serializers.ValidationError({
+                    "question_name": (
+                        f"Question '{question_name}' not found"
+                        f" on form {form_id}."
+                    ),
+                })
+        elif question_id:
             question = Questions.objects.filter(
                 pk=question_id,
                 form_id=form_id,
@@ -117,9 +134,10 @@ class ValuesFilterSerializer(serializers.Serializer):
                         f" on form {form_id}."
                     ),
                 })
+        if question:
             if question.type not in SUPPORTED_QUESTION_TYPES:
                 raise serializers.ValidationError({
-                    "question_id": (
+                    "question": (
                         f"Question type {question.type}"
                         " is not supported."
                     ),
@@ -166,15 +184,15 @@ class ValuesFilterSerializer(serializers.Serializer):
                 if c["parts"][0] in on_parent
             ] or None
 
-        # stack_by requires group_by and question_id
+        # stack_by requires group_by and a resolved question (id or name)
         if stack_by:
             if not group_by:
                 raise serializers.ValidationError({
                     "stack_by": "stack_by requires group_by.",
                 })
-            if not question_id:
+            if not data.get("question"):
                 raise serializers.ValidationError({
-                    "stack_by": "stack_by requires question_id.",
+                    "stack_by": "stack_by requires a question.",
                 })
 
         return data

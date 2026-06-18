@@ -198,7 +198,10 @@ def visualization_values(request, version):
     validated = serializer.validated_data
     question_name = validated.get("question_name")
 
-    if question_name:
+    # Global cross-form path: question_name with NO form_id. With a
+    # form_id, the serializer resolves the question by name and we fall
+    # through to the form-scoped rich handlers below.
+    if question_name and not validated.get("form_id"):
         params = {
             "administration_id": resolve_default_administration_id(
                 validated.get("administration_id"),
