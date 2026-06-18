@@ -333,22 +333,63 @@ Response (`{data:[{group,label}]}`) unchanged.
 
 ## Part H — consolidation / functions to simplify (reduce complexity)
 
-The point of normalizing on names is to collapse the two value code paths' shared logic:
+> **Reality check (updated after implementation).** The MV optimization's *core* goal —
+> eliminating query complexity (N+1 / correlated-subquery aggregation → single MV reads) — is
+> **already achieved**. Measured MV-vs-base-table usage: `values_functions.py` 36:4,
+> `functions.py` 12:7, `escalation_functions.py` 8:2, `progress_functions.py` 7:1. The residual
+> line count is **feature breadth** (value-type × group-dimension × latest-mode × date-source),
+> **not** removable duplication. The aggressive `−40%` collapse below turned out **not** to be a
+> safe mechanical merge — see "What is NOT a safe win". Do not treat the original targets as a
+> backlog; treat this section as the record of what was done and why the rest was deliberately
+> deferred.
 
-1. **Extract `get_options_by_qname(question_name)`** (option dedup) into `functions.py` and
-   reuse it from both `_values_by_qname_option` (Part C) and `handle_option_question`
-   (Part D item 4). Removes duplicated dedup logic.
-2. **`mv_answer_denormalized` everywhere for criteria matching — CHOSEN (not optional).**
-   `_criterion_matching_ids` currently hits the **base `Answers`** table; escalation already
-   matches criteria on `mv_answer_denormalized`. Route `_criterion_matching_ids` through
-   `mv_answer_denormalized` (`question_name=`, indexed by `idx_mv_answer_question_name`) too,
-   so all criteria matching uses **one indexed MV path**. This is the **performance reason**
-   name-filtering must not run against base `Answers` (unindexed `Questions.name` → seq scan).
-   The MV is refreshed in test `setUp`, so tests stay green. (See Part C item 1.)
-3. **Keep** `get_values_by_question_name` + `_count_parents_by_qname` /
-   `_values_by_qname_number|option|text` / `_apply_qname_date_filter`: they serve the genuine
-   **global (no-`form_id`)** case that the form-scoped handlers can't. Do **not** delete them;
-   just deduplicate option logic via item 1.
+### Status (implemented)
+
+- ✅ **Item 2 — one indexed MV path for criteria matching (CHOSEN, done).**
+  `_criterion_matching_ids` now matches `mv_answer_denormalized` by `question_name`
+  (`idx_mv_answer_question_name`), not base `Answers` (unindexed `Questions.name` → seq scan).
+  Escalation already did. (Commit: criteria grammar; see Part C item 1.)
+- ✅ **`utils/functions.py` — `_typed_value` extracted.** `get_answer_value` /
+  `get_answer_history` now share one type-branch helper (geo/option/multi→options, number→value,
+  else→name); the administration branch stays per-function (they differ on webform/None).
+  +6 unit tests; 425 caller tests green.
+- ✅ **`values_functions.py` — safe extractions.** `_date_answer_sq(date_qname)` (the OuterRef
+  date subquery, 3→1) and `_finalize_month` / `_finalize_date` (the gap-fill + labels + return
+  tail). Behaviour-preserving; suite green. (1341→1334 ln — small, because the rest is *not*
+  safely mergeable.)
+
+### Item 3 — KEEP the global path (still true)
+
+**Keep** `get_values_by_question_name` + `_count_parents_by_qname` /
+`_values_by_qname_number|option|text` / `_apply_qname_date_filter`: they serve the genuine
+**global (no-`form_id`)** case the form-scoped handlers can't. Reinforced by the
+`parent_form_id` family-scope filter (Part C item 5), which makes this path *more* capable.
+
+### What is NOT a safe win (investigated, deferred)
+
+- ❌ **Item 1 — `get_options_by_qname` shared option-dedup: not a trivial extraction.** The two
+  impls return **different shapes**: `functions.py:_values_by_qname_option` yields dicts
+  `{value,label,color}`; `values_functions.py:handle_option_question` yields `QuestionOptions`
+  **model instances** (downstream uses `opt.label`/`opt.value` attribute access across the stack
+  functions). Unifying them requires changing option access throughout `values_functions.py` —
+  real churn/risk for little gain. Deferred.
+- ❌ **The `−40%` `values_functions.py` matrix collapse is not a mechanical merge.** The
+  `_{count,number,option,stack}_group_by_{month,parent,date,id}` cells differ **intentionally**:
+  (a) **data source** — e.g. `_count_group_by_month` not-latest+no-date counts the **FormData**
+  qs (`count(id)`, includes answerless submissions) while other branches read the MV
+  (`count(distinct data_id)`); (b) **aggregation** — count uses `Count(distinct)`, number uses
+  `Avg/Sum/agg_func`; (c) **edge branches** — `_stack_option_by_parent_legacy` registration-form
+  fallback; (d) **dynamic date windows** — non-materializable. A genuine collapse needs a careful
+  generic-helper *redesign* (`group_rows(qs, value_type, dimension, value_extractor)`), the
+  highest-risk change in the task — deferred to a dedicated, reviewed pass, not rushed.
+- ❌ **"Extend MV coverage to delete the fallbacks" — bad tradeoff.** Investigated: the residual
+  fallbacks are mostly **non-materializable** (`latest_monitoring_subquery` / `get_base_monitoring_qs`
+  date-window paths — arbitrary `from_date..to_date` can't be pre-materialized) or **necessary**
+  (`_stack_option_by_parent_legacy` is the all-submissions path; `mv_parent_aggregates` is
+  latest-only by design). The only deletable target (~80 ln of `_legacy`, which already queries
+  `mv_answer_denormalized`) would require a **new all-submissions aggregate MV** — adding refresh
+  cost on every write + a migration/model/refresh-path — to remove working code. Net: *more* MV
+  surface to maintain. Not worth it.
 
 > Per this folder's CLAUDE.md, prefer additive/consolidating changes; do not delete a function
 > unless its callers are all migrated and tests stay green. List any removal explicitly in the
@@ -364,8 +405,9 @@ consolidation math — this section stays as written, with two clarifications:
   **pre-collapsed to `rn=1`** (exactly one latest row per `(parent_id, question_name)`), so it
   can never serve `group_by=month|date`, `stack_by`, `criteria`, or `repeat_agg` — those need
   the full per-answer rows in `mv_answer_denormalized`. The `_{count,number,option,stack}_
-  group_by_{month,parent,date,id}` matrix therefore still exists; the **−40%** `values_functions.py`
-  target is unchanged.
+  group_by_{month,parent,date,id}` matrix therefore still exists — and (per "What is NOT a safe
+  win") its branches differ intentionally, so the `−40%` figure is a **redesign** estimate, not
+  a mechanical target; deferred.
 - **It slightly *grows* the kept global path** (item 3), so the `functions.py` reduction is a
   hair smaller: `get_values_by_question_name` gains an optional `parent_form_id` param + one
   `.filter()` (Part C item 5). This also **reinforces "keep"** — the path is now the
@@ -377,26 +419,27 @@ consolidation math — this section stays as written, with two clarifications:
   *routed* to this lean path instead of the heavy handlers — a performance/clarity win, but it
   does not delete the heavy path (trend/stack/criteria still need `mv_answer_denormalized`).
 
-### Concrete reduction targets (current → realistic)
+### Reduction targets — original estimate vs reality
 
-Inventory today: `values_functions.py` 25 fn / 1340 ln · `functions.py` 33 fn / 922 ln ·
-`escalation_functions.py` 6 fn / 338 ln · `progress_functions.py` 9 fn / 334 ln ·
-`backend/utils/functions.py` 5 fn / 75 ln. The reductions are **uneven** — ~80% of the win is in
-`values_functions.py` plus the `question_name` half of `functions.py`. The others are already
-lean; squeezing them is churn for <10 lines and added risk.
+Inventory now (post-Task-6): `values_functions.py` ~1334 ln · `functions.py` ~955 ln ·
+`escalation_functions.py` ~338 ln · `progress_functions.py` ~334 ln ·
+`backend/utils/functions.py` ~105 ln. The original `−40%` estimate assumed the matrix was
+mechanically mergeable; it is not (see "What is NOT a safe win"). Status per file:
 
-| File | Now | Realistic | Where the cut comes from |
-|------|-----|-----------|--------------------------|
-| **values_functions.py** | 25 fn / 1340 | ~13 fn / ~800 (**−40%**) | The big one. There is a `_{count,number,option,stack}_group_by_{month,parent,date,id}` **matrix** — the same group + gap-fill logic re-implemented per value-type. Collapse to 1–2 generic `group_rows(qs, value_type, dimension)` helpers + a value extractor. Also delete `_stack_option_by_parent_legacy` and its dispatcher once the MV is authoritative (~80 ln). |
-| **functions.py** | 33 fn / 922 | ~26 fn / ~720 (**−22%**) | `get_values_by_question_name` + the 5 `_*_by_qname_*` helpers (lines ~685–922, ~237 ln) re-implement count/number/option over `mv_cross_form_latest` — **keep** (global no-`form_id` case) but share the value-extract + option-dedup with values_functions (Part H item 1). Drop one of the two correlated-subquery builders (`get_latest_monitoring_subquery` / `latest_monitoring_subquery`) once the MV path is default (~50 ln). Centralize `format_month_label` / `format_date_group` / `fill_*_gaps` here so values_functions calls them instead of duplicating. *Note: the new `parent_form_id` filter (Part C item 5) adds ~2–4 ln to the kept global path, so this target is marginally smaller — negligible.* |
-| **progress_functions.py** | 9 fn / 334 | ~8 fn (**~0**) | Already lean. The 4 `compute_*` formula handlers are a clean registry. Only the Task 6 rename (`question_ids`→`question_names`). Not worth restructuring. |
-| **escalation_functions.py** | 6 fn / 338 | ~5 fn (**~0**) | Cohesive. Optionally fold `_answer_cell_value` into `extract_column_value`. Mostly a key-by-name change. |
-| **utils/functions.py** | 5 fn / 75 | 5 fn / ~60 | `get_answer_value` and `get_answer_history` duplicate the same geo/option/number/administration type-branch — extract one `_typed_value(question_type, options, value, name)` helper (~15 ln). |
+| File | Original estimate | Actual outcome |
+|------|-----|--------------------------|
+| **values_functions.py** | ~13 fn / ~800 (**−40%**) | **Deferred — redesign, not a merge.** Safe extractions done (`_date_answer_sq`, `_finalize_month/_date`). The matrix cells differ intentionally (FormData-vs-MV source, distinct-vs-plain count, registration fallback, dynamic date windows), so the `−40%` needs a careful `group_rows(...)` redesign — highest-risk change, deferred. `_stack_option_by_parent_legacy` can't be deleted (it's the all-submissions path; `mv_parent_aggregates` is latest-only). |
+| **functions.py** | ~26 fn / ~720 (**−22%**) | **Mostly deferred.** Item-1 option-dedup share blocked (different option shapes). The two correlated-subquery builders **both stay** — `latest_monitoring_subquery` is needed for dynamic date-windows *and* in-transaction tests, so it can't be dropped. `format_*`/`fill_*` already live here and `values_functions` imports them (no duplication). |
+| **progress_functions.py** | ~0 | Done — only the Task-6 rename (`question_ids`→`question_names`, filter/scope/date by name). |
+| **escalation_functions.py** | ~0 | Done — key-by-name change (criteria + columns). `_answer_cell_value` fold not pursued (cosmetic). |
+| **utils/functions.py** | ~−15 ln | ✅ **Done** — `_typed_value` extracted (net slightly larger with its docstring + the 6 unit tests, but duplication removed). |
 
-**Safety:** these collapses are only safe **after** Tasks 4/6 make the MV authoritative (so the
-legacy fallbacks can go) and only with the visualization test suite (now the **name-correctness**
-tests — see Testing) as the safety net. Do them as this Part H, incrementally, re-running tests
-after each — not as a standalone refactor.
+**Reality:** the only legacy fallbacks the original plan assumed could "go once the MV is
+authoritative" turned out to be **inherent** (dynamic date windows, all-submissions mode,
+denominators) — not deletable without adding *more* MV machinery than they remove. So Part H
+delivered the safe consolidations (criteria→indexed-MV, `_typed_value`, the `values_functions`
+helper extracts) and correctly **stopped short** of the matrix redesign, which remains an
+optional, separately-reviewed effort guarded by the name-correctness test suite.
 
 ---
 
