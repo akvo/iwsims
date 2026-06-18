@@ -39,50 +39,50 @@ def build_escalation_criteria_filter(criteria, latest_ids):
         parts = criterion["parts"]
 
         if ctype == "option_equals":
-            qid = int(parts[0])
+            qname = parts[0]
             value = parts[1]
             matching = MVAnswerDenormalized.objects.filter(
                 data_id__in=latest_ids,
-                question_id=qid,
+                question_name=qname,
                 answer_options__contains=[value],
             ).values_list("data_id", flat=True)
             or_condition |= Q(latest_id__in=matching)
 
         elif ctype == "threshold_gt":
-            qid = int(parts[0])
+            qname = parts[0]
             threshold = float(parts[1])
             matching = MVAnswerDenormalized.objects.filter(
                 data_id__in=latest_ids,
-                question_id=qid,
+                question_name=qname,
                 answer_value__gt=threshold,
             ).values_list("data_id", flat=True)
             or_condition |= Q(latest_id__in=matching)
 
         elif ctype == "threshold_lt":
-            qid = int(parts[0])
+            qname = parts[0]
             threshold = float(parts[1])
             matching = MVAnswerDenormalized.objects.filter(
                 data_id__in=latest_ids,
-                question_id=qid,
+                question_name=qname,
                 answer_value__lt=threshold,
             ).values_list("data_id", flat=True)
             or_condition |= Q(latest_id__in=matching)
 
         elif ctype == "overdue":
-            completion_qid = int(parts[0])
-            deadline_qid = int(parts[1])
+            completion_qname = parts[0]
+            deadline_qname = parts[1]
             today = date.today().isoformat()
             incomplete = set(
                 MVAnswerDenormalized.objects.filter(
                     data_id__in=latest_ids,
-                    question_id=completion_qid,
+                    question_name=completion_qname,
                     answer_options__contains=["no"],
                 ).values_list("data_id", flat=True)
             )
             overdue_ids = set(
                 MVAnswerDenormalized.objects.filter(
                     data_id__in=latest_ids,
-                    question_id=deadline_qid,
+                    question_name=deadline_qname,
                     answer_name__lt=today,
                 ).values_list("data_id", flat=True)
             )

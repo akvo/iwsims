@@ -268,7 +268,7 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
             f"?monitoring_form_id={self.monitoring.id}"
             f"&components=quality:ratio"
             f":{self.Q_NUMBER_ID}:{self.Q_NUMBER_ID}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -284,7 +284,7 @@ class ProgressTestCases(VisualizationValuesTestMixin, APITestCase):
             f"?monitoring_form_id={self.monitoring.id}"
             f"&components=features:multi_select_proportion"
             f":{self.Q_MULTI_ID}:3"
-            f"&criteria=option_contains:{self.Q_MULTI_ID}"
+            f"&criteria=option_contains:{self.q_multi.name}"
             ":feature_x"
         )
         self.assertEqual(response.status_code, 200)

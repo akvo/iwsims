@@ -73,7 +73,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:pending"
+            f"&criteria=option_equals:{self.q_option.name}:pending"
             "&columns=name:parent_name,status:answer:"
             f"{self.Q_OPTION_ID}"
         )
@@ -95,8 +95,8 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
-            f",option_equals:{self.Q_OPTION_ID}:pending"
+            f"&criteria=option_equals:{self.q_option.name}:active"
+            f",option_equals:{self.q_option.name}:pending"
             "&columns=name:parent_name"
         )
         self.assertEqual(response.status_code, 200)
@@ -112,7 +112,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:inactive"
+            f"&criteria=option_equals:{self.q_option.name}:inactive"
             "&columns=name:parent_name"
         )
         self.assertEqual(response.status_code, 200)
@@ -132,7 +132,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=threshold_gt:{self.Q_NUMBER_ID}:25"
+            f"&criteria=threshold_gt:{self.q_number.name}:25"
             "&columns=name:parent_name"
         )
         self.assertEqual(response.status_code, 200)
@@ -150,7 +150,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=threshold_lt:{self.Q_NUMBER_ID}:25"
+            f"&criteria=threshold_lt:{self.q_number.name}:25"
             "&columns=name:parent_name"
         )
         self.assertEqual(response.status_code, 200)
@@ -165,7 +165,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:pending"
+            f"&criteria=option_equals:{self.q_option.name}:pending"
             "&columns=name:parent_name,location:administration"
         )
         self.assertEqual(response.status_code, 200)
@@ -182,7 +182,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
             f"&columns=name:parent_name"
             f",status:answer:{self.Q_OPTION_ID}"
             f",last_visit:latest_date:{self.Q_DATE_ID}"
@@ -206,7 +206,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
             f"&columns=name:parent_name"
             f",reg_admin:parent_answer:{self.Q_REG_ADMIN_ID}"
             f",mon_admin:answer:{self.Q_REG_ADMIN_ID}"
@@ -226,7 +226,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
             f"&columns=name:parent_name"
             f",missing:parent_answer:99999999"
         )
@@ -239,7 +239,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
             "&columns=name:not_a_real_source"
         )
         self.assertEqual(response.status_code, 400)
@@ -254,8 +254,8 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
-            f",option_equals:{self.Q_OPTION_ID}:pending"
+            f"&criteria=option_equals:{self.q_option.name}:active"
+            f",option_equals:{self.q_option.name}:pending"
             "&columns=name:parent_name"
             "&page=1&page_size=1"
         )
@@ -277,8 +277,8 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
-            f",option_equals:{self.Q_OPTION_ID}:pending"
+            f"&criteria=option_equals:{self.q_option.name}:active"
+            f",option_equals:{self.q_option.name}:pending"
             "&columns=name:parent_name"
             f"&administration_id={self.adm_child.id}"
         )
@@ -298,10 +298,10 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active,"
-            f"option_equals:{self.Q_OPTION_ID}:pending"
+            f"&criteria=option_equals:{self.q_option.name}:active,"
+            f"option_equals:{self.q_option.name}:pending"
             "&columns=name:parent_name"
-            f"&filter_criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&filter_criteria=option_equals:{self.q_option.name}:active"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -312,7 +312,7 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
             "&columns=name:parent_name"
             "&filter_criteria=bogus:1:2"
         )

@@ -23,6 +23,24 @@ from api.v1.v1_visualization.models import (
 logger = logging.getLogger(__name__)
 
 
+def validate_qname(token):
+    """Normalize a question token to a question_name string.
+
+    Dashboard endpoints are question_name-only. A digits-only token is a
+    legacy question_id and is rejected with a 400 so a stray id is never
+    silently treated as a literal name that matches nothing.
+    """
+    if token is None:
+        return None
+    name = str(token)
+    if name.isdigit():
+        raise ValidationError(
+            f"Expected a question_name, got a numeric id '{name}'. "
+            "Dashboard endpoints are question_name-only."
+        )
+    return name
+
+
 def refresh_materialized_data(views=None, concurrent=False):
     """Refresh materialized views.
 
@@ -330,10 +348,10 @@ def parse_criteria_string(value, allowed_types):
             )
         try:
             if ctype in ("option_equals", "option_contains"):
-                qid = int(parts[1])
-                normalized = [qid, parts[2]]
+                qname = validate_qname(parts[1])
+                normalized = [qname, parts[2]]
             elif ctype == "option_in":
-                qid = int(parts[1])
+                qname = validate_qname(parts[1])
                 values = [
                     v for v in parts[2].split("|") if v
                 ]
@@ -342,15 +360,15 @@ def parse_criteria_string(value, allowed_types):
                         "option_in requires at least one value:"
                         f" '{item}'"
                     )
-                normalized = [qid, values]
+                normalized = [qname, values]
             elif ctype in ("threshold_gt", "threshold_lt"):
-                qid = int(parts[1])
+                qname = validate_qname(parts[1])
                 threshold = float(parts[2])
-                normalized = [qid, threshold]
+                normalized = [qname, threshold]
             elif ctype == "overdue":
-                completion_qid = int(parts[1])
-                deadline_qid = int(parts[2])
-                normalized = [completion_qid, deadline_qid]
+                completion_qname = validate_qname(parts[1])
+                deadline_qname = validate_qname(parts[2])
+                normalized = [completion_qname, deadline_qname]
             else:
                 normalized = parts[1:]
         except ValueError as e:
@@ -365,39 +383,46 @@ def parse_criteria_string(value, allowed_types):
 
 
 def _criterion_matching_ids(data_ids, criterion):
-    """Return iterable of data_ids matching a single criterion."""
+    """Return iterable of data_ids matching a single criterion.
+
+    Matches over mv_answer_denormalized by question_name (indexed by
+    idx_mv_answer_question_name) rather than the base Answers table —
+    Questions.name is unindexed, so a question__name join would seq-scan.
+    The MV is form-scoped by data_id__in, so results are identical to the
+    old question_id filter.
+    """
     ctype = criterion["type"]
     parts = criterion["parts"]
     if ctype in ("option_equals", "option_contains"):
-        qid, value = parts
-        return Answers.objects.filter(
+        qname, value = parts
+        return MVAnswerDenormalized.objects.filter(
             data_id__in=data_ids,
-            question_id=qid,
-            options__contains=[value],
+            question_name=qname,
+            answer_options__contains=[value],
         ).values_list("data_id", flat=True)
     if ctype == "option_in":
-        qid, values = parts
+        qname, values = parts
         or_q = Q()
         for v in values:
-            or_q |= Q(options__contains=[v])
-        return Answers.objects.filter(
+            or_q |= Q(answer_options__contains=[v])
+        return MVAnswerDenormalized.objects.filter(
             or_q,
             data_id__in=data_ids,
-            question_id=qid,
+            question_name=qname,
         ).values_list("data_id", flat=True)
     if ctype == "threshold_gt":
-        qid, threshold = parts
-        return Answers.objects.filter(
+        qname, threshold = parts
+        return MVAnswerDenormalized.objects.filter(
             data_id__in=data_ids,
-            question_id=qid,
-            value__gt=threshold,
+            question_name=qname,
+            answer_value__gt=threshold,
         ).values_list("data_id", flat=True)
     if ctype == "threshold_lt":
-        qid, threshold = parts
-        return Answers.objects.filter(
+        qname, threshold = parts
+        return MVAnswerDenormalized.objects.filter(
             data_id__in=data_ids,
-            question_id=qid,
-            value__lt=threshold,
+            question_name=qname,
+            answer_value__lt=threshold,
         ).values_list("data_id", flat=True)
     return []
 
@@ -469,21 +494,21 @@ def split_criteria_by_form(criteria, form_id, parent_form_id):
     """Split parsed criteria list into same-form and parent-form."""
     if not criteria:
         return None, None
-    qids = {c["parts"][0] for c in criteria}
+    qnames = {c["parts"][0] for c in criteria}
     on_form = set(
         Questions.objects.filter(
-            pk__in=qids, form_id=form_id,
-        ).values_list("pk", flat=True)
+            name__in=qnames, form_id=form_id,
+        ).values_list("name", flat=True)
     )
     on_parent = set()
     if parent_form_id:
-        remaining = qids - on_form
+        remaining = qnames - on_form
         if remaining:
             on_parent = set(
                 Questions.objects.filter(
-                    pk__in=remaining,
+                    name__in=remaining,
                     form_id=parent_form_id,
-                ).values_list("pk", flat=True)
+                ).values_list("name", flat=True)
             )
     same = [c for c in criteria if c["parts"][0] in on_form]
     parent = [c for c in criteria if c["parts"][0] in on_parent]

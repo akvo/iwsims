@@ -11,26 +11,13 @@ from api.v1.v1_visualization.constants import (
     VALID_PROGRESS_FORMULAS,
     SUPPORTED_QUESTION_TYPES,
 )
-from api.v1.v1_visualization.functions import parse_criteria_string
+from api.v1.v1_visualization.functions import (
+    parse_criteria_string,
+    validate_qname,
+)
 from api.v1.v1_forms.models import Forms, Questions
 
-
-def validate_qname(token):
-    """Normalize a question token to a question_name string.
-
-    Dashboard endpoints are question_name-only. A digits-only token is a
-    legacy question_id and is rejected with a 400 so a stray id is never
-    silently treated as a literal name that matches nothing.
-    """
-    if token is None:
-        return None
-    name = str(token)
-    if name.isdigit():
-        raise serializers.ValidationError(
-            f"Expected a question_name, got a numeric id '{name}'. "
-            "Dashboard endpoints are question_name-only."
-        )
-    return name
+__all__ = ["validate_qname"]
 
 
 class ValuesFilterSerializer(serializers.Serializer):
@@ -140,16 +127,16 @@ class ValuesFilterSerializer(serializers.Serializer):
             data["question"] = question
 
         # Split criteria into same-form and parent-form buckets.
-        # qids on form_id → criteria; qids on parent form → parent_criteria.
+        # names on form_id → criteria; names on parent form → parent_criteria.
         criteria = data.get("criteria") or []
         if criteria:
-            qids = {c["parts"][0] for c in criteria}
+            qnames = {c["parts"][0] for c in criteria}
             on_form = set(
                 Questions.objects.filter(
-                    pk__in=qids, form_id=form_id,
-                ).values_list("pk", flat=True)
+                    name__in=qnames, form_id=form_id,
+                ).values_list("name", flat=True)
             )
-            remaining = qids - on_form
+            remaining = qnames - on_form
             parent_form = Forms.objects.filter(
                 pk=form_id,
             ).values_list("parent_id", flat=True).first()
@@ -157,15 +144,15 @@ class ValuesFilterSerializer(serializers.Serializer):
             if remaining and parent_form:
                 on_parent = set(
                     Questions.objects.filter(
-                        pk__in=remaining,
+                        name__in=remaining,
                         form_id=parent_form,
-                    ).values_list("pk", flat=True)
+                    ).values_list("name", flat=True)
                 )
             unknown = remaining - on_parent
             if unknown:
                 raise serializers.ValidationError({
                     "criteria": (
-                        "question_id(s) not on form "
+                        "question_name(s) not on form "
                         f"{form_id} or its parent: "
                         f"{sorted(unknown)}"
                     ),
@@ -249,16 +236,16 @@ class EscalationFilterSerializer(serializers.Serializer):
 
             try:
                 if ctype == "option_equals":
-                    qid = int(parts[1])
-                    normalized = [qid, parts[2]]
+                    qname = validate_qname(parts[1])
+                    normalized = [qname, parts[2]]
                 elif ctype in ("threshold_gt", "threshold_lt"):
-                    qid = int(parts[1])
+                    qname = validate_qname(parts[1])
                     threshold = float(parts[2])
-                    normalized = [qid, threshold]
+                    normalized = [qname, threshold]
                 elif ctype == "overdue":
-                    completion_qid = int(parts[1])
-                    deadline_qid = int(parts[2])
-                    normalized = [completion_qid, deadline_qid]
+                    completion_qname = validate_qname(parts[1])
+                    deadline_qname = validate_qname(parts[2])
+                    normalized = [completion_qname, deadline_qname]
             except ValueError:
                 raise serializers.ValidationError(
                     f"Invalid numeric value in criteria: '{item}'."

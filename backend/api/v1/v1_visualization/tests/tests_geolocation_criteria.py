@@ -4,6 +4,7 @@ from rest_framework.test import APITestCase
 from api.v1.v1_data.models import Answers
 from api.v1.v1_visualization.tests.mixins import (
     VisualizationValuesTestMixin,
+    refresh_all_mvs,
 )
 
 
@@ -31,12 +32,15 @@ class GeolocationCriteriaTestCases(
             options=["type_b"],
             created_by=self.user,
         )
+        # Criteria matching now runs over mv_answer_denormalized, so the
+        # MV must be refreshed after adding these registration answers.
+        refresh_all_mvs()
 
     def test_criteria_narrows_map_results(self):
         response = self.client.get(
             f"{self.BASE_URL}/{self.registration.id}"
             "?criteria=option_equals"
-            f":{self.q_reg_option.id}:type_a"
+            f":{self.q_reg_option.name}:type_a"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()

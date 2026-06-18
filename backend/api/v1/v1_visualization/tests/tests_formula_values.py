@@ -218,7 +218,7 @@ class FormulaValuesViewTests(
             f"?form_id={self.MONITORING_FORM_ID}"
             f"&group_by=parent_id"
             f"&formula={_encode(self._formula())}"
-            f"&criteria=option_equals:{self.Q_OPTION_ID}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -237,7 +237,7 @@ class FormulaValuesViewTests(
 class FormulaValuesRegistrationFormTests(
     VisualizationValuesTestMixin, APITestCase
 ):
-    """Formula endpoint with a registration-form question (form.parent is None).
+    """Formula endpoint with a registration-form question (no parent).
 
     The endpoint must group by the datapoint's own id rather than parent_id,
     since registration data has parent__isnull=True.
