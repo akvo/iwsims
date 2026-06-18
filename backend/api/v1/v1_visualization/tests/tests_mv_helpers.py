@@ -143,7 +143,7 @@ class GetLatestMonitoringFromMVTest(VisualizationValuesTestMixin, TestCase):
         qs = get_latest_monitoring_from_mv(
             self.monitoring.id,
             date_filters={
-                "date_question_id": self.q_date.id,
+                "date_question_name": self.q_date.name,
                 "from_date": "2025-03-01",
             },
         )

@@ -138,14 +138,14 @@ def handle_count_mode(form, params):
 
 def _count_group_by_month(qs, is_latest, params):
     """Count grouped by month."""
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
     if is_latest:
         data_ids = get_monitoring_data_ids(qs, is_latest)
-        if date_qid:
+        if date_qname:
             answer_qs = MVAnswerDenormalized.objects.filter(
                 data_id__in=data_ids,
-                question_id=date_qid,
+                question_name=date_qname,
                 answer_name__isnull=False,
             )
             results = answer_qs.annotate(
@@ -180,10 +180,10 @@ def _count_group_by_month(qs, is_latest, params):
                 for r in results
             ]
     else:
-        if date_qid:
+        if date_qname:
             answer_qs = MVAnswerDenormalized.objects.filter(
                 data_id__in=qs.values("id"),
-                question_id=date_qid,
+                question_name=date_qname,
                 answer_name__isnull=False,
             )
             results = answer_qs.annotate(
@@ -282,13 +282,13 @@ def _count_group_by_id(qs, is_latest):
 
 def _count_group_by_date(qs, is_latest, params):
     """Count grouped by individual date (not month bucket)."""
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
     data_ids = get_monitoring_data_ids(qs, is_latest)
 
-    if date_qid:
+    if date_qname:
         results = MVAnswerDenormalized.objects.filter(
             data_id__in=data_ids,
-            question_id=date_qid,
+            question_name=date_qname,
             answer_name__isnull=False,
         ).annotate(
             day=Substr("answer_name", 1, 10),
@@ -468,7 +468,7 @@ def _option_value_group_by_month(
     by a date question (e.g. project deadline). When `sum_by` is
     `parent_id`, counts distinct parents per month.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
     matching_ids = list(MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
@@ -478,10 +478,10 @@ def _option_value_group_by_month(
 
     if not matching_ids:
         data = []
-    elif date_qid:
+    elif date_qname:
         answer_qs = MVAnswerDenormalized.objects.filter(
             data_id__in=matching_ids,
-            question_id=date_qid,
+            question_name=date_qname,
             answer_name__isnull=False,
         )
         if sum_by == "parent_id":
@@ -753,14 +753,14 @@ def _number_group_by_date(question, data_ids, params):
     """Number question grouped by date."""
     repeat_agg = params.get("repeat_agg", "average")
     agg_func = AGG_FUNCS.get(repeat_agg, Avg)
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
-    if date_qid:
+    if date_qname:
         data = []
         for data_id in data_ids:
             date_answer = MVAnswerDenormalized.objects.filter(
                 data_id=data_id,
-                question_id=date_qid,
+                question_name=date_qname,
             ).first()
             if not date_answer or not date_answer.answer_name:
                 continue
@@ -817,7 +817,7 @@ def _number_group_by_month(
     date answer (via a Subquery) instead of FormData.created so the
     x-axis aligns with the filter's date dimension.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
     base = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
@@ -825,10 +825,10 @@ def _number_group_by_month(
         answer_value__isnull=False,
     )
 
-    if date_qid:
+    if date_qname:
         date_sq = MVAnswerDenormalized.objects.filter(
             data_id=OuterRef("data_id"),
-            question_id=date_qid,
+            question_name=date_qname,
             answer_name__isnull=False,
         ).values("answer_name")[:1]
         results = base.annotate(
@@ -921,7 +921,7 @@ def _stack_option_by_month(
     O(months × options) queries. Honors date_question_id when
     provided so the month bucket aligns with the filter dimension.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
     option_values = {o.value for o in options}
 
     base = MVAnswerDenormalized.objects.filter(
@@ -929,10 +929,10 @@ def _stack_option_by_month(
         question_id=question.id,
     )
 
-    if date_qid:
+    if date_qname:
         date_sq = MVAnswerDenormalized.objects.filter(
             data_id=OuterRef("data_id"),
-            question_id=date_qid,
+            question_name=date_qname,
             answer_name__isnull=False,
         ).values("answer_name")[:1]
         rows = base.annotate(
@@ -1198,7 +1198,7 @@ def _stack_parent_by_date(
     Prefetches date keys and aggregated values per data_id in two
     bulk queries instead of N+1 per-point queries.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
     all_data_ids = []
     for p in parents:
@@ -1207,10 +1207,10 @@ def _stack_parent_by_date(
         else:
             all_data_ids.extend(p["data_ids"])
 
-    if date_qid:
+    if date_qname:
         date_rows = MVAnswerDenormalized.objects.filter(
             data_id__in=all_data_ids,
-            question_id=date_qid,
+            question_name=date_qname,
             answer_name__isnull=False,
         ).values("data_id", "answer_name")
         date_map = {
@@ -1272,7 +1272,7 @@ def _stack_parent_by_month(
     When date_question_id is provided, buckets by the month of that
     date answer (via Subquery) instead of FormData.created.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
     all_rows = {}
 
     for p in parents:
@@ -1287,10 +1287,10 @@ def _stack_parent_by_month(
             answer_value__isnull=False,
         )
 
-        if date_qid:
+        if date_qname:
             date_sq = MVAnswerDenormalized.objects.filter(
                 data_id=OuterRef("data_id"),
-                question_id=date_qid,
+                question_name=date_qname,
                 answer_name__isnull=False,
             ).values("answer_name")[:1]
             results = base.annotate(

@@ -322,7 +322,7 @@ def handle_escalation(
             base_params.append(
                 ("administration_id", administration_id)
             )
-        for key in ("from_date", "to_date", "date_question_id"):
+        for key in ("from_date", "to_date", "date_question_name"):
             if params.get(key):
                 base_params.append((key, params[key]))
 

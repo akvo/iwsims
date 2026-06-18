@@ -228,7 +228,7 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.q_option.id}"
             "&option_value=active&monitoring=latest"
-            f"&group_by=month&date_question_id={self.q_date.id}"
+            f"&group_by=month&date_question_name={self.q_date.name}"
             "&sum_by=parent_id"
         )
         self.assertEqual(response.status_code, 200)
@@ -248,7 +248,7 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.q_option.id}"
             "&option_value=active&monitoring=latest"
-            f"&group_by=month&date_question_id={self.q_date.id}"
+            f"&group_by=month&date_question_name={self.q_date.name}"
             "&sum_by=parent_id"
             "&from_date=2025-01-01&to_date=2025-04-30"
         )
@@ -271,7 +271,7 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.q_option.id}"
             "&option_value=does_not_exist&monitoring=latest"
-            f"&group_by=month&date_question_id={self.q_date.id}"
+            f"&group_by=month&date_question_name={self.q_date.name}"
             "&sum_by=parent_id"
         )
         self.assertEqual(response.status_code, 200)

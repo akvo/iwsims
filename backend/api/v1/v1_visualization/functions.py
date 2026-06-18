@@ -168,11 +168,11 @@ def get_latest_monitoring_from_mv(
     if date_filters:
         from_date = date_filters.get("from_date")
         to_date = date_filters.get("to_date")
-        date_qid = date_filters.get("date_question_id")
+        date_qname = date_filters.get("date_question_name")
 
-        if date_qid:
+        if date_qname:
             matching = MVAnswerDenormalized.objects.filter(
-                question_id=date_qid,
+                question_name=date_qname,
                 answer_name__isnull=False,
             )
             if from_date:
@@ -235,8 +235,8 @@ def build_date_filters(params):
         date_filters["from_date"] = params["from_date"]
     if params.get("to_date"):
         date_filters["to_date"] = params["to_date"]
-    if params.get("date_question_id"):
-        date_filters["date_question_id"] = params["date_question_id"]
+    if params.get("date_question_name"):
+        date_filters["date_question_name"] = params["date_question_name"]
     return date_filters
 
 
@@ -286,11 +286,11 @@ def latest_monitoring_subquery(form_id, date_filters=None):
         is_draft=False,
     )
     if date_filters:
-        date_qid = date_filters.get("date_question_id")
-        if date_qid:
+        date_qname = date_filters.get("date_question_name")
+        if date_qname:
             sub = Answers.objects.filter(
                 data=OuterRef("pk"),
-                question_id=date_qid,
+                question__name=date_qname,
             )
             if date_filters.get("from_date"):
                 sub = sub.filter(
@@ -524,7 +524,7 @@ def get_base_monitoring_qs(form, monitoring_form_id, params):
     monitoring = params.get("monitoring", "latest")
     from_date = params.get("from_date")
     to_date = params.get("to_date")
-    date_question_id = params.get("date_question_id")
+    date_question_name = params.get("date_question_name")
     administration_id = params.get("administration_id")
 
     date_filters = build_date_filters(params)
@@ -570,10 +570,10 @@ def get_base_monitoring_qs(form, monitoring_form_id, params):
         )
 
     if date_filters:
-        if date_question_id:
+        if date_question_name:
             matching_ids = Answers.objects.filter(
                 data__form_id=monitoring_form_id,
-                question_id=date_question_id,
+                question__name=date_question_name,
                 name__isnull=False,
             )
             if from_date:

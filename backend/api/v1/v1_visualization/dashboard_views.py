@@ -137,7 +137,7 @@ from utils.custom_serializer_fields import (
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name="date_question_id", required=False,
+            name="date_question_name", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
@@ -241,8 +241,8 @@ def visualization_values(request, version):
         ),
         "from_date": validated.get("from_date"),
         "to_date": validated.get("to_date"),
-        "date_question_id": validated.get(
-            "date_question_id"
+        "date_question_name": validated.get(
+            "date_question_name"
         ),
         "administration_id": resolve_default_administration_id(
             validated.get("administration_id"),
@@ -346,7 +346,7 @@ def visualization_values(request, version):
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name="date_question_id", required=False,
+            name="date_question_name", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
@@ -392,8 +392,8 @@ def visualization_escalation(request, form_id, version):
             ),
             "from_date": validated.get("from_date"),
             "to_date": validated.get("to_date"),
-            "date_question_id": validated.get(
-                "date_question_id"
+            "date_question_name": validated.get(
+                "date_question_name"
             ),
             "filter_criteria": validated.get("filter_criteria"),
             "query_string": [
@@ -473,7 +473,7 @@ def visualization_escalation(request, form_id, version):
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name="date_question_id", required=False,
+            name="date_question_name", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
@@ -529,8 +529,8 @@ def visualization_progress(request, form_id, version):
             ),
             "from_date": validated.get("from_date"),
             "to_date": validated.get("to_date"),
-            "date_question_id": validated.get(
-                "date_question_id"
+            "date_question_name": validated.get(
+                "date_question_name"
             ),
             "criteria": mon_criteria,
             "parent_criteria": parent_criteria,

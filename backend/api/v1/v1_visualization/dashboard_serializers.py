@@ -59,7 +59,7 @@ class ValuesFilterSerializer(serializers.Serializer):
     )
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
-    date_question_id = serializers.IntegerField(required=False)
+    date_question_name = serializers.CharField(required=False)
     administration_id = serializers.IntegerField(required=False)
     option_value = serializers.CharField(required=False)
     criteria = serializers.CharField(required=False)
@@ -223,7 +223,7 @@ class EscalationFilterSerializer(serializers.Serializer):
     )
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
-    date_question_id = serializers.IntegerField(required=False)
+    date_question_name = serializers.CharField(required=False)
     administration_id = serializers.IntegerField(required=False)
     filter_criteria = serializers.CharField(required=False)
 
@@ -333,7 +333,7 @@ class ProgressFilterSerializer(serializers.Serializer):
     )
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
-    date_question_id = serializers.IntegerField(
+    date_question_name = serializers.CharField(
         required=False
     )
     administration_id = serializers.IntegerField(

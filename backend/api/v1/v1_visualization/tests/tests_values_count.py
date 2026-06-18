@@ -142,7 +142,7 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&group_by=month"
-            f"&date_question_id={self.Q_DATE_ID}"
+            f"&date_question_name={self.q_date.name}"
             "&from_date=2025-01-01&to_date=2025-01-31"
         )
         self.assertEqual(response.status_code, 200)
@@ -163,7 +163,7 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&group_by=month&monitoring=all"
-            f"&date_question_id={self.Q_DATE_ID}"
+            f"&date_question_name={self.q_date.name}"
             f"&administration_id={self.adm_child.id}"
             "&from_date=2025-01-01&to_date=2025-12-31"
         )
@@ -194,7 +194,7 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&group_by=month"
-            f"&date_question_id={self.Q_DATE_ID}"
+            f"&date_question_name={self.q_date.name}"
             "&from_date=2025-06-01&to_date=2025-06-30"
         )
         self.assertEqual(response.status_code, 200)
@@ -264,7 +264,7 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&group_by=date&monitoring=all"
-            f"&date_question_id={self.Q_DATE_ID}"
+            f"&date_question_name={self.q_date.name}"
             "&from_date=2025-01-15&to_date=2025-01-20"
         )
         self.assertEqual(response.status_code, 200)
@@ -345,7 +345,7 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&group_by=date&monitoring=all"
-            f"&date_question_id={self.Q_DATE_ID}"
+            f"&date_question_name={self.q_date.name}"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
