@@ -14,6 +14,12 @@ from utils.custom_serializer_fields import (
     CustomIntegerField,
 )
 from api.v1.v1_visualization.formula import validate_shape
+from api.v1.v1_visualization.constants import (
+    VALID_VALUES_CRITERIA_TYPES,
+)
+from api.v1.v1_visualization.functions import (
+    parse_criteria_string,
+)
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -122,12 +128,6 @@ class GeoLocationFilterSerializer(serializers.Serializer):
         ).queryset = Administration.objects.all()
 
     def validate_criteria(self, value):
-        from api.v1.v1_visualization.constants import (
-            VALID_VALUES_CRITERIA_TYPES,
-        )
-        from api.v1.v1_visualization.functions import (
-            parse_criteria_string,
-        )
         try:
             return parse_criteria_string(
                 value, VALID_VALUES_CRITERIA_TYPES,

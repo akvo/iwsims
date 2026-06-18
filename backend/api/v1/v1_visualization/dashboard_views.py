@@ -210,6 +210,7 @@ def visualization_values(request, version):
             "rolling_months": validated.get("rolling_months"),
             "from_date": validated.get("from_date"),
             "to_date": validated.get("to_date"),
+            "parent_form_id": validated.get("parent_form_id"),
         }
         data, labels = get_values_by_question_name(question_name, params)
         return Response(

@@ -15,12 +15,31 @@ from api.v1.v1_visualization.functions import parse_criteria_string
 from api.v1.v1_forms.models import Forms, Questions
 
 
+def validate_qname(token):
+    """Normalize a question token to a question_name string.
+
+    Dashboard endpoints are question_name-only. A digits-only token is a
+    legacy question_id and is rejected with a 400 so a stray id is never
+    silently treated as a literal name that matches nothing.
+    """
+    if token is None:
+        return None
+    name = str(token)
+    if name.isdigit():
+        raise serializers.ValidationError(
+            f"Expected a question_name, got a numeric id '{name}'. "
+            "Dashboard endpoints are question_name-only."
+        )
+    return name
+
+
 class ValuesFilterSerializer(serializers.Serializer):
     """Validates query parameters for /visualization/values endpoint."""
 
     form_id = serializers.IntegerField(required=False)
     question_id = serializers.IntegerField(required=False)
     question_name = serializers.CharField(required=False, max_length=255)
+    parent_form_id = serializers.IntegerField(required=False)
     monitoring = serializers.ChoiceField(
         choices=list(VALID_MONITORING),
         default="latest",

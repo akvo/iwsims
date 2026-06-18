@@ -76,6 +76,7 @@ class MVCrossFormLatest(models.Model):
     """Cross-form latest values aggregated by question_name."""
     id = models.BigIntegerField(primary_key=True)
     parent_id = models.BigIntegerField()
+    parent_form_id = models.BigIntegerField()
     administration_id = models.BigIntegerField()
     question_name = models.TextField()
     question_type = models.IntegerField()

@@ -39,6 +39,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigIntegerField(primary_key=True, serialize=False)),
                 ('parent_id', models.BigIntegerField()),
+                ('parent_form_id', models.BigIntegerField()),
                 ('administration_id', models.BigIntegerField()),
                 ('question_name', models.TextField()),
                 ('question_type', models.IntegerField()),
@@ -176,17 +177,22 @@ class Migration(migrations.Migration):
                 SELECT
                     d.id AS data_id,
                     d.parent_id,
+                    parent.form_id AS parent_form_id,
                     d.form_id,
                     d.administration_id,
                     d.created
                 FROM data d
+                INNER JOIN data parent ON parent.id = d.parent_id
                 WHERE d.parent_id IS NOT NULL
                     AND d.is_pending = FALSE
                     AND d.is_draft = FALSE
+                    AND parent.is_pending = FALSE
+                    AND parent.is_draft = FALSE
             ),
             answers_with_meta AS (
                 SELECT
                     m.parent_id,
+                    m.parent_form_id,
                     m.administration_id,
                     m.created AS data_created,
                     a.question_id,
@@ -206,6 +212,7 @@ class Migration(migrations.Migration):
             SELECT
                 row_number() OVER () AS id,
                 parent_id,
+                parent_form_id,
                 administration_id,
                 question_name,
                 question_type,
@@ -220,6 +227,8 @@ class Migration(migrations.Migration):
                 ON mv_cross_form_latest (id);
             CREATE INDEX idx_mv_cross_form_parent_qname
                 ON mv_cross_form_latest (parent_id, question_name);
+            CREATE INDEX idx_mv_cross_form_parent_form_qname
+                ON mv_cross_form_latest (parent_form_id, question_name);
             CREATE INDEX idx_mv_cross_form_qname
                 ON mv_cross_form_latest (question_name);
             CREATE INDEX idx_mv_cross_form_admin

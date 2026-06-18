@@ -708,6 +708,14 @@ def get_values_by_question_name(question_name, params):
 
     qs = MVCrossFormLatest.objects.filter(question_name=question_name)
 
+    # Optional: scope to a single registration family. Omitted → national
+    # (cross-family) overview. mv_cross_form_latest carries parent_form_id
+    # (the parent's registration form) + an index on
+    # (parent_form_id, question_name).
+    parent_form_id = params.get("parent_form_id")
+    if parent_form_id:
+        qs = qs.filter(parent_form_id=parent_form_id)
+
     if administration_id:
         qs = apply_administration_filter_mv(
             qs, administration_id, field='administration_id'
