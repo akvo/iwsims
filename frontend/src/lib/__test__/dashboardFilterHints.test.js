@@ -234,4 +234,31 @@ describe("applyDashboardFilters", () => {
     );
     expect(out.criteria).toBeUndefined();
   });
+
+  test("widget's own criteria is preserved when no custom filters apply", () => {
+    const out = applyDashboardFilters(
+      {
+        form_id: 1749652214711,
+        criteria: "option_equals:has_chlorine_gas_risks:no",
+      },
+      {},
+      customDefs
+    );
+    expect(out.criteria).toBe("option_equals:has_chlorine_gas_risks:no");
+  });
+
+  test("custom filter criteria AND-joins after the widget's own criteria", () => {
+    const out = applyDashboardFilters(
+      {
+        form_id: 1749652214711,
+        criteria: "option_equals:has_chlorine_gas_risks:no",
+      },
+      { custom: [{ key: "water_committee", value: "yes" }] },
+      customDefs
+    );
+    expect(out.criteria).toBe(
+      "option_equals:has_chlorine_gas_risks:no," +
+        "option_equals:water_committee:yes"
+    );
+  });
 });

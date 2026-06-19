@@ -400,6 +400,14 @@ const Dashboard = () => {
     () => (config ? collectByCompute(config.items, "capacity_compare") : []),
     [config]
   );
+  const groupedStackItems = useMemo(
+    () => (config ? collectByCompute(config.items, "grouped_stack") : []),
+    [config]
+  );
+  const bucketBarItems = useMemo(
+    () => (config ? collectByCompute(config.items, "bucket_bar") : []),
+    [config]
+  );
   const accessibilityNoIssuesKpiItems = useMemo(
     () =>
       config
@@ -415,6 +423,8 @@ const Dashboard = () => {
   const [kpiStackByItem, setKpiStackByItem] = useState({});
   const [processCountsByItem, setProcessCountsByItem] = useState({});
   const [capacityCompareByItem, setCapacityCompareByItem] = useState({});
+  const [groupedStackByItem, setGroupedStackByItem] = useState({});
+  const [bucketBarByItem, setBucketBarByItem] = useState({});
   const [accessibilityNoIssuesKpiByItem, setAccessibilityNoIssuesKpiByItem] =
     useState({});
 
@@ -463,6 +473,24 @@ const Dashboard = () => {
     },
     []
   );
+  const onGroupedStackSegmentData = useCallback((itemId, segmentKey, data) => {
+    setGroupedStackByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+  const onBucketBarSegmentData = useCallback((itemId, segmentKey, data) => {
+    setBucketBarByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
 
   // Merge into one tree, with legacy complianceResponses under `compliance`.
   const computeResponses = useMemo(
@@ -474,6 +502,8 @@ const Dashboard = () => {
       kpi_stack: kpiStackByItem,
       process_counts: processCountsByItem,
       capacity_compare: capacityCompareByItem,
+      grouped_stack: groupedStackByItem,
+      bucket_bar: bucketBarByItem,
       accessibility_no_issues_kpi: accessibilityNoIssuesKpiByItem,
     }),
     [
@@ -484,6 +514,8 @@ const Dashboard = () => {
       kpiStackByItem,
       processCountsByItem,
       capacityCompareByItem,
+      groupedStackByItem,
+      bucketBarByItem,
       accessibilityNoIssuesKpiByItem,
     ]
   );
@@ -787,6 +819,38 @@ const Dashboard = () => {
             fiscalYearStartMonth={fyStart}
             customFilterDefs={customFilterDefs}
             onSegmentData={onCapacityCompareMeasureData}
+          />
+        ))
+      )}
+
+      {/* Invisible grouped_stack segment fetchers — one per (item, segment) pair */}
+      {groupedStackItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onGroupedStackSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible bucket_bar segment fetchers — one per (item, segment) pair */}
+      {bucketBarItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onBucketBarSegmentData}
           />
         ))
       )}

@@ -13,6 +13,8 @@ import { computeAccessibilityBucket } from "./compute/accessibility";
 import { computeKpiStack } from "./compute/kpiStack";
 import { computeProcessCounts } from "./compute/processCounts";
 import { computeCapacityCompare } from "./compute/capacityCompare";
+import { computeGroupedStack } from "./compute/groupedStack";
+import { computeBucketBar } from "./compute/bucketBar";
 import { computeDateHistogram } from "./compute/dateHistogram";
 import { computeValueBuckets } from "./compute/valueBuckets";
 import DotsChart from "./DotsChart";
@@ -581,6 +583,16 @@ const ChartRenderer = ({
     if (item.compute === "capacity_compare") {
       const responses = computeResponses?.capacity_compare?.[item.id];
       return computeCapacityCompare(item.measures, responses);
+    }
+
+    if (item.compute === "grouped_stack") {
+      const responses = computeResponses?.grouped_stack?.[item.id];
+      return computeGroupedStack(item.segments, item.stacks, responses);
+    }
+
+    if (item.compute === "bucket_bar") {
+      const responses = computeResponses?.bucket_bar?.[item.id];
+      return computeBucketBar(item.buckets, responses);
     }
 
     if (item.compute === "date_histogram") {

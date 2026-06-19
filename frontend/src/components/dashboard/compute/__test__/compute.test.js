@@ -15,6 +15,8 @@ import { computeCapacityCompare } from "../capacityCompare";
 import { computeDateHistogram } from "../dateHistogram";
 import { computeStageFlow } from "../stageFlow";
 import { computeValueBuckets } from "../valueBuckets";
+import { computeGroupedStack } from "../groupedStack";
+import { computeBucketBar } from "../bucketBar";
 
 describe("rotateToFiscalOrder", () => {
   const rows = [
@@ -915,5 +917,115 @@ describe("computeStageFlow", () => {
         }),
       ])
     );
+  });
+});
+
+describe("computeGroupedStack", () => {
+  const stacks = [
+    { key: "working", label: "In use · working" },
+    { key: "issue", label: "In use · issue logged" },
+  ];
+  const segments = [
+    {
+      key: "chlorine__working",
+      group: "chlorine",
+      group_label: "Chlorine",
+      stack: "working",
+    },
+    {
+      key: "chlorine__issue",
+      group: "chlorine",
+      group_label: "Chlorine",
+      stack: "issue",
+    },
+    {
+      key: "lime__working",
+      group: "lime",
+      group_label: "Lime",
+      stack: "working",
+    },
+    { key: "lime__issue", group: "lime", group_label: "Lime", stack: "issue" },
+  ];
+
+  test("collapses segments into one row per group with stack labels as keys", () => {
+    const responses = {
+      chlorine__working: { data: [{ value: 5, label: "chlorine" }] },
+      chlorine__issue: { data: [{ value: 2, label: "chlorine" }] },
+      lime__working: { data: [{ value: 3, label: "lime" }] },
+      lime__issue: { data: [] },
+    };
+    const out = computeGroupedStack(segments, stacks, responses);
+    expect(out).toEqual([
+      {
+        category: "Chlorine",
+        "In use · working": 5,
+        "In use · issue logged": 2,
+      },
+      { category: "Lime", "In use · working": 3, "In use · issue logged": 0 },
+    ]);
+  });
+
+  test("preserves first-seen group order", () => {
+    const responses = {};
+    const out = computeGroupedStack(segments, stacks, responses);
+    expect(out.map((r) => r.category)).toEqual(["Chlorine", "Lime"]);
+  });
+
+  test("defaults every stack to 0 when responses are missing", () => {
+    const out = computeGroupedStack(segments, stacks, {});
+    expect(out[0]).toEqual({
+      category: "Chlorine",
+      "In use · working": 0,
+      "In use · issue logged": 0,
+    });
+  });
+
+  test("returns [] for empty segments", () => {
+    expect(computeGroupedStack([], stacks, {})).toEqual([]);
+  });
+});
+
+describe("computeBucketBar", () => {
+  const buckets = [
+    { label: "No meter", segment: "no_meter" },
+    { label: "Inflow", subtract: ["inflow_total", "both"] },
+    { label: "Outflow", subtract: ["outflow_total", "both"] },
+    { label: "Both", segment: "both" },
+  ];
+  const responses = {
+    no_meter: { data: [{ value: 11, label: "no" }] },
+    inflow_total: { data: [{ value: 17, label: "inflow" }] },
+    outflow_total: { data: [{ value: 36, label: "outflow" }] },
+    both: { data: [{ value: 15, label: "inflow" }] },
+  };
+
+  test("resolves direct segments and subtraction buckets", () => {
+    expect(computeBucketBar(buckets, responses)).toEqual([
+      { label: "No meter", value: 11 },
+      { label: "Inflow", value: 2 },
+      { label: "Outflow", value: 21 },
+      { label: "Both", value: 15 },
+    ]);
+  });
+
+  test("floors subtraction at zero", () => {
+    const out = computeBucketBar([{ label: "X", subtract: ["a", "b"] }], {
+      a: { data: [{ value: 1 }] },
+      b: { data: [{ value: 5 }] },
+    });
+    expect(out).toEqual([{ label: "X", value: 0 }]);
+  });
+
+  test("treats missing responses as zero", () => {
+    expect(computeBucketBar(buckets, {})).toEqual([
+      { label: "No meter", value: 0 },
+      { label: "Inflow", value: 0 },
+      { label: "Outflow", value: 0 },
+      { label: "Both", value: 0 },
+    ]);
+  });
+
+  test("returns [] for empty buckets", () => {
+    expect(computeBucketBar([], responses)).toEqual([]);
   });
 });

@@ -154,7 +154,15 @@ export const applyDashboardFilters = (
   // narrows every widget on the dashboard, not just those whose own
   // api.question_id happens to match. Criteria AND across questions
   // server-side; option_in handles OR within a multiple_option.
-  const criteria = [];
+  //
+  // A widget may carry its own pre-serialized `criteria` string (e.g. a
+  // grouped-stack segment counting "chemical in use AND risk=no"). Seed
+  // the list with it so dashboard custom filters AND on top instead of
+  // overwriting it.
+  const criteria =
+    typeof out.criteria === "string" && out.criteria.length > 0
+      ? out.criteria.split(",")
+      : [];
   (filterState?.custom || []).forEach((entry) => {
     const def = customFilterDefs.find((d) => d.key === entry.key);
     if (!def || !def.question_name) {
