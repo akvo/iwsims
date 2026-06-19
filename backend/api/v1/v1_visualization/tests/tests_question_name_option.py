@@ -85,8 +85,8 @@ class QuestionNameOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             by_group["feature_x|feature_y|feature_z"], 1
         )
 
-    def test_two_option_combo_includes_both_bucket_by_question_name(self):
-        """Two-option combo mode exposes a stable Both bucket."""
+    def test_two_option_combo_includes_mixed_bucket_by_question_name(self):
+        """Two-option combo mode exposes a stable Mixed bucket."""
         question = Questions.objects.create(
             form=self.monitoring,
             question_group=self.q_multi.question_group,
@@ -131,7 +131,7 @@ class QuestionNameOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             d["group"]: d
             for d in response.json()["data"]
         }
-        self.assertEqual(by_group["lab_test|cbt_bag_test"]["label"], "Both")
+        self.assertEqual(by_group["lab_test|cbt_bag_test"]["label"], "Mixed")
         self.assertEqual(by_group["lab_test|cbt_bag_test"]["value"], 1)
 
     def test_option_labels_in_response(self):

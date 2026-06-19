@@ -827,8 +827,8 @@ def _count_parents_by_qname(qs, option_value, value_type):
 
 def _qname_combo_label(combo_values, option_labels):
     """Human label for a form-order option-value combo."""
-    if len(combo_values) == 2 and len(option_labels) == 2:
-        return "Both"
+    if len(combo_values) > 1:
+        return "Mixed"
     return " + ".join(
         option_labels.get(value, value) for value in combo_values
     )
@@ -1105,15 +1105,22 @@ def _values_by_qname_option_combo(
 
 def _values_by_qname_text(qs):
     """Handle text/date question by question_name."""
+    rows = list(
+        qs.filter(latest_text_value__isnull=False)
+        .values("parent_id", "latest_text_value")
+    )
+    parent_ids = [row["parent_id"] for row in rows]
+    name_map = dict(
+        FormData.objects.filter(id__in=parent_ids)
+        .values_list("id", "name")
+    )
     data = [
         {
             "value": row["latest_text_value"] or "",
-            "label": str(row["parent_id"]),
+            "label": name_map.get(row["parent_id"], str(row["parent_id"])),
             "group": str(row["parent_id"]),
         }
-        for row in qs.filter(
-            latest_text_value__isnull=False
-        ).values("parent_id", "latest_text_value")
+        for row in rows
     ]
     labels = [d["label"] for d in data]
     return data, labels

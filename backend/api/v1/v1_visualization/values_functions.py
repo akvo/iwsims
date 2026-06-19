@@ -683,8 +683,8 @@ def _option_group_by_option(
 
 def _combo_label(combo_values, option_labels):
     """Human label for a sorted option-value combo."""
-    if len(combo_values) == 2 and len(option_labels) == 2:
-        return "Both"
+    if len(combo_values) > 1:
+        return "Mixed"
     return " + ".join(
         option_labels.get(value, value) for value in combo_values
     )
