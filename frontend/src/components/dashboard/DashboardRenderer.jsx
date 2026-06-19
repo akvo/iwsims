@@ -75,6 +75,7 @@ const DashboardRenderer = ({
   complianceResponses,
   computeResponses,
   cellComputersById,
+  parentFormId,
 }) => {
   // Back-compat: fold legacy `complianceResponses` into the unified map under
   // `compliance`. New consumers should read `computeResponses.compliance`.
@@ -107,6 +108,7 @@ const DashboardRenderer = ({
         today={today}
         computeResponses={resolvedComputeResponses}
         cellComputersById={cellComputersById}
+        parentFormId={parentFormId}
       />
     ),
     [
@@ -119,6 +121,7 @@ const DashboardRenderer = ({
       today,
       resolvedComputeResponses,
       cellComputersById,
+      parentFormId,
     ]
   );
 
@@ -135,6 +138,7 @@ const DashboardRenderer = ({
           today={today}
           definitionsById={definitionsById}
           computeResponses={resolvedComputeResponses}
+          parentFormId={parentFormId}
         />
       );
     }
@@ -147,6 +151,7 @@ const DashboardRenderer = ({
           fiscalYearStartMonth={fiscalYearStartMonth}
           customFilterDefs={customFilterDefs}
           today={today}
+          parentFormId={parentFormId}
         />
       );
     }
@@ -172,6 +177,7 @@ const DashboardRenderer = ({
             definitionsById={definitionsById}
             complianceResponses={resolvedComputeResponses?.compliance}
             computeResponses={resolvedComputeResponses}
+            parentFormId={parentFormId}
           />
         </Card>
       );
@@ -278,6 +284,7 @@ DashboardRenderer.propTypes = {
   complianceResponses: PropTypes.object,
   computeResponses: PropTypes.object,
   cellComputersById: PropTypes.object,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default DashboardRenderer;

@@ -111,6 +111,36 @@ describe("KPICard — value_type: ratio_percentage (ratio KPI)", () => {
     expect(params.value_type).not.toBe("ratio_percentage");
   });
 
+  test("passes parent_form_id to primary and denominator requests", async () => {
+    axiosValue(42);
+    axiosValue(50);
+    render(
+      <KPICard
+        item={{
+          id: "kpi_scoped",
+          chart_type: "card",
+          label: "Scoped KPI",
+          api: {
+            form_id: 1749631041125,
+            question_name: "operationality",
+            value_type: "ratio_percentage",
+          },
+          denominator_api: { form_id: 1748903240763 },
+        }}
+        filterState={emptyFilters}
+        parentFormId={1748903240763}
+      />
+    );
+    await screen.findByText("42/50 (84%)");
+
+    const calls = axios.mock.calls.map(([cfg]) => cfg);
+    expect(calls).toHaveLength(2);
+    calls.forEach((call) => {
+      expect(call.url).toBe("visualization/values");
+      expect(call.params.parent_form_id).toBe(1748903240763);
+    });
+  });
+
   test("M === 0 renders '—' (no div-by-zero)", async () => {
     axiosValue(0); // numerator
     axiosValue(0); // denominator

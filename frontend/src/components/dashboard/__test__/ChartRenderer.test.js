@@ -97,6 +97,7 @@ describe("ChartRenderer", () => {
         }}
         filterState={emptyFilters}
         today={today}
+        parentFormId={1748903240763}
       />
     );
 
@@ -106,6 +107,7 @@ describe("ChartRenderer", () => {
         "2"
       )
     );
+    expect(axios.mock.calls[0][0].params.parent_form_id).toBe(1748903240763);
   });
 
   test("donut with all-zero values renders No data (not equal slices)", async () => {

@@ -46,6 +46,22 @@ describe("MetricCard — scalar mode (no target_group)", () => {
     expect(await screen.findByText("75%")).toBeInTheDocument();
   });
 
+  test("passes parent_form_id to the values request", async () => {
+    axiosRows([{ group: "total", value: 40 }]);
+    render(
+      <MetricCard
+        item={baseItem}
+        filterState={emptyFilters}
+        parentFormId={1748903240763}
+      />
+    );
+    expect(await screen.findByText("40")).toBeInTheDocument();
+
+    const call = axios.mock.calls[0][0];
+    expect(call.url).toBe("visualization/values");
+    expect(call.params.parent_form_id).toBe(1748903240763);
+  });
+
   test("renders — when api returns no rows", async () => {
     axiosRows([]);
     render(<MetricCard item={baseItem} filterState={emptyFilters} />);

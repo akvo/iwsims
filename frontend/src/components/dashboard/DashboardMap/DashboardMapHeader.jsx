@@ -43,7 +43,7 @@ export const resolveBuckets = (filter) => {
       });
     });
   }
-  if (map._no_info) {
+  if (map._no_info && !out.some((b) => b.value === "_no_info")) {
     out.push({
       value: "_no_info",
       label: DEFAULT_NO_INFO_LABEL,

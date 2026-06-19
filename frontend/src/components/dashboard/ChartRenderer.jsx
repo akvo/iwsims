@@ -470,6 +470,7 @@ const ChartRenderer = ({
   definitionsById,
   complianceResponses,
   computeResponses,
+  parentFormId,
 }) => {
   const chartType = item.chart_type === "histogram" ? "bar" : item.chart_type;
   const Component = COMPONENT_BY_TYPE[chartType];
@@ -490,6 +491,7 @@ const ChartRenderer = ({
     today,
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
     enabled: isApiDriven,
   });
 

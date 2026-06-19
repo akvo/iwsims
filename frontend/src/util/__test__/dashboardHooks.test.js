@@ -148,6 +148,34 @@ describe("useDashboardValues", () => {
     expect(latest().data.data[0].value).toBe(42);
   });
 
+  test("adds parent_form_id when parentFormId option is provided", async () => {
+    axios.mockResolvedValue({
+      data: { data: [{ value: 7 }], labels: ["WTP"] },
+    });
+
+    const { latest } = mount(() =>
+      useDashboardValues(
+        {
+          form_id: 1749634736797,
+          question_name: "water_testing_method",
+          group_by: "option",
+        },
+        emptyFilters,
+        {
+          today,
+          parentFormId: 1748903240763,
+        }
+      )
+    );
+
+    await waitFor(() => expect(latest().loading).toBe(false));
+
+    const call = axios.mock.calls[0][0];
+    expect(call.url).toBe("visualization/values");
+    expect(call.params.question_name).toBe("water_testing_method");
+    expect(call.params.parent_form_id).toBe(1748903240763);
+  });
+
   test("deduplicates concurrent requests with the same params", async () => {
     axios.mockResolvedValue({ data: { data: [] } });
 
@@ -253,9 +281,7 @@ describe("useDashboardProgress", () => {
       "urf:completed_binary:urf,pipes:ratio:impl:plan"
     );
     expect(call.params.filter_option_value).toBe("no");
-    expect(call.params.deadline_question_name).toBe(
-      "proposed_completion_date"
-    );
+    expect(call.params.deadline_question_name).toBe("proposed_completion_date");
   });
 });
 

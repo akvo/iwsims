@@ -26,6 +26,7 @@ const { Title, Paragraph } = Typography;
 const WqParamFetcher = ({
   paramItem,
   filterState,
+  parentFormId,
   fiscalYearStartMonth,
   customFilterDefs,
   onData,
@@ -33,6 +34,7 @@ const WqParamFetcher = ({
   const { data } = useDashboardValues(paramItem.api, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
   });
   useEffect(() => {
     if (data) {
@@ -114,11 +116,12 @@ const ProgressFetcher = ({
 const CrossTabFetcher = ({
   item,
   filterState,
+  parentFormId,
   fiscalYearStartMonth,
   customFilterDefs,
   onData,
 }) => {
-  const opts = { fiscalYearStartMonth, customFilterDefs };
+  const opts = { fiscalYearStartMonth, customFilterDefs, parentFormId };
   const { data: category } = useDashboardValues(
     item.category_api,
     filterState,
@@ -146,11 +149,12 @@ const CrossTabFetcher = ({
 const SampleIssuesFetcher = ({
   item,
   filterState,
+  parentFormId,
   fiscalYearStartMonth,
   customFilterDefs,
   onData,
 }) => {
-  const opts = { fiscalYearStartMonth, customFilterDefs };
+  const opts = { fiscalYearStartMonth, customFilterDefs, parentFormId };
   const { data: sample } = useDashboardValues(
     item.sample_api,
     filterState,
@@ -178,6 +182,7 @@ const KpiSegmentFetcher = ({
   itemId,
   segment,
   filterState,
+  parentFormId,
   fiscalYearStartMonth,
   customFilterDefs,
   onSegmentData,
@@ -185,6 +190,7 @@ const KpiSegmentFetcher = ({
   const { data } = useDashboardValues(segment.api, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
   });
   useEffect(() => {
     if (data) {
@@ -631,6 +637,7 @@ const Dashboard = () => {
           key={paramItem.id}
           paramItem={paramItem}
           filterState={filters.queryParams}
+          parentFormId={config.parent_form_id}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onParamData}
@@ -667,6 +674,7 @@ const Dashboard = () => {
           key={item.id}
           item={item}
           filterState={filters.queryParams}
+          parentFormId={config.parent_form_id}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onCrossTabData}
@@ -679,6 +687,7 @@ const Dashboard = () => {
           key={item.id}
           item={item}
           filterState={filters.queryParams}
+          parentFormId={config.parent_form_id}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onAccessibilityBucketData}
@@ -691,6 +700,7 @@ const Dashboard = () => {
           key={item.id}
           item={item}
           filterState={filters.queryParams}
+          parentFormId={config.parent_form_id}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onAccessibilityNoIssuesKpiData}
@@ -705,6 +715,7 @@ const Dashboard = () => {
             itemId={item.id}
             segment={segment}
             filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
             fiscalYearStartMonth={fyStart}
             customFilterDefs={customFilterDefs}
             onSegmentData={onKpiStackSegmentData}
@@ -748,6 +759,7 @@ const Dashboard = () => {
         computeResponses={computeResponses}
         cellComputersById={cellComputersById}
         today={today}
+        parentFormId={config.parent_form_id}
       />
     </div>
   );

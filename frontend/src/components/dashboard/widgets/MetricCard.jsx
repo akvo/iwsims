@@ -63,6 +63,7 @@ const MetricCard = ({
   today,
   fiscalYearStartMonth,
   customFilterDefs,
+  parentFormId,
 }) => {
   const target = item?.target_group;
   const showPercentage = Boolean(item.show_percentage);
@@ -79,6 +80,7 @@ const MetricCard = ({
       today,
       fiscalYearStartMonth,
       customFilterDefs,
+      parentFormId,
       enabled: Boolean(apiForFetch),
     }
   );
@@ -133,6 +135,7 @@ MetricCard.propTypes = {
   today: PropTypes.instanceOf(Date),
   fiscalYearStartMonth: PropTypes.number,
   customFilterDefs: PropTypes.array,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default MetricCard;

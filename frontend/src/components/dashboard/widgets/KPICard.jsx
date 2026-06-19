@@ -104,6 +104,7 @@ const KPICard = ({
   customFilterDefs,
   definitionsById,
   computeResponses,
+  parentFormId,
 }) => {
   const compute = item.compute;
   const hasDenominator = Boolean(item.denominator_api);
@@ -142,6 +143,7 @@ const KPICard = ({
     today,
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
     enabled: Boolean(primaryApi),
   });
 
@@ -155,6 +157,7 @@ const KPICard = ({
     today,
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
     enabled: Boolean(denominatorApi),
   });
 
@@ -221,6 +224,7 @@ KPICard.propTypes = {
   customFilterDefs: PropTypes.array,
   definitionsById: PropTypes.instanceOf(Map),
   computeResponses: PropTypes.object,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default KPICard;
