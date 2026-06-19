@@ -66,6 +66,12 @@ spaces" goal: `AND([a]="No",[b]>0)` — not `AND( [a] = "No" , [b] > 0 )`.
 | `PERCENT(boolexpr)` | % of parents satisfying a condition | `metric_card` + `show_percentage` |
 | `DISTRIBUTION([q])` | option breakdown of one question | `half_doughnut` + `group_by:option`; for `multiple_option`, defaults to `group_by:option_combo` |
 | `DISTRIBUTION([q],FLAT)` | per-option breakdown for a `multiple_option` question | `half_doughnut` + `group_by:option` |
+| `OPTION_COUNTS([q])` | per-option parent counts for one option/multiple-option question | horizontal `bar` + `group_by:option` |
+| `PROCESS_COUNTS([q]="value" AS "Label", …)` | count parents across several independent process questions | horizontal `bar` + `compute:process_counts` segment fetches |
+| `CAPACITY_COMPARE([production_q],[design_q])` | total production vs design capacity for the current filter scope | `bar` + `compute:capacity_compare`; default total, filtered drilldown later |
+| `DATE_HISTOGRAM([date_q],months)` | bucket latest parent inspection dates by recency | `bar` + `compute:date_histogram`; `> months` overdue bucket plus monthly buckets |
+| `VALUE_BUCKETS([q],0,1,2,3,4+)` | bucket per-parent numeric values into explicit labels | `bar` + `display:value_buckets` |
+| `STAGE_FLOW([stage1_q] AS "Stage 1", [stage2_q] AS "Stage 2", …)` | sequential positive-response flow; each later stage is counted only from parents that passed all prior stages | `custom_component` + `StageFlowWidget` Sankey |
 | `VALUE([q])` | per-parent numeric value | `bar` / `dot_strip` + `group_by:parent_id` |
 | `COMPLIANT(boolexpr)` | pass/fail compliance | `stack_bar` / compliance KPI |
 | `RANK([date_q],ASC\|DESC,n)` | top-N parents by recency | ranking card / custom |
@@ -74,13 +80,19 @@ spaces" goal: `AND([a]="No",[b]>0)` — not `AND( [a] = "No" , [b] > 0 )`.
 `COALESCE([a],[b])` = "use `[a]`, fall back to `[b]`". The **first** input in the formula is the
 chart's primary question; a `[date_q]` of type `date` is used for recency/ranking.
 
+`STAGE_FLOW` is intentionally generic. Each argument is a yes/positive stage,
+and every stage after the first is intersected with the parents that passed all
+previous stages. Use `AS "Label"` to define the visible node label; the renderer
+uses a Sankey custom component because pie charts cannot show stage drop-off.
+
 ### Multiple-option distribution
 
 `DISTRIBUTION([q])` treats `multiple_option` answers as mutually exclusive
 selection-combo buckets. A latest answer with only `lab_test` counts in
 `lab_test`; only `cbt_bag_test` counts in `cbt_bag_test`; both selected counts
-once in `lab_test|cbt_bag_test`. This keeps the denominator aligned to parent
-datapoints instead of total selected options.
+once in `lab_test|cbt_bag_test` and is labelled `Mixed`. Any N-way combo is
+also labelled `Mixed`. This keeps the denominator aligned to parent datapoints
+instead of total selected options.
 
 Use `DISTRIBUTION([q],FLAT)` when the desired view is a per-option tally where a
 single parent can increment more than one option bucket.
@@ -164,3 +176,41 @@ incremental:
    transition; rows not yet converted keep working (with the label-only caveat above).
 4. Once a form's rows are fully VizCalc, input extraction is exact and `MAP`/`RANK` rows stop
    dropping their questions.
+
+### Optional private LLM normalizer
+
+`normalize_csv_llm.py` is a separate proposal generator that uses Z.ai Chat
+Completions and `$ZAI_API_KEY`. It does **not** replace `normalize_csv.ipynb`
+and writes to separate folders by default:
+
+```bash
+ZAI_API_KEY=... python scripts/visualization-config/normalize_csv_llm.py
+```
+
+Useful scoped runs:
+
+```bash
+# Only one dashboard source file
+python scripts/visualization-config/normalize_csv_llm.py --file 1749634736797.csv
+
+# Smoke test one row without spending tokens on the whole file
+python scripts/visualization-config/normalize_csv_llm.py --file 1749634736797.csv --limit 1
+
+# Preserve already-valid VizCalc deterministically; use the LLM only for prose rows
+python scripts/visualization-config/normalize_csv_llm.py --mode hybrid
+```
+
+Outputs:
+
+| Path | Purpose |
+|------|---------|
+| `normalized-llm/*.csv` | pipeline-compatible 4-column normalized CSV proposals |
+| `normalized-llm-review/*.review.csv` | confidence, warnings, validator errors, and raw model response |
+
+The script follows three safety rules:
+
+1. Existing valid VizCalc can be preserved with `--mode hybrid`.
+2. LLM output is treated as a proposal, especially for prose-heavy rows.
+3. Every formula is locally validated for output function, `[question_name]`
+   references, unresolved numeric IDs, bracket balance, and option values. Rows
+   that fail validation are marked `method=manual_review`.

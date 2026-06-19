@@ -187,45 +187,157 @@
       "chart_type": "bar",
       "order": 11,
       "col_span": 12,
+      "compute": "capacity_compare",
       "config": {
         "title": "Production vs Design Capacity",
-        "xAxisLabel": "Administration",
-        "yAxisLabel": "count"
+        "xAxisLabel": "Capacity",
+        "yAxisLabel": "ML/day"
       },
-      "api": {
-        "question_name": "daily_production_megalitres",
-        "group_by": "parent_id",
-        "monitoring": "latest"
+      "measures": [
+        {
+          "key": "design",
+          "label": "Design capacity",
+          "api": {
+            "form_id": 1749634736797,
+            "question_id": 1749635313175,
+            "repeat_agg": "sum"
+          }
+        },
+        {
+          "key": "production",
+          "label": "Production",
+          "api": {
+            "form_id": 1749652214711,
+            "question_id": 1749652417794,
+            "monitoring": "latest",
+            "repeat_agg": "sum"
+          }
+        }
+      ],
+      "detail": {
+        "mode": "filtered_scope",
+        "enabled_by": "administration_filter"
       }
     },
     {
       "id": "chart_treatment_processes_in_use",
-      "chart_type": "half_doughnut",
+      "chart_type": "bar",
       "order": 12,
       "col_span": 12,
+      "compute": "process_counts",
+      "orientation": "horizontal",
+      "sort": "desc",
       "config": {
-        "title": "Treatment Processes in Use"
+        "title": "Treatment Processes in Use",
+        "xAxisLabel": "plants",
+        "yAxisLabel": "process"
       },
-      "api": {
-        "question_name": "floc_tanks_used_in_the_plant",
-        "group_by": "option",
-        "monitoring": "latest",
-        "include_unanswered": true
-      }
+      "segments": [
+        {
+          "key": "flocculation",
+          "label": "Coagulation/Flocculation",
+          "api": {
+            "question_name": "floc_tanks_used_in_the_plant",
+            "sum_by": "parent_id",
+            "monitoring": "latest",
+            "option_value": "yes"
+          }
+        },
+        {
+          "key": "sedimentation",
+          "label": "Sedimentation/Clarification",
+          "api": {
+            "question_name": "clarifier_sedimentation_tanks_at_the_plant",
+            "sum_by": "parent_id",
+            "monitoring": "latest",
+            "option_value": "yes"
+          }
+        },
+        {
+          "key": "filtration",
+          "label": "Filtration",
+          "api": {
+            "question_name": "filtration_system_at_the_plant",
+            "sum_by": "parent_id",
+            "monitoring": "latest",
+            "option_value": "yes"
+          }
+        },
+        {
+          "key": "backwash_sludge_removal",
+          "label": "Backwash sludge removal",
+          "api": {
+            "question_name": "backwash_sludge_removal_system_at_the_plant",
+            "sum_by": "parent_id",
+            "monitoring": "latest",
+            "option_value": "yes"
+          }
+        },
+        {
+          "key": "disinfection",
+          "label": "Disinfection",
+          "api": {
+            "question_name": "disinfection_technique",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "chemical_specific",
+          "label": "Chemical-specific",
+          "api": {
+            "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        }
+      ]
     },
     {
-      "id": "kpi_ohs_policy_flow",
-      "chart_type": "metric_card",
+      "id": "chart_ohs_policy_flow",
+      "chart_type": "custom_component",
+      "component": "StageFlowWidget",
       "order": 13,
-      "col_span": 12,
-      "label": "OHS Policy Flow",
-      "api": {
-        "question_name": "has_ohs_policy",
-        "group_by": "option",
-        "include_unanswered": true
+      "col_span": 24,
+      "title": "OHS Policy Flow",
+      "height": 280,
+      "root_label": "All WTPs",
+      "summary_template": "Of {total} WTPs: {final} reached the final stage.",
+      "denominator_api": {
+        "form_id": 1749634736797
       },
-      "show_percentage": true,
-      "target_group": "Yes"
+      "stages": [
+        {
+          "key": "policy",
+          "label": "Has OHS policy",
+          "fail_label": "No policy in place",
+          "api": {
+            "question_name": "has_ohs_policy",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "use",
+          "label": "Staff use the policy",
+          "fail_label": "Have policy but do not use it",
+          "api": {
+            "question_name": "staff_use_ohs_equipment",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "comply",
+          "label": "Staff comply",
+          "fail_label": "Not complying",
+          "api": {
+            "question_name": "staff_comply_ohs_policy",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        }
+      ]
     },
     {
       "id": "main_tabs",
@@ -280,15 +392,34 @@
               "chart_type": "bar",
               "order": 4,
               "col_span": 12,
+              "compute": "date_histogram",
+              "description": "Green = inspected \u2264 6 months ago · Amber = 7–12 months · Red = > 12 months (overdue).",
               "config": {
                 "title": "Inspection-date histogram",
                 "xAxisLabel": "Month",
-                "yAxisLabel": "count"
+                "yAxisLabel": "count",
+                "xAxis": {
+                  "axisLabel": {
+                    "interval": 1,
+                    "rotate": 45
+                  },
+                  "nameGap": 72
+                }
               },
               "api": {
                 "question_name": "date_of_inspection",
                 "group_by": "parent_id",
                 "monitoring": "latest"
+              },
+              "display": {
+                "mode": "date_histogram",
+                "months": 18,
+                "overdue_label": "> 18 mo",
+                "colors": {
+                  "recent": "#2fb36d",
+                  "watch": "#f5a623",
+                  "overdue": "#d93c35"
+                }
               }
             },
             {
@@ -498,28 +629,62 @@
               "col_span": 12,
               "config": {
                 "title": "Sedimentation — Floc Tank Count",
-                "xAxisLabel": "Total floc tanks",
+                "xAxisLabel": "Floc tanks per plant",
                 "yAxisLabel": "count"
               },
               "api": {
                 "question_name": "floc_tanks_are_there_at_the_plant",
                 "group_by": "parent_id",
                 "monitoring": "latest"
+              },
+              "display": {
+                "mode": "value_buckets",
+                "buckets": [
+                  {
+                    "label": "0",
+                    "value": 0
+                  },
+                  {
+                    "label": "1",
+                    "value": 1
+                  },
+                  {
+                    "label": "2",
+                    "value": 2
+                  },
+                  {
+                    "label": "3",
+                    "value": 3
+                  },
+                  {
+                    "label": "4+",
+                    "min": 4
+                  }
+                ]
               }
             },
             {
               "id": "chart_sedimentation_tank_type",
-              "chart_type": "half_doughnut",
+              "chart_type": "bar",
               "order": 3,
               "col_span": 12,
+              "orientation": "horizontal",
               "config": {
-                "title": "Sedimentation Tank Type"
+                "title": "Sedimentation Tank Type",
+                "xAxisLabel": "# of plants",
+                "yAxisLabel": "type",
+                "grid": {
+                  "left": 160,
+                  "right": 32,
+                  "top": 32,
+                  "bottom": 48,
+                  "containLabel": false
+                }
               },
               "api": {
                 "question_name": "types_of_clarifiers_sedimentation_tanks_at_the_plant",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
+                "monitoring": "latest"
               }
             },
             {

@@ -1,14 +1,20 @@
-#,Group,Indicator,Feasible?,Used questionnaire(s),Used questions,Guidance,Logic,Calculation Comprehensive monitoring,Remarks,Verify with Ima / DWS / tech,checked Lotte
+#,Group,Indicator,Feasible?,Used questionnaire(s),Used questions,Guidance,Logic,Calculation Comprehensive monitoring,Remarks
 1,Total Overview (Cards),Total WTPs,Yes,,"1749635249444 (Name) or
-1749635692873 (GPS)",,,"COUNTDISTINCT(COALESCE([plant_name],[geolocation]))",,Verify with IMA whether to focus on Name OR GPS.,
-2,,Inspected (12 mo),Yes,,1900000000101 (Reg-Inspection date),,,"RECENT([date_of_inspection],12)",,,
+1749635692873 (GPS)",,,COUNT DISTINCT Registration records by 1749635249444 (use 1749635692873 if name duplicated).,
+2,,Inspected (12 mo),Yes,,1900000000101 (Reg-Inspection date),,,COUNT DISTINCT IDs WHERE 1900000000101 < 12 months.,
 3,,% Operational,Yes,,"1749700156602 (Production constraints Y/N)
 1749652417794 (Daily production ML)
 1754995400013 (Pumps/Rising Main risks)
 1754995400028 (Borehole pump risks)
-1754995400043 (Borehole gallery pump risks)",,"a system is considered operational when no constraints are mentioned, there is a daily production > 0, pump rising main is operational and, borehole pumps are operational and borehole gallery pumps are operational","PERCENT(AND([has_production_constraints]=""No"",[daily_production_megalitres]>0,[pumps_rising_main_has_risks]=""No"",[borehole_pump_has_risks]=""No"",[borehole_gallery_pumps_has_risks]=""No""))","-Pump-risk checks should only apply when the plant uses that transport mode (dependance with 1749693821961 (How is the raw water transported to the plant?)).
+1754995400043 (Borehole gallery pump risks)",,"a system is considered operational when no constraints are mentioned, there is a daily production > 0, pump rising main is operational and, borehole pumps are operational and borehole gallery pumps are operational","Plant is OPERATIONAL when :
+  • 1749700156602 = No (no production constraints), AND
+  • 1749652417794 > 0, AND
+  • 1754995400013 = No (where Pumps/Rising Main is part of transport), AND
+  • 1754995400028 = No (where Borehole Pump is part of transport), AND
+  • 1754995400043 = No (where Borehole Gallery Pumps part of transport).
+% = operational / total plants.","-Pump-risk checks should only apply when the plant uses that transport mode (dependance with 1749693821961 (How is the raw water transported to the plant?)).
 
-Confirm with Ima whether a 'risks = Yes' alone is enough to mark the system NOT OPERATIONAL, or only when those risks include 'No spare pump' / 'Mechanical' / 'Electrical'. Currently the formula treats ANY risk = Yes as non-operational.",,
+Confirm with Ima whether a 'risks = Yes' alone is enough to mark the system NOT OPERATIONAL, or only when those risks include 'No spare pump' / 'Mechanical' / 'Electrical'. Currently the formula treats ANY risk = Yes as non-operational."
 4,,DW Compliance,Yes,,"1754995400007 or 1749693051134 (E.coli)
 1749693340552 (Total coliform)
 1749693362270 (Faecal coliform)
@@ -16,11 +22,20 @@ Confirm with Ima whether a 'risks = Yes' alone is enough to mark the system NOT 
 1749693184574 (Residual Cl)
 1754995300102 (pH)
 1754995300103 (Conductivity)
-1754995300104 (Salinity)",,,"COMPLIANT(AND(OR([e_coli_cfu_100ml]=0,[e_coli_count_cbt]=0),[total_coliform_cfu_100ml]=0,[fecal_coliform_cfu_100ml]=0,[turbidity_ntu]<5,BETWEEN([residual_chlorine_mg_l],0.2,0.5),BETWEEN([ph],6.5,8.5),[conductivity]<1000,[salinity]<1))","DWS threshold reminder: E. coli 0/100mL · Total coliform 0/100mL · Turbidity <5 NTU · Residual Cl 0.2–0.5 mg/L · pH 6.5–8.5 · Conductivity <1000 µS/cm · Salinity <1 ppt. ⚠ Per DWS doc the binding parameters are E. coli, Total coliform, Faecal coliform, Turbidity — others advisory. Verify the rule with DWS.",,
-5,,Critical (RED),Yes,,Composite — same fields as DW Compliance + operational checklist,,,"COUNT(OR(OR([e_coli_cfu_100ml]>0,[e_coli_count_cbt]>0,[total_coliform_cfu_100ml]>0,[fecal_coliform_cfu_100ml]>0,[turbidity_ntu]>=5,NOT(BETWEEN([residual_chlorine_mg_l],0.2,0.5)),NOT(BETWEEN([ph],6.5,8.5)),[conductivity]>=1000,[salinity]>=1),OR([has_production_constraints]=""Yes"",[daily_production_megalitres]=0,[pumps_rising_main_has_risks]=""Yes"",[borehole_pump_has_risks]=""Yes"",[borehole_gallery_pumps_has_risks]=""Yes"")))",This Align RED rule with the operational definition (row 4) and the DW rule (row 5) so the three KPIs stay consistent.,,
+1754995300104 (Salinity)",,,"Plant compliant when :
+  • E.coli (1754995400007 OR 1749693051134) = 0 /100mL, AND
+  • Total coliform (1749693340552) = 0, AND
+  • Faecal coliform (1749693362270) = 0, AND
+  • Turbidity (1749693079936) < 5 NTU, AND
+  • Residual Cl (1749693184574) ∈ [0.2, 0.5] mg/L, AND
+  • pH (1754995300102) ∈ [6.5, 8.5], AND
+  • Conductivity (1754995300103) < 1000 µS/cm, AND
+  • Salinity (1754995300104) < 1 ppt
+% = compliant / total plants.","DWS threshold reminder: E. coli 0/100mL · Total coliform 0/100mL · Turbidity <5 NTU · Residual Cl 0.2–0.5 mg/L · pH 6.5–8.5 · Conductivity <1000 µS/cm · Salinity <1 ppt. ⚠ Per DWS doc the binding parameters are E. coli, Total coliform, Faecal coliform, Turbidity — others advisory. Verify the rule with DWS."
+5,,Critical (RED),Yes,,Composite — same fields as DW Compliance + operational checklist,,,Plant RED when: DW Compliance = Non-compliant OR Plant is Non-Operational,This Align RED rule with the operational definition (row 4) and the DW rule (row 5) so the three KPIs stay consistent.
 6,WTP Operational Map,Drinking water compliance,Yes,,"1749635692873
-+ DW params (see row 5)",,,MAP([geolocation]),,,
-7,,Disinfection technique,Yes,,1749653091407 (Comprehensive),,,MAP([disinfection_technique]),Warning: this variable is Multi-select. if a plant uses more than one technique it would be confusing. define a priority order with DWS (example: show primary technique only).,,
++ DW params (see row 5)",,,For each plant with GPS: pin colour from DW Compliance rule.,
+7,,Disinfection technique,Yes,,1749653091407 (Comprehensive),,,Colour by which technique(s) in 1749653091407 are selected: Chlorine gas / HTH Powder / Sodium Hypochlorite / DPD Tablets.,Warning: this variable is Multi-select. if a plant uses more than one technique it would be confusing. define a priority order with DWS (example: show primary technique only).
 8,WTP at a glance,Drinking Water Compliance by Parameter,Yes,,"1754995400007
 1749693051134
 1749693340552
@@ -29,77 +44,106 @@ Confirm with Ima whether a 'risks = Yes' alone is enough to mark the system NOT 
 1749693184574
 1754995300102
 1754995300103
-1754995300104",,,"COMPLIANT(AND(OR([e_coli_cfu_100ml]=0,[e_coli_count_cbt]=0),[total_coliform_cfu_100ml]=0,[fecal_coliform_cfu_100ml]=0,[turbidity_ntu]<5,BETWEEN([residual_chlorine_mg_l],0.2,0.5),BETWEEN([ph],6.5,8.5),[conductivity]<1000,[salinity]<1))",E.coli value can come from either method — use whichever is present in the latest submission.,,
-9,,Sample Method,Yes,,. 1749692895121 (Lab Test / CBT Bag Test) -- multi select,,,DISTRIBUTION([water_testing_method]),"Instead of Donut, we could use a barchart",Check with DWS if multi select is the correct option here?,check with dws if multi select is correct
+1754995300104",,,"Stacked-bar per parameter (Pass / Fail), each plant counted once:
+  E. coli: COUNT(value = 0 using either lab 1754995400007 or CBT 1749693051134)
+  Total coliform: COUNT(1749693340552 = 0)
+  Faecal coliform: COUNT(1749693362270 = 0)
+  Turbidity: COUNT(1749693079936 < 5)
+  Residual Cl: COUNT(1749693184574 ∈ [0.2, 0.5])
+  pH: COUNT(1754995300102 ∈ [6.5, 8.5])
+  Conductivity: COUNT(1754995300103 < 1000)
+  Salinity: COUNT(1754995300104 < 1)",E.coli value can come from either method — use whichever is present in the latest submission.
+9,,Sample Method,Yes,,. 1749692895121 (Lab Test / CBT Bag Test) -- multi select,,,Donut: COUNT plants per option of 1749692895121 (multi-select — a plant choosing both counts in both segments OR show three categories Lab / CBT / Both).,"Instead of Donut, we could use a barchart"
 10,,Production vs Design Capacity,Yes,,"1749652417794 (M-daily production)
-1749635313175 (Design capacity)",,,"VALUE(COALESCE([daily_production_megalitres],[designed_capacity_megalitres]))",Production vs capacity is a Secondary indicator per DWS.,,"I dont understand the remark, do you Halimata Sawadogo"
+1749635313175 (Design capacity)
+1749635162210 (Division)",,,Per plant: utilisation = 1749652417794 / 1749635313175. Plot bar per plant (design vs production) for each division.,
 11,,Pumps & Chemical Dosing Functioning,,,"1754995400013, 1754995400028, 1754995400043 (pump risks)
 1749698699399, 1749704846694, 1749705116886, 1749705449153 (disinfectant risks)
 1749696125775, 1749696429991, 1749696644615, 1749696956618 (coagulant/correction risks)",,,"Stacked bar of pass/fail across 3 sub-domains:
   • Pumps functioning: % plants with all relevant pump-risk flags = No (Rising Main 1754995400013, Borehole 1754995400028, Gallery 1754995400043) — only those that the plant uses.
   • Chemical dosing OK: % plants with all 'risks?' flags = No across chemicals in use (1749698699399, 1749704846694, 1749705116886, 1749705449153, 1749696125775, 1749696429991, 1749696644615, 1749696956618).
-  • Filtration / sedimentation OK: % plants with 1749697815486 = No AND 1749697503628 = No.","⚠ When a plant doesn't use a given chemical / pump type, exclude it from the denominator. Verify the precise pass-rule for each sub-domain with DWS.",,
+  • Filtration / sedimentation OK: % plants with 1749697815486 = No AND 1749697503628 = No.","When a plant doesn't use a given chemical / pump type, exclude it from the denominator. Verify the precise pass-rule for each sub-domain with DWS."
 12,,Treatment Processes in Use,Yes,,"1749634736799 (plant type)
 1749652997590 (chemicals)
 1749653030359, 1749697374360, 1749697716330, 1749698044673 (sed)
-1749653091407 (disinfection)",,,"DISTRIBUTION(COALESCE([floc_tanks_used_in_the_plant],[clarifier_sedimentation_tanks_at_the_plant],[filtration_system_at_the_plant],[backwash_sludge_removal_system_at_the_plant],[disinfection_technique],[chemicals_are_use_for_water_treatment_on_the_day_of_inspection]))",,,
-13,,Compliance Trend,,,Submission timestamp + all DW + operational fields,,,GROUP BY month(submission_timestamp). Per month: % plants passing each domain (DW / Pumps & Dosing / Operational / OHS).,"Requires accumulated historical data. ⚠ For first months after rollout, label series 'partial data'.",,agreed
+1749653091407 (disinfection)",,,"Horizontal bar: # plants per process. Derive 'process in use' from:
+  • Coagulation/Flocculation — 1749653030359 = Yes
+  • Sedimentation/Clarification — 1749697374360 = Yes
+  • Filtration — 1749697716330 = Yes
+  • Backwash sludge removal — 1749698044673 = Yes
+  • Disinfection — 1749653091407 non-empty
+  • Chemical-specific (Alum, Polymer, Lime, Soda Ash) — 1749652997590 options",
+13,,Compliance Trend,,,Submission timestamp + all DW + operational fields,,,GROUP BY month(submission_timestamp). Per month: % plants passing each domain (DW / Pumps & Dosing / Operational / OHS).,"Requires accumulated historical data. For first months after rollout, label series 'partial data'."
 14,,OHS Policy Flow,Yes,,"1749692619340 (Has OHS policy)
 1749692658734 (Staff use OHS equipment)
-1749692692815 (Staff comply)",,,"PERCENT(AND([has_ohs_policy]=""Yes"",[staff_use_ohs_equipment]=""Yes"",[staff_comply_ohs_policy]=""Yes""))",✓ Aligns with the WAF form cleanly. The Sankey's 'drop-off' band counts plants that fall out of the funnel at each stage.,,
-15,Monitoring Status,Monitored (12 mo),Yes,,1900000000101,,,"RECENT([date_of_inspection],12)",,,
-16,,Critical issues,Yes,,Composite — see row 6 (critial-red),,,"COUNT(OR(OR([e_coli_cfu_100ml]>0,[e_coli_count_cbt]>0,[total_coliform_cfu_100ml]>0,[fecal_coliform_cfu_100ml]>0,[turbidity_ntu]>=5,NOT(BETWEEN([residual_chlorine_mg_l],0.2,0.5)),NOT(BETWEEN([ph],6.5,8.5)),[conductivity]>=1000,[salinity]>=1),OR([has_production_constraints]=""Yes"",[daily_production_megalitres]=0,[pumps_rising_main_has_risks]=""Yes"",[borehole_pump_has_risks]=""Yes"",[borehole_gallery_pumps_has_risks]=""Yes"")))",,,
-17,,No water-quality check,Yes,,1749692856000,,,"COUNT([can_take_water_sample]=""No"")",Take latest of either form per plant.,,
-18,,Inspection-date histogram,Yes,,Submission timestamp,,,VALUE([date_of_inspection]),,,
+1749692692815 (Staff comply)",,,"Sankey stages:
+  All plants → 1749692619340 = Yes → 1749692658734 = Yes → 1749692692815 = Yes.
+Each transition's width = count of plants meeting all prior conditions.",
+15,Monitoring Status,Monitored (12 mo),Yes,,1900000000101,,,COUNT DISTINCT plants with 1900000000101 in last 12 months.,
+16,,Critical issues,Yes,,Composite — see row 6 (critial-red),,,Count of WTPs with risk = red (per row 6 rule).,
+17,,No water-quality check,Yes,,1749692856000,,,COUNT plants where latest 1749692856000 = No.,Take latest of either form per plant.
+18,,Inspection-date histogram,Yes,,Submission timestamp,,,"Bucket plants by months since last submission (0–17 + >18). Bar coloured by recency (≤6 mo green, 7–12 amber, >12 red).",
 19,,Most recently monitored,Yes,,"Submission timestamp
-1749640508299",,,"RANK([date_of_inspection],DESC,8)",,,
+1749640508299",,,Top 8 plants ORDER BY latest submission DESC.,
 20,,Needs monitoring,Yes,,"Submission timestamp
-1749640508299",,,"RANK([date_of_inspection],ASC,8)",,,
-21,,All Water Treatment Plants,,,All Registration + latest Monitoring fields,,,"One row per registered plant. Columns derive from: 1749635249444, 1749635162210, 1749634736799, 1749635313175, latest 1749652417794, DW pass, latest sample method (1749692895121), OHS aggregate, latest inspection.",🚩 Form does not capture District separately from Division — same gap as in WWTP / Pump templates. Add or derive.,,np.
+1749640508299",,,Top 8 plants ORDER BY latest submission ASC (oldest first).,
+21,,All Water Treatment Plants,,,All Registration + latest Monitoring fields,,,"One row per registered plant. Columns derive from: 1749635249444, 1749635162210, 1749634736799, 1749635313175, latest 1749652417794, DW pass, latest sample method (1749692895121), OHS aggregate, latest inspection.",Form does not capture District separately from Division — same gap as in WWTP / Pump templates. Add or derive.
 22,Treatment set-up,Raw Water Source,,,"1749652966061 (Surface / Ground)
 1749693552939 (Surface risks Y/N)
 1749695045123 (Ground risks Y/N)",,,"Stacked horizontal bar — Surface vs Ground from 1749652966061.
   Green segment = plants with risks = No
-  Red segment = plants with risks = Yes (per 1749693552939 or 1749695045123 depending on source).",⚠ Form has DUPLICATED options in 1749693552939 (Yes/Yes/No/No). Same for 1749695045123. Verify with DWS — these should be cleaned up to Yes / No.,remove deplicated options from the form,
+  Red segment = plants with risks = Yes (per 1749693552939 or 1749695045123 depending on source).",
 23,,Treatment Chemicals,Yes,,"1749652997590 + each chemical's risks Y/N:
-1749696125775, 1749696644615, 1749696956618, 1749696429991, 1749698699399",,,DISTRIBUTION([chemicals_are_use_for_water_treatment_on_the_day_of_inspection]),,,
+1749696125775, 1749696644615, 1749696956618, 1749696429991, 1749698699399",,,"Horizontal bar per chemical (Chlorine / Potassium Aluminium Sulphate / Polymer / Lime / Sodium Carbonate). Stacked:
+  Green = in use (1749652997590 contains chemical) AND risks=No.
+  Red   = in use AND risks=Yes.
+Plants not using the chemical excluded from the bar.",
 24,,Sedimentation — Floc Tank Count,Yes,,"1749653030359 (Y/N)
-1749697133234 (# tanks)",,,"VALUE(COALESCE([floc_tanks_are_there_at_the_plant],[floc_tanks_used_in_the_plant]))",Plants without floc tanks excluded — show count separately in caption.,,agreed
-25,,Sedimentation Tank Type,Yes,,"1749697374360, 1749697404925, 1749697434141",,,DISTRIBUTION([types_of_clarifiers_sedimentation_tanks_at_the_plant]),,,
-26,,Sedimentation — Active Risks,Yes,,1749697163079 + 1749697221338 + 1749697503628 + 1749697561569,,,"DISTRIBUTION(COALESCE([these_risks],[these_risks_associated_with_the_clarifiers_sedimentation_tanks]))",,,
+1749697133234 (# tanks)",,,Histogram of plants by 1749697133234 (only counting plants where 1749653030359 = Yes).,Plants without floc tanks excluded — show count separately in caption.
+25,,Sedimentation Tank Type,Yes,,"1749697374360, 1749697404925, 1749697434141",,,"Bar of # tanks per type from 1749697434141 (multi-select: Horizontal Flow / Up Flow Vertical / Rectangle Lamella Plates / Lamella Tubes).
+Sum 1749697404925 across plants reporting each type.",
+26,,Sedimentation — Active Risks,Yes,,1749697163079 + 1749697221338 + 1749697503628 + 1749697561569,,,"Horizontal bar across risk options:
+  COUNT plants where each option appears in 1749697221338 OR 1749697561569.
+  Options: Overloading / High turbidity / Low retention time / Carried over flocs / Mechanical / Electrical / Desludging / Other.",
 27,,Disinfection Technique,Yes,,"1749653091407
-1749698531949 (SOPs)",,,DISTRIBUTION([disinfection_technique]),,,
+1749698531949 (SOPs)",,,Donut of plants per option of 1749653091407 (Chlorine gas / HTH Powder / Sodium Hypochlorite / DPD Tablets). Plus side note: % with disinfection SOP (1749698531949 = Yes).,
 28,,Disinfection — Active Risks,Yes,,"1749698753569
 1749704890550
 1749705162551
-1749705495320",,,"DISTRIBUTION(COALESCE([chlorine_gas_risks_description],[hth_powder_risks_description],[sodium_hypochlorite_risks_description],[dpd_tablets_risks_description]))",Also show a side-list of plants where disinfection SOP = Yes AND any active disinfection risk Y/N flag = Yes (click-through to profile).,,
+1749705495320",,,"Horizontal bar across risk categories aggregated from all four techniques:
+  Storage / Dosage / Handling / Leakage / Other.
+  Each option counted across 1749698753569, 1749704890550, 1749705162551, 1749705495320.",Also show a side-list of plants where disinfection SOP = Yes AND any active disinfection risk Y/N flag = Yes (click-through to profile).
 29,,Magnetic Flow Meters,Yes,,"1749653112804 (Y/N)
-1749699101674 (Inflow / Outflow)",,,"DISTRIBUTION(COALESCE([type_of_flow_meters],[there_plant_mag_flow_meters_in_place]))",,,
-30,,Flow Meter Risks,Yes,,1749699154310 (Y/N) + 1749699189052 (details),,,DISTRIBUTION([these_risks_associated_with_the_flow_meters]),Form typo 'Inncorrect reading' (double n). To be corrected,,
+1749699101674 (Inflow / Outflow)",,,"Bar with categories: No meter (count of 1749653112804=No) / Inflow / Outflow / Both.
+  Inflow / Outflow / Both derived from 1749699101674 (multi-select).",
+30,,Flow Meter Risks,Yes,,1749699154310 (Y/N) + 1749699189052 (details),,,Horizontal bar across risk options of 1749699189052: Flooded flow meter / No Flow Meter / Uncalibrated Meter / Incorrect reading / Buried meters / Defunct Meters / Other.,Form typo 'Inncorrect reading' (double n). To be corrected
 31,,Reservoirs — High-Lift Pumps,Yes,,"1749699346821 (Y/N)
-1749699372393 (# pumps)",,,"VALUE(COALESCE([number_of_high_lift_pumps],[high_lift_pumps_at_the_plant]))",,,
-32,,Reservoir Risks,,,1749699414777 (Y/N) + 1749699457040,,,Horizontal bar across risk options of 1749699457040: Electrical / Mechanical / No standby pumps / Other.,"⚠ Dashboard's 'Reservoir risks' panel currently uses these HIGH-LIFT PUMP risks — verify with DWS that this is intended. There is no separate 'reservoir risks' field in the form (only Storage / Distribution counts). If a true reservoir risk question is needed, extend the form.",,we will remove this visualisation from the design then
+1749699372393 (# pumps)",,,Histogram of plants by 1749699372393 (0 = plants with 1749699346821=No).,
+32,,Reservoir Risks,,,1749699414777 (Y/N) + 1749699457040,,,Horizontal bar across risk options of 1749699457040: Electrical / Mechanical / No standby pumps / Other.,"Dashboard's 'Reservoir risks' panel currently uses these HIGH-LIFT PUMP risks — verify with DWS that this is intended. There is no separate 'reservoir risks' field in the form (only Storage / Distribution counts). If a true reservoir risk question is needed, extend the form."
 33,,Back-up Power Supply,Yes,,"1749653134928 (has generator)
 1749699885495 (maintained?)
-1749699931981 (issues text)",,,"DISTRIBUTION(COALESCE([has_backup_generator],[backup_generator_condition]))",,,
-34,Water Quality,Sampled (12 mo),Yes,,1749692856000,,,"PERCENT([can_take_water_sample]=""Yes"")",Take latest of either form.,,
-35,,Lab tested,Yes,,1749692895121 (Lab Test / CBT) — multiselect,,,"COUNT([water_testing_method]=""Lab Test"")",Multi-select: a plant choosing both 'Lab Test' and 'CBT Bag Test' counts in BOTH this row and row 37.,check with DWS if it happens that plants are both lab tested and cbt tested or htis hsould be changed in form,
+1749699931981 (issues text)",,,"Stacked bar with three segments:
+  Green = 1749653134928=Yes AND 1749699885495=Yes
+  Amber = 1749653134928=Yes AND 1749699885495=No
+  Red   = 1749653134928=No (no back-up at all)",
+34,Water Quality,Sampled (12 mo),Yes,,1749692856000,,,% plants with latest 1749692856000 = Yes within last 12 months.,Take latest of either form.
+35,,Lab tested,Yes,,1749692895121 (Lab Test / CBT) — multiselect,,,COUNT plants where 1749692895121 contains 'Lab Test'.,Multi-select: a plant choosing both 'Lab Test' and 'CBT Bag Test' counts in BOTH this row and row 37.
 36,,CBT tested,Yes,,"1749692895121
-1749640821051",,,"COUNT([water_testing_method]=""CBT Bag Test"")",,,
+1749640821051",,,COUNT plants where 1749692895121 contains 'CBT Bag Test'.,
 37,,E. coli,,,"1754995400007 (Lab) and/or 1749693051134 (CBT)
-1805756143042 / 1749641099165",,,X-axis = value; pass threshold = 0. Combine Lab + CBT readings per plant — use Lab if both present.,⚠ One plant can have BOTH a Lab and CBT result — define priority with DWS (recommend: Lab overrides CBT).,check with DWS if it happens that plants are both lab tested and cbt tested or htis hsould be changed in form,
+1805756143042 / 1749641099165",,,X-axis = value, pass threshold = 0. Combine Lab + CBT readings per plant — use Lab if both present.
 38,,Total coliform,Yes,,"1749693340552
-1749641401104",,,VALUE([total_coliform_cfu_100ml]),,,
+1749641401104",,,Jitter plot of 1749693340552, threshold 0 (per DWS).
 39,,Turbidity,Yes,,"1749693079936
-1749641129391",,,VALUE([turbidity_ntu]),,,
+1749641129391",,,Jitter plot of 1749693079936, threshold < 5 NTU.
 40,,Residual chlorine,Yes,,"1749693184574
-1749641225922",,,VALUE([residual_chlorine_mg_l]),Band threshold — render both bounding lines.,,
+1749641225922",,,Jitter plot of 1749693184574, pass band 0.2–0.5 mg/L (both bounds shown).
 41,,pH,Yes,,"1754995300102
-1796405550522",,,VALUE([ph]),Band threshold.,,
+1796405550522",,,Jitter plot of 1754995300102, pass band 6.5–8.5.
 42,,Conductivity,Yes,,"1754995300103
-1796405550523",,,VALUE([conductivity]),,,
+1796405550523",,,Jitter plot of 1754995300103, threshold < 1000 µS/cm.
 43,,Salinity,,,"1754995300104
-1796405550524",,,Jitter plot of 1754995300104; threshold < 1 ppt.,DWS comment in earlier doc: 'Acceptable (any range)' for salinity. Verify whether the < 1 ppt threshold should be enforced or relaxed.,,please enforce it
+1796405550524",,,Jitter plot of 1754995300104, threshold < 1 ppt.
 44,All Water Treatment Plants,All Water Treatment Plants,,,"1749635249444, 1749635162210, 1749634736799, 1749635313175, 1749652417794, DW params, 1749692856000",,,"One row per registered plant. Columns:
   • Plant — 1749635249444
   • Division — 1749635162210
@@ -111,4 +155,4 @@ Confirm with Ima whether a 'risks = Yes' alone is enough to mark the system NOT 
   • Pumps + Dosing — pass/fail from row 12 rule
   • OHS — aggregated from 1749692619340, 1749692658734, 1749692692815
   • Last Inspected — latest submission
-  • Status — derived from operational rule (row 4).",Form lacks District separately from Division. Same flag as WWTP / Pump templates.,,
+  • Status — derived from operational rule (row 4).",Form lacks District separately from Division. Same flag as WWTP / Pump templates.
