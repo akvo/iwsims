@@ -6,6 +6,7 @@ import DashboardMap from "./DashboardMap";
 import EscalationTable from "./EscalationTable";
 import KPICard from "./widgets/KPICard";
 import MetricCard from "./widgets/MetricCard";
+import RankingWidget from "./widgets/RankingWidget";
 import SectionTitleWidget from "./widgets/SectionTitleWidget";
 import FilterBarWidget from "./widgets/FilterBarWidget";
 import TabsWidget from "./widgets/TabsWidget";
@@ -156,6 +157,19 @@ const DashboardRenderer = ({
       );
     }
 
+    if (type === "ranking") {
+      return (
+        <RankingWidget
+          item={item}
+          filterState={filterState}
+          fiscalYearStartMonth={fiscalYearStartMonth}
+          customFilterDefs={customFilterDefs}
+          today={today}
+          parentFormId={parentFormId}
+        />
+      );
+    }
+
     if (CHART_TYPES.has(type)) {
       const { title: cardTitle, ...restConfig } = item.config || {};
       const itemForChart = { ...item, config: restConfig };
@@ -234,7 +248,16 @@ const DashboardRenderer = ({
     }
 
     if (type === "custom_component") {
-      return <CustomComponentWidget item={item} />;
+      return (
+        <CustomComponentWidget
+          item={item}
+          filterState={filterState}
+          fiscalYearStartMonth={fiscalYearStartMonth}
+          customFilterDefs={customFilterDefs}
+          today={today}
+          parentFormId={parentFormId}
+        />
+      );
     }
 
     // Unknown type — silently skip in production.

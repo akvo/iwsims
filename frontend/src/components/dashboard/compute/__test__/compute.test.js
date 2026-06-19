@@ -10,6 +10,11 @@ import {
   deriveAccessibilityBucket,
 } from "../accessibility";
 import { computeKpiStack } from "../kpiStack";
+import { computeProcessCounts } from "../processCounts";
+import { computeCapacityCompare } from "../capacityCompare";
+import { computeDateHistogram } from "../dateHistogram";
+import { computeStageFlow } from "../stageFlow";
+import { computeValueBuckets } from "../valueBuckets";
 
 describe("rotateToFiscalOrder", () => {
   const rows = [
@@ -662,5 +667,253 @@ describe("computeKpiStack", () => {
     const responses = { operational: { data: [{ value: 1 }] } };
     const out = computeKpiStack(segments2, responses);
     expect(typeof out[0].category).toBe("string");
+  });
+});
+
+describe("computeProcessCounts", () => {
+  const segments = [
+    { key: "flocculation", label: "Coagulation/Flocculation" },
+    { key: "sedimentation", label: "Sedimentation/Clarification" },
+    { key: "filtration", label: "Filtration" },
+  ];
+
+  test("maps scalar segment responses into horizontal bar rows", () => {
+    const responses = {
+      flocculation: { data: [{ value: 18 }] },
+      sedimentation: { data: [{ value: 7 }] },
+      filtration: { data: [{ value: 9 }] },
+    };
+    expect(computeProcessCounts(segments, responses)).toEqual([
+      { label: "Coagulation/Flocculation", value: 18 },
+      { label: "Sedimentation/Clarification", value: 7 },
+      { label: "Filtration", value: 9 },
+    ]);
+  });
+
+  test("missing responses default to zero", () => {
+    const responses = {
+      flocculation: { data: [{ value: 18 }] },
+      filtration: { data: [] },
+    };
+    expect(computeProcessCounts(segments, responses)).toEqual([
+      { label: "Coagulation/Flocculation", value: 18 },
+      { label: "Sedimentation/Clarification", value: 0 },
+      { label: "Filtration", value: 0 },
+    ]);
+  });
+
+  test("can sort descending for top-process bars", () => {
+    const responses = {
+      flocculation: { data: [{ value: 18 }] },
+      sedimentation: { data: [{ value: 7 }] },
+      filtration: { data: [{ value: 9 }] },
+    };
+    expect(computeProcessCounts(segments, responses, { sort: "desc" })).toEqual(
+      [
+        { label: "Coagulation/Flocculation", value: 18 },
+        { label: "Filtration", value: 9 },
+        { label: "Sedimentation/Clarification", value: 7 },
+      ]
+    );
+  });
+});
+
+describe("computeCapacityCompare", () => {
+  const measures = [
+    { key: "design", label: "Design capacity" },
+    { key: "production", label: "Production" },
+  ];
+
+  test("maps scalar measure responses into comparison rows", () => {
+    const responses = {
+      design: { data: [{ value: 120.25 }] },
+      production: { data: [{ value: 98.5 }] },
+    };
+    expect(computeCapacityCompare(measures, responses)).toEqual([
+      { label: "Design capacity", value: 120.25 },
+      { label: "Production", value: 98.5 },
+    ]);
+  });
+
+  test("sums grouped rows and coerces numeric strings", () => {
+    const responses = {
+      design: { data: [{ value: "10.5" }, { value: 20 }] },
+      production: { data: [{ value: 3.333 }, { value: 4.333 }] },
+    };
+    expect(computeCapacityCompare(measures, responses)).toEqual([
+      { label: "Design capacity", value: 30.5 },
+      { label: "Production", value: 7.67 },
+    ]);
+  });
+
+  test("missing responses default to zero", () => {
+    expect(computeCapacityCompare(measures, { design: { data: [] } })).toEqual([
+      { label: "Design capacity", value: 0 },
+      { label: "Production", value: 0 },
+    ]);
+  });
+});
+
+describe("computeDateHistogram", () => {
+  const today = new Date(Date.UTC(2026, 5, 19));
+
+  test("buckets dates into overdue plus recent monthly buckets", () => {
+    const out = computeDateHistogram(
+      [
+        { value: "2026-06-01" },
+        { value: "2026-05-15" },
+        { value: "2025-12-01" },
+        { value: "2024-11-30" },
+      ],
+      today,
+      { months: 3, overdue_label: "> 3 mo" }
+    );
+    expect(out).toEqual([
+      { label: "> 3 mo", value: 2, color: "#d93c35" },
+      { label: "Apr '26", value: 0, color: "#2fb36d" },
+      { label: "May '26", value: 1, color: "#2fb36d" },
+      { label: "Jun '26", value: 1, color: "#2fb36d" },
+    ]);
+  });
+
+  test("colors older visible months amber and red by recency", () => {
+    const out = computeDateHistogram([], today, { months: 14 });
+    const jan2026 = out.find((row) => row.label === "Jan '26");
+    const jun2025 = out.find((row) => row.label === "Jun '25");
+    const may2025 = out.find((row) => row.label === "May '25");
+    expect(jan2026.color).toBe("#2fb36d");
+    expect(jun2025.color).toBe("#f5a623");
+    expect(may2025.color).toBe("#d93c35");
+    expect(out[0].color).toBe("#d93c35");
+  });
+});
+
+describe("computeValueBuckets", () => {
+  const buckets = [
+    { label: "0", value: 0 },
+    { label: "1", value: 1 },
+    { label: "2", value: 2 },
+    { label: "3", value: 3 },
+    { label: "4+", min: 4 },
+  ];
+
+  test("counts exact numeric buckets and open-ended final bucket", () => {
+    const rows = [
+      { value: 0 },
+      { value: 1 },
+      { value: 2 },
+      { value: "2" },
+      { value: 3 },
+      { value: 4 },
+      { value: 6 },
+      { value: null },
+      { value: "not-a-number" },
+    ];
+    expect(computeValueBuckets(rows, buckets)).toEqual([
+      { label: "0", value: 1 },
+      { label: "1", value: 1 },
+      { label: "2", value: 2 },
+      { label: "3", value: 1 },
+      { label: "4+", value: 2 },
+    ]);
+  });
+
+  test("emits configured buckets even when counts are zero", () => {
+    expect(computeValueBuckets([], buckets)).toEqual([
+      { label: "0", value: 0 },
+      { label: "1", value: 0 },
+      { label: "2", value: 0 },
+      { label: "3", value: 0 },
+      { label: "4+", value: 0 },
+    ]);
+  });
+});
+
+describe("computeStageFlow", () => {
+  test("computes sequential positive-response stage intersections", () => {
+    const flow = computeStageFlow({
+      total: 5,
+      rootLabel: "All WTPs",
+      stages: [
+        {
+          key: "policy",
+          label: "Has policy",
+          fail_label: "No policy",
+        },
+        {
+          key: "use",
+          label: "Staff use",
+          fail_label: "Does not use",
+        },
+        {
+          key: "comply",
+          label: "Staff comply",
+          fail_label: "Not complying",
+        },
+      ],
+      responses: {
+        policy: {
+          data: [
+            { group: 1, value: ["yes"] },
+            { group: 2, value: ["yes"] },
+            { group: 3, value: ["yes"] },
+            { group: 4, value: ["no"] },
+          ],
+        },
+        use: {
+          data: [
+            { group: 1, value: ["yes"] },
+            { group: 2, value: ["no"] },
+            { group: 3, value: ["yes"] },
+          ],
+        },
+        comply: {
+          data: [
+            { group: 1, value: ["yes"] },
+            { group: 2, value: ["yes"] },
+            { group: 3, value: ["no"] },
+          ],
+        },
+      },
+    });
+
+    expect(flow.counts).toEqual({ all: 5 });
+    expect(flow.steps).toEqual([
+      {
+        key: "policy",
+        label: "Has policy",
+        passed: 3,
+        failed: 2,
+        failLabel: "No policy",
+      },
+      {
+        key: "use",
+        label: "Staff use",
+        passed: 2,
+        failed: 1,
+        failLabel: "Does not use",
+      },
+      {
+        key: "comply",
+        label: "Staff comply",
+        passed: 1,
+        failed: 1,
+        failLabel: "Not complying",
+      },
+    ]);
+    expect(flow.links).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "Staff use",
+          target: "Staff comply",
+          value: 1,
+        }),
+        expect.objectContaining({
+          source: "Staff use",
+          target: "Not complying",
+          value: 1,
+        }),
+      ])
+    );
   });
 });

@@ -11,6 +11,10 @@ import { toValueHistogramBins } from "./compute/valueHistogramBins";
 import { computeCrossTab } from "./compute/crossTab";
 import { computeAccessibilityBucket } from "./compute/accessibility";
 import { computeKpiStack } from "./compute/kpiStack";
+import { computeProcessCounts } from "./compute/processCounts";
+import { computeCapacityCompare } from "./compute/capacityCompare";
+import { computeDateHistogram } from "./compute/dateHistogram";
+import { computeValueBuckets } from "./compute/valueBuckets";
 import DotsChart from "./DotsChart";
 import DotStripChart from "./DotStripChart";
 
@@ -360,6 +364,7 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       ...(commonProps.config?.yAxis && !horizontal
         ? { yAxis: commonProps.config.yAxis }
         : {}),
+      ...(commonProps.config?.grid ? { grid: commonProps.config.grid } : {}),
       ...tooltipPatch(commonProps.config),
     };
 
@@ -373,7 +378,10 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
     const chartData = commonProps.data || [];
     if (chartData.length > 0 && "label" in chartData[0]) {
       // Simple bar chart path.
-      if (chartData.some((r) => r.label === noInfoLabel)) {
+      const hasPerRowStyle = chartData.some(
+        (r) => r.color || r.label === noInfoLabel
+      );
+      if (hasPerRowStyle) {
         const categoryLabels = chartData.map((r) => r.label);
         const axisWithData = {
           ...categoryAxisOverride,
@@ -383,8 +391,12 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
           {
             data: chartData.map((r) => ({
               value: r.value,
-              ...(r.label === noInfoLabel
-                ? { itemStyle: { color: NO_INFO_COLOR } }
+              ...(r.color || r.label === noInfoLabel
+                ? {
+                    itemStyle: {
+                      color: r.color || NO_INFO_COLOR,
+                    },
+                  }
                 : {}),
             })),
           },
@@ -480,7 +492,9 @@ const ChartRenderer = ({
   const isApiDriven =
     (Boolean(Component) || isDots || isDotStrip) &&
     Boolean(item.api) &&
-    (!item.compute || (item.compute === "kpi_stack" && !item.segments)) &&
+    (!item.compute ||
+      (item.compute === "kpi_stack" && !item.segments) ||
+      item.compute === "date_histogram") &&
     !item.source;
 
   const {
@@ -555,6 +569,22 @@ const ChartRenderer = ({
         row[label] = r.value ?? 0;
       });
       return [row];
+    }
+
+    if (item.compute === "process_counts") {
+      const responses = computeResponses?.process_counts?.[item.id];
+      return computeProcessCounts(item.segments, responses, {
+        sort: item.sort,
+      });
+    }
+
+    if (item.compute === "capacity_compare") {
+      const responses = computeResponses?.capacity_compare?.[item.id];
+      return computeCapacityCompare(item.measures, responses);
+    }
+
+    if (item.compute === "date_histogram") {
+      return computeDateHistogram(apiData?.data || [], today, item.display);
     }
 
     if (item.compute === "compliance") {
@@ -640,6 +670,9 @@ const ChartRenderer = ({
           extendTo,
         });
       }
+      if (item.display?.mode === "value_buckets") {
+        return computeValueBuckets(rows, item.display.buckets);
+      }
       return rows.map((r) => ({
         label:
           r.group === "_no_info" ? uiText.en.noInformationAvailable : r.label,
@@ -656,6 +689,7 @@ const ChartRenderer = ({
     complianceParams,
     computeResponses,
     fiscalYearStartMonth,
+    today,
   ]);
 
   if (!Component && !isDots && !isDotStrip) {

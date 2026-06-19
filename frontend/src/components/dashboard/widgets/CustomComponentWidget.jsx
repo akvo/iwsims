@@ -9,7 +9,7 @@ import * as customComponents from "../custom-components";
  * log to console.error rather than throwing, so a typo in the JSON config does
  * not crash the rest of the dashboard.
  */
-const CustomComponentWidget = ({ item }) => {
+const CustomComponentWidget = ({ item, ...context }) => {
   const Component = customComponents[item.component];
 
   if (!Component) {
@@ -25,7 +25,7 @@ const CustomComponentWidget = ({ item }) => {
     );
   }
 
-  return <Component />;
+  return <Component item={item} {...context} />;
 };
 
 CustomComponentWidget.propTypes = {

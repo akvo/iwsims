@@ -174,11 +174,11 @@ const SampleIssuesFetcher = ({
 };
 
 /**
- * Invisible fetcher for a single kpi_stack segment. Parent renders one
+ * Invisible fetcher for a single derived-compute segment. Parent renders one
  * instance per item × segment so the hook count per instance stays at 1.
  * Reports (itemId, segmentKey, data) via onSegmentData.
  */
-const KpiSegmentFetcher = ({
+const SegmentFetcher = ({
   itemId,
   segment,
   filterState,
@@ -374,6 +374,7 @@ const Dashboard = () => {
 
   // ── Cross-form & derived-compute fan-out ──────────────────────────────────
   // Items with compute=cross_tab / accessibility_bucket / kpi_stack /
+  // process_counts / capacity_compare /
   // accessibility_no_issues_kpi each need pre-fetched /values responses
   // combined into a single `computeResponses` tree keyed by
   // {[mode]: {[itemId]: payload}}. This mirrors the compliance fan-out but
@@ -391,6 +392,14 @@ const Dashboard = () => {
     () => (config ? collectByCompute(config.items, "kpi_stack") : []),
     [config]
   );
+  const processCountItems = useMemo(
+    () => (config ? collectByCompute(config.items, "process_counts") : []),
+    [config]
+  );
+  const capacityCompareItems = useMemo(
+    () => (config ? collectByCompute(config.items, "capacity_compare") : []),
+    [config]
+  );
   const accessibilityNoIssuesKpiItems = useMemo(
     () =>
       config
@@ -404,6 +413,8 @@ const Dashboard = () => {
     {}
   );
   const [kpiStackByItem, setKpiStackByItem] = useState({});
+  const [processCountsByItem, setProcessCountsByItem] = useState({});
+  const [capacityCompareByItem, setCapacityCompareByItem] = useState({});
   const [accessibilityNoIssuesKpiByItem, setAccessibilityNoIssuesKpiByItem] =
     useState({});
 
@@ -431,6 +442,27 @@ const Dashboard = () => {
       return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
     });
   }, []);
+  const onProcessCountSegmentData = useCallback((itemId, segmentKey, data) => {
+    setProcessCountsByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+  const onCapacityCompareMeasureData = useCallback(
+    (itemId, measureKey, data) => {
+      setCapacityCompareByItem((prev) => {
+        const inner = prev[itemId] || {};
+        if (inner[measureKey] === data) {
+          return prev;
+        }
+        return { ...prev, [itemId]: { ...inner, [measureKey]: data } };
+      });
+    },
+    []
+  );
 
   // Merge into one tree, with legacy complianceResponses under `compliance`.
   const computeResponses = useMemo(
@@ -440,6 +472,8 @@ const Dashboard = () => {
       cross_tab: crossTabByItem,
       accessibility_bucket: accessibilityBucketByItem,
       kpi_stack: kpiStackByItem,
+      process_counts: processCountsByItem,
+      capacity_compare: capacityCompareByItem,
       accessibility_no_issues_kpi: accessibilityNoIssuesKpiByItem,
     }),
     [
@@ -448,6 +482,8 @@ const Dashboard = () => {
       crossTabByItem,
       accessibilityBucketByItem,
       kpiStackByItem,
+      processCountsByItem,
+      capacityCompareByItem,
       accessibilityNoIssuesKpiByItem,
     ]
   );
@@ -710,7 +746,7 @@ const Dashboard = () => {
       {/* Invisible kpi_stack segment fetchers — one per (item, segment) pair */}
       {kpiStackItems.flatMap((item) =>
         (item.segments || []).map((segment) => (
-          <KpiSegmentFetcher
+          <SegmentFetcher
             key={`${item.id}::${segment.key}`}
             itemId={item.id}
             segment={segment}
@@ -719,6 +755,38 @@ const Dashboard = () => {
             fiscalYearStartMonth={fyStart}
             customFilterDefs={customFilterDefs}
             onSegmentData={onKpiStackSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible process_counts segment fetchers — one per (item, segment) pair */}
+      {processCountItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onProcessCountSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible capacity_compare measure fetchers — one per (item, measure) pair */}
+      {capacityCompareItems.flatMap((item) =>
+        (item.measures || []).map((measure) => (
+          <SegmentFetcher
+            key={`${item.id}::${measure.key}`}
+            itemId={item.id}
+            segment={measure}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onCapacityCompareMeasureData}
           />
         ))
       )}
