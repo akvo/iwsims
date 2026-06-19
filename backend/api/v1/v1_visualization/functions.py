@@ -774,7 +774,9 @@ def get_values_by_question_name(question_name, params):
     if question_type == 4:  # number
         return _values_by_qname_number(qs, group_by, value_type)
     if question_type in (5, 6):  # option, multiple_option
-        return _values_by_qname_option(qs, question_name, group_by, value_type)
+        return _values_by_qname_option(
+            qs, question_name, group_by, value_type, params
+        )
     return _values_by_qname_text(qs)
 
 
@@ -821,6 +823,15 @@ def _count_parents_by_qname(qs, option_value, value_type):
     label = option_value or "Total"
     group = option_value or "total"
     return [{"value": value, "label": label, "group": group}], [label]
+
+
+def _qname_combo_label(combo_values, option_labels):
+    """Human label for a form-order option-value combo."""
+    if len(combo_values) == 2 and len(option_labels) == 2:
+        return "Both"
+    return " + ".join(
+        option_labels.get(value, value) for value in combo_values
+    )
 
 
 def _values_by_qname_number(qs, group_by, value_type):
@@ -871,15 +882,25 @@ def _values_by_qname_number(qs, group_by, value_type):
     return data, labels
 
 
-def _values_by_qname_option(qs, question_name, group_by, value_type):
+def _values_by_qname_option(
+    qs, question_name, group_by, value_type, params=None
+):
     """Handle option question aggregation by question_name."""
-    # Deduplicate options by value. Order by (order, value, question_id)
-    # so the tiebreak between forms sharing the same option value is
-    # deterministic (lowest question_id wins).
+    params = params or {}
+    parent_form_id = params.get("parent_form_id")
+    include_unanswered = params.get("include_unanswered", False)
+
+    # Deduplicate options by value. When parent_form_id is provided,
+    # scope option metadata to monitoring forms under that registration
+    # family; otherwise national/cross-family queries keep the global
+    # option union.
     raw_opts = QuestionOptions.objects.filter(
         question__name=question_name,
         value__isnull=False,
-    ).order_by(
+    )
+    if parent_form_id:
+        raw_opts = raw_opts.filter(question__form__parent_id=parent_form_id)
+    raw_opts = raw_opts.order_by(
         "order", "value", "question_id",
     ).values("value", "label", "color")
     seen = set()
@@ -911,21 +932,48 @@ def _values_by_qname_option(qs, question_name, group_by, value_type):
         labels = [d["label"] for d in data]
         return data, labels
 
+    if group_by == "option_combo":
+        return _values_by_qname_option_combo(
+            qs, options, value_type, include_unanswered, params
+        )
+
     # default: group_by == "option"
     tallies = defaultdict(int)
-    total_parents = 0
-    for row in qs.values("latest_option_values"):
+    answered_parent_ids = set()
+    for row in qs.values("parent_id", "latest_option_values"):
         opts = row["latest_option_values"] or []
         for opt_value in opts:
             tallies[opt_value] += 1
         if opts:
-            total_parents += 1
+            answered_parent_ids.add(row["parent_id"])
+
+    bucket_count = 0
+    if include_unanswered:
+        parent_qs = FormData.objects.filter(
+            parent__isnull=True,
+            is_pending=False,
+            is_draft=False,
+        )
+        if parent_form_id:
+            parent_qs = parent_qs.filter(form_id=parent_form_id)
+        else:
+            parent_form_ids = list(
+                qs.values_list("parent_form_id", flat=True).distinct()
+            )
+            parent_qs = parent_qs.filter(form_id__in=parent_form_ids)
+        administration_id = params.get("administration_id")
+        if administration_id:
+            parent_qs = apply_administration_filter(
+                parent_qs, administration_id
+            )
+        bucket_count = max(0, parent_qs.count() - len(answered_parent_ids))
 
     data = []
     for opt in options:
         count = tallies.get(opt["value"], 0)
-        if value_type == "percentage" and total_parents > 0:
-            value = round(count / total_parents * 100, 2)
+        denominator = len(answered_parent_ids) + bucket_count
+        if value_type == "percentage" and denominator > 0:
+            value = round(count / denominator * 100, 2)
         else:
             value = count
         data.append({
@@ -933,6 +981,122 @@ def _values_by_qname_option(qs, question_name, group_by, value_type):
             "label": opt["label"] or opt["value"],
             "group": opt["value"],
             "color": opt.get("color"),
+        })
+
+    if include_unanswered and bucket_count > 0:
+        if value_type == "percentage":
+            denominator = len(answered_parent_ids) + bucket_count
+            value = round(bucket_count / denominator * 100, 2)
+        else:
+            value = bucket_count
+        data.append({
+            "value": value,
+            "label": "No information available",
+            "group": "_no_info",
+            "color": "#bfbfbf",
+        })
+
+    labels = [d["label"] for d in data]
+    return data, labels
+
+
+def _values_by_qname_option_combo(
+    qs, options, value_type, include_unanswered, params
+):
+    """Handle combo buckets for question_name multiple_option queries."""
+    params = params or {}
+    parent_form_id = params.get("parent_form_id")
+    option_values = {o["value"] for o in options}
+    option_labels = {
+        o["value"]: o["label"] or o["value"] for o in options
+    }
+    option_colors = {o["value"]: o.get("color") for o in options}
+    option_order = {
+        o["value"]: i for i, o in enumerate(options)
+    }
+
+    tallies = defaultdict(int)
+    answered_parent_ids = set()
+    for row in qs.values("parent_id", "latest_option_values"):
+        combo_values = sorted(
+            (
+                value for value in (row["latest_option_values"] or [])
+                if value in option_values
+            ),
+            key=lambda value: option_order.get(value, len(option_order)),
+        )
+        if not combo_values:
+            continue
+        combo_key = "|".join(combo_values)
+        tallies[combo_key] += 1
+        answered_parent_ids.add(row["parent_id"])
+
+    bucket_count = 0
+    if include_unanswered:
+        parent_qs = FormData.objects.filter(
+            parent__isnull=True,
+            is_pending=False,
+            is_draft=False,
+        )
+        if parent_form_id:
+            parent_qs = parent_qs.filter(form_id=parent_form_id)
+        else:
+            parent_form_ids = list(
+                qs.values_list("parent_form_id", flat=True).distinct()
+            )
+            parent_qs = parent_qs.filter(form_id__in=parent_form_ids)
+        administration_id = params.get("administration_id")
+        if administration_id:
+            parent_qs = apply_administration_filter(
+                parent_qs, administration_id
+            )
+        bucket_count = max(0, parent_qs.count() - len(answered_parent_ids))
+
+    denominator = sum(tallies.values()) + bucket_count
+
+    ordered_keys = [opt["value"] for opt in options]
+    fallback_combo_keys = []
+    if len(options) == 2:
+        fallback_combo_keys.append(
+            "|".join(opt["value"] for opt in options)
+        )
+    observed_combo_keys = sorted(
+        (
+            key for key in set(tallies.keys()) | set(fallback_combo_keys)
+            if "|" in key
+        ),
+        key=lambda key: [
+            option_order.get(value, len(option_order))
+            for value in key.split("|")
+        ],
+    )
+    ordered_keys.extend(observed_combo_keys)
+
+    data = []
+    for key in ordered_keys:
+        count = tallies.get(key, 0)
+        if value_type == "percentage" and denominator > 0:
+            value = round(count / denominator * 100, 2)
+        else:
+            value = count
+        combo_values = key.split("|")
+        data.append({
+            "value": value,
+            "label": _qname_combo_label(combo_values, option_labels),
+            "group": key,
+            "color": option_colors.get(key) if "|" not in key else None,
+        })
+
+    if include_unanswered and bucket_count > 0:
+        if value_type == "percentage" and denominator > 0:
+            value = round(bucket_count / denominator * 100, 2)
+        else:
+            value = bucket_count
+        data.append({
+            "value": value,
+            "label": "No information available",
+            "group": "_no_info",
+            "color": "#bfbfbf",
         })
 
     labels = [d["label"] for d in data]

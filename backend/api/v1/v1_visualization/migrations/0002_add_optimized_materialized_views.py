@@ -203,7 +203,7 @@ class Migration(migrations.Migration):
                     a.options AS answer_options,
                     ROW_NUMBER() OVER (
                         PARTITION BY m.parent_id, q.name
-                        ORDER BY m.created DESC
+                        ORDER BY m.created DESC, m.data_id DESC, a.id DESC
                     ) AS rn
                 FROM all_monitoring m
                 INNER JOIN answer a ON a.data_id = m.data_id

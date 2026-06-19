@@ -97,7 +97,7 @@ from utils.custom_serializer_fields import (
             location=OpenApiParameter.QUERY,
             enum=[
                 "date", "month", "id",
-                "parent_id", "option",
+                "parent_id", "option", "option_combo",
             ],
         ),
         OpenApiParameter(
@@ -214,6 +214,9 @@ def visualization_values(request, version):
             "from_date": validated.get("from_date"),
             "to_date": validated.get("to_date"),
             "parent_form_id": validated.get("parent_form_id"),
+            "include_unanswered": validated.get(
+                "include_unanswered", False
+            ),
         }
         data, labels = get_values_by_question_name(question_name, params)
         return Response(

@@ -4,7 +4,7 @@ from django.db.models import Count, Avg, F, OuterRef, Subquery
 from django.db.models.functions import TruncDate, TruncMonth, Substr
 
 from api.v1.v1_data.models import FormData
-from api.v1.v1_forms.models import QuestionOptions
+from api.v1.v1_forms.models import QuestionOptions, QuestionTypes
 from api.v1.v1_visualization.constants import AGG_FUNCS
 from api.v1.v1_visualization.models import (
     MVAnswerDenormalized,
@@ -391,7 +391,21 @@ def handle_option_question(form, question, params):
             qs, is_latest, params
         )
 
-    if group_by == "option":
+    if group_by == "option_combo" and \
+            question.type == QuestionTypes.multiple_option:
+        restricted = _extract_criteria_option_values(
+            params, question.name
+        )
+        return _option_group_by_combo(
+            question, options, data_ids, value_type, restricted,
+            include_unanswered=params.get(
+                "include_unanswered", False
+            ),
+            form=form,
+            params=params,
+        )
+
+    if group_by in ("option", "option_combo"):
         restricted = _extract_criteria_option_values(
             params, question.name
         )
@@ -649,6 +663,131 @@ def _option_group_by_option(
             "label": opt.label,
             "group": opt.value,
             "color": opt.color,
+        })
+
+    if include_unanswered and bucket_count > 0:
+        bucket_val = (
+            round((bucket_count / denom * 100), 2)
+            if value_type == "percentage" and denom else bucket_count
+        )
+        data.append({
+            "value": bucket_val,
+            "label": "No information available",
+            "group": "_no_info",
+            "color": "#bfbfbf",
+        })
+
+    labels = [d["label"] for d in data]
+    return data, labels
+
+
+def _combo_label(combo_values, option_labels):
+    """Human label for a sorted option-value combo."""
+    if len(combo_values) == 2 and len(option_labels) == 2:
+        return "Both"
+    return " + ".join(
+        option_labels.get(value, value) for value in combo_values
+    )
+
+
+def _option_group_by_combo(
+    question, options, data_ids, value_type,
+    restricted_values=None,
+    include_unanswered=False, form=None, params=None,
+):
+    """Group multiple_option answers by mutually exclusive combos.
+
+    Example:
+    - ["lab_test"] -> group "lab_test"
+    - ["cbt_bag_test"] -> group "cbt_bag_test"
+    - ["lab_test", "cbt_bag_test"] -> group "lab_test|cbt_bag_test"
+
+    This is intentionally distinct from group_by=option, which counts
+    each selected option independently and is still useful for FLAT
+    multi-select breakdowns.
+    """
+    option_values = {o.value for o in options}
+    option_labels = {o.value: o.label for o in options}
+    option_colors = {o.value: o.color for o in options}
+    option_order = {o.value: i for i, o in enumerate(options)}
+    tally_values = (
+        option_values & restricted_values
+        if restricted_values else option_values
+    )
+    tallies = defaultdict(int)
+    qualifying_parents = set()
+    is_registration = form is not None and form.parent is None
+    tracking_field = (
+        "data_id" if is_registration else "parent_id"
+    )
+
+    for tracking_id, opts in MVAnswerDenormalized.objects.filter(
+        data_id__in=data_ids,
+        question_name=question.name,
+        answer_options__isnull=False,
+    ).values_list(tracking_field, "answer_options"):
+        combo_values = sorted(
+            (value for value in (opts or []) if value in tally_values),
+            key=lambda value: option_order.get(value, len(option_order)),
+        )
+        if not combo_values:
+            continue
+        combo_key = "|".join(combo_values)
+        tallies[combo_key] += 1
+        qualifying_parents.add(tracking_id)
+
+    bucket_count = (
+        _count_no_info_parents(form, params, qualifying_parents)
+        if include_unanswered else 0
+    )
+
+    if value_type == "percentage":
+        denom = sum(tallies.values()) + bucket_count
+    else:
+        denom = None
+
+    data = []
+
+    # Stable legend: single-option buckets first in form option order,
+    # then observed multi-option combo buckets by combo key.
+    ordered_keys = []
+    for opt in options:
+        if not restricted_values or opt.value in tally_values:
+            ordered_keys.append(opt.value)
+    full_combo_values = [
+        opt.value for opt in options
+        if not restricted_values or opt.value in tally_values
+    ]
+    fallback_combo_keys = []
+    if len(full_combo_values) == 2:
+        fallback_combo_keys.append("|".join(full_combo_values))
+    observed_combo_keys = sorted(
+        (
+            key for key in set(tallies.keys()) | set(fallback_combo_keys)
+            if "|" in key
+        ),
+        key=lambda key: [
+            option_order.get(value, len(option_order))
+            for value in key.split("|")
+        ],
+    )
+    ordered_keys.extend(observed_combo_keys)
+
+    for key in ordered_keys:
+        count = tallies.get(key, 0)
+        combo_values = key.split("|")
+        value = (
+            round((count / denom * 100), 2)
+            if value_type == "percentage" and denom else count
+        )
+        data.append({
+            "value": value,
+            "label": _combo_label(combo_values, option_labels),
+            "group": key,
+            "color": (
+                option_colors.get(key)
+                if "|" not in key else None
+            ),
         })
 
     if include_unanswered and bucket_count > 0:

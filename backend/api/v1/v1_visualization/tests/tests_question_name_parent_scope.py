@@ -78,3 +78,33 @@ class QuestionNameParentFormScopeTestCases(CrossFormTestBase, APITestCase):
         self.assertEqual(response.status_code, 200)
         groups = {d["group"] for d in response.json()["data"]}
         self.assertEqual(groups, {str(self.REG2_DATA_ID)})
+
+    def test_parent_form_id_scopes_option_metadata(self):
+        """parent_form_id also restricts option labels/legend values."""
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name=shared_status"
+            f"&parent_form_id={self.REG1_FORM_ID}"
+            "&group_by=option"
+        )
+        self.assertEqual(response.status_code, 200)
+        groups = {d["group"] for d in response.json()["data"]}
+        self.assertEqual(groups, {"fam1_val"})
+
+    def test_parent_form_id_include_unanswered_bucket(self):
+        """include_unanswered counts parents without this question answer."""
+        self.make_registration(
+            self.REG1_DATA_ID + 1, "Family One Unanswered",
+            self.reg1.form,
+        )
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name=shared_status"
+            f"&parent_form_id={self.REG1_FORM_ID}"
+            "&group_by=option&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        by_group = {
+            d["group"]: d["value"]
+            for d in response.json()["data"]
+        }
+        self.assertEqual(by_group.get("fam1_val"), 1)
+        self.assertEqual(by_group.get("_no_info"), 1)

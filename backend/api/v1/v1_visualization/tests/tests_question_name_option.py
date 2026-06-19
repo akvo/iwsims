@@ -1,8 +1,15 @@
 from django.test.utils import override_settings
 from rest_framework.test import APITestCase
 
+from api.v1.v1_data.models import Answers
+from api.v1.v1_forms.models import (
+    Questions,
+    QuestionOptions,
+    QuestionTypes,
+)
 from api.v1.v1_visualization.tests.mixins import (
     VisualizationValuesTestMixin,
+    refresh_all_mvs,
 )
 
 
@@ -58,6 +65,74 @@ class QuestionNameOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(by_group.get("active"), 1)
         self.assertEqual(by_group.get("pending"), 1)
         self.assertEqual(by_group.get("inactive", 0), 0)
+
+    def test_multiple_option_group_by_option_combo_by_question_name(self):
+        """question_name path supports mutually exclusive combo buckets."""
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name=features"
+            "&group_by=option_combo"
+        )
+        self.assertEqual(response.status_code, 200)
+        by_group = {
+            d["group"]: d["value"]
+            for d in response.json()["data"]
+        }
+        self.assertEqual(by_group["feature_x"], 0)
+        self.assertEqual(by_group["feature_y"], 0)
+        self.assertEqual(by_group["feature_z"], 0)
+        self.assertEqual(by_group["feature_y|feature_z"], 1)
+        self.assertEqual(
+            by_group["feature_x|feature_y|feature_z"], 1
+        )
+
+    def test_two_option_combo_includes_both_bucket_by_question_name(self):
+        """Two-option combo mode exposes a stable Both bucket."""
+        question = Questions.objects.create(
+            form=self.monitoring,
+            question_group=self.q_multi.question_group,
+            name="sample_method",
+            label="Sample Method",
+            type=QuestionTypes.multiple_option,
+            order=99,
+        )
+        QuestionOptions.objects.create(
+            question=question,
+            value="lab_test",
+            label="Lab Test",
+            order=1,
+        )
+        QuestionOptions.objects.create(
+            question=question,
+            value="cbt_bag_test",
+            label="CBT Bag Test",
+            order=2,
+        )
+        Answers.objects.create(
+            data=self.mon1b,
+            question=question,
+            options=["lab_test", "cbt_bag_test"],
+            created_by=self.user,
+        )
+        Answers.objects.create(
+            data=self.mon2b,
+            question=question,
+            options=["lab_test"],
+            created_by=self.user,
+        )
+        refresh_all_mvs()
+
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name=sample_method"
+            "&group_by=option_combo"
+            f"&parent_form_id={self.registration.id}"
+        )
+        self.assertEqual(response.status_code, 200)
+        by_group = {
+            d["group"]: d
+            for d in response.json()["data"]
+        }
+        self.assertEqual(by_group["lab_test|cbt_bag_test"]["label"], "Both")
+        self.assertEqual(by_group["lab_test|cbt_bag_test"]["value"], 1)
 
     def test_option_labels_in_response(self):
         """Labels list matches option labels."""
