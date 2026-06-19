@@ -1,25 +1,25 @@
-group,indicator,calculation
-Total Overview (Cards),Total Pump Stations,"COUNTDISTINCT(COALESCE([pump_station_name],[gps_location]))"
-Total Overview (Cards),Inspected (12 mo),"RECENT([inspection_date],12)"
-Total Overview (Cards),% Operational,"PERCENT(OR([station_status]=""Operational"",AND([electrical_panel]=""Satisfactory"",[pump_station_lid]=""Covered"",[non_return_valve]=""Operational"",[sluice_valve]=""Operational"",[guardrails_pump_station]=""Secured"")))"
-Total Overview (Cards),Critical issues,"COUNT(OR(IN([station_status],""Not Operational"",""Overflowing"",""Blocked""),AND(IN([electrical_panel],""Broken"",""Electrical hazard""),[pump_station_lid]=""Missing"",[non_return_valve]=""Faulty"",[sluice_valve]=""Faulty"",[guardrails_pump_station]=""Missing"",[ohs_equipment]=""Not available"")))"
-Pump Stations Operational Map,Operationality,MAP([station_status])
-Pump Stations Operational Map,Electrical issues,MAP([electrical_panel])
-Pump Stations Operational Map,Standby facility,MAP([num_pumps_standby])
-Pumps at a glance - Structural & Site Condition,Ground conditions,DISTRIBUTION([ground_conditions])
-Pumps at a glance - Structural & Site Condition,Facility condition,DISTRIBUTION([facility_condition])
-Pumps at a glance - Structural & Site Condition,Security gate & fencing,DISTRIBUTION([security_gate_fencing])
-Pumps at a glance - Structural & Site Condition,Non-return valve,DISTRIBUTION([non_return_valve])
-Pumps at a glance - Structural & Site Condition,Sluice valve,DISTRIBUTION([sluice_valve])
-Pumps at a glance - Structural & Site Condition,Ventilation,DISTRIBUTION([ventilation])
-Pumps at a glance - Structural & Site Condition,Electrical panel,DISTRIBUTION([electrical_panel])
-Pumps at a glance - Structural & Site Condition,Pump station lid,DISTRIBUTION([pump_station_lid])
-Pumps at a glance - Structural & Site Condition,Gantry,DISTRIBUTION([gantry])
-Pumps at a glance - Structural & Site Condition,Hour run meter,DISTRIBUTION([hour_run_meter])
-Pumps at a glance - Structural & Site Condition,Amp meter,DISTRIBUTION([amp_meter])
-Pumps at a glance - Structural & Site Condition,Volt meter,DISTRIBUTION([volt_meter])
-Pumps at a glance - Structural & Site Condition,Guardrails,DISTRIBUTION([guardrails_pump_station])
-Pumps at a glance - Structural & Site Condition,Odour,DISTRIBUTION([odour])
-Pumps at a glance - Structural & Site Condition,Fats / grease balls,DISTRIBUTION([fats_grease_balls])
-Pumps at a glance - Structural & Site Condition,Lights,DISTRIBUTION([lights])
-Pumps at a glance - Structural & Site Condition,Water supply,DISTRIBUTION([water_supply])
+group,indicator,calculation,method
+Total Overview (Cards),Total Pump Stations,"COUNTDISTINCT(COALESCE([pump_station_name],[gps_location]))",auto
+Total Overview (Cards),Inspected (12 mo),"RECENT([inspection_date],12)",auto
+Total Overview (Cards),% Operational,"PERCENT(OR([station_status]=""Operational"",AND([electrical_panel]=""Satisfactory"",[pump_station_lid]=""Covered"",[non_return_valve]=""Operational"",[sluice_valve]=""Operational"",[guardrails_pump_station]=""Secured"")))",auto
+Total Overview (Cards),Critical issues,"COUNT(OR(IN([station_status],""Not Operational"",""Overflowing"",""Blocked""),AND(IN([electrical_panel],""Broken"",""Electrical hazard""),[pump_station_lid]=""Missing"",[non_return_valve]=""Faulty"",[sluice_valve]=""Faulty"",[guardrails_pump_station]=""Missing"",[ohs_equipment]=""Not available"")))",auto
+Pump Stations Operational Map,Operationality,MAP([station_status]),auto
+Pump Stations Operational Map,Electrical issues,MAP([electrical_panel]),auto
+Pump Stations Operational Map,Standby facility,MAP([num_pumps_standby]),auto
+Pumps at a glance - Structural & Site Condition,Ground conditions,DISTRIBUTION([ground_conditions]),auto
+Pumps at a glance - Structural & Site Condition,Facility condition,DISTRIBUTION([facility_condition]),auto
+Pumps at a glance - Structural & Site Condition,Security gate & fencing,DISTRIBUTION([security_gate_fencing]),auto
+Pumps at a glance - Structural & Site Condition,Non-return valve,DISTRIBUTION([non_return_valve]),auto
+Pumps at a glance - Structural & Site Condition,Sluice valve,DISTRIBUTION([sluice_valve]),auto
+Pumps at a glance - Structural & Site Condition,Ventilation,DISTRIBUTION([ventilation]),auto
+Pumps at a glance - Structural & Site Condition,Electrical panel,DISTRIBUTION([electrical_panel]),auto
+Pumps at a glance - Structural & Site Condition,Pump station lid,DISTRIBUTION([pump_station_lid]),auto
+Pumps at a glance - Structural & Site Condition,Gantry,DISTRIBUTION([gantry]),auto
+Pumps at a glance - Structural & Site Condition,Hour run meter,DISTRIBUTION([hour_run_meter]),auto
+Pumps at a glance - Structural & Site Condition,Amp meter,DISTRIBUTION([amp_meter]),auto
+Pumps at a glance - Structural & Site Condition,Volt meter,DISTRIBUTION([volt_meter]),auto
+Pumps at a glance - Structural & Site Condition,Guardrails,DISTRIBUTION([guardrails_pump_station]),auto
+Pumps at a glance - Structural & Site Condition,Odour,DISTRIBUTION([odour]),auto
+Pumps at a glance - Structural & Site Condition,Fats / grease balls,DISTRIBUTION([fats_grease_balls]),auto
+Pumps at a glance - Structural & Site Condition,Lights,DISTRIBUTION([lights]),auto
+Pumps at a glance - Structural & Site Condition,Water supply,DISTRIBUTION([water_supply]),auto

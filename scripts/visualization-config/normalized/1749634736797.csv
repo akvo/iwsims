@@ -1,37 +1,37 @@
-group,indicator,calculation
-Total Overview (Cards),Total WTPs,"COUNTDISTINCT(COALESCE([plant_name],[geolocation]))"
-Total Overview (Cards),Inspected (12 mo),"RECENT([date_of_inspection],12)"
-Total Overview (Cards),% Operational,"PERCENT(AND([has_production_constraints]=""No"",[daily_production_megalitres]>0,[pumps_rising_main_has_risks]=""No"",[borehole_pump_has_risks]=""No"",[borehole_gallery_pumps_has_risks]=""No""))"
-Total Overview (Cards),DW Compliance,"COMPLIANT(AND(OR([e_coli_cfu_100ml]=0,[e_coli_count_cbt]=0),[total_coliform_cfu_100ml]=0,[fecal_coliform_cfu_100ml]=0,[turbidity_ntu]<5,BETWEEN([residual_chlorine_mg_l],0.2,0.5),BETWEEN([ph],6.5,8.5),[conductivity]<1000,[salinity]<1))"
-Total Overview (Cards),Critical (RED),"COUNT(OR(OR([e_coli_cfu_100ml]>0,[e_coli_count_cbt]>0,[total_coliform_cfu_100ml]>0,[fecal_coliform_cfu_100ml]>0,[turbidity_ntu]>=5,NOT(BETWEEN([residual_chlorine_mg_l],0.2,0.5)),NOT(BETWEEN([ph],6.5,8.5)),[conductivity]>=1000,[salinity]>=1),OR([has_production_constraints]=""Yes"",[daily_production_megalitres]=0,[pumps_rising_main_has_risks]=""Yes"",[borehole_pump_has_risks]=""Yes"",[borehole_gallery_pumps_has_risks]=""Yes"")))"
-WTP Operational Map,Drinking water compliance,MAP([geolocation])
-WTP Operational Map,Disinfection technique,MAP([disinfection_technique])
-WTP at a glance,Drinking Water Compliance by Parameter,"COMPLIANT(AND(OR([e_coli_cfu_100ml]=0,[e_coli_count_cbt]=0),[total_coliform_cfu_100ml]=0,[fecal_coliform_cfu_100ml]=0,[turbidity_ntu]<5,BETWEEN([residual_chlorine_mg_l],0.2,0.5),BETWEEN([ph],6.5,8.5),[conductivity]<1000,[salinity]<1))"
-WTP at a glance,Sample Method,DISTRIBUTION([water_testing_method])
-WTP at a glance,Production vs Design Capacity,"VALUE(COALESCE([daily_production_megalitres],[designed_capacity_megalitres]))"
-WTP at a glance,Treatment Processes in Use,"DISTRIBUTION(COALESCE([floc_tanks_used_in_the_plant],[clarifier_sedimentation_tanks_at_the_plant],[filtration_system_at_the_plant],[backwash_sludge_removal_system_at_the_plant],[disinfection_technique],[chemicals_are_use_for_water_treatment_on_the_day_of_inspection]))"
-WTP at a glance,OHS Policy Flow,"PERCENT(AND([has_ohs_policy]=""Yes"",[staff_use_ohs_equipment]=""Yes"",[staff_comply_ohs_policy]=""Yes""))"
-Monitoring Status,Monitored (12 mo),"RECENT([date_of_inspection],12)"
-Monitoring Status,Critical issues,"COUNT(OR(OR([e_coli_cfu_100ml]>0,[e_coli_count_cbt]>0,[total_coliform_cfu_100ml]>0,[fecal_coliform_cfu_100ml]>0,[turbidity_ntu]>=5,NOT(BETWEEN([residual_chlorine_mg_l],0.2,0.5)),NOT(BETWEEN([ph],6.5,8.5)),[conductivity]>=1000,[salinity]>=1),OR([has_production_constraints]=""Yes"",[daily_production_megalitres]=0,[pumps_rising_main_has_risks]=""Yes"",[borehole_pump_has_risks]=""Yes"",[borehole_gallery_pumps_has_risks]=""Yes"")))"
-Monitoring Status,No water-quality check,"COUNT([can_take_water_sample]=""No"")"
-Monitoring Status,Inspection-date histogram,VALUE([date_of_inspection])
-Monitoring Status,Most recently monitored,"RANK([date_of_inspection],DESC,8)"
-Monitoring Status,Needs monitoring,"RANK([date_of_inspection],ASC,8)"
-Treatment set-up,Treatment Chemicals,DISTRIBUTION([chemicals_are_use_for_water_treatment_on_the_day_of_inspection])
-Treatment set-up,Sedimentation — Floc Tank Count,"VALUE(COALESCE([floc_tanks_are_there_at_the_plant],[floc_tanks_used_in_the_plant]))"
-Treatment set-up,Sedimentation Tank Type,DISTRIBUTION([types_of_clarifiers_sedimentation_tanks_at_the_plant])
-Treatment set-up,Sedimentation — Active Risks,"DISTRIBUTION(COALESCE([these_risks],[these_risks_associated_with_the_clarifiers_sedimentation_tanks]))"
-Treatment set-up,Disinfection Technique,DISTRIBUTION([disinfection_technique])
-Treatment set-up,Disinfection — Active Risks,"DISTRIBUTION(COALESCE([chlorine_gas_risks_description],[hth_powder_risks_description],[sodium_hypochlorite_risks_description],[dpd_tablets_risks_description]))"
-Treatment set-up,Magnetic Flow Meters,"DISTRIBUTION(COALESCE([type_of_flow_meters],[there_plant_mag_flow_meters_in_place]))"
-Treatment set-up,Flow Meter Risks,DISTRIBUTION([these_risks_associated_with_the_flow_meters])
-Treatment set-up,Reservoirs — High-Lift Pumps,"VALUE(COALESCE([number_of_high_lift_pumps],[high_lift_pumps_at_the_plant]))"
-Treatment set-up,Back-up Power Supply,"DISTRIBUTION(COALESCE([has_backup_generator],[backup_generator_condition]))"
-Water Quality,Sampled (12 mo),"PERCENT([can_take_water_sample]=""Yes"")"
-Water Quality,Lab tested,"COUNT([water_testing_method]=""Lab Test"")"
-Water Quality,CBT tested,"COUNT([water_testing_method]=""CBT Bag Test"")"
-Water Quality,Total coliform,VALUE([total_coliform_cfu_100ml])
-Water Quality,Turbidity,VALUE([turbidity_ntu])
-Water Quality,Residual chlorine,VALUE([residual_chlorine_mg_l])
-Water Quality,pH,VALUE([ph])
-Water Quality,Conductivity,VALUE([conductivity])
+group,indicator,calculation,method
+Total Overview (Cards),Total WTPs,"COUNTDISTINCT(COALESCE([plant_name],[geolocation]))",auto
+Total Overview (Cards),Inspected (12 mo),"RECENT([date_of_inspection],12)",auto
+Total Overview (Cards),% Operational,"PERCENT(AND([has_production_constraints]=""No"",[daily_production_megalitres]>0,[pumps_rising_main_has_risks]=""No"",[borehole_pump_has_risks]=""No"",[borehole_gallery_pumps_has_risks]=""No""))",auto
+Total Overview (Cards),DW Compliance,"COMPLIANT(AND(OR([e_coli_cfu_100ml]=0,[e_coli_count_cbt]=0),[total_coliform_cfu_100ml]=0,[fecal_coliform_cfu_100ml]=0,[turbidity_ntu]<5,BETWEEN([residual_chlorine_mg_l],0.2,0.5),BETWEEN([ph],6.5,8.5),[conductivity]<1000,[salinity]<1))",auto
+Total Overview (Cards),Critical (RED),"COUNT(OR(OR([e_coli_cfu_100ml]>0,[e_coli_count_cbt]>0,[total_coliform_cfu_100ml]>0,[fecal_coliform_cfu_100ml]>0,[turbidity_ntu]>=5,NOT(BETWEEN([residual_chlorine_mg_l],0.2,0.5)),NOT(BETWEEN([ph],6.5,8.5)),[conductivity]>=1000,[salinity]>=1),OR([has_production_constraints]=""Yes"",[daily_production_megalitres]=0,[pumps_rising_main_has_risks]=""Yes"",[borehole_pump_has_risks]=""Yes"",[borehole_gallery_pumps_has_risks]=""Yes"")))",auto
+WTP Operational Map,Drinking water compliance,MAP([geolocation]),auto
+WTP Operational Map,Disinfection technique,MAP([disinfection_technique]),auto
+WTP at a glance,Drinking Water Compliance by Parameter,"COMPLIANT(AND(OR([e_coli_cfu_100ml]=0,[e_coli_count_cbt]=0),[total_coliform_cfu_100ml]=0,[fecal_coliform_cfu_100ml]=0,[turbidity_ntu]<5,BETWEEN([residual_chlorine_mg_l],0.2,0.5),BETWEEN([ph],6.5,8.5),[conductivity]<1000,[salinity]<1))",auto
+WTP at a glance,Sample Method,DISTRIBUTION([water_testing_method]),auto
+WTP at a glance,Production vs Design Capacity,"VALUE(COALESCE([daily_production_megalitres],[designed_capacity_megalitres]))",auto
+WTP at a glance,Treatment Processes in Use,"DISTRIBUTION(COALESCE([floc_tanks_used_in_the_plant],[clarifier_sedimentation_tanks_at_the_plant],[filtration_system_at_the_plant],[backwash_sludge_removal_system_at_the_plant],[disinfection_technique],[chemicals_are_use_for_water_treatment_on_the_day_of_inspection]))",auto
+WTP at a glance,OHS Policy Flow,"PERCENT(AND([has_ohs_policy]=""Yes"",[staff_use_ohs_equipment]=""Yes"",[staff_comply_ohs_policy]=""Yes""))",auto
+Monitoring Status,Monitored (12 mo),"RECENT([date_of_inspection],12)",auto
+Monitoring Status,Critical issues,"COUNT(OR(OR([e_coli_cfu_100ml]>0,[e_coli_count_cbt]>0,[total_coliform_cfu_100ml]>0,[fecal_coliform_cfu_100ml]>0,[turbidity_ntu]>=5,NOT(BETWEEN([residual_chlorine_mg_l],0.2,0.5)),NOT(BETWEEN([ph],6.5,8.5)),[conductivity]>=1000,[salinity]>=1),OR([has_production_constraints]=""Yes"",[daily_production_megalitres]=0,[pumps_rising_main_has_risks]=""Yes"",[borehole_pump_has_risks]=""Yes"",[borehole_gallery_pumps_has_risks]=""Yes"")))",auto
+Monitoring Status,No water-quality check,"COUNT([can_take_water_sample]=""No"")",auto
+Monitoring Status,Inspection-date histogram,VALUE([date_of_inspection]),auto
+Monitoring Status,Most recently monitored,"RANK([date_of_inspection],DESC,8)",auto
+Monitoring Status,Needs monitoring,"RANK([date_of_inspection],ASC,8)",auto
+Treatment set-up,Treatment Chemicals,DISTRIBUTION([chemicals_are_use_for_water_treatment_on_the_day_of_inspection]),auto
+Treatment set-up,Sedimentation — Floc Tank Count,"VALUE(COALESCE([floc_tanks_are_there_at_the_plant],[floc_tanks_used_in_the_plant]))",auto
+Treatment set-up,Sedimentation Tank Type,DISTRIBUTION([types_of_clarifiers_sedimentation_tanks_at_the_plant]),auto
+Treatment set-up,Sedimentation — Active Risks,"DISTRIBUTION(COALESCE([these_risks],[these_risks_associated_with_the_clarifiers_sedimentation_tanks]))",auto
+Treatment set-up,Disinfection Technique,DISTRIBUTION([disinfection_technique]),auto
+Treatment set-up,Disinfection — Active Risks,"DISTRIBUTION(COALESCE([chlorine_gas_risks_description],[hth_powder_risks_description],[sodium_hypochlorite_risks_description],[dpd_tablets_risks_description]))",auto
+Treatment set-up,Magnetic Flow Meters,"DISTRIBUTION(COALESCE([type_of_flow_meters],[there_plant_mag_flow_meters_in_place]))",auto
+Treatment set-up,Flow Meter Risks,DISTRIBUTION([these_risks_associated_with_the_flow_meters]),auto
+Treatment set-up,Reservoirs — High-Lift Pumps,"VALUE(COALESCE([number_of_high_lift_pumps],[high_lift_pumps_at_the_plant]))",auto
+Treatment set-up,Back-up Power Supply,"DISTRIBUTION(COALESCE([has_backup_generator],[backup_generator_condition]))",auto
+Water Quality,Sampled (12 mo),"PERCENT([can_take_water_sample]=""Yes"")",auto
+Water Quality,Lab tested,"COUNT([water_testing_method]=""Lab Test"")",auto
+Water Quality,CBT tested,"COUNT([water_testing_method]=""CBT Bag Test"")",auto
+Water Quality,Total coliform,VALUE([total_coliform_cfu_100ml]),auto
+Water Quality,Turbidity,VALUE([turbidity_ntu]),auto
+Water Quality,Residual chlorine,VALUE([residual_chlorine_mg_l]),auto
+Water Quality,pH,VALUE([ph]),auto
+Water Quality,Conductivity,VALUE([conductivity]),auto

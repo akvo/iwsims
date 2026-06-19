@@ -1,10 +1,19 @@
 {
   "parent_form_id": 1749634736797,
-  "slug": "waf_water_treatment_plant-overview",
+  "slug": "wtp-overview",
   "name": "WAF Water Treatment Plant",
   "description": "Overview dashboard for WAF Water Treatment Plant.",
   "fiscal_year_start_month": 1,
   "items": [
+    {
+      "id": "wq_globals",
+      "chart_type": "water_quality_globals",
+      "hide": true,
+      "order": 0,
+      "sample_question_name": "can_take_water_sample",
+      "test_method_question_name": "water_testing_method",
+      "monitoring_form_id": 1749652214711
+    },
     {
       "id": "filters_main",
       "chart_type": "filter_bar",
@@ -17,7 +26,7 @@
           "order": 1,
           "label": "Monitoring Period",
           "date_question_names": {
-            "monitoring": "__TODO_inspection_date_qname__"
+            "monitoring": "date_of_inspection"
           }
         },
         {
@@ -74,11 +83,15 @@
       "color": "#64A73B",
       "compute": "compliance_kpi",
       "params_ref": [
-        "__TODO_list_param_ids__"
+        "param_total_coliform",
+        "param_turbidity",
+        "param_residual_chlorine",
+        "param_ph",
+        "param_conductivity"
       ],
-      "globals_ref": "__TODO_wq_globals_ref__",
+      "globals_ref": "wq_globals",
       "denominator_api": {
-        "form_id": "__TODO_reg_form_id__"
+        "form_id": 1749634736797
       }
     },
     {
@@ -105,21 +118,15 @@
       "filters": [
         {
           "type": "select",
-          "key": "geolocation",
-          "label": "Drinking water compliance",
-          "question_name": "geolocation",
-          "color_map": {
-            "__TODO_option__": "#64A73B",
-            "_no_info": "#999999"
-          }
-        },
-        {
-          "type": "select",
           "key": "disinfection_technique",
           "label": "Disinfection technique",
+          "form_id": 1749652214711,
           "question_name": "disinfection_technique",
           "color_map": {
-            "__TODO_option__": "#64A73B",
+            "chlorine_gas": "#1b9e77",
+            "hth_powder": "#d95f02",
+            "sodium_hypochlorite": "#7570b3",
+            "dpd_tablets": "#e7298a",
             "_no_info": "#999999"
           }
         },
@@ -152,9 +159,13 @@
       "compute": "compliance",
       "include_unanswered": true,
       "params_ref": [
-        "__TODO_list_param_ids__"
+        "param_total_coliform",
+        "param_turbidity",
+        "param_residual_chlorine",
+        "param_ph",
+        "param_conductivity"
       ],
-      "globals_ref": "__TODO_wq_globals_ref__"
+      "globals_ref": "wq_globals"
     },
     {
       "id": "chart_sample_method",
@@ -166,7 +177,7 @@
       },
       "api": {
         "question_name": "water_testing_method",
-        "group_by": "option",
+        "group_by": "option_combo",
         "monitoring": "latest",
         "include_unanswered": true
       }
@@ -178,7 +189,7 @@
       "col_span": 12,
       "config": {
         "title": "Production vs Design Capacity",
-        "xAxisLabel": "__TODO_unit__",
+        "xAxisLabel": "Administration",
         "yAxisLabel": "count"
       },
       "api": {
@@ -271,7 +282,7 @@
               "col_span": 12,
               "config": {
                 "title": "Inspection-date histogram",
-                "xAxisLabel": "__TODO_unit__",
+                "xAxisLabel": "Month",
                 "yAxisLabel": "count"
               },
               "api": {
@@ -462,8 +473,8 @@
           ]
         },
         {
-          "id": "tab_treatment_condition",
-          "label": "Treatment & Condition",
+          "id": "tab_treatment_setup",
+          "label": "Treatment set-up",
           "items": [
             {
               "id": "chart_treatment_chemicals",
@@ -487,7 +498,7 @@
               "col_span": 12,
               "config": {
                 "title": "Sedimentation — Floc Tank Count",
-                "xAxisLabel": "__TODO_unit__",
+                "xAxisLabel": "Total floc tanks",
                 "yAxisLabel": "count"
               },
               "api": {
@@ -593,7 +604,7 @@
               "col_span": 12,
               "config": {
                 "title": "Reservoirs — High-Lift Pumps",
-                "xAxisLabel": "__TODO_unit__",
+                "xAxisLabel": "Total high-lift pumps",
                 "yAxisLabel": "count"
               },
               "api": {

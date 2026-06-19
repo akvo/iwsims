@@ -126,3 +126,6 @@ Each parameter's bar reads pass/fail across the fleet.",,,"you can follow what i
   • Effluent — pass/fail by BOD/COD/TDS thresholds
   • OHS — derived count of YES across 1748910184998, 1748910219997, 1748910278981, 1748910823255
   • Status — derived (see row 4).","Form does NOT capture District separately from Division. Add District field to Registration, OR derive from GPS lookup.",,
+53,Water Quality,BOD,Yes,Monitoring,,,Effluent BOD per plant — latest sample.,VALUE([bod]),,,
+54,Water Quality,COD,Yes,Monitoring,,,Effluent COD per plant — latest sample.,VALUE([chemical_oxygen_demand]),,,
+55,Water Quality,TDS,Yes,Monitoring,,,Effluent TDS per plant — latest sample.,VALUE([total_dissolved_solids]),,,

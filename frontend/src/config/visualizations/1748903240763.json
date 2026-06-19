@@ -1,10 +1,19 @@
 {
   "parent_form_id": 1748903240763,
-  "slug": "waf_wastewater_treatment_plant-overview",
+  "slug": "wwtp-overview",
   "name": "WAF Wastewater Treatment Plant",
   "description": "Overview dashboard for WAF Wastewater Treatment Plant.",
   "fiscal_year_start_month": 1,
   "items": [
+    {
+      "id": "wq_globals",
+      "chart_type": "water_quality_globals",
+      "hide": true,
+      "order": 0,
+      "sample_question_name": "can_take_sample",
+      "test_method_question_name": "effluent_test_method",
+      "monitoring_form_id": 1748905550055
+    },
     {
       "id": "filters_main",
       "chart_type": "filter_bar",
@@ -17,7 +26,7 @@
           "order": 1,
           "label": "Monitoring Period",
           "date_question_names": {
-            "monitoring": "__TODO_inspection_date_qname__"
+            "monitoring": "inspection_date"
           }
         },
         {
@@ -35,7 +44,7 @@
       "col_span": 6,
       "label": "Total WWTPs",
       "api": {
-        "form_id": 1749634736797,
+        "form_id": 1748903240763,
         "monitoring": "latest"
       }
     },
@@ -59,12 +68,10 @@
       "label": "Effluent Compliance",
       "color": "#64A73B",
       "compute": "compliance_kpi",
-      "params_ref": [
-        "__TODO_list_param_ids__"
-      ],
-      "globals_ref": "__TODO_wq_globals_ref__",
+      "params_ref": ["param_bod", "param_cod", "param_tds"],
+      "globals_ref": "wq_globals",
       "denominator_api": {
-        "form_id": "__TODO_reg_form_id__"
+        "form_id": 1748903240763
       }
     },
     {
@@ -78,31 +85,13 @@
       "filters": [
         {
           "type": "select",
-          "key": "geolocation",
-          "label": "Operationality",
-          "question_name": "geolocation",
-          "color_map": {
-            "__TODO_option__": "#64A73B",
-            "_no_info": "#999999"
-          }
-        },
-        {
-          "type": "select",
-          "key": "bod",
-          "label": "Effluent compliance",
-          "question_name": "bod",
-          "color_map": {
-            "__TODO_option__": "#64A73B",
-            "_no_info": "#999999"
-          }
-        },
-        {
-          "type": "select",
           "key": "influent_pump_station",
           "label": "Influent pump station presence (Y/N)",
+          "form_id": 1748905550055,
           "question_name": "influent_pump_station",
           "color_map": {
-            "__TODO_option__": "#64A73B",
+            "yes": "#64A73B",
+            "no": "#e41a1c",
             "_no_info": "#999999"
           }
         },
@@ -110,9 +99,17 @@
           "type": "select",
           "key": "final_recommendations",
           "label": "Final recommendations",
+          "form_id": 1748905550055,
           "question_name": "final_recommendations",
           "color_map": {
-            "__TODO_option__": "#64A73B",
+            "increase_in_budget": "#003f5c",
+            "capacity_building": "#d95f02",
+            "upgrading_works": "#7570b3",
+            "technical_assistance": "#e7298a",
+            "training": "#66a61e",
+            "plant_rehabilitation": "#e6ab02",
+            "plant_augmentation": "#a6761d",
+            "other": "#1f78b4",
             "_no_info": "#999999"
           }
         },
@@ -142,12 +139,10 @@
       "label": "Compliance Trend",
       "color": "#64A73B",
       "compute": "compliance_kpi",
-      "params_ref": [
-        "__TODO_list_param_ids__"
-      ],
-      "globals_ref": "__TODO_wq_globals_ref__",
+      "params_ref": ["param_bod", "param_cod", "param_tds"],
+      "globals_ref": "wq_globals",
       "denominator_api": {
-        "form_id": "__TODO_reg_form_id__"
+        "form_id": 1748903240763
       }
     },
     {
@@ -220,6 +215,75 @@
                 "question_name": "inspection_date",
                 "sort": "asc",
                 "limit": 8,
+                "monitoring": "latest"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab_water_quality",
+          "label": "Water quality",
+          "items": [
+            {
+              "id": "param_bod",
+              "chart_type": "dot_strip",
+              "order": 1,
+              "col_span": 12,
+              "label": "BOD",
+              "description": "Acceptance threshold < 40 mg/L",
+              "config": {
+                "title": "BOD",
+                "xAxisLabel": "mg/L",
+                "entity_label": "WWTP"
+              },
+              "threshold": {
+                "max": 40
+              },
+              "api": {
+                "question_name": "bod",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_cod",
+              "chart_type": "dot_strip",
+              "order": 2,
+              "col_span": 12,
+              "label": "COD",
+              "description": "Acceptance threshold < 100 mg/L",
+              "config": {
+                "title": "COD",
+                "xAxisLabel": "mg/L",
+                "entity_label": "WWTP"
+              },
+              "threshold": {
+                "max": 100
+              },
+              "api": {
+                "question_name": "chemical_oxygen_demand",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_tds",
+              "chart_type": "dot_strip",
+              "order": 3,
+              "col_span": 12,
+              "label": "TDS",
+              "description": "Acceptance threshold < 1000 mg/L",
+              "config": {
+                "title": "TDS",
+                "xAxisLabel": "mg/L",
+                "entity_label": "WWTP"
+              },
+              "threshold": {
+                "max": 1000
+              },
+              "api": {
+                "question_name": "total_dissolved_solids",
+                "group_by": "parent_id",
                 "monitoring": "latest"
               }
             }
