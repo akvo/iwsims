@@ -17,16 +17,16 @@ Monitoring Status,No water-quality check,"COUNT([can_take_water_sample]=""No"")"
 Monitoring Status,Inspection-date histogram,"DATE_HISTOGRAM([date_of_inspection],18)",auto
 Monitoring Status,Most recently monitored,"RANK([date_of_inspection],DESC,8)",auto
 Monitoring Status,Needs monitoring,"RANK([date_of_inspection],ASC,8)",auto
-Treatment set-up,Treatment Chemicals,DISTRIBUTION([chemicals_are_use_for_water_treatment_on_the_day_of_inspection]),auto
+Treatment set-up,Treatment Chemicals,"CHEMICAL_STACK([chemicals_are_use_for_water_treatment_on_the_day_of_inspection],chlorine=has_chlorine_gas_risks AS ""Chlorine"",potassium_aluminium_sulphate=has_alum_dosing_risks AS ""Potassium Aluminium Sulphate (Alum)"",polymer=issues_risks_associated_with_polymer_dosing AS ""Polymer"",lime=issues_risk_associated_with_lime_dosing AS ""Lime"",sodium_carbonate=has_soda_ash_dosing_risks AS ""Sodium Carbonate (Soda Ash)"")",manual
 Treatment set-up,Sedimentation — Floc Tank Count,"VALUE_BUCKETS([floc_tanks_are_there_at_the_plant],0,1,2,3,4+)",auto
 Treatment set-up,Sedimentation Tank Type,OPTION_COUNTS([types_of_clarifiers_sedimentation_tanks_at_the_plant]),auto
-Treatment set-up,Sedimentation — Active Risks,"DISTRIBUTION(COALESCE([these_risks],[these_risks_associated_with_the_clarifiers_sedimentation_tanks]))",auto
+Treatment set-up,Sedimentation — Active Risks,OPTION_COUNTS([these_risks]),manual
 Treatment set-up,Disinfection Technique,DISTRIBUTION([disinfection_technique]),auto
-Treatment set-up,Disinfection — Active Risks,"DISTRIBUTION(COALESCE([chlorine_gas_risks_description],[hth_powder_risks_description],[sodium_hypochlorite_risks_description],[dpd_tablets_risks_description]))",auto
-Treatment set-up,Magnetic Flow Meters,"DISTRIBUTION(COALESCE([type_of_flow_meters],[there_plant_mag_flow_meters_in_place]))",auto
-Treatment set-up,Flow Meter Risks,DISTRIBUTION([these_risks_associated_with_the_flow_meters]),auto
-Treatment set-up,Reservoirs — High-Lift Pumps,"VALUE(COALESCE([number_of_high_lift_pumps],[high_lift_pumps_at_the_plant]))",auto
-Treatment set-up,Back-up Power Supply,"DISTRIBUTION(COALESCE([has_backup_generator],[backup_generator_condition]))",auto
+Treatment set-up,Disinfection — Active Risks,OPTION_COUNTS([chlorine_gas_risks_description]),manual
+Treatment set-up,Magnetic Flow Meters,"BUCKET_BAR([there_plant_mag_flow_meters_in_place]=""no"" AS ""No meter"",[type_of_flow_meters]=""inflow"" AND NOT ""outflow"" AS ""Inflow"",[type_of_flow_meters]=""outflow"" AND NOT ""inflow"" AS ""Outflow"",[type_of_flow_meters]=""inflow"" AND ""outflow"" AS ""Both"")",manual
+Treatment set-up,Flow Meter Risks,OPTION_COUNTS([these_risks_associated_with_the_flow_meters]),manual
+Treatment set-up,Reservoirs — High-Lift Pumps,"VALUE_BUCKETS([number_of_high_lift_pumps],0,1,2,3,4+)",manual
+Treatment set-up,Back-up Power Supply,"GROUPED_STACK([backup_generator_condition]=""yes"" AND [has_backup_generator]=""yes"" AS ""Generator · well maintained"",[backup_generator_condition]=""no"" AND [has_backup_generator]=""yes"" AS ""Generator · poorly maintained"",[has_backup_generator]=""no"" AS ""No back-up generator"")",manual
 Water Quality,Sampled (12 mo),"PERCENT([can_take_water_sample]=""Yes"")",auto
 Water Quality,Lab tested,"COUNT([water_testing_method]=""Lab Test"")",auto
 Water Quality,CBT tested,"COUNT([water_testing_method]=""CBT Bag Test"")",auto

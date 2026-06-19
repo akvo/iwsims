@@ -159,7 +159,7 @@
               "id": "kpi_monitored_12_mo",
               "chart_type": "card",
               "order": 1,
-              "col_span": 12,
+              "col_span": 8,
               "label": "Monitored (12 mo)",
               "api": {
                 "question_name": "inspection_date",
@@ -171,7 +171,7 @@
               "id": "kpi_critical_issues",
               "chart_type": "card",
               "order": 2,
-              "col_span": 12,
+              "col_span": 8,
               "label": "Critical issues",
               "api": {
                 "question_name": "bod",
@@ -183,7 +183,7 @@
               "id": "kpi_no_sample_taken",
               "chart_type": "card",
               "order": 3,
-              "col_span": 12,
+              "col_span": 8,
               "label": "No sample taken",
               "api": {
                 "question_name": "can_take_sample",

@@ -609,18 +609,171 @@
           "items": [
             {
               "id": "chart_treatment_chemicals",
-              "chart_type": "half_doughnut",
+              "chart_type": "stack_bar",
+              "compute": "grouped_stack",
+              "orientation": "horizontal",
               "order": 1,
-              "col_span": 12,
+              "col_span": 24,
+              "description": "Green = chemical in use with no risks logged · Red = in use with a risk/issue logged. Plants not using a chemical are excluded from its bar.",
               "config": {
-                "title": "Treatment Chemicals"
+                "title": "Treatment Chemicals",
+                "xAxisLabel": "# of plants",
+                "yAxisLabel": "chemical",
+                "color": ["#2fb36d", "#d93c35"],
+                "grid": {
+                  "left": 220,
+                  "right": 32,
+                  "top": 48,
+                  "bottom": 48,
+                  "containLabel": false
+                }
               },
-              "api": {
-                "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
-                "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+              "stacks": [
+                { "key": "working", "label": "In use · working" },
+                { "key": "issue", "label": "In use · issue logged" }
+              ],
+              "segments": [
+                {
+                  "key": "chlorine__working",
+                  "group": "chlorine",
+                  "group_label": "Chlorine",
+                  "stack": "working",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "chlorine",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:has_chlorine_gas_risks:no"
+                  }
+                },
+                {
+                  "key": "chlorine__issue",
+                  "group": "chlorine",
+                  "group_label": "Chlorine",
+                  "stack": "issue",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "chlorine",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:has_chlorine_gas_risks:yes"
+                  }
+                },
+                {
+                  "key": "alum__working",
+                  "group": "potassium_aluminium_sulphate",
+                  "group_label": "Potassium Aluminium Sulphate (Alum)",
+                  "stack": "working",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "potassium_aluminium_sulphate",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:has_alum_dosing_risks:no"
+                  }
+                },
+                {
+                  "key": "alum__issue",
+                  "group": "potassium_aluminium_sulphate",
+                  "group_label": "Potassium Aluminium Sulphate (Alum)",
+                  "stack": "issue",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "potassium_aluminium_sulphate",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:has_alum_dosing_risks:yes"
+                  }
+                },
+                {
+                  "key": "polymer__working",
+                  "group": "polymer",
+                  "group_label": "Polymer",
+                  "stack": "working",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "polymer",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:issues_risks_associated_with_polymer_dosing:no"
+                  }
+                },
+                {
+                  "key": "polymer__issue",
+                  "group": "polymer",
+                  "group_label": "Polymer",
+                  "stack": "issue",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "polymer",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:issues_risks_associated_with_polymer_dosing:yes"
+                  }
+                },
+                {
+                  "key": "lime__working",
+                  "group": "lime",
+                  "group_label": "Lime",
+                  "stack": "working",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "lime",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:issues_risk_associated_with_lime_dosing:no"
+                  }
+                },
+                {
+                  "key": "lime__issue",
+                  "group": "lime",
+                  "group_label": "Lime",
+                  "stack": "issue",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "lime",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:issues_risk_associated_with_lime_dosing:yes"
+                  }
+                },
+                {
+                  "key": "soda_ash__working",
+                  "group": "sodium_carbonate",
+                  "group_label": "Sodium Carbonate (Soda Ash)",
+                  "stack": "working",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "sodium_carbonate",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:has_soda_ash_dosing_risks:no"
+                  }
+                },
+                {
+                  "key": "soda_ash__issue",
+                  "group": "sodium_carbonate",
+                  "group_label": "Sodium Carbonate (Soda Ash)",
+                  "stack": "issue",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
+                    "option_value": "sodium_carbonate",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:has_soda_ash_dosing_risks:yes"
+                  }
+                }
+              ]
             },
             {
               "id": "chart_sedimentation_floc_tank_count",
@@ -689,17 +842,26 @@
             },
             {
               "id": "chart_sedimentation_active_risks",
-              "chart_type": "half_doughnut",
+              "chart_type": "bar",
+              "orientation": "horizontal",
               "order": 4,
               "col_span": 12,
               "config": {
-                "title": "Sedimentation — Active Risks"
+                "title": "Sedimentation — Active Risks",
+                "xAxisLabel": "# of plants",
+                "yAxisLabel": "risk",
+                "grid": {
+                  "left": 180,
+                  "right": 32,
+                  "top": 32,
+                  "bottom": 48,
+                  "containLabel": false
+                }
               },
               "api": {
                 "question_name": "these_risks",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
+                "monitoring": "latest"
               }
             },
             {
@@ -719,47 +881,113 @@
             },
             {
               "id": "chart_disinfection_active_risks",
-              "chart_type": "half_doughnut",
+              "chart_type": "bar",
+              "orientation": "horizontal",
               "order": 6,
               "col_span": 12,
+              "description": "Risks logged against chlorine-gas dosing. Risks for other disinfection techniques (HTH, hypochlorite, DPD) are not yet unioned in.",
               "config": {
-                "title": "Disinfection — Active Risks"
+                "title": "Disinfection — Active Risks",
+                "xAxisLabel": "# of plants",
+                "yAxisLabel": "risk",
+                "grid": {
+                  "left": 180,
+                  "right": 32,
+                  "top": 32,
+                  "bottom": 48,
+                  "containLabel": false
+                }
               },
               "api": {
                 "question_name": "chlorine_gas_risks_description",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
+                "monitoring": "latest"
               }
             },
             {
               "id": "chart_magnetic_flow_meters",
-              "chart_type": "half_doughnut",
+              "chart_type": "bar",
+              "compute": "bucket_bar",
               "order": 7,
               "col_span": 12,
+              "description": "No meter = plant reports no magnetic flow meter in place. Inflow / Outflow / Both derived from the meter placement(s) recorded.",
               "config": {
-                "title": "Magnetic Flow Meters"
+                "title": "Magnetic Flow Meters",
+                "xAxisLabel": "meter placement",
+                "yAxisLabel": "# of plants"
               },
-              "api": {
-                "question_name": "type_of_flow_meters",
-                "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+              "buckets": [
+                { "label": "No meter", "segment": "no_meter" },
+                { "label": "Inflow", "subtract": ["inflow_total", "both"] },
+                { "label": "Outflow", "subtract": ["outflow_total", "both"] },
+                { "label": "Both", "segment": "both" }
+              ],
+              "segments": [
+                {
+                  "key": "no_meter",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "there_plant_mag_flow_meters_in_place",
+                    "option_value": "no",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                },
+                {
+                  "key": "inflow_total",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "type_of_flow_meters",
+                    "option_value": "inflow",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                },
+                {
+                  "key": "outflow_total",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "type_of_flow_meters",
+                    "option_value": "outflow",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                },
+                {
+                  "key": "both",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "type_of_flow_meters",
+                    "option_value": "inflow",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_contains:type_of_flow_meters:outflow"
+                  }
+                }
+              ]
             },
             {
               "id": "chart_flow_meter_risks",
-              "chart_type": "half_doughnut",
+              "chart_type": "bar",
+              "orientation": "horizontal",
               "order": 8,
               "col_span": 12,
               "config": {
-                "title": "Flow Meter Risks"
+                "title": "Flow Meter Risks",
+                "xAxisLabel": "# of plants",
+                "yAxisLabel": "risk",
+                "grid": {
+                  "left": 180,
+                  "right": 32,
+                  "top": 32,
+                  "bottom": 48,
+                  "containLabel": false
+                }
               },
               "api": {
                 "question_name": "these_risks_associated_with_the_flow_meters",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
+                "monitoring": "latest"
               }
             },
             {
@@ -769,29 +997,109 @@
               "col_span": 12,
               "config": {
                 "title": "Reservoirs — High-Lift Pumps",
-                "xAxisLabel": "Total high-lift pumps",
+                "xAxisLabel": "High-lift pumps per plant",
                 "yAxisLabel": "count"
               },
               "api": {
                 "question_name": "number_of_high_lift_pumps",
                 "group_by": "parent_id",
                 "monitoring": "latest"
+              },
+              "display": {
+                "mode": "value_buckets",
+                "buckets": [
+                  {
+                    "label": "0",
+                    "value": 0
+                  },
+                  {
+                    "label": "1",
+                    "value": 1
+                  },
+                  {
+                    "label": "2",
+                    "value": 2
+                  },
+                  {
+                    "label": "3",
+                    "value": 3
+                  },
+                  {
+                    "label": "4+",
+                    "min": 4
+                  }
+                ]
               }
             },
             {
               "id": "chart_backup_power_supply",
-              "chart_type": "half_doughnut",
+              "chart_type": "stack_bar",
+              "compute": "grouped_stack",
+              "orientation": "horizontal",
               "order": 10,
-              "col_span": 12,
+              "col_span": 24,
+              "description": "Green = generator present & well maintained · Amber = present but poorly maintained · Red = no back-up generator.",
               "config": {
-                "title": "Back-up Power Supply"
+                "title": "Back-up Power Supply",
+                "xAxisLabel": "# of plants",
+                "yAxisLabel": "",
+                "color": ["#2fb36d", "#f5a623", "#d93c35"],
+                "grid": {
+                  "left": 80,
+                  "right": 32,
+                  "top": 48,
+                  "bottom": 48,
+                  "containLabel": false
+                }
               },
-              "api": {
-                "question_name": "has_backup_generator",
-                "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+              "stacks": [
+                { "key": "well", "label": "Generator · well maintained" },
+                { "key": "poorly", "label": "Generator · poorly maintained" },
+                { "key": "no_backup", "label": "No back-up generator" }
+              ],
+              "segments": [
+                {
+                  "key": "well",
+                  "group": "plants",
+                  "group_label": "Plants",
+                  "stack": "well",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "backup_generator_condition",
+                    "option_value": "yes",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:has_backup_generator:yes"
+                  }
+                },
+                {
+                  "key": "poorly",
+                  "group": "plants",
+                  "group_label": "Plants",
+                  "stack": "poorly",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "backup_generator_condition",
+                    "option_value": "no",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest",
+                    "criteria": "option_equals:has_backup_generator:yes"
+                  }
+                },
+                {
+                  "key": "no_backup",
+                  "group": "plants",
+                  "group_label": "Plants",
+                  "stack": "no_backup",
+                  "api": {
+                    "form_id": 1749652214711,
+                    "question_name": "has_backup_generator",
+                    "option_value": "no",
+                    "sum_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                }
+              ]
             }
           ]
         }
