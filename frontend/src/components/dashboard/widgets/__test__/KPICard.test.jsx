@@ -233,6 +233,74 @@ describe("KPICard — compute: compliance_kpi", () => {
   });
 });
 
+describe("KPICard — compute: critical_kpi", () => {
+  const definitionsById = new Map([
+    ["param_x", { id: "param_x", threshold: { max: 0 } }],
+  ]);
+  // param_x: parent 1 = 5 (non-compliant), parent 2 = 0 (compliant).
+  // op segment: parent 1 = no (operational), parent 2 = yes (non-operational).
+  // → both parents critical (1 via compliance, 2 via operational) = 2.
+  const computeResponses = {
+    compliance: {
+      param_x: {
+        data: [
+          { group: "1", value: 5 },
+          { group: "2", value: 0 },
+        ],
+      },
+    },
+    critical: {
+      kpi_critical: {
+        op: {
+          data: [
+            { group: "1", value: ["no"] },
+            { group: "2", value: ["yes"] },
+          ],
+        },
+      },
+    },
+  };
+  const baseItem = {
+    id: "kpi_critical",
+    chart_type: "card",
+    label: "Critical",
+    compute: "critical_kpi",
+    params_ref: ["param_x"],
+    operational_segments: [
+      {
+        key: "op",
+        rule: { op: "option_not_equals", value: "yes" },
+        api: { question_name: "q", group_by: "parent_id" },
+      },
+    ],
+  };
+
+  test("renders a scalar count when no denominator_api", async () => {
+    render(
+      <KPICard
+        item={baseItem}
+        filterState={emptyFilters}
+        definitionsById={definitionsById}
+        computeResponses={computeResponses}
+      />
+    );
+    expect(await screen.findByText("2")).toBeInTheDocument();
+  });
+
+  test("renders 'N/M (P%)' when denominator_api is present", async () => {
+    axiosValue(50); // denominator
+    render(
+      <KPICard
+        item={{ ...baseItem, denominator_api: { form_id: 1 } }}
+        filterState={emptyFilters}
+        definitionsById={definitionsById}
+        computeResponses={computeResponses}
+      />
+    );
+    expect(await screen.findByText("2/50 (4%)")).toBeInTheDocument();
+  });
+});
+
 describe("KPICard — compute: accessibility_no_issues_kpi", () => {
   test("counts easily_accessible bucket as numerator", async () => {
     axiosValue(50); // denominator

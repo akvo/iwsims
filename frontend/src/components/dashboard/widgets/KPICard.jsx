@@ -4,6 +4,8 @@ import { Card, Skeleton, Statistic } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
 import { getCompliantCount } from "../compute/compliance";
 import { computeAccessibilityBucket } from "../compute/accessibility";
+import { getCriticalCount } from "../compute/critical";
+import { getRulesMatchCount } from "../compute/rulesKpi";
 
 /**
  * Single KPI tile. Owns its own fetch(es) so each tile resolves
@@ -96,6 +98,43 @@ const resolveAccessibilityNoIssuesNumerator = (item, computeResponses) => {
   return row[ACCESSIBILITY_LABELS.easily_accessible] ?? 0;
 };
 
+const resolveCriticalNumerator = (item, definitionsById, computeResponses) => {
+  const complianceResponses = computeResponses?.compliance || {};
+  const params = (item.params_ref || [])
+    .map((id) => definitionsById?.get(id))
+    .filter(Boolean)
+    .map((p) => ({ ...p, key: p.id }));
+  const responsesByKey = {};
+  params.forEach((p) => {
+    if (complianceResponses[p.id]) {
+      responsesByKey[p.id] = complianceResponses[p.id];
+    }
+  });
+  const segments = item.operational_segments || [];
+  const segmentResponses = computeResponses?.critical?.[item.id] || null;
+  // Hold "—" until at least one input layer has resolved, so the card does
+  // not flash 0 during the gap before the param / operational fetches land.
+  if (!segmentResponses && Object.keys(responsesByKey).length === 0) {
+    return null;
+  }
+  return getCriticalCount(
+    params,
+    responsesByKey,
+    segments,
+    segmentResponses || {}
+  );
+};
+
+const resolveRulesNumerator = (item, computeResponses) => {
+  const responses = computeResponses?.rules?.[item.id] || null;
+  // Hold "—" until the per-question fetches land, so a denominator-bearing
+  // card does not flash 0/M before its rule inputs resolve.
+  if (!responses) {
+    return null;
+  }
+  return getRulesMatchCount(item.rules || [], responses);
+};
+
 const KPICard = ({
   item,
   filterState,
@@ -116,7 +155,13 @@ const KPICard = ({
   const isRatioApi = Boolean(item.api) && hasDenominator && !compute;
   const isRatioCompute =
     compute === "compliance_kpi" || compute === "accessibility_no_issues_kpi";
-  const wantsDenominator = isRatioApi || isRatioCompute;
+  // rules_kpi / critical_kpi are ratios when they supply a denominator_api
+  // (e.g. "% Operational" / "% Critical" = matching / total), otherwise a
+  // scalar count (e.g. "Critical issues").
+  const isRulesRatio = compute === "rules_kpi" && hasDenominator;
+  const isCriticalRatio = compute === "critical_kpi" && hasDenominator;
+  const wantsDenominator =
+    isRatioApi || isRatioCompute || isRulesRatio || isCriticalRatio;
 
   // Primary /values fetch (only for non-compute items). Strip the
   // frontend-only `value_type: "ratio_percentage"` marker before handing the
@@ -173,6 +218,14 @@ const KPICard = ({
     );
   } else if (compute === "accessibility_no_issues_kpi") {
     numerator = resolveAccessibilityNoIssuesNumerator(item, computeResponses);
+  } else if (compute === "critical_kpi") {
+    numerator = resolveCriticalNumerator(
+      item,
+      definitionsById,
+      computeResponses
+    );
+  } else if (compute === "rules_kpi") {
+    numerator = resolveRulesNumerator(item, computeResponses);
   } else {
     numerator = primaryData?.data?.[0]?.value ?? null;
   }

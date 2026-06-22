@@ -9,6 +9,7 @@ import {
 } from "../../util/hooks";
 import DashboardRenderer from "../../components/dashboard/DashboardRenderer";
 import { fails } from "../../components/dashboard/compute/compliance";
+import { collectRuleQuestionNames } from "../../components/dashboard/compute/rulesKpi";
 import { COMPLIANCE_PARAM_COMPUTES } from "../../components/dashboard/constants";
 import "./style.scss";
 
@@ -422,6 +423,14 @@ const Dashboard = () => {
         : [],
     [config]
   );
+  const criticalKpiItems = useMemo(
+    () => (config ? collectByCompute(config.items, "critical_kpi") : []),
+    [config]
+  );
+  const rulesKpiItems = useMemo(
+    () => (config ? collectByCompute(config.items, "rules_kpi") : []),
+    [config]
+  );
 
   const [crossTabByItem, setCrossTabByItem] = useState({});
   const [accessibilityBucketByItem, setAccessibilityBucketByItem] = useState(
@@ -434,6 +443,8 @@ const Dashboard = () => {
   const [bucketBarByItem, setBucketBarByItem] = useState({});
   const [accessibilityNoIssuesKpiByItem, setAccessibilityNoIssuesKpiByItem] =
     useState({});
+  const [criticalByItem, setCriticalByItem] = useState({});
+  const [rulesByItem, setRulesByItem] = useState({});
 
   const onCrossTabData = useCallback((id, payload) => {
     setCrossTabByItem((prev) =>
@@ -498,6 +509,24 @@ const Dashboard = () => {
       return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
     });
   }, []);
+  const onCriticalSegmentData = useCallback((itemId, segmentKey, data) => {
+    setCriticalByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+  const onRulesSegmentData = useCallback((itemId, segmentKey, data) => {
+    setRulesByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
 
   // Merge into one tree, with legacy complianceResponses under `compliance`.
   const computeResponses = useMemo(
@@ -512,6 +541,8 @@ const Dashboard = () => {
       grouped_stack: groupedStackByItem,
       bucket_bar: bucketBarByItem,
       accessibility_no_issues_kpi: accessibilityNoIssuesKpiByItem,
+      critical: criticalByItem,
+      rules: rulesByItem,
     }),
     [
       complianceResponses,
@@ -524,6 +555,8 @@ const Dashboard = () => {
       groupedStackByItem,
       bucketBarByItem,
       accessibilityNoIssuesKpiByItem,
+      criticalByItem,
+      rulesByItem,
     ]
   );
 
@@ -858,6 +891,49 @@ const Dashboard = () => {
             fiscalYearStartMonth={fyStart}
             customFilterDefs={customFilterDefs}
             onSegmentData={onBucketBarSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible critical_kpi operational-segment fetchers — one per
+          (item, operational_segment) pair. Compliance params are fetched
+          by the compliance fan-out above (COMPLIANCE_PARAM_COMPUTES). */}
+      {criticalKpiItems.flatMap((item) =>
+        (item.operational_segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onCriticalSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible rules_kpi fetchers — one per (item, referenced
+          question_name). Each rule condition's question is fetched per
+          parent (group_by=parent_id) and joined client-side. */}
+      {rulesKpiItems.flatMap((item) =>
+        collectRuleQuestionNames(item.rules).map((qname) => (
+          <SegmentFetcher
+            key={`${item.id}::${qname}`}
+            itemId={item.id}
+            segment={{
+              key: qname,
+              api: {
+                question_name: qname,
+                group_by: "parent_id",
+                monitoring: "latest",
+              },
+            }}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onRulesSegmentData}
           />
         ))
       )}
