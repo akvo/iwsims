@@ -41,7 +41,7 @@
       "id": "kpi_total_wtps",
       "chart_type": "card",
       "order": 2,
-      "col_span": 6,
+      "col_span": 5,
       "label": "Total WTPs",
       "api": {
         "form_id": 1749634736797,
@@ -52,7 +52,7 @@
       "id": "kpi_inspected_12_mo",
       "chart_type": "card",
       "order": 3,
-      "col_span": 6,
+      "col_span": 5,
       "label": "Inspected (12 mo)",
       "api": {
         "question_name": "date_of_inspection",
@@ -64,7 +64,7 @@
       "id": "kpi_operational",
       "chart_type": "metric_card",
       "order": 4,
-      "col_span": 6,
+      "col_span": 5,
       "label": "% Operational",
       "api": {
         "question_name": "has_production_constraints",
@@ -78,7 +78,7 @@
       "id": "kpi_dw_compliance",
       "chart_type": "card",
       "order": 5,
-      "col_span": 6,
+      "col_span": 5,
       "label": "DW Compliance",
       "color": "#64A73B",
       "compute": "compliance_kpi",
@@ -98,7 +98,7 @@
       "id": "kpi_critical_red",
       "chart_type": "card",
       "order": 6,
-      "col_span": 6,
+      "col_span": 4,
       "label": "Critical (RED)",
       "api": {
         "question_name": "e_coli_cfu_100ml",
@@ -223,14 +223,20 @@
       "id": "chart_treatment_processes_in_use",
       "chart_type": "bar",
       "order": 12,
-      "col_span": 12,
+      "col_span": 24,
       "compute": "process_counts",
       "orientation": "horizontal",
       "sort": "desc",
       "config": {
         "title": "Treatment Processes in Use",
         "xAxisLabel": "plants",
-        "yAxisLabel": "process"
+        "yAxisLabel": "process",
+        "xAxis": {
+          "axisLabel": {
+            "rotate": 30
+          },
+          "nameGap": 152
+        }
       },
       "segments": [
         {
@@ -353,7 +359,7 @@
               "id": "kpi_monitored_12_mo",
               "chart_type": "card",
               "order": 1,
-              "col_span": 12,
+              "col_span": 8,
               "label": "Monitored (12 mo)",
               "api": {
                 "question_name": "date_of_inspection",
@@ -365,7 +371,7 @@
               "id": "kpi_critical_issues",
               "chart_type": "card",
               "order": 2,
-              "col_span": 12,
+              "col_span": 8,
               "label": "Critical issues",
               "api": {
                 "question_name": "e_coli_cfu_100ml",
@@ -378,7 +384,7 @@
               "id": "kpi_no_waterquality_check",
               "chart_type": "card",
               "order": 3,
-              "col_span": 12,
+              "col_span": 8,
               "label": "No water-quality check",
               "api": {
                 "question_name": "can_take_water_sample",
@@ -391,7 +397,7 @@
               "id": "chart_inspectiondate_histogram",
               "chart_type": "bar",
               "order": 4,
-              "col_span": 12,
+              "col_span": 24,
               "compute": "date_histogram",
               "description": "Green = inspected \u2264 6 months ago · Amber = 7–12 months · Red = > 12 months (overdue).",
               "config": {
@@ -458,7 +464,7 @@
               "id": "kpi_sampled_12_mo",
               "chart_type": "metric_card",
               "order": 1,
-              "col_span": 12,
+              "col_span": 8,
               "label": "Sampled (12 mo)",
               "api": {
                 "question_name": "can_take_water_sample",
@@ -472,7 +478,7 @@
               "id": "kpi_lab_tested",
               "chart_type": "card",
               "order": 2,
-              "col_span": 12,
+              "col_span": 8,
               "label": "Lab tested",
               "api": {
                 "question_name": "water_testing_method",
@@ -485,7 +491,7 @@
               "id": "kpi_cbt_tested",
               "chart_type": "card",
               "order": 3,
-              "col_span": 12,
+              "col_span": 8,
               "label": "CBT tested",
               "api": {
                 "question_name": "water_testing_method",
@@ -624,13 +630,25 @@
                   "left": 220,
                   "right": 32,
                   "top": 48,
-                  "bottom": 48,
+                  "bottom": 64,
                   "containLabel": false
+                },
+                "xAxis": {
+                  "axisLabel": {
+                    "rotate": 30
+                  },
+                  "nameGap": 160
                 }
               },
               "stacks": [
-                { "key": "working", "label": "In use · working" },
-                { "key": "issue", "label": "In use · issue logged" }
+                {
+                  "key": "working",
+                  "label": "In use · working"
+                },
+                {
+                  "key": "issue",
+                  "label": "In use · issue logged"
+                }
               ],
               "segments": [
                 {
@@ -830,7 +848,7 @@
                   "left": 160,
                   "right": 32,
                   "top": 32,
-                  "bottom": 48,
+                  "bottom": 64,
                   "containLabel": false
                 }
               },
@@ -854,8 +872,14 @@
                   "left": 180,
                   "right": 32,
                   "top": 32,
-                  "bottom": 48,
+                  "bottom": 64,
                   "containLabel": false
+                },
+                "xAxis": {
+                  "axisLabel": {
+                    "rotate": 30
+                  },
+                  "nameGap": 128
                 }
               },
               "api": {
@@ -914,13 +938,28 @@
               "config": {
                 "title": "Magnetic Flow Meters",
                 "xAxisLabel": "meter placement",
-                "yAxisLabel": "# of plants"
+                "yAxisLabel": "# of plants",
+                "xAxis": {
+                  "nameGap": 32
+                }
               },
               "buckets": [
-                { "label": "No meter", "segment": "no_meter" },
-                { "label": "Inflow", "subtract": ["inflow_total", "both"] },
-                { "label": "Outflow", "subtract": ["outflow_total", "both"] },
-                { "label": "Both", "segment": "both" }
+                {
+                  "label": "No meter",
+                  "segment": "no_meter"
+                },
+                {
+                  "label": "Inflow",
+                  "subtract": ["inflow_total", "both"]
+                },
+                {
+                  "label": "Outflow",
+                  "subtract": ["outflow_total", "both"]
+                },
+                {
+                  "label": "Both",
+                  "segment": "both"
+                }
               ],
               "segments": [
                 {
@@ -1048,14 +1087,26 @@
                   "left": 80,
                   "right": 32,
                   "top": 48,
-                  "bottom": 48,
+                  "bottom": 64,
                   "containLabel": false
+                },
+                "xAxis": {
+                  "nameGap": 32
                 }
               },
               "stacks": [
-                { "key": "well", "label": "Generator · well maintained" },
-                { "key": "poorly", "label": "Generator · poorly maintained" },
-                { "key": "no_backup", "label": "No back-up generator" }
+                {
+                  "key": "well",
+                  "label": "Generator · well maintained"
+                },
+                {
+                  "key": "poorly",
+                  "label": "Generator · poorly maintained"
+                },
+                {
+                  "key": "no_backup",
+                  "label": "No back-up generator"
+                }
               ],
               "segments": [
                 {
