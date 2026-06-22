@@ -29,3 +29,5 @@ export const DETAIL_URL_TEMPLATE =
   "/control-center/data/{parent_form_id}/monitoring/{data_id}";
 
 export default CONDITION_TONE_COLORS;
+
+export const COMPLIANCE_PARAM_COMPUTES = ["compliance", "compliance_kpi"];

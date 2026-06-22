@@ -9,6 +9,7 @@ import {
 } from "../../util/hooks";
 import DashboardRenderer from "../../components/dashboard/DashboardRenderer";
 import { fails } from "../../components/dashboard/compute/compliance";
+import { COMPLIANCE_PARAM_COMPUTES } from "../../components/dashboard/constants";
 import "./style.scss";
 
 const { Title, Paragraph } = Typography;
@@ -252,7 +253,10 @@ const collectByCompute = (items = [], computeMode) => {
 
 /**
  * Walk items and collect all ids listed in any `params_ref[]` arrays found
- * on compliance charts (`compute: "compliance"`).
+ * on compliance items — both the stacked-bar chart (`compute: "compliance"`)
+ * and the KPI card (`compute: "compliance_kpi"`). The KPI reuses these
+ * pre-fetched param responses, so its params must be fetched even on a
+ * dashboard that has no compliance stacked-bar chart.
  *
  * @param {Array} items
  * @returns {Set<string>}
@@ -264,7 +268,10 @@ const collectComplianceParamIds = (items = []) => {
       collectComplianceParamIds(item.items).forEach((id) => ids.add(id));
       return;
     }
-    if (item.compute === "compliance" && Array.isArray(item.params_ref)) {
+    if (
+      COMPLIANCE_PARAM_COMPUTES.includes(item.compute) &&
+      Array.isArray(item.params_ref)
+    ) {
       item.params_ref.forEach((id) => ids.add(id));
     }
     if (Array.isArray(item.items)) {
