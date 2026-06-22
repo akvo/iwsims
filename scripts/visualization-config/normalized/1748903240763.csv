@@ -6,37 +6,40 @@ WWTP Operational Map,Operationality,MAP([geolocation]),auto
 WWTP Operational Map,Effluent compliance,MAP([bod]),auto
 WWTP Operational Map,Influent pump station presence (Y/N),MAP([influent_pump_station]),auto
 WWTP Operational Map,Final recommendations,MAP([final_recommendations]),auto
-WWTP at a glance,Compliance Trend,Group inspections by month. Per month: % WWTPs passing each domain (effluent / OHS / derived operational).,auto
+WWTP at a glance,Compliance Trend,Group inspections by month. Per month: % WWTPs passing each domain (effluent / OHS / derived operational).,manual
 Monitoring Status,Monitored (12 mo),"RECENT([inspection_date],12)",auto
 Monitoring Status,Critical issues,"COUNT(OR([bod]>=40,[chemical_oxygen_demand]>=100,[total_dissolved_solids]>=1000))",auto
 Monitoring Status,No sample taken,"COUNT([can_take_sample]=""No"")",auto
 Monitoring Status,Most recently monitored,"RANK([inspection_date],DESC,8)",auto
 Monitoring Status,Needs monitoring,"RANK([inspection_date],ASC,8)",auto
-Treatment Units Functionality - Plant Condition,Building condition,DISTRIBUTION([building_conditions]),auto
-Treatment Units Functionality - Plant Condition,Fence condition,DISTRIBUTION([condition_of_fence_for_security_purpose]),auto
-"Treatment Units Functionality - Tools, OHS & Maintenance",Working tools available,"COUNT([working_tools]=""Yes"")",auto
-"Treatment Units Functionality - Tools, OHS & Maintenance",OHS equipment present,"COUNT([ohs_equipment_available]=""Yes"")",auto
-"Treatment Units Functionality - Tools, OHS & Maintenance",Effluent pumping at the plant,"COUNT([effluent_pump_station]=""Yes"")",auto
-"Treatment Units Functionality - Tools, OHS & Maintenance",Urgent maintenance programs,"COUNT([urgent_maintenance_programs]=""Yes"")",auto
-"Treatment Units Functionality - Tools, OHS & Maintenance",Preventative maintenance programs,"COUNT([planned_preventative_maintenance_programs]=""Yes"")",auto
-"Treatment Units Functionality - Tools, OHS & Maintenance",Upgrading programs,"COUNT([any_upgrading_programs]=""Yes"")",auto
-Treatment Units Functionality - Inflow,Influent Pumping,DISTRIBUTION([comment_on_the_influent_pumping_system]),auto
-Treatment Units Functionality - Per-process,Primary clarifier,DISTRIBUTION([comment_on_the_operation_of_the_primary_clarifiers]),auto
-Treatment Units Functionality - Per-process,Trickling filters,DISTRIBUTION([comment_on_the_operation_of_the_trickling_filters]),auto
-Treatment Units Functionality - Per-process,Activated sludge system,DISTRIBUTION([comment_on_the_operation_of_the_activated_sludge_system]),auto
-Treatment Units Functionality - Per-process,Stabilization lagoons,DISTRIBUTION([comment_on_the_operation_of_the_stabilization_lagoons]),auto
-Treatment Units Functionality - Per-process,Secondary clarifier,DISTRIBUTION([comment_on_the_operation_of_the_secondary_clarifiers]),auto
-Treatment Units Functionality - Per-process,Oxidation ponds,DISTRIBUTION([comment_on_operation_of_oxidation_ponds]),auto
-Treatment Units Functionality - Per-process,Pasveer ditches,DISTRIBUTION([comment_on_operation_of_pasveer_ditches]),auto
-Treatment Units Functionality - Per-process,IDEA lagoons,DISTRIBUTION([comment_on_operation_of_idea_lagoons]),auto
-Treatment Units Functionality - Per-process,Polishing ponds,DISTRIBUTION([comment_on_operation_of_polishing_ponds]),auto
-Treatment Units Functionality - Per-process,Aerobic lagoons,DISTRIBUTION([comment_on_operation_of_aerobic_lagoons]),auto
-Treatment Units Functionality - Per-process,Sludge digester,DISTRIBUTION([comment_on_operation_of_sludge_digester]),auto
-Treatment Units Functionality - Per-process,Imhoff tanks,DISTRIBUTION([comment_on_operation_of_imhoff]),auto
-Treatment Units Functionality - Per-process,Sludge aerobic digestion,DISTRIBUTION([comment_on_operation_of_the_sludge_aerobic_digestion]),auto
-Treatment Units Functionality - Per-process,Sludge handling,DISTRIBUTION([comment_on_the_sludge_handling_system]),auto
-Treatment Units Functionality - Per-process,Drying beds,DISTRIBUTION([comment_on_the_drying_beds]),auto
-Treatment Units Functionality - Per-process,Plant Effluent observations,DISTRIBUTION([comment_on_the_plant_effluent]),auto
+Treatment Units Functionality - Plant Condition,Building condition,DISTRIBUTION([building_conditions]),manual
+Treatment Units Functionality - Plant Condition,Fence condition,DISTRIBUTION([condition_of_fence_for_security_purpose]),manual
+Treatment Units Functionality - Plant Condition,Security lights,DISTRIBUTION([security_lights]),manual
+Treatment Units Functionality - Plant Condition,Transport availability,DISTRIBUTION([transport_availability]),manual
+"Treatment Units Functionality - Tools, OHS & Maintenance",Working tools available,"COUNT([working_tools]=""Yes"")",manual
+"Treatment Units Functionality - Tools, OHS & Maintenance",OHS equipment present,"COUNT([ohs_equipment_available]=""Yes"")",manual
+"Treatment Units Functionality - Tools, OHS & Maintenance",Effluent pumping at the plant,"COUNT([effluent_pump_station]=""Yes"")",manual
+"Treatment Units Functionality - Tools, OHS & Maintenance",Urgent maintenance programs,"COUNT([urgent_maintenance_programs]=""Yes"")",manual
+"Treatment Units Functionality - Tools, OHS & Maintenance",Preventative maintenance programs,"COUNT([planned_preventative_maintenance_programs]=""Yes"")",manual
+"Treatment Units Functionality - Tools, OHS & Maintenance",Upgrading programs,"COUNT([any_upgrading_programs]=""Yes"")",manual
+Treatment Units Functionality - Inflow,Influent Pumping,DISTRIBUTION([comment_on_the_influent_pumping_system]),manual
+Treatment Units Functionality - Per-process,Primary clarifier,DISTRIBUTION([comment_on_the_operation_of_the_primary_clarifiers]),manual
+Treatment Units Functionality - Per-process,Trickling filters,DISTRIBUTION([comment_on_the_operation_of_the_trickling_filters]),manual
+Treatment Units Functionality - Per-process,Activated sludge system,DISTRIBUTION([comment_on_the_operation_of_the_activated_sludge_system]),manual
+Treatment Units Functionality - Per-process,Stabilization lagoons,DISTRIBUTION([comment_on_the_operation_of_the_stabilization_lagoons]),manual
+Treatment Units Functionality - Per-process,Anaerobic lagoons,DISTRIBUTION([comment_on_the_anaerobic_lagoons]),manual
+Treatment Units Functionality - Per-process,Secondary clarifier,DISTRIBUTION([comment_on_the_operation_of_the_secondary_clarifiers]),manual
+Treatment Units Functionality - Per-process,Oxidation ponds,DISTRIBUTION([comment_on_operation_of_oxidation_ponds]),manual
+Treatment Units Functionality - Per-process,Pasveer ditches,DISTRIBUTION([comment_on_operation_of_pasveer_ditches]),manual
+Treatment Units Functionality - Per-process,IDEA lagoons,DISTRIBUTION([comment_on_operation_of_idea_lagoons]),manual
+Treatment Units Functionality - Per-process,Polishing ponds,DISTRIBUTION([comment_on_operation_of_polishing_ponds]),manual
+Treatment Units Functionality - Per-process,Aerobic lagoons,DISTRIBUTION([comment_on_operation_of_aerobic_lagoons]),manual
+Treatment Units Functionality - Per-process,Sludge digester,DISTRIBUTION([comment_on_operation_of_sludge_digester]),manual
+Treatment Units Functionality - Per-process,Imhoff tanks,DISTRIBUTION([comment_on_operation_of_imhoff]),manual
+Treatment Units Functionality - Per-process,Sludge aerobic digestion,DISTRIBUTION([comment_on_operation_of_the_sludge_aerobic_digestion]),manual
+Treatment Units Functionality - Per-process,Sludge handling,DISTRIBUTION([comment_on_the_sludge_handling_system]),manual
+Treatment Units Functionality - Per-process,Drying beds,DISTRIBUTION([comment_on_the_drying_beds]),manual
+Treatment Units Functionality - Per-process,Plant Effluent observations,DISTRIBUTION([comment_on_the_plant_effluent]),manual
 Water Quality,BOD,VALUE([bod]),auto
 Water Quality,COD,VALUE([chemical_oxygen_demand]),auto
 Water Quality,TDS,VALUE([total_dissolved_solids]),auto

@@ -132,18 +132,43 @@
       "text": "WWTP at a glance"
     },
     {
-      "id": "kpi_compliance_trend",
-      "chart_type": "card",
+      "id": "chart_compliance_trend",
+      "chart_type": "custom_component",
+      "component": "ComplianceTrendWidget",
       "order": 7,
-      "col_span": 12,
-      "label": "Compliance Trend",
-      "color": "#64A73B",
-      "compute": "compliance_kpi",
-      "params_ref": ["param_bod", "param_cod", "param_tds"],
-      "globals_ref": "wq_globals",
-      "denominator_api": {
-        "form_id": 1748903240763
-      }
+      "col_span": 24,
+      "title": "Compliance Trend",
+      "subtitle": "last 12 months · % WWTPs passing each domain",
+      "months": 12,
+      "domains": [
+        {
+          "key": "effluent",
+          "label": "Effluent",
+          "color": "#1AB99F",
+          "type": "threshold_all",
+          "params": [
+            { "question_name": "bod", "op": "<", "value": 40 },
+            {
+              "question_name": "chemical_oxygen_demand",
+              "op": "<",
+              "value": 100
+            },
+            {
+              "question_name": "total_dissolved_solids",
+              "op": "<",
+              "value": 1000
+            }
+          ]
+        },
+        {
+          "key": "ohs",
+          "label": "OHS",
+          "color": "#f0ad4e",
+          "type": "option_share",
+          "question_name": "ohs_equipment_available",
+          "pass_value": "yes"
+        }
+      ]
     },
     {
       "id": "main_tabs",
@@ -291,398 +316,1161 @@
         },
         {
           "id": "tab_treatment_condition",
-          "label": "Treatment & Condition",
+          "label": "Treatment Units Functionality",
           "items": [
             {
-              "id": "title_treatment_units_functionality_plant_cond",
-              "chart_type": "section_title",
+              "id": "condition_matrix_plant_condition",
+              "chart_type": "custom_component",
+              "component": "ConditionMatrixWidget",
               "order": 1,
-              "col_span": 24,
-              "text": "Treatment Units Functionality - Plant Condition"
+              "col_span": 12,
+              "title": "Plant Condition",
+              "subtitle": "4-option scale",
+              "columns": 1,
+              "fields": [
+                {
+                  "key": "building_conditions",
+                  "label": "Building condition",
+                  "api": {
+                    "question_name": "building_conditions",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "good",
+                      "label": "Good",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "satisfactory",
+                      "label": "Satisfactory",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "maintenance_in_progress",
+                      "label": "Maintenance in progress",
+                      "tone": "mid"
+                    },
+                    {
+                      "value": "poor",
+                      "label": "Poor",
+                      "tone": "bad"
+                    }
+                  ]
+                },
+                {
+                  "key": "condition_of_fence_for_security_purpose",
+                  "label": "Fence condition",
+                  "api": {
+                    "question_name": "condition_of_fence_for_security_purpose",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "good",
+                      "label": "Good",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "satisfactory",
+                      "label": "Satisfactory",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "maintenance_in_progress",
+                      "label": "Maintenance in progress",
+                      "tone": "mid"
+                    },
+                    {
+                      "value": "poor",
+                      "label": "Poor",
+                      "tone": "bad"
+                    }
+                  ]
+                },
+                {
+                  "key": "security_lights",
+                  "label": "Security lights",
+                  "api": {
+                    "question_name": "security_lights",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "good",
+                      "label": "Good",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "satisfactory",
+                      "label": "Satisfactory",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "maintenance_in_progress",
+                      "label": "Maintenance in progress",
+                      "tone": "mid"
+                    },
+                    {
+                      "value": "poor",
+                      "label": "Poor",
+                      "tone": "bad"
+                    },
+                    {
+                      "value": "no_security_lights",
+                      "label": "No Security Lights",
+                      "tone": "bad"
+                    }
+                  ]
+                },
+                {
+                  "key": "transport_availability",
+                  "label": "Transport availability",
+                  "api": {
+                    "question_name": "transport_availability",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "good",
+                      "label": "Good",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "satisfactory",
+                      "label": "Satisfactory",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "intermittent",
+                      "label": "Intermittent",
+                      "tone": "mid"
+                    },
+                    {
+                      "value": "not_available",
+                      "label": "Not Available",
+                      "tone": "bad"
+                    }
+                  ]
+                }
+              ]
             },
             {
-              "id": "chart_building_condition",
-              "chart_type": "half_doughnut",
+              "id": "condition_matrix_tools_ohs_maintenance",
+              "chart_type": "custom_component",
+              "component": "ConditionMatrixWidget",
               "order": 2,
               "col_span": 12,
-              "config": {
-                "title": "Building condition"
-              },
-              "api": {
-                "question_name": "building_conditions",
-                "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
-            },
-            {
-              "id": "chart_fence_condition",
-              "chart_type": "half_doughnut",
-              "order": 3,
-              "col_span": 12,
-              "config": {
-                "title": "Fence condition"
-              },
-              "api": {
-                "question_name": "condition_of_fence_for_security_purpose",
-                "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
-            },
-            {
-              "id": "title_treatment_units_functionality_tools_ohs",
-              "chart_type": "section_title",
-              "order": 4,
-              "col_span": 24,
-              "text": "Treatment Units Functionality - Tools, OHS & Maintenance"
-            },
-            {
-              "id": "kpi_working_tools_available",
-              "chart_type": "card",
-              "order": 5,
-              "col_span": 12,
-              "label": "Working tools available",
-              "api": {
-                "question_name": "working_tools",
-                "sum_by": "parent_id",
-                "monitoring": "latest",
-                "option_value": "Yes"
-              }
-            },
-            {
-              "id": "kpi_ohs_equipment_present",
-              "chart_type": "card",
-              "order": 6,
-              "col_span": 12,
-              "label": "OHS equipment present",
-              "api": {
-                "question_name": "ohs_equipment_available",
-                "sum_by": "parent_id",
-                "monitoring": "latest",
-                "option_value": "Yes"
-              }
-            },
-            {
-              "id": "kpi_effluent_pumping_at_the_plant",
-              "chart_type": "card",
-              "order": 7,
-              "col_span": 12,
-              "label": "Effluent pumping at the plant",
-              "api": {
-                "question_name": "effluent_pump_station",
-                "sum_by": "parent_id",
-                "monitoring": "latest",
-                "option_value": "Yes"
-              }
-            },
-            {
-              "id": "kpi_urgent_maintenance_programs",
-              "chart_type": "card",
-              "order": 8,
-              "col_span": 12,
-              "label": "Urgent maintenance programs",
-              "api": {
-                "question_name": "urgent_maintenance_programs",
-                "sum_by": "parent_id",
-                "monitoring": "latest",
-                "option_value": "Yes"
-              }
-            },
-            {
-              "id": "kpi_preventative_maintenance_programs",
-              "chart_type": "card",
-              "order": 9,
-              "col_span": 12,
-              "label": "Preventative maintenance programs",
-              "api": {
-                "question_name": "planned_preventative_maintenance_programs",
-                "sum_by": "parent_id",
-                "monitoring": "latest",
-                "option_value": "Yes"
-              }
-            },
-            {
-              "id": "kpi_upgrading_programs",
-              "chart_type": "card",
-              "order": 10,
-              "col_span": 12,
-              "label": "Upgrading programs",
-              "api": {
-                "question_name": "any_upgrading_programs",
-                "sum_by": "parent_id",
-                "monitoring": "latest",
-                "option_value": "Yes"
-              }
-            },
-            {
-              "id": "title_treatment_units_functionality_inflow",
-              "chart_type": "section_title",
-              "order": 11,
-              "col_span": 24,
-              "text": "Treatment Units Functionality - Inflow"
+              "title": "Working Tools, OHS & Maintenance Programs",
+              "subtitle": "yes / no",
+              "columns": 1,
+              "readout": "count_of_total",
+              "fields": [
+                {
+                  "key": "working_tools",
+                  "label": "Working tools available",
+                  "api": {
+                    "question_name": "working_tools",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "yes",
+                      "label": "Yes",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "no",
+                      "label": "No",
+                      "tone": "bad"
+                    }
+                  ]
+                },
+                {
+                  "key": "ohs_equipment_available",
+                  "label": "OHS equipment present",
+                  "api": {
+                    "question_name": "ohs_equipment_available",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "yes",
+                      "label": "Yes",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "no",
+                      "label": "No",
+                      "tone": "bad"
+                    }
+                  ]
+                },
+                {
+                  "key": "effluent_pump_station",
+                  "label": "Effluent pumping at the plant",
+                  "api": {
+                    "question_name": "effluent_pump_station",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "yes",
+                      "label": "Yes",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "no",
+                      "label": "No",
+                      "tone": "bad"
+                    }
+                  ]
+                },
+                {
+                  "key": "urgent_maintenance_programs",
+                  "label": "Urgent maintenance programs",
+                  "api": {
+                    "question_name": "urgent_maintenance_programs",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "yes",
+                      "label": "Yes",
+                      "tone": "mid"
+                    },
+                    {
+                      "value": "no",
+                      "label": "No",
+                      "tone": "track"
+                    }
+                  ]
+                },
+                {
+                  "key": "planned_preventative_maintenance_programs",
+                  "label": "Preventative maintenance programs",
+                  "api": {
+                    "question_name": "planned_preventative_maintenance_programs",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "yes",
+                      "label": "Yes",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "no",
+                      "label": "No",
+                      "tone": "bad"
+                    }
+                  ]
+                },
+                {
+                  "key": "any_upgrading_programs",
+                  "label": "Upgrading programs",
+                  "api": {
+                    "question_name": "any_upgrading_programs",
+                    "group_by": "option",
+                    "monitoring": "latest"
+                  },
+                  "options": [
+                    {
+                      "value": "yes",
+                      "label": "Yes",
+                      "tone": "good"
+                    },
+                    {
+                      "value": "no",
+                      "label": "No",
+                      "tone": "bad"
+                    }
+                  ]
+                }
+              ]
             },
             {
               "id": "chart_influent_pumping",
-              "chart_type": "half_doughnut",
-              "order": 12,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Influent Pumping"
-              },
+              "title": "Influent Pumping",
+              "subtitle": "presence + per-status reports",
               "api": {
                 "question_name": "comment_on_the_influent_pumping_system",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
-            },
-            {
-              "id": "title_treatment_units_functionality_perprocess",
-              "chart_type": "section_title",
-              "order": 13,
-              "col_span": 24,
-              "text": "Treatment Units Functionality - Per-process"
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_influent_pumping_system",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{operating} of {total} plants operate an influent pump station.",
+              "options": [
+                {
+                  "value": "normal_operation",
+                  "label": "Normal operation",
+                  "tone": "good"
+                },
+                {
+                  "value": "inadequate_pumping_during_wet_weather_flows",
+                  "label": "Inadequate pumping during wet weather flows",
+                  "tone": "bad"
+                },
+                {
+                  "value": "screens_overloaded",
+                  "label": "Screens overloaded",
+                  "tone": "bad"
+                },
+                {
+                  "value": "poor_ventilation",
+                  "label": "Poor ventilation",
+                  "tone": "bad"
+                },
+                {
+                  "value": "pumps_not_operational",
+                  "label": "Pumps not operational",
+                  "tone": "bad"
+                },
+                {
+                  "value": "pump_house_in_bad_condition",
+                  "label": "Pump house in bad condition",
+                  "tone": "bad"
+                },
+                {
+                  "value": "pump_house_in_good_condition",
+                  "label": "Pump house in good condition",
+                  "tone": "good"
+                },
+                {
+                  "value": "no_influent_pump_station_in_the_plant",
+                  "label": "No influent Pump Station in the plant",
+                  "tone": "neutral"
+                },
+                {
+                  "value": "other",
+                  "label": "Other",
+                  "tone": "mid"
+                }
+              ],
+              "absent_value": "no_influent_pump_station_in_the_plant",
+              "order": 3
             },
             {
               "id": "chart_primary_clarifier",
-              "chart_type": "half_doughnut",
-              "order": 14,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Primary clarifier"
-              },
+              "title": "Primary clarifier",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_the_operation_of_the_primary_clarifiers",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_operation_of_the_primary_clarifiers",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have primary clarifier in use.",
+              "options": [
+                {
+                  "value": "excessive_gas_bubbles_or_grease_on_surface",
+                  "label": "Excessive gas bubbles or grease on surface"
+                },
+                {
+                  "value": "black_and_odorous_wastewater",
+                  "label": "Black and odorous wastewater"
+                },
+                {
+                  "value": "poor_removal_of_suspended_solids",
+                  "label": "Poor removal of suspended solids"
+                },
+                {
+                  "value": "excessive_buildup_of_solids_in_the_center_well",
+                  "label": "Excessive buildup of solids in the center well"
+                },
+                {
+                  "value": "uneven_discharge_weirs",
+                  "label": "Uneven discharge weirs"
+                },
+                {
+                  "value": "fouling_of_overflow_weirs",
+                  "label": "Fouling of overflow weirs"
+                },
+                {
+                  "value": "evidence_of_short_circuit",
+                  "label": "Evidence of short circuit"
+                },
+                {
+                  "value": "ineffective_scum_skimmer",
+                  "label": "Ineffective scum skimmer"
+                },
+                {
+                  "value": "excessive_floating_of_sludge_and_scum",
+                  "label": "Excessive floating of sludge and scum"
+                },
+                {
+                  "value": "excessive_sludge_on_the_bottom_and_inadequate_sludge_removal",
+                  "label": "Excessive sludge on the bottom and inadequate sludge removal"
+                },
+                {
+                  "value": "noisy_sludge_scraper_drive",
+                  "label": "Noisy Sludge Scraper Drive"
+                },
+                {
+                  "value": "half_bridge_in_operation",
+                  "label": "Half bridge in operation"
+                },
+                {
+                  "value": "normal",
+                  "label": "Normal"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 4
             },
             {
               "id": "chart_trickling_filters",
-              "chart_type": "half_doughnut",
-              "order": 15,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Trickling filters"
-              },
+              "title": "Trickling filters",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_the_operation_of_the_trickling_filters",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_operation_of_the_trickling_filters",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have trickling filters in use.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Normal"
+                },
+                {
+                  "value": "aerator_in_operation",
+                  "label": "Aerator in operation"
+                },
+                {
+                  "value": "shaft,bearing,drive_gear,or_motor_failure",
+                  "label": "Shaft,bearing,drive gear,or motor failure"
+                },
+                {
+                  "value": "dead_spots_in_aeration_tanks",
+                  "label": "Dead Spots in aeration tanks"
+                },
+                {
+                  "value": "uneven_distribution_of_the_flow_on_the_surface",
+                  "label": "Uneven distribution of the flow on the surface"
+                },
+                {
+                  "value": "uneven_or_discolored_growth",
+                  "label": "Uneven or discolored growth"
+                },
+                {
+                  "value": "bad_odor",
+                  "label": "Bad Odor"
+                },
+                {
+                  "value": "clogging_of_trickling_filter's_distribution_arm_orifices",
+                  "label": "Clogging of trickling filter's distribution arm orifices"
+                },
+                {
+                  "value": "restricted_rotation_of_distribution_arms",
+                  "label": "Restricted rotation of distribution arms"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 5
             },
             {
               "id": "chart_activated_sludge_system",
-              "chart_type": "half_doughnut",
-              "order": 16,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Activated sludge system"
-              },
+              "title": "Activated sludge system",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_the_operation_of_the_activated_sludge_system",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_operation_of_the_activated_sludge_system",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have activated sludge system in use.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Normal"
+                },
+                {
+                  "value": "air_compressors_not_working",
+                  "label": "Air compressors not working"
+                },
+                {
+                  "value": "excessive_air_leaks_in_compressed_air_piping",
+                  "label": "Excessive air leaks in compressed air piping"
+                },
+                {
+                  "value": "dark_mixed_liquor_in_aeration_tank",
+                  "label": "Dark mixed liquor in aeration tank"
+                },
+                {
+                  "value": "dark_foam_or_bad_odor_in_aeration_tank",
+                  "label": "Dark foam or bad odor in aeration tank"
+                },
+                {
+                  "value": "thick_billows_of_white,sudsy_foam_in_aeration_tank",
+                  "label": "Thick billows of white,sudsy foam in aeration tank"
+                },
+                {
+                  "value": "low_dissolved_oxygen_(do_<1.0mg/l)",
+                  "label": "Low Dissolved Oxygen (DO <1.0mg/L)"
+                },
+                {
+                  "value": "inadequate_amount_of_return_activated_sludge_rates",
+                  "label": "Inadequate amount of return activated sludge rates"
+                },
+                {
+                  "value": "auto_mode",
+                  "label": "Auto Mode"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 6
             },
             {
               "id": "chart_stabilization_lagoons",
-              "chart_type": "half_doughnut",
-              "order": 17,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Stabilization lagoons"
-              },
+              "title": "Stabilization lagoons",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_the_operation_of_the_stabilization_lagoons",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_operation_of_the_stabilization_lagoons",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have stabilization lagoons in use.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Normal"
+                },
+                {
+                  "value": "trees_or_shrubs_growing_on_the_bank",
+                  "label": "Trees or shrubs growing on the bank"
+                },
+                {
+                  "value": "erosion_of_the_stabilization_pond_bank_or_dike",
+                  "label": "Erosion of the stabilization pond bank or dike"
+                },
+                {
+                  "value": "excessive_weeds_in_the_stabilization_ponds",
+                  "label": "Excessive weeds in the stabilization ponds"
+                },
+                {
+                  "value": "dead_fish_or_aquatic_organisms",
+                  "label": "Dead fish or aquatic organisms"
+                },
+                {
+                  "value": "buildup_of_solids_around_the_influent_pipe",
+                  "label": "Buildup of solids around the influent pipe"
+                },
+                {
+                  "value": "excessive_scum_on_the_surface",
+                  "label": "Excessive scum on the surface"
+                },
+                {
+                  "value": "bad_odor",
+                  "label": "Bad odor"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 7
+            },
+            {
+              "id": "process_anaerobic_lagoons",
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
+              "col_span": 12,
+              "title": "Anaerobic lagoons",
+              "subtitle": "status counts (multi-select)",
+              "api": {
+                "question_name": "comment_on_the_anaerobic_lagoons",
+                "group_by": "option",
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_anaerobic_lagoons",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have anaerobic lagoons in use.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Normal"
+                },
+                {
+                  "value": "damage_to_dikes_around_laggons",
+                  "label": "Damage to dikes around laggons"
+                },
+                {
+                  "value": "new_option",
+                  "label": "New Option"
+                },
+                {
+                  "value": "lagoons_overflowing_sludge",
+                  "label": "Lagoons overflowing sludge"
+                },
+                {
+                  "value": "bad_odor",
+                  "label": "Bad odor"
+                },
+                {
+                  "value": "desludging_of_lagoons_ongoing",
+                  "label": "Desludging of lagoons ongoing"
+                },
+                {
+                  "value": "industrial_waste_visible",
+                  "label": "Industrial Waste Visible"
+                },
+                {
+                  "value": "supernatant_removal",
+                  "label": "Supernatant removal"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 8
             },
             {
               "id": "chart_secondary_clarifier",
-              "chart_type": "half_doughnut",
-              "order": 18,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Secondary clarifier"
-              },
+              "title": "Secondary clarifier",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_the_operation_of_the_secondary_clarifiers",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_operation_of_the_secondary_clarifiers",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have secondary clarifier in use.",
+              "options": [
+                {
+                  "value": "excessive_gas_bubbles_on_surface",
+                  "label": "Excessive gas bubbles on surface"
+                },
+                {
+                  "value": "fouling_of_overflow_weirs",
+                  "label": "Fouling of overflow weirs"
+                },
+                {
+                  "value": "uneven_overflow_weirs",
+                  "label": "Uneven overflow weirs"
+                },
+                {
+                  "value": "short_circuit",
+                  "label": "Short circuit"
+                },
+                {
+                  "value": "excessive_buildup_of_solids_in_the_center_well",
+                  "label": "Excessive buildup of solids in the center well"
+                },
+                {
+                  "value": "de-flocculating_in_clarifier",
+                  "label": "De-flocculating in clarifier"
+                },
+                {
+                  "value": "ineffective_scum_raking",
+                  "label": "Ineffective scum raking"
+                },
+                {
+                  "value": "floating_sludge_on_surface",
+                  "label": "Floating sludge on surface"
+                },
+                {
+                  "value": "excessive_high_sludge_blanket",
+                  "label": "Excessive high sludge blanket"
+                },
+                {
+                  "value": "recirculation_pump_in_operation",
+                  "label": "Recirculation pump in operation"
+                },
+                {
+                  "value": "clogged_sludge_withdrawal_ports",
+                  "label": "Clogged sludge withdrawal ports"
+                },
+                {
+                  "value": "normal_operation",
+                  "label": "Normal Operation"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 9
             },
             {
               "id": "chart_oxidation_ponds",
-              "chart_type": "half_doughnut",
-              "order": 19,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Oxidation ponds"
-              },
+              "title": "Oxidation ponds",
+              "subtitle": "operational / non operational",
               "api": {
                 "question_name": "comment_on_operation_of_oxidation_ponds",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_operation_of_oxidation_ponds",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have oxidation ponds in use.",
+              "options": [
+                {
+                  "value": "operational",
+                  "label": "Operational"
+                },
+                {
+                  "value": "not_operational",
+                  "label": "Not Operational"
+                }
+              ],
+              "order": 10
             },
             {
               "id": "chart_pasveer_ditches",
-              "chart_type": "half_doughnut",
-              "order": 20,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Pasveer ditches"
-              },
+              "title": "Pasveer ditches",
+              "subtitle": "operational / non operational",
               "api": {
                 "question_name": "comment_on_operation_of_pasveer_ditches",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_operation_of_pasveer_ditches",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have pasveer ditches in use.",
+              "options": [
+                {
+                  "value": "operational",
+                  "label": "Operational"
+                },
+                {
+                  "value": "not_operational",
+                  "label": "Not Operational"
+                }
+              ],
+              "order": 11
             },
             {
               "id": "chart_idea_lagoons",
-              "chart_type": "half_doughnut",
-              "order": 21,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "IDEA lagoons"
-              },
+              "title": "IDEA Lagoons",
+              "subtitle": "operational / non operational",
               "api": {
                 "question_name": "comment_on_operation_of_idea_lagoons",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_operation_of_idea_lagoons",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have idea lagoons in use.",
+              "options": [
+                {
+                  "value": "operational",
+                  "label": "Operational"
+                },
+                {
+                  "value": "not_operational",
+                  "label": "Not Operational"
+                }
+              ],
+              "order": 12
             },
             {
               "id": "chart_polishing_ponds",
-              "chart_type": "half_doughnut",
-              "order": 22,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Polishing ponds"
-              },
+              "title": "Polishing ponds",
+              "subtitle": "operational / non operational",
               "api": {
                 "question_name": "comment_on_operation_of_polishing_ponds",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_operation_of_polishing_ponds",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have polishing ponds in use.",
+              "options": [
+                {
+                  "value": "operational",
+                  "label": "Operational"
+                },
+                {
+                  "value": "not_operational",
+                  "label": "Not Operational"
+                }
+              ],
+              "order": 13
             },
             {
               "id": "chart_aerobic_lagoons",
-              "chart_type": "half_doughnut",
-              "order": 23,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Aerobic lagoons"
-              },
+              "title": "Aerobic lagoons",
+              "subtitle": "operational / non operational",
               "api": {
                 "question_name": "comment_on_operation_of_aerobic_lagoons",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_operation_of_aerobic_lagoons",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have aerobic lagoons in use.",
+              "options": [
+                {
+                  "value": "operational",
+                  "label": "Operational"
+                },
+                {
+                  "value": "not_operational",
+                  "label": "Not Operational"
+                }
+              ],
+              "order": 14
             },
             {
               "id": "chart_sludge_digester",
-              "chart_type": "half_doughnut",
-              "order": 24,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Sludge digester"
-              },
+              "title": "Sludge digester",
+              "subtitle": "operational / non operational",
               "api": {
                 "question_name": "comment_on_operation_of_sludge_digester",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_operation_of_sludge_digester",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have sludge digester in use.",
+              "options": [
+                {
+                  "value": "operational",
+                  "label": "Operational"
+                },
+                {
+                  "value": "not_operational",
+                  "label": "Not Operational"
+                }
+              ],
+              "order": 15
             },
             {
               "id": "chart_imhoff_tanks",
-              "chart_type": "half_doughnut",
-              "order": 25,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Imhoff tanks"
-              },
+              "title": "Imhoff tanks",
+              "subtitle": "operational / non operational",
               "api": {
                 "question_name": "comment_on_operation_of_imhoff",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_operation_of_imhoff",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have imhoff tanks in use.",
+              "options": [
+                {
+                  "value": "operational",
+                  "label": "Operational"
+                },
+                {
+                  "value": "not_operational",
+                  "label": "Not Operational"
+                }
+              ],
+              "order": 16
             },
             {
               "id": "chart_sludge_aerobic_digestion",
-              "chart_type": "half_doughnut",
-              "order": 26,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Sludge aerobic digestion"
-              },
+              "title": "Sludge aerobic digestion",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_operation_of_the_sludge_aerobic_digestion",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_operation_of_the_sludge_aerobic_digestion",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have sludge aerobic digestion in use.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Normal"
+                },
+                {
+                  "value": "excessive_foaming",
+                  "label": "Excessive foaming"
+                },
+                {
+                  "value": "bad_odor",
+                  "label": "Bad odor"
+                },
+                {
+                  "value": "insufficient_dissolved_oxygen_in_digester",
+                  "label": "Insufficient dissolved oxygen in digester"
+                },
+                {
+                  "value": "digester_overloaded",
+                  "label": "Digester overloaded"
+                },
+                {
+                  "value": "mechanical_aerator_failure",
+                  "label": "Mechanical aerator failure"
+                },
+                {
+                  "value": "inadequate_supernatant_removal",
+                  "label": "Inadequate supernatant removal"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 17
             },
             {
               "id": "chart_sludge_handling",
-              "chart_type": "half_doughnut",
-              "order": 27,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Sludge handling"
-              },
+              "title": "Sludge handling",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_the_sludge_handling_system",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_sludge_handling_system",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have sludge handling in use.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Normal"
+                },
+                {
+                  "value": "inadequate_sludge_removal_from_clarifiers_or_thickeners",
+                  "label": "Inadequate sludge removal from clarifiers or thickeners"
+                },
+                {
+                  "value": "fouling_of_overflow_weirs_on_gravity_thickeners",
+                  "label": "Fouling of overflow weirs on gravity thickeners"
+                },
+                {
+                  "value": "sludge_disposal_inadequate_to_keep_treatment_system_in_balance",
+                  "label": "Sludge disposal inadequate to keep treatment system in balance"
+                },
+                {
+                  "value": "bad_odor",
+                  "label": "Bad odor"
+                },
+                {
+                  "value": "mechanical_or_gas_mixers_not_operational",
+                  "label": "Mechanical or gas mixers not operational"
+                },
+                {
+                  "value": "excessive_suspended_solids_in_supernatant",
+                  "label": "Excessive suspended solids in supernatant"
+                },
+                {
+                  "value": "recirculation_pump_operations",
+                  "label": "Recirculation pump operations"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 18
             },
             {
               "id": "chart_drying_beds",
-              "chart_type": "half_doughnut",
-              "order": 28,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Drying beds"
-              },
+              "title": "Drying beds",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_the_drying_beds",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_drying_beds",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have drying beds in use.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Normal"
+                },
+                {
+                  "value": "poor_sludge_distribution_on_drying_beds",
+                  "label": "Poor sludge distribution on drying beds"
+                },
+                {
+                  "value": "dry_sludge_not_removed_on_time",
+                  "label": "Dry sludge not removed on time"
+                },
+                {
+                  "value": "dry_sludge_stored_around_drying_beds",
+                  "label": "Dry sludge stored around drying beds"
+                },
+                {
+                  "value": "filtrate_from_sludge_drying_beds_returned_to_inlet",
+                  "label": "Filtrate from sludge drying beds returned to inlet"
+                },
+                {
+                  "value": "filtrate_overflowing_to_surrounding_environment",
+                  "label": "Filtrate  overflowing to surrounding environment"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 19
             },
             {
               "id": "chart_plant_effluent_observations",
-              "chart_type": "half_doughnut",
-              "order": 29,
+              "chart_type": "custom_component",
+              "component": "ProcessStatusWidget",
               "col_span": 12,
-              "config": {
-                "title": "Plant Effluent observations"
-              },
+              "title": "Plant Effluent observations",
+              "subtitle": "status counts (multi-select)",
               "api": {
                 "question_name": "comment_on_the_plant_effluent",
                 "group_by": "option",
-                "monitoring": "latest",
-                "include_unanswered": true
-              }
+                "monitoring": "latest"
+              },
+              "usage_api": {
+                "question_name": "comment_on_the_plant_effluent",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "footer_template": "{n} plants have plant effluent observations in use.",
+              "options": [
+                {
+                  "value": "effluent_clear",
+                  "label": "Effluent Clear"
+                },
+                {
+                  "value": "bad_odor",
+                  "label": "Bad odor"
+                },
+                {
+                  "value": "low_dissolved_oxygen_content",
+                  "label": "Low Dissolved Oxygen Content"
+                },
+                {
+                  "value": "excessive_suspended_solids,turbidity,foam,grease,scum_and_colour",
+                  "label": "Excessive suspended solids,turbidity,foam,grease,scum and colour"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "order": 20
             }
           ]
         }
