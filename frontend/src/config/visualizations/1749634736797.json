@@ -54,6 +54,7 @@
       "order": 3,
       "col_span": 5,
       "label": "Inspected (12 mo)",
+      "color": "#1890ff",
       "api": {
         "question_name": "date_of_inspection",
         "sum_by": "parent_id",
@@ -66,13 +67,14 @@
       "order": 4,
       "col_span": 5,
       "label": "% Operational",
+      "color": "#64A73B",
       "api": {
         "question_name": "has_production_constraints",
         "group_by": "option",
         "include_unanswered": true
       },
       "show_percentage": true,
-      "target_group": "No"
+      "target_group": "no"
     },
     {
       "id": "kpi_dw_compliance",
@@ -80,7 +82,7 @@
       "order": 5,
       "col_span": 5,
       "label": "DW Compliance",
-      "color": "#64A73B",
+      "color": "#fa8c16",
       "compute": "compliance_kpi",
       "params_ref": [
         "param_total_coliform",
@@ -99,13 +101,66 @@
       "chart_type": "card",
       "order": 6,
       "col_span": 4,
-      "label": "Critical (RED)",
-      "api": {
-        "question_name": "e_coli_cfu_100ml",
-        "sum_by": "parent_id",
-        "monitoring": "latest",
-        "option_value": "Yes"
-      }
+      "label": "Critical",
+      "color": "#e41a1c",
+      "compute": "critical_kpi",
+      "denominator_api": {
+        "form_id": 1749634736797
+      },
+      "params_ref": [
+        "param_total_coliform",
+        "param_turbidity",
+        "param_residual_chlorine",
+        "param_ph",
+        "param_conductivity"
+      ],
+      "operational_segments": [
+        {
+          "key": "no_production_constraints",
+          "rule": { "op": "option_not_equals", "value": "yes" },
+          "api": {
+            "question_name": "has_production_constraints",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "has_production",
+          "rule": { "op": "number_gt", "value": 0 },
+          "api": {
+            "question_name": "daily_production_megalitres",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "pumps_rising_main_ok",
+          "rule": { "op": "option_not_equals", "value": "yes" },
+          "api": {
+            "question_name": "pumps_rising_main_has_risks",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "borehole_pump_ok",
+          "rule": { "op": "option_not_equals", "value": "yes" },
+          "api": {
+            "question_name": "borehole_pump_has_risks",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "borehole_gallery_ok",
+          "rule": { "op": "option_not_equals", "value": "yes" },
+          "api": {
+            "question_name": "borehole_gallery_pumps_has_risks",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        }
+      ]
     },
     {
       "id": "map_main",
@@ -365,12 +420,61 @@
               "order": 2,
               "col_span": 8,
               "label": "Critical issues",
-              "api": {
-                "question_name": "e_coli_cfu_100ml",
-                "sum_by": "parent_id",
-                "monitoring": "latest",
-                "option_value": "Yes"
-              }
+              "compute": "critical_kpi",
+              "params_ref": [
+                "param_total_coliform",
+                "param_turbidity",
+                "param_residual_chlorine",
+                "param_ph",
+                "param_conductivity"
+              ],
+              "operational_segments": [
+                {
+                  "key": "no_production_constraints",
+                  "rule": { "op": "option_not_equals", "value": "yes" },
+                  "api": {
+                    "question_name": "has_production_constraints",
+                    "group_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                },
+                {
+                  "key": "has_production",
+                  "rule": { "op": "number_gt", "value": 0 },
+                  "api": {
+                    "question_name": "daily_production_megalitres",
+                    "group_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                },
+                {
+                  "key": "pumps_rising_main_ok",
+                  "rule": { "op": "option_not_equals", "value": "yes" },
+                  "api": {
+                    "question_name": "pumps_rising_main_has_risks",
+                    "group_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                },
+                {
+                  "key": "borehole_pump_ok",
+                  "rule": { "op": "option_not_equals", "value": "yes" },
+                  "api": {
+                    "question_name": "borehole_pump_has_risks",
+                    "group_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                },
+                {
+                  "key": "borehole_gallery_ok",
+                  "rule": { "op": "option_not_equals", "value": "yes" },
+                  "api": {
+                    "question_name": "borehole_gallery_pumps_has_risks",
+                    "group_by": "parent_id",
+                    "monitoring": "latest"
+                  }
+                }
+              ]
             },
             {
               "id": "kpi_no_waterquality_check",
@@ -382,7 +486,8 @@
                 "question_name": "can_take_water_sample",
                 "sum_by": "parent_id",
                 "monitoring": "latest",
-                "option_value": "No"
+                "option_value": "no",
+                "include_unanswered": true
               }
             },
             {
@@ -461,10 +566,11 @@
               "api": {
                 "question_name": "can_take_water_sample",
                 "group_by": "option",
-                "include_unanswered": true
+                "include_unanswered": true,
+                "rolling_months": 12
               },
               "show_percentage": true,
-              "target_group": "Yes"
+              "target_group": "yes"
             },
             {
               "id": "kpi_lab_tested",
@@ -476,7 +582,7 @@
                 "question_name": "water_testing_method",
                 "sum_by": "parent_id",
                 "monitoring": "latest",
-                "option_value": "Lab Test"
+                "option_value": "lab_test"
               }
             },
             {
@@ -489,7 +595,7 @@
                 "question_name": "water_testing_method",
                 "sum_by": "parent_id",
                 "monitoring": "latest",
-                "option_value": "CBT Bag Test"
+                "option_value": "cbt_bag_test"
               }
             },
             {

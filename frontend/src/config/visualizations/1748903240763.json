@@ -75,10 +75,106 @@
       }
     },
     {
+      "id": "kpi_critical_issues_percentage",
+      "chart_type": "card",
+      "order": 5,
+      "col_span": 6,
+      "label": "% Critical Alerts",
+      "color": "#e41a1c",
+      "compute": "rules_kpi",
+      "denominator_api": {
+        "form_id": 1748903240763
+      },
+      "rules": [
+        { "all_of": [{ "question_name": "bod", "op": "gt", "value": 40 }] },
+        {
+          "all_of": [
+            {
+              "question_name": "chemical_oxygen_demand",
+              "op": "gt",
+              "value": 100
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "total_dissolved_solids",
+              "op": "gt",
+              "value": 1000
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "comment_on_operation_of_oxidation_ponds",
+              "op": "option_equals",
+              "value": "not_operational"
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "comment_on_operation_of_pasveer_ditches",
+              "op": "option_equals",
+              "value": "not_operational"
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "comment_on_operation_of_idea_lagoons",
+              "op": "option_equals",
+              "value": "not_operational"
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "comment_on_operation_of_polishing_ponds",
+              "op": "option_equals",
+              "value": "not_operational"
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "comment_on_operation_of_aerobic_lagoons",
+              "op": "option_equals",
+              "value": "not_operational"
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "comment_on_operation_of_sludge_digester",
+              "op": "option_equals",
+              "value": "not_operational"
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "comment_on_operation_of_imhoff",
+              "op": "option_equals",
+              "value": "not_operational"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "map_main",
       "chart_type": "map",
       "title": "Monitored Wwtp Sites",
-      "order": 5,
+      "order": 6,
       "col_span": 24,
       "height": 400,
       "source_form_id": 1748903240763,
@@ -117,7 +213,7 @@
     {
       "id": "title_wwtp_at_a_glance",
       "chart_type": "section_title",
-      "order": 6,
+      "order": 7,
       "col_span": 24,
       "text": "WWTP at a glance"
     },
@@ -125,7 +221,7 @@
       "id": "chart_compliance_trend",
       "chart_type": "custom_component",
       "component": "ComplianceTrendWidget",
-      "order": 7,
+      "order": 8,
       "col_span": 24,
       "title": "Compliance Trend",
       "subtitle": "last 12 months · % WWTPs passing each domain",
@@ -163,7 +259,7 @@
     {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 8,
+      "order": 9,
       "col_span": 24,
       "items": [
         {
@@ -176,6 +272,7 @@
               "order": 1,
               "col_span": 8,
               "label": "Monitored (12 mo)",
+              "color": "#1890ff",
               "api": {
                 "question_name": "inspection_date",
                 "sum_by": "parent_id",
@@ -188,11 +285,95 @@
               "order": 2,
               "col_span": 8,
               "label": "Critical issues",
-              "api": {
-                "question_name": "bod",
-                "sum_by": "parent_id",
-                "monitoring": "latest"
-              }
+              "compute": "rules_kpi",
+              "rules": [
+                {
+                  "all_of": [
+                    { "question_name": "bod", "op": "gt", "value": 40 }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "chemical_oxygen_demand",
+                      "op": "gt",
+                      "value": 100
+                    }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "total_dissolved_solids",
+                      "op": "gt",
+                      "value": 1000
+                    }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "comment_on_operation_of_oxidation_ponds",
+                      "op": "option_equals",
+                      "value": "not_operational"
+                    }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "comment_on_operation_of_pasveer_ditches",
+                      "op": "option_equals",
+                      "value": "not_operational"
+                    }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "comment_on_operation_of_idea_lagoons",
+                      "op": "option_equals",
+                      "value": "not_operational"
+                    }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "comment_on_operation_of_polishing_ponds",
+                      "op": "option_equals",
+                      "value": "not_operational"
+                    }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "comment_on_operation_of_aerobic_lagoons",
+                      "op": "option_equals",
+                      "value": "not_operational"
+                    }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "comment_on_operation_of_sludge_digester",
+                      "op": "option_equals",
+                      "value": "not_operational"
+                    }
+                  ]
+                },
+                {
+                  "all_of": [
+                    {
+                      "question_name": "comment_on_operation_of_imhoff",
+                      "op": "option_equals",
+                      "value": "not_operational"
+                    }
+                  ]
+                }
+              ]
             },
             {
               "id": "kpi_no_sample_taken",
@@ -204,7 +385,8 @@
                 "question_name": "can_take_sample",
                 "sum_by": "parent_id",
                 "monitoring": "latest",
-                "option_value": "No"
+                "option_value": "no",
+                "include_unanswered": true
               }
             },
             {

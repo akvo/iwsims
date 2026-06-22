@@ -1,8 +1,8 @@
 group,indicator,calculation,method
 Total Overview (Cards),Total Pump Stations,"COUNTDISTINCT(COALESCE([pump_station_name],[gps_location]))",auto
 Total Overview (Cards),Inspected (12 mo),"RECENT([inspection_date],12)",auto
-Total Overview (Cards),% Operational,"PERCENT(OR([station_status]=""Operational"",AND([electrical_panel]=""Satisfactory"",[pump_station_lid]=""Covered"",[non_return_valve]=""Operational"",[sluice_valve]=""Operational"",[guardrails_pump_station]=""Secured"")))",auto
-Total Overview (Cards),Critical issues,"COUNT(OR(IN([station_status],""Not Operational"",""Overflowing"",""Blocked""),AND(IN([electrical_panel],""Broken"",""Electrical hazard""),[pump_station_lid]=""Missing"",[non_return_valve]=""Faulty"",[sluice_valve]=""Faulty"",[guardrails_pump_station]=""Missing"",[ohs_equipment]=""Not available"")))",auto
+Total Overview (Cards),% Operational,"PERCENT(OR([station_status]=""Operational"",AND([electrical_panel]=""Satisfactory"",[pump_station_lid]=""Covered"",[non_return_valve]=""Operational"",[sluice_valve]=""Operational"",[guardrails_pump_station]=""Secured"")))",manual
+Total Overview (Cards),Critical issues,"COUNT(OR(IN([station_status],""Not Operational"",""Overflowing"",""Blocked""),AND(IN([electrical_panel],""Broken"",""Electrical hazard""),[pump_station_lid]=""Missing"",[non_return_valve]=""Faulty"",[sluice_valve]=""Faulty"",[guardrails_pump_station]=""Missing"",[ohs_equipment]=""Not available"")))",manual
 Pump Stations Operational Map,Operationality,MAP([station_status]),auto
 Pump Stations Operational Map,Electrical issues,MAP([electrical_panel]),auto
 Pump Stations Operational Map,Standby facility,MAP([num_pumps_standby]),auto

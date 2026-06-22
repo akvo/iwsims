@@ -45,6 +45,7 @@
       "order": 3,
       "col_span": 6,
       "label": "Inspected (12 mo)",
+      "color": "#1890ff",
       "api": {
         "question_name": "inspection_date",
         "sum_by": "parent_id",
@@ -53,17 +54,55 @@
     },
     {
       "id": "kpi_operational",
-      "chart_type": "metric_card",
+      "chart_type": "card",
       "order": 4,
       "col_span": 6,
       "label": "% Operational",
-      "api": {
-        "question_name": "station_status",
-        "group_by": "option",
-        "include_unanswered": true
+      "color": "#64A73B",
+      "compute": "rules_kpi",
+      "denominator_api": {
+        "form_id": 1749611049520
       },
-      "show_percentage": true,
-      "target_group": "Operational"
+      "rules": [
+        {
+          "all_of": [
+            {
+              "question_name": "station_status",
+              "op": "option_equals",
+              "value": "operational"
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "electrical_panel",
+              "op": "option_equals",
+              "value": "satisfactory"
+            },
+            {
+              "question_name": "pump_station_lid",
+              "op": "option_equals",
+              "value": "covered"
+            },
+            {
+              "question_name": "non_return_valve",
+              "op": "option_equals",
+              "value": "operational"
+            },
+            {
+              "question_name": "sluice_valve",
+              "op": "option_equals",
+              "value": "operational"
+            },
+            {
+              "question_name": "guardrails_pump_station",
+              "op": "option_equals",
+              "value": "secured"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "kpi_critical_issues",
@@ -71,12 +110,53 @@
       "order": 5,
       "col_span": 6,
       "label": "Critical issues",
-      "api": {
-        "question_name": "station_status",
-        "sum_by": "parent_id",
-        "monitoring": "latest",
-        "option_value": "Missing"
-      }
+      "color": "#e41a1c",
+      "compute": "rules_kpi",
+      "rules": [
+        {
+          "all_of": [
+            {
+              "question_name": "station_status",
+              "op": "option_in",
+              "values": ["not_operational", "overflowing", "blocked"]
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "electrical_panel",
+              "op": "option_in",
+              "values": ["broken", "electrical_hazard"]
+            },
+            {
+              "question_name": "pump_station_lid",
+              "op": "option_equals",
+              "value": "missing"
+            },
+            {
+              "question_name": "non_return_valve",
+              "op": "option_equals",
+              "value": "faulty"
+            },
+            {
+              "question_name": "sluice_valve",
+              "op": "option_equals",
+              "value": "faulty"
+            },
+            {
+              "question_name": "guardrails_pump_station",
+              "op": "option_equals",
+              "value": "missing"
+            },
+            {
+              "question_name": "ohs_equipment",
+              "op": "option_equals",
+              "value": "not_available"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "map_main",
