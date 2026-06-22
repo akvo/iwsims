@@ -98,11 +98,31 @@ class GeoLocationListSerializer(serializers.ModelSerializer):
 
 class DatapointDetailSerializer(serializers.ModelSerializer):
     administration_full_name = serializers.SerializerMethodField()
+    updated = serializers.SerializerMethodField()
 
     def get_administration_full_name(self, obj):
         if obj.administration:
             return obj.administration.full_name
         return ""
+
+    def get_updated(self, obj):
+        # "Last update" for a site is the most recent monitoring
+        # submission across any of its monitoring forms. The
+        # registration datapoint's own ``updated`` is null unless the
+        # registration itself was edited, so fall back to it (then to
+        # the registration's ``created``) only when there is no
+        # monitoring yet.
+        latest_monitoring = (
+            FormData.objects.filter(
+                parent_id=obj.id,
+                is_pending=False,
+                is_draft=False,
+            )
+            .order_by("-created")
+            .values_list("created", flat=True)
+            .first()
+        )
+        return latest_monitoring or obj.updated or obj.created
 
     class Meta:
         model = FormData
@@ -150,7 +170,7 @@ class FormulaValuesSerializer(serializers.Serializer):
     ``validate_formula`` hook parses and structurally validates it.
     """
 
-    form_id = serializers.IntegerField(required=True)
+    parent_form_id = serializers.IntegerField(required=True)
     group_by = serializers.ChoiceField(
         choices=["parent_id"], required=True,
     )
@@ -158,7 +178,6 @@ class FormulaValuesSerializer(serializers.Serializer):
         choices=["latest"], required=False, default="latest",
     )
     formula = serializers.CharField(required=True)
-    criteria = serializers.CharField(required=False)
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
 
@@ -181,22 +200,8 @@ class FormulaValuesSerializer(serializers.Serializer):
                 validate_qname(cond.get("question_name"))
         return validated
 
-    def validate_criteria(self, value):
-        from api.v1.v1_visualization.constants import (
-            VALID_VALUES_CRITERIA_TYPES,
-        )
-        from api.v1.v1_visualization.functions import (
-            parse_criteria_string,
-        )
-        try:
-            return parse_criteria_string(
-                value, VALID_VALUES_CRITERIA_TYPES,
-            )
-        except ValueError as e:
-            raise serializers.ValidationError(str(e))
-
     class Meta:
         fields = [
-            "form_id", "group_by", "monitoring", "formula",
-            "criteria", "from_date", "to_date",
+            "parent_form_id", "group_by", "monitoring", "formula",
+            "from_date", "to_date",
         ]

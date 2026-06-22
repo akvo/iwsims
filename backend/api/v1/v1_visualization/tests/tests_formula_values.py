@@ -1,4 +1,12 @@
-"""View-level tests for /api/v1/visualization/values/formula."""
+"""View-level tests for /api/v1/visualization/values/formula.
+
+The endpoint is cross-form: it is scoped by ``parent_form_id`` (the
+registration form) and, per registration datapoint, evaluates the
+formula against the latest answer per question_name taken across ALL of
+the family's monitoring forms (mv_cross_form_latest), falling back to the
+registration datapoint's own answer for questions that only exist on the
+registration form.
+"""
 import json
 from urllib.parse import quote
 
@@ -6,6 +14,7 @@ from django.test.utils import override_settings
 from rest_framework.test import APITestCase
 
 from api.v1.v1_data.models import Answers, FormData
+from api.v1.v1_forms.models import Questions, QuestionTypes
 from api.v1.v1_visualization.tests.mixins import (
     VisualizationValuesTestMixin,
     refresh_all_mvs,
@@ -22,13 +31,23 @@ class FormulaValuesViewTests(
     VisualizationValuesTestMixin, APITestCase
 ):
     """Mixin pre-creates two registrations and four monitoring children
-    on form 6002 with answers on q_number (600202)."""
+    on form 6002 with answers on q_number (600202). The endpoint is
+    scoped by the registration form id (6001)."""
 
     BASE_URL = "/api/v1/visualization/values/formula"
 
+    def _url(self, formula, extra=""):
+        return (
+            f"{self.BASE_URL}"
+            f"?parent_form_id={self.REGISTRATION_FORM_ID}"
+            f"&group_by=parent_id"
+            f"&formula={_encode(formula)}"
+            f"{extra}"
+        )
+
     def _formula(self):
-        # mon1b numeric=20.0 (latest for reg1, passes <= 25)
-        # mon2b numeric=40.0 (latest for reg2, fails <= 25)
+        # reg1 latest monitoring numeric=20.0 (passes <= 25)
+        # reg2 latest monitoring numeric=40.0 (fails <= 25)
         return {
             "buckets": [{
                 "value": "low",
@@ -43,13 +62,7 @@ class FormulaValuesViewTests(
         }
 
     def test_groups_by_parent_id(self):
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(self._formula())}"
-        )
-        response = self.client.get(url)
+        response = self.client.get(self._url(self._formula()))
         self.assertEqual(response.status_code, 200)
         body = response.json()
         rows = {row["group"]: row["label"] for row in body["data"]}
@@ -57,7 +70,7 @@ class FormulaValuesViewTests(
         self.assertEqual(rows[self.reg2.id], "high")
 
     def test_between_inclusive_bounds(self):
-        # Salinity-style range: 6.5 <= value <= 8.5
+        # Salinity-style range: 6.5 <= value <= 25.0
         formula = {
             "buckets": [{
                 "value": "in_range",
@@ -71,13 +84,7 @@ class FormulaValuesViewTests(
             }],
             "default": {"value": "out", "label": "Out"},
         }
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(formula)}"
-        )
-        response = self.client.get(url)
+        response = self.client.get(self._url(formula))
         self.assertEqual(response.status_code, 200)
         rows = {
             row["group"]: row["label"]
@@ -88,10 +95,9 @@ class FormulaValuesViewTests(
         self.assertEqual(rows[self.reg2.id], "out")
 
     def test_latest_repeat_used(self):
-        # On reg1's latest monitoring (mon1b), the repeatable
-        # number question has values [8.0, 12.0, 4.0] at indices
-        # 0, 1, 2. The latest repeat (index=2) is 4.0. A formula
-        # over the repeatable question should reflect 4.0 not 8.0.
+        # mv_cross_form_latest collapses each repeatable question to its
+        # latest answer. On reg1's latest monitoring the repeatable
+        # number question is 4.0; on reg2's it is 35.0.
         formula = {
             "buckets": [{
                 "value": "small",
@@ -104,43 +110,33 @@ class FormulaValuesViewTests(
             }],
             "default": {"value": "big", "label": "Big"},
         }
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(formula)}"
-        )
-        response = self.client.get(url)
+        response = self.client.get(self._url(formula))
         self.assertEqual(response.status_code, 200)
         rows = {
             row["group"]: row["label"]
             for row in response.json()["data"]
         }
-        # reg1 latest mon1b: index=2 value=4.0 → small
         self.assertEqual(rows[self.reg1.id], "small")
-        # reg2 latest mon2b: indices 0,1 values 25.0, 35.0 →
-        # latest repeat is 35.0 → big
         self.assertEqual(rows[self.reg2.id], "big")
 
-    def test_parent_with_no_monitoring_omitted(self):
-        # Delete all monitoring children for reg1 (hard delete to
-        # bypass the soft-delete manager).
+    def test_parent_with_no_monitoring_falls_back(self):
+        # Hard-delete reg1's monitoring children (bypass soft-delete).
+        # reg1 still appears via its registration answers, but with no
+        # monitoring measurement_value it can only hit the default bucket.
         FormData.objects.filter(parent=self.reg1).delete(hard=True)
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(self._formula())}"
-        )
-        response = self.client.get(url)
+        refresh_all_mvs()
+        response = self.client.get(self._url(self._formula()))
         self.assertEqual(response.status_code, 200)
-        rows = response.json()["data"]
-        groups = [r["group"] for r in rows]
-        self.assertNotIn(self.reg1.id, groups)
-        self.assertIn(self.reg2.id, groups)
+        rows = {
+            row["group"]: row["label"]
+            for row in response.json()["data"]
+        }
+        self.assertIn(self.reg1.id, rows)
+        self.assertEqual(rows[self.reg1.id], "high")
+        self.assertEqual(rows[self.reg2.id], "high")
 
     def test_default_when_no_match(self):
-        # Use a formula no datapoint can satisfy.
+        # A formula no datapoint can satisfy → everyone is the default.
         formula = {
             "buckets": [{
                 "value": "impossible",
@@ -152,37 +148,44 @@ class FormulaValuesViewTests(
             }],
             "default": {"value": "fallback", "label": "FB"},
         }
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(formula)}"
-        )
-        response = self.client.get(url)
+        response = self.client.get(self._url(formula))
         self.assertEqual(response.status_code, 200)
-        rows = response.json()["data"]
-        labels = {row["label"] for row in rows}
+        labels = {row["label"] for row in response.json()["data"]}
         self.assertEqual(labels, {"fallback"})
 
     def test_pending_monitoring_excluded(self):
-        # Make all of reg1's monitoring children pending. The next
-        # candidate for reg1 should be NONE; reg1 vanishes from the
-        # response.
+        # Make reg1's monitoring children pending. mv_cross_form_latest
+        # drops them, so reg1 loses its monitoring measurement_value and
+        # reverts to the default bucket (registration fallback only).
         FormData.objects.filter(parent=self.reg1).update(is_pending=True)
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(self._formula())}"
-        )
-        response = self.client.get(url)
+        refresh_all_mvs()
+        response = self.client.get(self._url(self._formula()))
         self.assertEqual(response.status_code, 200)
-        groups = [r["group"] for r in response.json()["data"]]
-        self.assertNotIn(self.reg1.id, groups)
-        self.assertIn(self.reg2.id, groups)
+        rows = {
+            row["group"]: row["label"]
+            for row in response.json()["data"]
+        }
+        self.assertEqual(rows[self.reg1.id], "high")
+        self.assertEqual(rows[self.reg2.id], "high")
+
+    def test_date_filter_narrows_latest(self):
+        # to_date before reg2's latest (Mar 15) but after its Jan record
+        # makes the Jan monitoring (numeric=30.0) the latest for reg2.
+        # reg1's Jan record (numeric=10.0) likewise becomes its latest.
+        response = self.client.get(
+            self._url(self._formula(), extra="&to_date=2025-02-01")
+        )
+        self.assertEqual(response.status_code, 200)
+        rows = {
+            row["group"]: row["label"]
+            for row in response.json()["data"]
+        }
+        # reg1 Jan=10.0 (<=25 → low), reg2 Jan=30.0 (>25 → high)
+        self.assertEqual(rows[self.reg1.id], "low")
+        self.assertEqual(rows[self.reg2.id], "high")
 
     def test_missing_required_param(self):
-        # Missing form_id → 400
+        # Missing parent_form_id → 400
         url = (
             f"{self.BASE_URL}"
             f"?group_by=parent_id"
@@ -204,73 +207,39 @@ class FormulaValuesViewTests(
             }],
             "default": {"value": "y", "label": "Y"},
         }
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(formula)}"
-        )
-        response = self.client.get(url)
+        response = self.client.get(self._url(formula))
         self.assertEqual(response.status_code, 400)
 
     def test_malformed_formula_rejected(self):
         url = (
             f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
+            f"?parent_form_id={self.REGISTRATION_FORM_ID}"
             f"&group_by=parent_id"
             f"&formula={quote('not json')}"
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 400)
 
-    def test_criteria_composes(self):
-        # Add option answers so we can filter via criteria.
-        Answers.objects.create(
-            data=self.mon1b,
-            question=self.q_option,
-            options=["active"],
-            created_by=self.user,
-        )
-        refresh_all_mvs()
-        # Filter to monitorings where operational_status == active.
-        # Both mon1a and mon1b are 'active' (from the mixin), and
-        # we just made sure mon1b also has it. mon2b is 'pending'.
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.MONITORING_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(self._formula())}"
-            f"&criteria=option_equals:{self.q_option.name}:active"
-        )
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        rows = {
-            row["group"]: row["label"]
-            for row in response.json()["data"]
-        }
-        # reg1 still has an active monitoring → present.
-        self.assertIn(self.reg1.id, rows)
-        # reg2's latest (mon2b) is 'pending', not 'active', and
-        # mon2a is 'inactive', so reg2 should be filtered out.
-        self.assertNotIn(self.reg2.id, rows)
-
 
 @override_settings(USE_TZ=False, TEST_ENV=True)
-class FormulaValuesRegistrationFormTests(
+class FormulaValuesRegistrationFallbackTests(
     VisualizationValuesTestMixin, APITestCase
 ):
-    """Formula endpoint with a registration-form question (no parent).
+    """Cross-form scope with registration-fallback behaviour.
 
-    The endpoint must group by the datapoint's own id rather than parent_id,
-    since registration data has parent__isnull=True.
+    Exercises the two layers the endpoint composes: the registration
+    datapoint's own answers, overlaid by the latest cross-form
+    monitoring answers. ``group`` is always the registration datapoint
+    id so the frontend's byParent[point.id] lookup matches.
     """
 
     BASE_URL = "/api/v1/visualization/values/formula"
 
     def setUp(self):
         super().setUp()
-        # Give reg1 a "yes" option answer and reg2 a "no" answer on the
-        # registration-form option question (site_type, id=Q_REG_OPTION_ID).
+        # Registration-only option question (site_type, Q_REG_OPTION_ID):
+        # reg1 = yes, reg2 = no. This name exists on no monitoring form,
+        # so only the registration fallback can supply it.
         Answers.objects.create(
             data=self.reg1,
             question=self.q_reg_option,
@@ -285,7 +254,15 @@ class FormulaValuesRegistrationFormTests(
         )
         refresh_all_mvs()
 
-    def _formula(self):
+    def _url(self, formula):
+        return (
+            f"{self.BASE_URL}"
+            f"?parent_form_id={self.REGISTRATION_FORM_ID}"
+            f"&group_by=parent_id"
+            f"&formula={_encode(formula)}"
+        )
+
+    def _site_type_formula(self):
         return {
             "buckets": [{
                 "value": "yes",
@@ -299,40 +276,68 @@ class FormulaValuesRegistrationFormTests(
             "default": {"value": "no", "label": "No"},
         }
 
-    def test_registration_form_groups_by_own_id(self):
-        """
-        group key is the registration datapoint's own id,
-        not a parent_id.
-        """
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.REGISTRATION_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(self._formula())}"
-        )
-        response = self.client.get(url)
+    def test_registration_only_question_uses_fallback(self):
+        """A registration-only question resolves from the fallback layer,
+        grouped by the registration datapoint's own id."""
+        response = self.client.get(self._url(self._site_type_formula()))
         self.assertEqual(response.status_code, 200)
         rows = {
             row["group"]: row["label"]
             for row in response.json()["data"]
         }
-        # Both registration datapoints should appear.
-        self.assertIn(self.reg1.id, rows)
-        self.assertIn(self.reg2.id, rows)
         self.assertEqual(rows[self.reg1.id], "yes")
         self.assertEqual(rows[self.reg2.id], "no")
 
-    def test_registration_form_excludes_pending(self):
-        """Pending registration datapoints are not included."""
+    def test_registration_fallback_excludes_pending(self):
+        """A pending registration datapoint drops out entirely: it is
+        excluded from the fallback layer and its monitoring children are
+        excluded from the cross-form layer (parent must be non-pending)."""
         FormData.objects.filter(id=self.reg1.id).update(is_pending=True)
-        url = (
-            f"{self.BASE_URL}"
-            f"?form_id={self.REGISTRATION_FORM_ID}"
-            f"&group_by=parent_id"
-            f"&formula={_encode(self._formula())}"
-        )
-        response = self.client.get(url)
+        refresh_all_mvs()
+        response = self.client.get(self._url(self._site_type_formula()))
         self.assertEqual(response.status_code, 200)
         groups = [row["group"] for row in response.json()["data"]]
         self.assertNotIn(self.reg1.id, groups)
         self.assertIn(self.reg2.id, groups)
+
+    def test_monitoring_overlays_registration(self):
+        """When the same question_name exists on both the registration and
+        a monitoring form, the latest monitoring answer wins."""
+        # Add a registration-side question sharing the monitoring
+        # question name "operational_status". reg1's registration answer
+        # is 'inactive'; its latest monitoring answer is 'active'.
+        shared = Questions.objects.create(
+            form=self.registration,
+            question_group=self.q_reg_option.question_group,
+            name=self.q_option.name,
+            label="Operational status (registration)",
+            type=QuestionTypes.option,
+            order=99,
+        )
+        Answers.objects.create(
+            data=self.reg1,
+            question=shared,
+            options=["inactive"],
+            created_by=self.user,
+        )
+        refresh_all_mvs()
+        formula = {
+            "buckets": [{
+                "value": "active",
+                "label": "Active",
+                "all_of": [{
+                    "question_name": self.q_option.name,
+                    "op": "option_equals",
+                    "value": "active",
+                }],
+            }],
+            "default": {"value": "other", "label": "Other"},
+        }
+        response = self.client.get(self._url(formula))
+        self.assertEqual(response.status_code, 200)
+        rows = {
+            row["group"]: row["label"]
+            for row in response.json()["data"]
+        }
+        # Monitoring 'active' overlays registration 'inactive'.
+        self.assertEqual(rows[self.reg1.id], "active")
