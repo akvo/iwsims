@@ -17,6 +17,14 @@ import { computeStageFlow } from "../stageFlow";
 import { computeValueBuckets } from "../valueBuckets";
 import { computeGroupedStack } from "../groupedStack";
 import { computeBucketBar } from "../bucketBar";
+import { computeConditionField } from "../conditionMatrix";
+import { CONDITION_TONE_COLORS } from "../../constants";
+import {
+  computeProcessBars,
+  processToneColor,
+  distinctParentCount,
+} from "../processStatus";
+import { computeComplianceTrend, monthLabelToKey } from "../complianceTrend";
 
 describe("rotateToFiscalOrder", () => {
   const rows = [
@@ -1027,5 +1035,225 @@ describe("computeBucketBar", () => {
 
   test("returns [] for empty buckets", () => {
     expect(computeBucketBar([], responses)).toEqual([]);
+  });
+});
+
+describe("computeConditionField", () => {
+  const groundOptions = [
+    { value: "good", label: "Good", tone: "good" },
+    { value: "satisfactory", label: "Satisfactory", tone: "good" },
+    {
+      value: "maintenance_in_progress",
+      label: "Maintenance in progress",
+      tone: "mid",
+    },
+    { value: "poor", label: "Poor", tone: "bad" },
+  ];
+  const response = {
+    data: [
+      { group: "good", label: "Good", value: 36 },
+      { group: "satisfactory", label: "Satisfactory", value: 18 },
+      {
+        group: "maintenance_in_progress",
+        label: "Maintenance in progress",
+        value: 7,
+      },
+      { group: "poor", label: "Poor", value: 3 },
+    ],
+  };
+
+  test("counts options, resolves tone colors, and rounds % good", () => {
+    const out = computeConditionField(groundOptions, response);
+    expect(out.total).toBe(64);
+    expect(out.goodCount).toBe(54);
+    expect(out.goodPct).toBe(84);
+    expect(out.options.map((o) => o.count)).toEqual([36, 18, 7, 3]);
+    expect(out.options[0].color).toBe(CONDITION_TONE_COLORS.good);
+    expect(out.options[2].color).toBe(CONDITION_TONE_COLORS.mid);
+    expect(out.options[3].color).toBe(CONDITION_TONE_COLORS.bad);
+  });
+
+  test("preserves config order even when the response is unordered", () => {
+    const shuffled = { data: [...response.data].reverse() };
+    const out = computeConditionField(groundOptions, shuffled);
+    expect(out.options.map((o) => o.value)).toEqual([
+      "good",
+      "satisfactory",
+      "maintenance_in_progress",
+      "poor",
+    ]);
+  });
+
+  test("excludes _no_info from the bar and the denominator", () => {
+    const withNoInfo = {
+      data: [
+        ...response.data,
+        { group: "_no_info", label: "No information", value: 10 },
+      ],
+    };
+    const out = computeConditionField(groundOptions, withNoInfo);
+    expect(out.total).toBe(64);
+    expect(out.options.find((o) => o.value === "_no_info")).toBeUndefined();
+  });
+
+  test("appends unknown option groups with the neutral tone", () => {
+    const withExtra = {
+      data: [
+        ...response.data,
+        { group: "mystery", label: "Mystery", value: 5 },
+      ],
+    };
+    const out = computeConditionField(groundOptions, withExtra);
+    const extra = out.options.find((o) => o.value === "mystery");
+    expect(extra).toMatchObject({
+      tone: "neutral",
+      color: CONDITION_TONE_COLORS.neutral,
+      count: 5,
+    });
+    expect(out.total).toBe(69);
+  });
+
+  test("returns null % good for empty/missing data", () => {
+    expect(computeConditionField(groundOptions, null).goodPct).toBeNull();
+    expect(computeConditionField(groundOptions, { data: [] }).total).toBe(0);
+  });
+
+  test("primaryCount is the first option's count (yes/no readout numerator)", () => {
+    const yesNo = [
+      { value: "yes", label: "Yes", tone: "good" },
+      { value: "no", label: "No", tone: "bad" },
+    ];
+    const out = computeConditionField(yesNo, {
+      data: [
+        { group: "yes", label: "Yes", value: 31 },
+        { group: "no", label: "No", value: 11 },
+      ],
+    });
+    expect(out.primaryCount).toBe(31);
+    expect(out.total).toBe(42);
+  });
+});
+
+describe("processStatus", () => {
+  test("processToneColor: normal/operational green, non-operational red, else amber", () => {
+    expect(processToneColor("normal")).toBe(CONDITION_TONE_COLORS.good);
+    expect(processToneColor("normal_operation")).toBe(
+      CONDITION_TONE_COLORS.good
+    );
+    expect(processToneColor("operational")).toBe(CONDITION_TONE_COLORS.good);
+    expect(processToneColor("not_operational")).toBe(CONDITION_TONE_COLORS.bad);
+    expect(processToneColor("bad_odor")).toBe(CONDITION_TONE_COLORS.mid);
+  });
+
+  test("computeProcessBars maps counts in config order with rule/override colors", () => {
+    const options = [
+      { value: "normal", label: "Normal" },
+      { value: "bad_odor", label: "Bad odor" },
+      { value: "no_station", label: "No station", tone: "neutral" },
+    ];
+    const bars = computeProcessBars(options, {
+      data: [
+        { group: "bad_odor", label: "Bad odor", value: 2 },
+        { group: "normal", label: "Normal", value: 9 },
+      ],
+    });
+    expect(bars.map((b) => [b.label, b.count])).toEqual([
+      ["Normal", 9],
+      ["Bad odor", 2],
+      ["No station", 0],
+    ]);
+    expect(bars[0].color).toBe(CONDITION_TONE_COLORS.good);
+    expect(bars[1].color).toBe(CONDITION_TONE_COLORS.mid);
+    expect(bars[2].color).toBe(CONDITION_TONE_COLORS.neutral);
+  });
+
+  test("distinctParentCount counts per-parent rows", () => {
+    expect(distinctParentCount({ data: [{}, {}, {}] })).toBe(3);
+    expect(distinctParentCount(null)).toBe(0);
+  });
+});
+
+describe("computeComplianceTrend", () => {
+  test("monthLabelToKey parses 'Mon YYYY' to YYYY-MM", () => {
+    expect(monthLabelToKey("Jun 2025")).toBe("2025-06");
+    expect(monthLabelToKey("Dec 2025")).toBe("2025-12");
+    expect(monthLabelToKey("bogus")).toBeNull();
+  });
+
+  const axis = [
+    { key: "2025-05", label: "May" },
+    { key: "2025-06", label: "Jun" },
+  ];
+
+  test("option_share = pass option over all answered, per month, aligned to axis", () => {
+    const out = computeComplianceTrend(
+      [
+        {
+          key: "ohs",
+          label: "OHS",
+          color: "#f0ad4e",
+          type: "option_share",
+          question_name: "ohs_equipment_available",
+          pass_value: "yes",
+        },
+      ],
+      axis,
+      {
+        ohs__share: {
+          data: [
+            { month: "May 2025", Yes: 1, No: 3 },
+            { month: "Jun 2025", Yes: 3, No: 1 },
+          ],
+        },
+      }
+    );
+    expect(out.months).toEqual(["May", "Jun"]);
+    expect(out.series[0].data).toEqual([25, 75]);
+  });
+
+  test("threshold_all passes a parent only if all present params satisfy", () => {
+    const domain = {
+      key: "effluent",
+      label: "Effluent",
+      type: "threshold_all",
+      params: [
+        { question_name: "bod", op: "<", value: 40 },
+        { question_name: "cod", op: "<", value: 100 },
+      ],
+    };
+    const out = computeComplianceTrend([domain], axis, {
+      // May: P1 passes (30,90); P2 fails cod (10,150) -> 1/2 = 50%
+      effluent__bod: {
+        data: [{ month: "May 2025", P1: 30, P2: 10 }],
+      },
+      effluent__cod: {
+        data: [{ month: "May 2025", P1: 90, P2: 150 }],
+      },
+    });
+    expect(out.series[0].data[0]).toBe(50);
+    // Jun has no data -> null gap
+    expect(out.series[0].data[1]).toBeNull();
+  });
+
+  test("missing param value is no-data, not a failure", () => {
+    const domain = {
+      key: "effluent",
+      label: "Effluent",
+      type: "threshold_all",
+      params: [
+        { question_name: "bod", op: "<", value: 40 },
+        { question_name: "cod", op: "<", value: 100 },
+      ],
+    };
+    // P1 only has bod (passes); cod missing -> still counts as pass
+    const out = computeComplianceTrend(
+      [domain],
+      [{ key: "2025-05", label: "May" }],
+      {
+        effluent__bod: { data: [{ month: "May 2025", P1: 30 }] },
+        effluent__cod: { data: [{ month: "May 2025" }] },
+      }
+    );
+    expect(out.series[0].data[0]).toBe(100);
   });
 });
