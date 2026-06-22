@@ -97,4 +97,94 @@ describe("RankingWidget", () => {
     expect(call.params.sort).toBeUndefined();
     expect(call.params.limit).toBeUndefined();
   });
+
+  test("links each row to its control-center monitoring detail", async () => {
+    axios.mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            group: "1",
+            label: "Site Alpha",
+            value: "2025-01-10T00:00:00.000Z",
+          },
+          { group: "2", label: "Site Beta", value: "2025-03-10T00:00:00.000Z" },
+        ],
+      },
+    });
+
+    render(
+      <RankingWidget
+        item={item}
+        filterState={emptyFilters}
+        parentFormId={1748903240763}
+      />
+    );
+
+    const link = await screen.findByRole("link", { name: "Site Beta" });
+    expect(link).toHaveAttribute(
+      "href",
+      "/control-center/data/1748903240763/monitoring/2"
+    );
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  test("renders plain text (no link) when no parent form id is available", async () => {
+    axios.mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            group: "1",
+            label: "Site Alpha",
+            value: "2025-01-10T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+
+    render(<RankingWidget item={item} filterState={emptyFilters} />);
+
+    expect(await screen.findByText("Site Alpha")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  test("shows the date question label, humanized from question_name", async () => {
+    axios.mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            group: "1",
+            label: "Site Alpha",
+            value: "2025-01-10T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+
+    render(<RankingWidget item={item} filterState={emptyFilters} />);
+
+    expect(await screen.findByText("Inspection date")).toBeInTheDocument();
+  });
+
+  test("prefers an explicit date_label over the humanized question_name", async () => {
+    axios.mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            group: "1",
+            label: "Site Alpha",
+            value: "2025-01-10T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+
+    render(
+      <RankingWidget
+        item={{ ...item, date_label: "Last inspected" }}
+        filterState={emptyFilters}
+      />
+    );
+
+    expect(await screen.findByText("Last inspected")).toBeInTheDocument();
+  });
 });

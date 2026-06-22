@@ -2,8 +2,30 @@ import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Alert, Card, Empty, Skeleton, Typography } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
+import { DETAIL_URL_TEMPLATE } from "../constants";
 
 const { Text } = Typography;
+
+/**
+ * Build the control-center detail URL for a ranked row. The row's `group`
+ * (from group_by:parent_id) is the parent datapoint id used as {data_id};
+ * {parent_form_id} comes from the dashboard's parentFormId (or api.form_id).
+ * Returns null when either id is missing, so the label stays plain text.
+ */
+const buildDetailHref = (item, formId, dataId) => {
+  if (
+    !formId ||
+    dataId === null ||
+    typeof dataId === "undefined" ||
+    dataId === ""
+  ) {
+    return null;
+  }
+  const template = item.click_url_template || DETAIL_URL_TEMPLATE;
+  return template
+    .replace("{parent_form_id}", formId)
+    .replace("{data_id}", dataId);
+};
 
 const stripRankingFields = (api = {}) => {
   const next = { ...api, group_by: "parent_id" };
@@ -27,6 +49,24 @@ const formatDate = (value) => {
     month: "short",
     day: "numeric",
   }).format(new Date(time));
+};
+
+/** Humanize a snake_case question_name, e.g. "date_of_inspection" -> "Date of inspection". */
+const humanizeQuestionName = (name) =>
+  String(name || "")
+    .replace(/_/g, " ")
+    .replace(/^./, (char) => char.toUpperCase());
+
+/**
+ * Label for which date each row shows. Explicit `item.date_label` wins;
+ * otherwise derive it from the ranking question_name. Null when neither exists.
+ */
+const resolveDateLabel = (item) => {
+  if (item.date_label) {
+    return item.date_label;
+  }
+  const qname = item.api?.question_name;
+  return qname ? humanizeQuestionName(qname) : null;
 };
 
 export const rankRows = (rows, sort = "desc", limit = 8) => {
@@ -84,12 +124,22 @@ const RankingWidget = ({
     [data, item.api]
   );
 
+  const detailFormId = parentFormId || item.api?.form_id;
+  const dateLabel = resolveDateLabel(item);
+
   return (
     <Card
       title={item.label}
       size="small"
       style={{ marginBottom: 0 }}
       data-testid={`ranking-widget-${item.id}`}
+      extra={
+        dateLabel ? (
+          <Text type="secondary" style={{ fontWeight: "normal" }}>
+            {dateLabel}
+          </Text>
+        ) : null
+      }
     >
       {loading ? (
         <Skeleton active paragraph={{ rows: 5 }} />
@@ -97,26 +147,36 @@ const RankingWidget = ({
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
         <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none" }}>
-          {rows.map((row, index) => (
-            <li
-              key={row.group || `${row.label}-${index}`}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "32px 1fr",
-                columnGap: 12,
-                padding: "8px 0",
-                borderBottom:
-                  index === rows.length - 1 ? "none" : "1px solid #f0f0f0",
-              }}
-            >
-              <Text strong>{index + 1}</Text>
-              <div>
-                <Text>{row.label || row.group}</Text>
-                <br />
-                <Text type="secondary">{formatDate(row.value)}</Text>
-              </div>
-            </li>
-          ))}
+          {rows.map((row, index) => {
+            const label = row.label || row.group;
+            const href = buildDetailHref(item, detailFormId, row.group);
+            return (
+              <li
+                key={`${row.label}-${index}`}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "32px 1fr",
+                  columnGap: 12,
+                  padding: "8px 0",
+                  borderBottom:
+                    index === rows.length - 1 ? "none" : "1px solid #f0f0f0",
+                }}
+              >
+                <Text strong>{index + 1}</Text>
+                <div>
+                  {href ? (
+                    <a href={href} target="_blank" rel="noopener noreferrer">
+                      {label}
+                    </a>
+                  ) : (
+                    <Text>{label}</Text>
+                  )}
+                  <br />
+                  <Text type="secondary">{formatDate(row.value)}</Text>
+                </div>
+              </li>
+            );
+          })}
         </ol>
       )}
       {error && (
