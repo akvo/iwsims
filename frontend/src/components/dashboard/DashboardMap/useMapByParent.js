@@ -1,22 +1,29 @@
 import { useEffect, useState } from "react";
 import { api } from "../../../lib";
-import getQuestionOptions from "./getQuestionOptions";
+import getCrossFormQuestionOptions from "./getCrossFormQuestionOptions";
 
 /**
  * Fetches and caches the per-parent_id bucket value for the active
- * select filter. Both question-id and formula filters route to
+ * select filter. Both question-name and formula filters route to
  * /visualization/values/formula (decision #22):
  *   - formula filters pass the config JSON directly
- *   - question-id filters build an equivalent option_equals formula
- *     from window.forms so the formula endpoint handles both modes
+ *   - question-name filters build an equivalent option_equals formula
+ *     from the family's option list so the endpoint handles both modes
+ *
+ * Scope is always cross-form: options are unioned across the
+ * registration family (the registration form `sourceFormId` plus its
+ * monitoring forms) and the backend resolves the latest value per
+ * parent across all of them — with a registration fallback — via
+ * mv_cross_form_latest (passed as `parent_form_id`).
  *
  * @param {{
  *   activeFilter: Object | null,
  *   filterState: Object,
+ *   sourceFormId: number | undefined,
  * }} args
  * @returns {{ byParent: Object, loading: boolean, error: any }}
  */
-const useMapByParent = ({ activeFilter, filterState }) => {
+const useMapByParent = ({ activeFilter, filterState, sourceFormId }) => {
   const [byParent, setByParent] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -44,8 +51,8 @@ const useMapByParent = ({ activeFilter, filterState }) => {
     if (activeFilter.formula) {
       formula = activeFilter.formula;
     } else if (activeFilter.question_name) {
-      const options = getQuestionOptions(
-        activeFilter.form_id,
+      const options = getCrossFormQuestionOptions(
+        sourceFormId,
         activeFilter.question_name
       );
       formula = {
@@ -70,7 +77,7 @@ const useMapByParent = ({ activeFilter, filterState }) => {
 
     const request = api.get("visualization/values/formula", {
       params: {
-        form_id: activeFilter.form_id,
+        parent_form_id: sourceFormId,
         group_by: "parent_id",
         monitoring: "latest",
         formula: JSON.stringify(formula),
@@ -101,7 +108,7 @@ const useMapByParent = ({ activeFilter, filterState }) => {
     return () => {
       cancelled = true;
     };
-  }, [activeFilter, filterState]);
+  }, [activeFilter, filterState, sourceFormId]);
 
   return { byParent, loading, error };
 };

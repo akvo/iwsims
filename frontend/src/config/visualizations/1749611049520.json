@@ -91,13 +91,8 @@
           "type": "select",
           "key": "station_status",
           "label": "Operationality",
-          "form_id": 1749611905372,
           "question_name": "station_status",
           "color_map": {
-            "operational": "#64A73B",
-            "overflowing": "#e6ab02",
-            "blocked": "#e41a1c",
-            "not_operational": "#666666",
             "_no_info": "#999999"
           }
         },
@@ -105,13 +100,8 @@
           "type": "select",
           "key": "electrical_panel",
           "label": "Electrical issues",
-          "form_id": 1749611905372,
           "question_name": "electrical_panel",
           "color_map": {
-            "broken": "#e41a1c",
-            "need_maintenance": "#e6ab02",
-            "electrical_hazard": "#1b9e77",
-            "satisfactory": "#7570b3",
             "_no_info": "#999999"
           }
         },
@@ -119,7 +109,6 @@
           "type": "select",
           "key": "standby_facility",
           "label": "Standby facility",
-          "form_id": 1749611905372,
           "formula": {
             "buckets": [
               {

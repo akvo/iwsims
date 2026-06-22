@@ -9,6 +9,7 @@ import DashboardMapHeader, { resolveBuckets } from "./DashboardMapHeader";
 import MapPopupCard from "./MapPopupCard";
 import useMapFilters from "./useMapFilters";
 import useMapByParent from "./useMapByParent";
+import resolveColorMap from "./resolveColorMap";
 import "./styles.scss";
 
 const DEFAULT_COLOR = "#1890ff";
@@ -20,10 +21,9 @@ const DEFAULT_COLOR = "#1890ff";
  *   GET /api/v1/maps/geolocation/{source_form_id}
  *       [?administration=<id>&criteria=...&from_date=...
  *        &to_date=...&include_monitoring=true]
- *   GET /api/v1/visualization/values
- *       (when active select filter has question_id)
  *   GET /api/v1/visualization/values/formula
- *       (when active select filter has formula)
+ *       (per active select filter; cross-form, scoped by
+ *        parent_form_id = source_form_id)
  *
  * The geolocation response carries id, name, geo, administration_id,
  * administration_full_name, updated. byParent[id] is the active
@@ -60,7 +60,11 @@ const DashboardMap = ({
     toggleDisabled,
   } = useMapFilters(itemFilters, filterState);
 
-  const { byParent } = useMapByParent({ activeFilter, filterState });
+  const { byParent } = useMapByParent({
+    activeFilter,
+    filterState,
+    sourceFormId,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -138,10 +142,14 @@ const DashboardMap = ({
 
   const bucketForPoint = (pointId) => byParent[pointId] || "_no_info";
 
+  const colorMap = useMemo(
+    () => resolveColorMap(activeFilter, sourceFormId),
+    [activeFilter, sourceFormId]
+  );
+
   const colorForParent = (pointId) => {
-    const map = activeFilter?.color_map || {};
     const value = bucketForPoint(pointId);
-    return map[value] || map._no_info || DEFAULT_COLOR;
+    return colorMap[value] || colorMap._no_info || DEFAULT_COLOR;
   };
 
   const visiblePoints = useMemo(() => {
@@ -151,7 +159,7 @@ const DashboardMap = ({
     if (!activeFilter) {
       return pts;
     }
-    const buckets = resolveBuckets(activeFilter);
+    const buckets = resolveBuckets(activeFilter, sourceFormId);
     if (buckets.length === 0) {
       return pts;
     }
@@ -186,6 +194,7 @@ const DashboardMap = ({
         toggleValues={toggleValues}
         onToggleChange={setToggleValue}
         toggleDisabled={toggleDisabled}
+        sourceFormId={sourceFormId}
       />
       <MapContainer
         center={center}

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { api, uiText } from "../../../lib";
-import getQuestionOptions from "./getQuestionOptions";
+import getCrossFormQuestionOptions from "./getCrossFormQuestionOptions";
 
 const LOADING = "…";
 
@@ -10,10 +10,10 @@ const resolveDynamic = (activeFilter, byParent, pointId, sourceFormId) => {
     return null;
   }
   const raw = byParent?.[pointId];
+  // No row for this datapoint means it has no answer on any form in the
+  // family — present it the same as an explicit "_no_info" bucket.
   if (raw === null || typeof raw === "undefined") {
-    const isRegistrationFilter =
-      Number(activeFilter.form_id) === Number(sourceFormId);
-    return isRegistrationFilter ? "Not answered" : "No monitoring data";
+    return "_no_info";
   }
   if (activeFilter.formula) {
     const buckets = activeFilter.formula.buckets || [];
@@ -27,8 +27,8 @@ const resolveDynamic = (activeFilter, byParent, pointId, sourceFormId) => {
     return raw;
   }
   if (activeFilter.question_name) {
-    const opts = getQuestionOptions(
-      activeFilter.form_id,
+    const opts = getCrossFormQuestionOptions(
+      sourceFormId,
       activeFilter.question_name
     );
     const found = opts.find((o) => String(o.value) === String(raw));

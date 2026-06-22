@@ -210,11 +210,8 @@
           "type": "select",
           "key": "operational_status",
           "label": "Operational status",
-          "form_id": 1749632545233,
           "question_name": "system_status",
           "color_map": {
-            "operational": "#64A73B",
-            "issue_with_system": "#e41a1c",
             "_no_info": "#999999"
           }
         },
@@ -222,7 +219,6 @@
           "type": "select",
           "key": "drinking_water_compliance",
           "label": "Drinking water compliance",
-          "form_id": 1749632545233,
           "formula": {
             "buckets": [
               {
@@ -288,12 +284,9 @@
           "type": "select",
           "key": "presence_water_committee",
           "label": "Presence of active water committee",
-          "form_id": 1749623934933,
           "question_name": "water_committee",
           "color_map": {
-            "yes": "#64A73B",
             "not_active": "#999999",
-            "no": "#e41a1c",
             "_no_info": "#377eb8"
           }
         },

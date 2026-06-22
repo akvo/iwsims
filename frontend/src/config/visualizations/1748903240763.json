@@ -87,11 +87,8 @@
           "type": "select",
           "key": "influent_pump_station",
           "label": "Influent pump station presence (Y/N)",
-          "form_id": 1748905550055,
           "question_name": "influent_pump_station",
           "color_map": {
-            "yes": "#64A73B",
-            "no": "#e41a1c",
             "_no_info": "#999999"
           }
         },
@@ -99,17 +96,10 @@
           "type": "select",
           "key": "final_recommendations",
           "label": "Final recommendations",
-          "form_id": 1748905550055,
           "question_name": "final_recommendations",
           "color_map": {
             "increase_in_budget": "#003f5c",
-            "capacity_building": "#d95f02",
-            "upgrading_works": "#7570b3",
-            "technical_assistance": "#e7298a",
             "training": "#66a61e",
-            "plant_rehabilitation": "#e6ab02",
-            "plant_augmentation": "#a6761d",
-            "other": "#1f78b4",
             "_no_info": "#999999"
           }
         },

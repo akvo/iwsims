@@ -120,15 +120,7 @@
           "type": "select",
           "key": "disinfection_technique",
           "label": "Disinfection technique",
-          "form_id": 1749652214711,
-          "question_name": "disinfection_technique",
-          "color_map": {
-            "chlorine_gas": "#1b9e77",
-            "hth_powder": "#d95f02",
-            "sodium_hypochlorite": "#7570b3",
-            "dpd_tablets": "#e7298a",
-            "_no_info": "#999999"
-          }
+          "question_name": "disinfection_technique"
         },
         {
           "type": "toggle",
