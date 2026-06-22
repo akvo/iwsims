@@ -217,6 +217,7 @@ def visualization_values(request, version):
             "include_unanswered": validated.get(
                 "include_unanswered", False
             ),
+            "include_empty": validated.get("include_empty", False),
         }
         data, labels = get_values_by_question_name(question_name, params)
         return Response(

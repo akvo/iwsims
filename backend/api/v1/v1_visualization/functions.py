@@ -3,14 +3,16 @@ from collections import defaultdict
 
 from django.db import connection
 from django.db.models import (
-    Avg, Count, Q, Subquery, OuterRef,
+    Avg, Count, Q, Subquery, OuterRef, Exists,
 )
+from django.db.models.functions import Substr
 from datetime import datetime as dt_datetime, timedelta, date
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_forms.models import Questions, QuestionOptions
+from api.v1.v1_forms.constants import QuestionTypes
 from api.v1.v1_profile.models import Administration
 from api.v1.v1_visualization.constants import MATERIALIZED_VIEWS
 from api.v1.v1_visualization.models import (
@@ -727,6 +729,8 @@ def get_values_by_question_name(question_name, params):
     value_type = params.get("value_type", "number")
     sum_by = params.get("sum_by")
     option_value = params.get("option_value")
+    include_unanswered = params.get("include_unanswered", False)
+    include_empty = params.get("include_empty", False)
     rolling_months = params.get("rolling_months")
     from_date = params.get("from_date")
     to_date = params.get("to_date")
@@ -746,16 +750,25 @@ def get_values_by_question_name(question_name, params):
             qs, administration_id, field='administration_id'
         )
 
-    # Recency / date-window filter on the latest submission timestamp.
+    # For a date question (e.g. inspection_date), recency/window filters
+    # must compare the latest *answer* date, not the submission timestamp —
+    # "COUNT plants with latest inspection_date >= today - N". Detect the
+    # type up front so _apply_qname_date_filter can switch fields.
+    qtype = qs.values_list("question_type", flat=True).first()
     qs = _apply_qname_date_filter(
-        qs, rolling_months, from_date, to_date
+        qs, rolling_months, from_date, to_date,
+        date_answer=(qtype == QuestionTypes.date),
     )
 
     # Card / count mode: a single parent count, optionally narrowed to a
     # specific option value. Triggered by sum_by=parent_id or option_value
     # so the number/option aggregation defaults below stay unchanged.
     if sum_by == "parent_id" or option_value:
-        return _count_parents_by_qname(qs, option_value, value_type)
+        return _count_parents_by_qname(
+            qs, option_value, value_type, params=params,
+            include_unanswered=include_unanswered,
+            include_empty=include_empty,
+        )
 
     # Pick the most common question_type across all rows (mode).
     # A well-formed dataset has one type per question_name; when forms
@@ -780,13 +793,38 @@ def get_values_by_question_name(question_name, params):
     return _values_by_qname_text(qs)
 
 
-def _apply_qname_date_filter(qs, rolling_months, from_date, to_date):
-    """Filter a cross-form queryset by submission recency / date window.
+def _apply_qname_date_filter(
+    qs, rolling_months, from_date, to_date, date_answer=False
+):
+    """Filter a cross-form queryset by recency / date window.
 
-    - rolling_months: keep rows whose latest answer is within the last N
-      months (approximated as N * 30 days from now).
-    - from_date / to_date: inclusive bounds on the latest answer date.
+    - rolling_months: keep rows within the last N months (~N*30 days).
+    - from_date / to_date: inclusive bounds.
+
+    By default the bounds compare the submission timestamp
+    (``latest_created``). When ``date_answer`` is set (the question is
+    itself a date, e.g. inspection_date), the bounds compare the latest
+    answer's date prefix (``YYYY-MM-DD`` of ``latest_text_value``)
+    instead. That prefix is the date as entered in the field's locale,
+    so a record captured "today" is not pushed to "tomorrow" by a UTC
+    conversion of its submission timestamp.
     """
+    def _iso(d):
+        return d.isoformat() if hasattr(d, "isoformat") else str(d)
+
+    if date_answer:
+        qs = qs.annotate(_ans_date=Substr("latest_text_value", 1, 10))
+        if rolling_months:
+            cutoff = (
+                timezone.now() - timedelta(days=30 * rolling_months)
+            ).date()
+            qs = qs.filter(_ans_date__gte=_iso(cutoff))
+        if from_date:
+            qs = qs.filter(_ans_date__gte=_iso(from_date))
+        if to_date:
+            qs = qs.filter(_ans_date__lte=_iso(to_date))
+        return qs
+
     if rolling_months:
         cutoff = timezone.now() - timedelta(days=30 * rolling_months)
         qs = qs.filter(latest_created__gte=cutoff)
@@ -797,14 +835,50 @@ def _apply_qname_date_filter(qs, rolling_months, from_date, to_date):
     return qs
 
 
-def _count_parents_by_qname(qs, option_value, value_type):
+def _registration_parent_qs(qs, params):
+    """Registration datapoints in the same family/admin scope as a
+    cross-form queryset — the universe used to add coverage/answer gaps."""
+    parent_qs = FormData.objects.filter(
+        parent__isnull=True, is_pending=False, is_draft=False,
+    )
+    parent_form_id = params.get("parent_form_id")
+    if parent_form_id:
+        parent_qs = parent_qs.filter(form_id=parent_form_id)
+    else:
+        parent_form_ids = list(
+            qs.values_list("parent_form_id", flat=True).distinct()
+        )
+        parent_qs = parent_qs.filter(form_id__in=parent_form_ids)
+    administration_id = params.get("administration_id")
+    if administration_id:
+        parent_qs = apply_administration_filter(parent_qs, administration_id)
+    return parent_qs
+
+
+def _count_parents_by_qname(
+    qs, option_value, value_type, params=None,
+    include_unanswered=False, include_empty=False,
+):
     """Count distinct parents for a question_name (card / KPI mode).
 
     When option_value is given, count only parents whose latest option
     values contain it. With value_type=percentage, return that count as a
-    share of all parents that answered the question.
+    share of the relevant universe.
+
+    Two optional "gap" inclusions (matching the form-scoped path):
+
+    - include_unanswered: also count registrations with no latest answer
+      for this question — whether monitored-but-skipped-it OR never
+      monitored (total - parents who answered this question). Used for
+      e.g. "No sample taken" = every plant that did not record a sample.
+    - include_empty: also count only registrations that were never
+      monitored at all (total - parents with any monitoring submission).
+
+    include_unanswered is the broader set and takes precedence when both
+    are set.
     """
-    total = qs.values("parent_id").distinct().count()
+    params = params or {}
+    answered = qs.values("parent_id").distinct().count()
     if option_value:
         matched = (
             qs.filter(latest_option_values__contains=[option_value])
@@ -813,12 +887,32 @@ def _count_parents_by_qname(qs, option_value, value_type):
             .count()
         )
     else:
-        matched = total
+        matched = answered
+
+    extra = 0
+    denominator = answered
+    if include_unanswered or include_empty:
+        parent_qs = _registration_parent_qs(qs, params)
+        denominator = parent_qs.values("id").distinct().count()
+        if include_unanswered:
+            # No latest answer for this question (monitored-skipped +
+            # never-monitored).
+            extra = max(0, denominator - answered)
+        else:
+            # Coverage gap only: registrations with zero monitoring.
+            child = FormData.objects.filter(
+                parent_id=OuterRef("id"),
+                is_pending=False, is_draft=False,
+            )
+            monitored = parent_qs.filter(Exists(child)).count()
+            extra = max(0, denominator - monitored)
 
     if value_type == "percentage":
-        value = round(matched / total * 100, 2) if total else 0
+        value = round(
+            (matched + extra) / denominator * 100, 2
+        ) if denominator else 0
     else:
-        value = matched
+        value = matched + extra
 
     label = option_value or "Total"
     group = option_value or "total"
