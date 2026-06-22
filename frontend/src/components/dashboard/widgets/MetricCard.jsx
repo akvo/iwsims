@@ -89,7 +89,12 @@ const MetricCard = ({
 
   let displayValue = "—";
   if (target) {
-    const targetRow = rows.find((r) => r.group === target);
+    // Match target_group against the row's option value (group) OR its
+    // label, so configs may reference either the option value ("no") or
+    // its display label ("No").
+    const targetRow = rows.find(
+      (r) => r.group === target || r.label === target
+    );
     if (targetRow) {
       const numerator = targetRow.value ?? 0;
       const denominator = rows.reduce((acc, r) => acc + (r.value || 0), 0);

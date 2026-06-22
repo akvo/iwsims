@@ -81,6 +81,22 @@ describe("MetricCard — share mode (target_group set)", () => {
     expect(await screen.findByText("3/5")).toBeInTheDocument();
   });
 
+  test("matches target_group against the row label (option value casing)", async () => {
+    // Backend groups by option value ("no"); config may target the
+    // label ("No"). The card must still resolve the row.
+    axiosRows([
+      { group: "no", label: "No", value: 3 },
+      { group: "yes", label: "Yes", value: 1 },
+    ]);
+    render(
+      <MetricCard
+        item={{ ...baseItem, target_group: "No", show_percentage: true }}
+        filterState={emptyFilters}
+      />
+    );
+    expect(await screen.findByText("3/4 (75%)")).toBeInTheDocument();
+  });
+
   test("renders N/M (P%) when show_percentage is true", async () => {
     axiosRows([
       { group: "operational", value: 2 },
