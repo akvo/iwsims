@@ -72,6 +72,9 @@ spaces" goal: `AND([a]="No",[b]>0)` — not `AND( [a] = "No" , [b] > 0 )`.
 | `DATE_HISTOGRAM([date_q],months)` | bucket latest parent inspection dates by recency | `bar` + `compute:date_histogram`; `> months` overdue bucket plus monthly buckets |
 | `VALUE_BUCKETS([q],0,1,2,3,4+)` | bucket per-parent numeric values into explicit labels | `bar` + `display:value_buckets` |
 | `STAGE_FLOW([stage1_q] AS "Stage 1", [stage2_q] AS "Stage 2", …)` | sequential positive-response flow; each later stage is counted only from parents that passed all prior stages | `custom_component` + `StageFlowWidget` Sankey |
+| `STATUS_BARS([q])` | per-option status bars for one process question, tone-coloured, with an "N in use" footer | `custom_component` + `ProcessStatusWidget` |
+| `CONDITION([q],GOOD(…),MID(…),BAD(…)[,TRACK(…)])` | one field of a condition panel: a good→bad share bar + option dot legend | `custom_component` + `ConditionMatrixWidget` (a group's `CONDITION` rows collapse into one panel) |
+| `COMPLIANCE_TREND(domain AS "Label", …)` | monthly % of parents passing each domain | `custom_component` + `ComplianceTrendWidget` line chart |
 | `VALUE([q])` | per-parent numeric value | `bar` / `dot_strip` + `group_by:parent_id` |
 | `COMPLIANT(boolexpr)` | pass/fail compliance | `stack_bar` / compliance KPI |
 | `RANK([date_q],ASC\|DESC,n)` | top-N parents by recency | ranking card / custom |
@@ -96,6 +99,92 @@ instead of total selected options.
 
 Use `DISTRIBUTION([q],FLAT)` when the desired view is a per-option tally where a
 single parent can increment more than one option bucket.
+
+### iwsims custom-component widgets
+
+Three outputs map to iwsims-only dashboard widgets (`frontend/src/components/dashboard/custom-components/`)
+rather than an `akvo-charts` primitive. They exist because the prototype layouts
+(dense condition matrices, per-process status bars, a multi-domain compliance
+trend) are compositions, not single charts. Each is **self-fetching**: the
+generated item carries the `api` blocks and the widget issues the `/values`
+calls itself (the dashboard's `computeResponses` fan-out is not involved).
+
+#### `STATUS_BARS([q])` → `ProcessStatusWidget` (row-level)
+
+One process question becomes one card of tone-coloured horizontal bars (one bar
+per option) with a footer caption like `12 plants have primary clarifier in use.`
+The generator emits, from the form family:
+
+- `api` `{question_name, group_by:"option", monitoring:"latest"}` — bar lengths.
+- `usage_api` `{question_name, group_by:"parent_id", monitoring:"latest"}` — the
+  footer numerator (distinct plants answering; a `multiple_option` question's
+  option counts overlap, so they cannot be summed to a plant count).
+- `options[]` `{value,label}` read from the question's option set (in form order).
+- `subtitle` by question type: `status counts (multi-select)` for
+  `multiple_option`, `operational / non operational` for `option`.
+- `footer_template` `"{n} plants have <indicator> in use."`
+
+**Tones are not authored** — `ProcessStatusWidget` derives them at render time
+(`normal`/`normal_operation`/`operational` → green, `not_operational` → red,
+everything else → amber). Left **manual**: a per-option tone override and the
+`{operating} of {total}` footer / `absent_value` of a presence-style question
+(e.g. WWTP *Influent Pumping*, where "no station" is grey and the footer counts
+plants that operate one).
+
+#### `CONDITION([q],GOOD(…),MID(…),BAD(…)[,TRACK(…)])` → `ConditionMatrixWidget` (group-level)
+
+A `CONDITION` row is **one field** of a panel; all `CONDITION` rows that share a
+CSV `group` collapse into a single `ConditionMatrixWidget` item with a `fields[]`
+array (this is the only group-level VizCalc output — every other output is one
+item per row). Unlike `STATUS_BARS`, condition tones **must be authored** in the
+formula: the monitoring forms' stored option colours are inconsistent (e.g.
+"electrical hazard" is green in the form definition), so the tone of each option
+is listed explicitly. `%good` = the share whose latest answer is a `GOOD` option.
+
+```text
+CONDITION([ground_conditions],GOOD("good","satisfactory"),MID("maintenance_in_progress"),BAD("poor"))
+```
+
+Per field the generator emits `{key,label,api(group_by:option,monitoring:latest),options:[{value,label,tone}]}`,
+option labels resolved from the form, ordered GOOD → MID → BAD → TRACK. Panel
+defaults: `columns:2`, `subtitle` from the group, `readout:"pct_good"`. Left
+**manual** (no CSV column carries it): the `count_of_total` readout for yes/no
+panels, the `TRACK` tone for a warning row (e.g. *Urgent maintenance programs*),
+side-by-side panel pairing (`col_span:12`, `columns:1`), and the exact
+two-column field interleave.
+
+#### `COMPLIANCE_TREND(domain AS "Label", …)` → `ComplianceTrendWidget` (row-level)
+
+One row becomes a 12-month line chart of the % of parents passing each domain.
+Each argument is one domain with one of two rule shapes:
+
+```text
+COMPLIANCE_TREND(THRESHOLD_ALL([bod]<40,[chemical_oxygen_demand]<100,[total_dissolved_solids]<1000) AS "Effluent",OPTION_SHARE([ohs_equipment_available]="yes") AS "OHS")
+```
+
+- `THRESHOLD_ALL(…)` → a `threshold_all` domain (per-parent monthly values via
+  `group_by:month` + `stack_by:parent_id`; a parent passes if every *present*
+  param satisfies its threshold).
+- `OPTION_SHARE([q]="v")` → an `option_share` domain (`group_by:month` +
+  `stack_by:option`; pass option ÷ all answered that month).
+
+Series colours are not derivable — left **manual**. A **derived "operational"
+domain is not expressible** as a frontend rule: option questions return nothing
+under `stack_by:parent_id`, so a per-plant cross-question proxy needs backend
+support (tracked separately).
+
+#### What stays manual
+
+These widgets carry presentation/semantic metadata the flat four-column CSV does
+not model. The generator reproduces structure and data wiring; the items below
+are re-applied by hand after regeneration (the same TODO discipline as
+`__TODO_unit__` / `__TODO_option_value__`):
+
+| Manual touch | Widget |
+|--------------|--------|
+| condition per-option tones, `TRACK` tone, yes/no `count_of_total` readout, panel pairing & field interleave | `ConditionMatrixWidget` |
+| per-option tone override, presence-style `absent_value` + `{operating} of {total}` footer | `ProcessStatusWidget` |
+| series colours, the backend-dependent "operational" domain | `ComplianceTrendWidget` |
 
 ### Before → after (real rows)
 
