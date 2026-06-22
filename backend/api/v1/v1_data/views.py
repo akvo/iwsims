@@ -574,6 +574,9 @@ class DataDetailDeleteView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         instance.delete()
+        # Refresh materialized views so the deleted datapoint drops out
+        # of the visualization aggregates.
+        async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
