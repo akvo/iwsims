@@ -377,6 +377,7 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
     //  • kpi_stack   [{category, SeriesA: N, "No information available": M}]
     //    — one series per stack key; target by series name via chart.getOption().
     const noInfoLabel = uiText.en.noInformationAvailable;
+    const noInfoColor = commonProps.config?.noInfoColor || NO_INFO_COLOR;
     const chartData = commonProps.data || [];
     if (chartData.length > 0 && "label" in chartData[0]) {
       // Simple bar chart path.
@@ -396,7 +397,7 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
               ...(r.color || r.label === noInfoLabel
                 ? {
                     itemStyle: {
-                      color: r.color || NO_INFO_COLOR,
+                      color: r.color || noInfoColor,
                     },
                   }
                 : {}),
@@ -409,13 +410,19 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
           overrides.xAxis = axisWithData;
         }
       }
-    } else if (chartData.length > 0 && noInfoLabel in chartData[0]) {
+    } else if (
+      chartData.length > 0 &&
+      chartData.some((r) => noInfoLabel in r)
+    ) {
       // kpi_stack path: find the series by name and set its itemStyle.
+      // The no-info key can sit on any row (e.g. the compliance chart puts
+      // it on the last "No information available" category, not chartData[0]),
+      // so probe every row rather than only the first.
       const existingSeries = chart.getOption()?.series || [];
       const noInfoIdx = existingSeries.findIndex((s) => s.name === noInfoLabel);
       if (noInfoIdx !== -1) {
         overrides.series = existingSeries.map((_, i) =>
-          i === noInfoIdx ? { itemStyle: { color: NO_INFO_COLOR } } : {}
+          i === noInfoIdx ? { itemStyle: { color: noInfoColor } } : {}
         );
       }
     }
@@ -787,6 +794,13 @@ const ChartRenderer = ({
     config: {
       ...(item.config || {}),
       ...(horizontal ? { horizontal: true } : {}),
+      // Optional override for the "No information available" bucket colour,
+      // taken from the item's color_map._no_info (falls back to the neutral
+      // NO_INFO_COLOR grey when absent). Lets a config recolour the no-info
+      // series away from the cycling palette (which otherwise lands on red).
+      ...(item.color_map?._no_info
+        ? { noInfoColor: item.color_map._no_info }
+        : {}),
     },
     data,
     rawConfig: item.raw_config,
