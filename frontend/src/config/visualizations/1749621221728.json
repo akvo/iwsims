@@ -451,7 +451,8 @@
         "xAxisLabel": "Number of RWS",
         "yAxisLabel": "Project type",
         "xAxis": {
-          "nameGap": 164
+          "nameGap": 164,
+          "minInterval": 1
         }
       },
       "compute": "cross_tab",

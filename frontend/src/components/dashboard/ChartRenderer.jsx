@@ -420,6 +420,17 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       }
     }
 
+    // Value-axis minInterval (e.g. integer-only ticks for counts). For a
+    // horizontal chart the value axis is the x-axis — config places it under
+    // config.xAxis; for a vertical chart it is the y-axis, already merged
+    // from config.yAxis above.
+    if (horizontal && typeof xAxisOverride.minInterval !== "undefined") {
+      overrides.xAxis = {
+        ...(overrides.xAxis || {}),
+        minInterval: xAxisOverride.minInterval,
+      };
+    }
+
     chart.setOption(overrides, false);
   }); // No deps: see ChartWithMarkLines note.
   return <Component ref={setRef} {...commonProps} />;

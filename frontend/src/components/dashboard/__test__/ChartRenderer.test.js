@@ -381,6 +381,44 @@ describe("ChartRenderer", () => {
     expect(axios).not.toHaveBeenCalled();
   });
 
+  test("horizontal chart applies config.xAxis.minInterval to the value axis", () => {
+    const computeResponses = {
+      process_counts: {
+        chart_processes: {
+          flocculation: { data: [{ value: 2 }] },
+          filtration: { data: [{ value: 1 }] },
+        },
+      },
+    };
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_processes",
+          chart_type: "bar",
+          compute: "process_counts",
+          orientation: "horizontal",
+          segments: [
+            { key: "flocculation", label: "Floc" },
+            { key: "filtration", label: "Filtration" },
+          ],
+          config: {
+            title: "Implementation at Scale",
+            xAxis: { nameGap: 164, minInterval: 1 },
+          },
+        }}
+        filterState={emptyFilters}
+        today={today}
+        computeResponses={computeResponses}
+      />
+    );
+    const opt = JSON.parse(
+      screen.getByTestId("chart-bar").getAttribute("data-option")
+    );
+    // Value axis is the x-axis when horizontal → integer-only ticks.
+    expect(opt.xAxis.minInterval).toBe(1);
+    expect(axios).not.toHaveBeenCalled();
+  });
+
   test("compute=capacity_compare assembles bar rows from measure responses", () => {
     const computeResponses = {
       capacity_compare: {
