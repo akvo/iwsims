@@ -6,7 +6,7 @@ from drf_spectacular.utils import (
 )
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import get_object_or_404
-from api.v1.v1_forms.models import Forms
+from api.v1.v1_forms.models import Forms, Questions
 from api.v1.v1_forms.constants import QuestionTypes
 from api.v1.v1_visualization.dashboard_serializers import (
     ValuesFilterSerializer,
@@ -67,7 +67,8 @@ from utils.custom_serializer_fields import (
             location=OpenApiParameter.QUERY,
             description=(
                 "Registration or monitoring form ID. "
-                "Required unless question_name is provided."
+                "Optional when question_name or parent_form_id is provided. "
+                "For count-only requests, parent_form_id is the fallback."
             ),
         ),
         OpenApiParameter(
@@ -198,32 +199,50 @@ def visualization_values(request, version):
     validated = serializer.validated_data
     question_name = validated.get("question_name")
 
-    # Global cross-form path: question_name with NO form_id. With a
-    # form_id, the serializer resolves the question by name and we fall
-    # through to the form-scoped rich handlers below.
+    # Global cross-form path: question_name with NO form_id. When the
+    # question exists only on the registration form identified by
+    # parent_form_id, use that form as the family fallback. Monitoring
+    # questions continue through mv_cross_form_latest across all children.
     if question_name and not validated.get("form_id"):
-        params = {
-            "administration_id": resolve_default_administration_id(
-                validated.get("administration_id"),
-            ),
-            "group_by": validated.get("group_by"),
-            "value_type": validated.get("value_type", "number"),
-            "sum_by": validated.get("sum_by"),
-            "option_value": validated.get("option_value"),
-            "rolling_months": validated.get("rolling_months"),
-            "from_date": validated.get("from_date"),
-            "to_date": validated.get("to_date"),
-            "parent_form_id": validated.get("parent_form_id"),
-            "include_unanswered": validated.get(
-                "include_unanswered", False
-            ),
-            "include_empty": validated.get("include_empty", False),
-        }
-        data, labels = get_values_by_question_name(question_name, params)
-        return Response(
-            {"data": data, "labels": labels},
-            status=status.HTTP_200_OK,
-        )
+        parent_form_id = validated.get("parent_form_id")
+        parent_question = None
+        has_monitoring_question = False
+        if parent_form_id:
+            parent_question = Questions.objects.filter(
+                form_id=parent_form_id,
+                name=question_name,
+            ).first()
+            has_monitoring_question = Questions.objects.filter(
+                form__parent_id=parent_form_id,
+                name=question_name,
+            ).exists()
+
+        if parent_question and not has_monitoring_question:
+            validated["form_id"] = parent_form_id
+            validated["question"] = parent_question
+        else:
+            params = {
+                "administration_id": resolve_default_administration_id(
+                    validated.get("administration_id"),
+                ),
+                "group_by": validated.get("group_by"),
+                "value_type": validated.get("value_type", "number"),
+                "sum_by": validated.get("sum_by"),
+                "option_value": validated.get("option_value"),
+                "rolling_months": validated.get("rolling_months"),
+                "from_date": validated.get("from_date"),
+                "to_date": validated.get("to_date"),
+                "parent_form_id": parent_form_id,
+                "include_unanswered": validated.get(
+                    "include_unanswered", False
+                ),
+                "include_empty": validated.get("include_empty", False),
+            }
+            data, labels = get_values_by_question_name(question_name, params)
+            return Response(
+                {"data": data, "labels": labels},
+                status=status.HTTP_200_OK,
+            )
 
     form = get_object_or_404(
         Forms, pk=validated["form_id"]

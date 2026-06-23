@@ -90,10 +90,27 @@ class ValuesFilterSerializer(serializers.Serializer):
     def validate(self, data):
         question_name = data.get("question_name")
         form_id = data.get("form_id")
+        parent_form_id = data.get("parent_form_id")
+
+        # Dashboard requests always carry their registration-family scope as
+        # parent_form_id. For count-only requests (notably denominator_api),
+        # that registration form is the natural form_id fallback.
+        if not question_name and not form_id and parent_form_id:
+            if not Forms.objects.filter(
+                pk=parent_form_id,
+                parent__isnull=True,
+            ).exists():
+                raise serializers.ValidationError({
+                    "parent_form_id": (
+                        f"Registration form {parent_form_id} not found."
+                    ),
+                })
+            data["form_id"] = parent_form_id
+            form_id = parent_form_id
 
         if not question_name and not form_id:
             raise serializers.ValidationError(
-                "Either question_name or form_id is required."
+                "Either question_name, form_id, or parent_form_id is required."
             )
 
         # Global cross-form path: question_name without form_id.

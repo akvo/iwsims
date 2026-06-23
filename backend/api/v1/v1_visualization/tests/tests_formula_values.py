@@ -69,6 +69,30 @@ class FormulaValuesViewTests(
         self.assertEqual(rows[self.reg1.id], "low")
         self.assertEqual(rows[self.reg2.id], "high")
 
+    def test_form_scoped_formula_uses_latest_submission(self):
+        response = self.client.get(
+            self._url(
+                self._formula(),
+                extra=f"&form_id={self.monitoring.id}",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        rows = {
+            row["group"]: row["label"]
+            for row in response.json()["data"]
+        }
+        self.assertEqual(rows[self.reg1.id], "low")
+        self.assertEqual(rows[self.reg2.id], "high")
+
+    def test_form_scoped_formula_rejects_unrelated_form(self):
+        response = self.client.get(
+            self._url(
+                self._formula(),
+                extra=f"&form_id={self.registration.id}",
+            )
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_between_inclusive_bounds(self):
         # Salinity-style range: 6.5 <= value <= 25.0
         formula = {

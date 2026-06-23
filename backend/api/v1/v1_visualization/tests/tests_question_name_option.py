@@ -30,6 +30,37 @@ class QuestionNameOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+    def test_parent_form_id_falls_back_to_registration_question(self):
+        """Registration questions need no duplicate form_id."""
+        Answers.objects.create(
+            data=self.reg1,
+            question=self.q_reg_option,
+            options=["urban"],
+            created_by=self.user,
+        )
+        Answers.objects.create(
+            data=self.reg2,
+            question=self.q_reg_option,
+            options=["rural"],
+            created_by=self.user,
+        )
+        refresh_all_mvs()
+
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name={self.q_reg_option.name}"
+            f"&parent_form_id={self.registration.id}"
+            "&group_by=option&include_unanswered=true"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        by_group = {
+            row["group"]: row["value"]
+            for row in response.json()["data"]
+        }
+        self.assertEqual(by_group["urban"], 1)
+        self.assertEqual(by_group["rural"], 1)
+        self.assertEqual(by_group.get("_no_info", 0), 0)
+
     def test_neither_question_name_nor_form_id_returns_400(self):
         """No form_id and no question_name returns 400."""
         response = self.client.get(

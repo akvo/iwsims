@@ -49,6 +49,25 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(values_by_group["pending"]["value"], 1)
         self.assertEqual(values_by_group["pending"]["color"], "#ff7f00")
 
+    def test_option_group_by_parent_latest(self):
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=parent_id&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        rows = {
+            row["group"]: row["value"]
+            for row in response.json()["data"]
+        }
+        self.assertEqual(
+            rows[str(self.reg1.id)], ["feature_y", "feature_z"]
+        )
+        self.assertEqual(
+            rows[str(self.reg2.id)],
+            ["feature_x", "feature_y", "feature_z"],
+        )
+
     def test_option_group_by_option_latest(self):
         """Option question group_by=option, monitoring=latest.
 

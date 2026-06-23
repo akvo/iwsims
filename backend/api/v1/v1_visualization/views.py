@@ -22,6 +22,8 @@ from api.v1.v1_visualization.models import (
 )
 from api.v1.v1_visualization.functions import (
     apply_criteria_to_monitoring_qs,
+    build_date_filters,
+    get_latest_monitoring_subquery,
 )
 from api.v1.v1_visualization.formula import (
     evaluate as formula_evaluate,
@@ -512,9 +514,76 @@ def visualization_values_formula(request, version):
 
     validated = serializer.validated_data
     parent_form_id = validated["parent_form_id"]
+    form_id = validated.get("form_id")
     formula = validated["formula"]
     from_date = validated.get("from_date")
     to_date = validated.get("to_date")
+
+    if form_id:
+        date_params = {
+            "from_date": from_date,
+            "to_date": to_date,
+        }
+        date_filters = build_date_filters(date_params)
+        parents = FormData.objects.filter(
+            form_id=parent_form_id,
+            parent__isnull=True,
+            is_pending=False,
+            is_draft=False,
+        ).annotate(
+            latest_id=get_latest_monitoring_subquery(
+                form_id, date_filters or None,
+            ),
+        )
+        answers_by_parent = {
+            parent_id: {}
+            for parent_id in parents.values_list("id", flat=True)
+        }
+        latest = {
+            parent_id: latest_id
+            for parent_id, latest_id in parents.exclude(
+                latest_id__isnull=True,
+            ).values_list("id", "latest_id")
+        }
+        rows = MVAnswerDenormalized.objects.filter(
+            data_id__in=latest.values(),
+        ).values(
+            "parent_id", "question_name", "answer_value",
+            "answer_options",
+        )
+        numeric = {}
+        option_values = {}
+        for row in rows:
+            key = (row["parent_id"], row["question_name"])
+            if row["answer_value"] is not None:
+                numeric.setdefault(key, []).append(row["answer_value"])
+            if row["answer_options"] is not None:
+                option_values.setdefault(key, set()).update(
+                    row["answer_options"] or []
+                )
+        for (parent_id, question_name), values in numeric.items():
+            answers_by_parent[parent_id][question_name] = {
+                "question_name": question_name,
+                "value": sum(values) / len(values),
+                "options": None,
+                "index": 0,
+            }
+        for (parent_id, question_name), values in option_values.items():
+            answers_by_parent[parent_id][question_name] = {
+                "question_name": question_name,
+                "value": None,
+                "options": sorted(values),
+                "index": 0,
+            }
+
+        data = [
+            {
+                "group": parent_id,
+                "label": formula_evaluate(formula, per_question),
+            }
+            for parent_id, per_question in answers_by_parent.items()
+        ]
+        return Response({"data": data}, status=status.HTTP_200_OK)
 
     # Layer 1: registration datapoints' own answers. parent_id is NULL
     # for registrations in the denormalized MV; data_id is the

@@ -25,6 +25,14 @@ class ValuesCountTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(data["data"][0]["value"], 2)
         self.assertEqual(data["data"][0]["label"], "Total")
 
+    def test_parent_form_id_is_count_form_fallback(self):
+        """Count-only denominator requests need no duplicate form_id."""
+        response = self.client.get(
+            f"{self.BASE_URL}?parent_form_id={self.registration.id}"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"][0]["value"], 2)
+
     def test_count_total_monitoring(self):
         """Count monitoring records — 4 total monitoring submissions.
 

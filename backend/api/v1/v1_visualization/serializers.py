@@ -5,6 +5,7 @@ from api.v1.v1_data.models import (
     Administration,
 )
 from api.v1.v1_forms.models import (
+    Forms,
     Questions,
     QuestionOptions,
     QuestionTypes,
@@ -171,6 +172,7 @@ class FormulaValuesSerializer(serializers.Serializer):
     """
 
     parent_form_id = serializers.IntegerField(required=True)
+    form_id = serializers.IntegerField(required=False)
     group_by = serializers.ChoiceField(
         choices=["parent_id"], required=True,
     )
@@ -195,13 +197,32 @@ class FormulaValuesSerializer(serializers.Serializer):
             raise serializers.ValidationError(str(exc))
         # Conditions are question_name-only: reject a numeric question_name
         # (a leaked question_id) with a 400 (Part A guard).
+
+        def validate_condition_names(condition):
+            for group in ("all_of", "any_of"):
+                if group in condition:
+                    for child in condition[group]:
+                        validate_condition_names(child)
+                    return
+            validate_qname(condition.get("question_name"))
+
         for bucket in validated.get("buckets", []):
-            for cond in bucket.get("all_of", []):
-                validate_qname(cond.get("question_name"))
+            validate_condition_names(bucket)
         return validated
+
+    def validate(self, attrs):
+        form_id = attrs.get("form_id")
+        if form_id and not Forms.objects.filter(
+            id=form_id,
+            parent_id=attrs["parent_form_id"],
+        ).exists():
+            raise serializers.ValidationError(
+                "form_id must be a monitoring form of parent_form_id"
+            )
+        return attrs
 
     class Meta:
         fields = [
-            "parent_form_id", "group_by", "monitoring", "formula",
+            "parent_form_id", "form_id", "group_by", "monitoring", "formula",
             "from_date", "to_date",
         ]

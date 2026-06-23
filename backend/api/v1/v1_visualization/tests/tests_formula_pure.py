@@ -174,6 +174,62 @@ class FormulaEvaluateTests(unittest.TestCase):
         answers = {"score": _Answer("score", value=75)}
         self.assertEqual(evaluate(formula, answers), "medium")
 
+    def test_nested_any_of_and_empty_option_conditions(self):
+        formula = {
+            "buckets": [
+                {
+                    "value": "not_applicable",
+                    "label": "N/A",
+                    "all_of": [{
+                        "question_name": "method",
+                        "op": "option_not_contains",
+                        "value": "lab_test",
+                    }],
+                },
+                {
+                    "value": "non_compliant",
+                    "label": "No",
+                    "any_of": [
+                        {"question_name": "ph", "op": "<", "value": 6.5},
+                        {
+                            "all_of": [
+                                {
+                                    "question_name": "method",
+                                    "op": "option_not_contains",
+                                    "value": "cbt_test",
+                                },
+                                {
+                                    "question_name": "cbt_count",
+                                    "op": ">",
+                                    "value": 0,
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "value": "_no_info",
+                    "label": "No information available",
+                    "any_of": [
+                        {"question_name": "ph", "op": "is_empty"},
+                    ],
+                },
+            ],
+            "default": {"value": "compliant", "label": "Yes"},
+        }
+        self.assertEqual(evaluate(formula, {}), "not_applicable")
+        self.assertEqual(evaluate(formula, {
+            "method": _Answer("method", options=["lab_test"]),
+        }), "_no_info")
+        self.assertEqual(evaluate(formula, {
+            "method": _Answer("method", options=["lab_test"]),
+            "ph": _Answer("ph", value=7),
+        }), "compliant")
+        self.assertEqual(evaluate(formula, {
+            "method": _Answer("method", options=["lab_test"]),
+            "ph": _Answer("ph", value=5),
+        }), "non_compliant")
+
 
 class PickLatestRepeatTests(unittest.TestCase):
     def test_latest_repeat_wins(self):

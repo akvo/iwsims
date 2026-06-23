@@ -391,6 +391,9 @@ def handle_option_question(form, question, params):
             qs, is_latest, params
         )
 
+    if group_by == "parent_id":
+        return _option_group_by_parent(question, data_ids)
+
     if group_by == "option_combo" and \
             question.type == QuestionTypes.multiple_option:
         restricted = _extract_criteria_option_values(
@@ -420,6 +423,41 @@ def handle_option_question(form, question, params):
         )
 
     return [], []
+
+
+def _option_group_by_parent(question, data_ids):
+    """Return the union of selected options per parent.
+
+    Multiple answers can exist when the question is inside a repeatable
+    group. Combining their option arrays mirrors numeric repeat_agg=average:
+    both describe all repeats from the latest monitoring submission.
+    """
+    grouped = defaultdict(set)
+    labels = {}
+    rows = MVAnswerDenormalized.objects.filter(
+        data_id__in=data_ids,
+        question_name=question.name,
+        answer_options__isnull=False,
+    ).values_list("parent_id", "answer_options")
+    for parent_id, answer_options in rows:
+        if parent_id is None:
+            continue
+        grouped[parent_id].update(answer_options or [])
+
+    parent_ids = list(grouped.keys())
+    labels.update(
+        FormData.objects.filter(id__in=parent_ids)
+        .values_list("id", "name")
+    )
+    data = [
+        {
+            "value": sorted(grouped[parent_id]),
+            "label": labels.get(parent_id, str(parent_id)),
+            "group": str(parent_id),
+        }
+        for parent_id in sorted(parent_ids)
+    ]
+    return data, [row["label"] for row in data]
 
 
 def _option_value_filter(
