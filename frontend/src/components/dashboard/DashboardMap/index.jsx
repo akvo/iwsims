@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { divIcon } from "leaflet";
 import { Alert, Skeleton } from "antd";
 import "leaflet/dist/leaflet.css";
 import { api, geo } from "../../../lib";
 import { applyDashboardFilters } from "../../../lib/dashboardFilterHints";
+import { conicGradient } from "../../map-view/markerGradient";
 import DashboardMapHeader, { resolveBuckets } from "./DashboardMapHeader";
 import MapPopupCard from "./MapPopupCard";
 import useMapFilters from "./useMapFilters";
@@ -15,20 +17,39 @@ import "./styles.scss";
 const DEFAULT_COLOR = "#1890ff";
 
 /**
+ * Build a leaflet divIcon for a datapoint: a single coloured dot, or an
+ * equal-segment conic-gradient pie when it has several selected options
+ * (multiple_option) — matching the manage-data MapView.
+ */
+const buildMarkerIcon = (segments) => {
+  const colors = segments.map((s) => s.color).filter(Boolean);
+  const background =
+    colors.length > 1 ? conicGradient(colors) : colors[0] || DEFAULT_COLOR;
+  return divIcon({
+    className: "dashboard-map-marker",
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+    html: `<span class="dashboard-map-marker-dot" style="background:${background};"></span>`,
+  });
+};
+
+/**
  * Config-driven dashboard map widget.
  *
  * Endpoints:
  *   GET /api/v1/maps/geolocation/{source_form_id}
  *       [?administration=<id>&criteria=...&from_date=...
  *        &to_date=...&include_monitoring=true]
- *   GET /api/v1/visualization/values/formula
+ *   GET /api/v1/visualization/values         (option question_name filters)
+ *   GET /api/v1/visualization/values/formula (formula filters)
  *       (per active select filter; cross-form, scoped by
  *        parent_form_id = source_form_id)
  *
  * The geolocation response carries id, name, geo, administration_id,
- * administration_full_name, updated. byParent[id] is the active
- * filter's bucket value for the datapoint, used for marker colour,
- * the popup's dynamic row, and chip-based narrowing.
+ * administration_full_name, updated. byParent[id] is the array of the
+ * active filter's selected values for the datapoint, used for the
+ * (segmented) marker colour, the popup's dynamic row, and chip-based
+ * narrowing.
  */
 const DashboardMap = ({
   item,
@@ -140,17 +161,23 @@ const DashboardMap = ({
     return d?.coordinates || [0, 0];
   }, []);
 
-  const bucketForPoint = (pointId) => byParent[pointId] || "_no_info";
-
   const colorMap = useMemo(
     () => resolveColorMap(activeFilter, sourceFormId),
     [activeFilter, sourceFormId]
   );
 
-  const colorForParent = (pointId) => {
-    const value = bucketForPoint(pointId);
-    return colorMap[value] || colorMap._no_info || DEFAULT_COLOR;
+  // byParent[id] is an array of values; a datapoint with none answered
+  // falls back to a single "_no_info" segment.
+  const valuesForPoint = (pointId) => {
+    const v = byParent[pointId];
+    return Array.isArray(v) && v.length > 0 ? v : ["_no_info"];
   };
+
+  const segmentsForPoint = (pointId) =>
+    valuesForPoint(pointId).map((value) => ({
+      value,
+      color: colorMap[value] || colorMap._no_info || DEFAULT_COLOR,
+    }));
 
   const visiblePoints = useMemo(() => {
     const pts = points.filter(
@@ -163,8 +190,12 @@ const DashboardMap = ({
     if (buckets.length === 0) {
       return pts;
     }
+    // A datapoint is visible when ANY of its selected values is selected
+    // in the legend (mirrors the manage-data map's multi-option filter).
     return pts.filter((p) =>
-      isChipSelected(activeFilter.key, bucketForPoint(String(p.id)))
+      valuesForPoint(String(p.id)).some((v) =>
+        isChipSelected(activeFilter.key, v)
+      )
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [points, activeFilter, byParent, isChipSelected]);
@@ -208,16 +239,10 @@ const DashboardMap = ({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {visiblePoints.map((p) => (
-          <CircleMarker
+          <Marker
             key={p.id}
-            center={p.geo}
-            radius={7}
-            pathOptions={{
-              color: colorForParent(String(p.id)),
-              fillColor: colorForParent(String(p.id)),
-              fillOpacity: 0.9,
-              weight: 1,
-            }}
+            position={p.geo}
+            icon={buildMarkerIcon(segmentsForPoint(String(p.id)))}
           >
             <Popup>
               <MapPopupCard
@@ -229,7 +254,7 @@ const DashboardMap = ({
                 cache={datapointCache}
               />
             </Popup>
-          </CircleMarker>
+          </Marker>
         ))}
       </MapContainer>
     </div>
