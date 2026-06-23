@@ -36,6 +36,11 @@ Minimum required top-level keys:
 dashboards and match `^[a-z0-9]+(-[a-z0-9]+)*$` (kebab-case). Everything else
 — filters, KPIs, charts, tables, maps — is an **item** inside `items[]`.
 
+The root `parent_form_id` is inherited by all items. Omit an item's `form_id`,
+`denominator_api.form_id`, progress/escalation parent form, or map
+`source_form_id` when it would repeat that same value. Specify those fields
+only to override the root with a different form, typically a monitoring form.
+
 ### 3. Register the config
 
 Add the import + entry in [`index.js`](./index.js):
@@ -93,11 +98,11 @@ Only these six keys at the top level. Everything else is an item.
 |---|---|---|
 | `card` | KPI tile | `color`, `api`, `api.value_type` (including `"ratio_percentage"` + sibling `denominator_api`), or `compute` ∈ {`compliance_kpi`, `accessibility_no_issues_kpi`} |
 | `metric_card` | Single-fetch metric tile (count / % / share / share %) | `color`, `api`, `target_group`, `show_percentage` — see [Metric cards](#8-metric-cards-metric_card) |
-| `bar`, `line`, `doughnut`, `half_doughnut`, `pie`, `stack_bar` | akvo-charts component | `config`, and one of: `api` / (`source`+`progress_ref`+`field`) / (`compute`+`params_ref`+`globals_ref`) / (`compute`+`category_api`+`series_api`) / (`compute`+`sample_api`+`issues_api`) / (`compute`+`segments[]`) |
+| `bar`, `line`, `doughnut`, `half_doughnut`, `pie`, `stack_bar` | akvo-charts component | `config`, optional `color_map`, and one of: `api` / (`source`+`progress_ref`+`field`) / (`compute`+`params_ref`+`globals_ref`) / (`compute`+`category_api`+`series_api`) / (`compute`+`sample_api`+`issues_api`) / (`compute`+`segments[]`) |
 | `boxplot` | Dot strip plot — one dot per record, colored by threshold compliance | `threshold`, `config` (`xAxisLabel`, `entity_label`), `api` — see [Dot strip chart](#9-dot-strip-chart-boxplot) |
 | `histogram` | Bar chart with binned numeric data (legacy — prefer `boxplot` for water-quality params) | `group`, `threshold`, `display`, `api` |
 | `table` | Escalation / data table | `api` (with `criteria[]`), `columns[]` |
-| `map` | Leaflet map | `source_form_id`, `status_question_id`, `status_monitoring_form_id`, `status_colors`, `click_url_template` |
+| `map` | Leaflet map | optional `source_form_id` (defaults to root `parent_form_id`), `filters`, `click_url_template` |
 | `section_title` | `<h4>` heading | `text` |
 | `tabs` | Container | `items[]` of pane objects (no `chart_type`) |
 | `filter_bar` | Container | `items[]` of filter items |
@@ -343,7 +348,8 @@ KPI invocation (scalar count via `sum_by: parent_id` + `option_value`).
 
 Ratio KPIs render the value as `"N/M (P%)"`; `M === 0` renders `"—"` (no
 div-by-zero). The **presence of `denominator_api`** is the signal — no extra
-marker required. Three flavours:
+marker required. When `denominator_api.form_id` is omitted, the dashboard's
+root `parent_form_id` is used as the denominator form. Three flavours:
 
 - **api-driven ratio** — item has both `api` (numerator) and `denominator_api`.
   Both fetches run in parallel. The legacy marker
@@ -372,7 +378,7 @@ marker required. Three flavours:
     "monitoring": "latest",
     "sum_by": "parent_id"
   },
-  "denominator_api": { "form_id": 1749621221728 }
+  "denominator_api": { "ignore_date_filter": true }
 }
 ```
 

@@ -44,7 +44,6 @@
       "col_span": 5,
       "label": "Total WTPs",
       "api": {
-        "form_id": 1749634736797,
         "monitoring": "latest",
         "ignore_date_filter": true
       }
@@ -94,7 +93,6 @@
       ],
       "globals_ref": "wq_globals",
       "denominator_api": {
-        "form_id": 1749634736797,
         "ignore_date_filter": true
       }
     },
@@ -107,7 +105,6 @@
       "color": "#e41a1c",
       "compute": "critical_kpi",
       "denominator_api": {
-        "form_id": 1749634736797,
         "ignore_date_filter": true
       },
       "params_ref": [
@@ -172,7 +169,6 @@
       "order": 7,
       "col_span": 24,
       "height": 400,
-      "source_form_id": 1749634736797,
       "filters": [
         {
           "type": "select",
@@ -223,7 +219,11 @@
       "order": 10,
       "col_span": 12,
       "config": {
-        "title": "Sample Method"
+        "title": "Sample Method",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
       },
       "api": {
         "question_name": "water_testing_method",
@@ -360,7 +360,6 @@
       "root_label": "All WTPs",
       "summary_template": "Of {total} WTPs: {final} reached the final stage.",
       "denominator_api": {
-        "form_id": 1749634736797,
         "ignore_date_filter": true
       },
       "stages": [
@@ -759,7 +758,6 @@
                   "group_label": "Chlorine",
                   "stack": "working",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "chlorine",
                     "sum_by": "parent_id",
@@ -773,7 +771,6 @@
                   "group_label": "Chlorine",
                   "stack": "issue",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "chlorine",
                     "sum_by": "parent_id",
@@ -787,7 +784,6 @@
                   "group_label": "Potassium Aluminium Sulphate (Alum)",
                   "stack": "working",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "potassium_aluminium_sulphate",
                     "sum_by": "parent_id",
@@ -801,7 +797,6 @@
                   "group_label": "Potassium Aluminium Sulphate (Alum)",
                   "stack": "issue",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "potassium_aluminium_sulphate",
                     "sum_by": "parent_id",
@@ -815,7 +810,6 @@
                   "group_label": "Polymer",
                   "stack": "working",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "polymer",
                     "sum_by": "parent_id",
@@ -829,7 +823,6 @@
                   "group_label": "Polymer",
                   "stack": "issue",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "polymer",
                     "sum_by": "parent_id",
@@ -843,7 +836,6 @@
                   "group_label": "Lime",
                   "stack": "working",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "lime",
                     "sum_by": "parent_id",
@@ -857,7 +849,6 @@
                   "group_label": "Lime",
                   "stack": "issue",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "lime",
                     "sum_by": "parent_id",
@@ -871,7 +862,6 @@
                   "group_label": "Sodium Carbonate (Soda Ash)",
                   "stack": "working",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "sodium_carbonate",
                     "sum_by": "parent_id",
@@ -885,7 +875,6 @@
                   "group_label": "Sodium Carbonate (Soda Ash)",
                   "stack": "issue",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
                     "option_value": "sodium_carbonate",
                     "sum_by": "parent_id",
@@ -1073,7 +1062,6 @@
                 {
                   "key": "no_meter",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "there_plant_mag_flow_meters_in_place",
                     "option_value": "no",
                     "sum_by": "parent_id",
@@ -1083,7 +1071,6 @@
                 {
                   "key": "inflow_total",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "type_of_flow_meters",
                     "option_value": "inflow",
                     "sum_by": "parent_id",
@@ -1093,7 +1080,6 @@
                 {
                   "key": "outflow_total",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "type_of_flow_meters",
                     "option_value": "outflow",
                     "sum_by": "parent_id",
@@ -1103,7 +1089,6 @@
                 {
                   "key": "both",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "type_of_flow_meters",
                     "option_value": "inflow",
                     "sum_by": "parent_id",
@@ -1223,7 +1208,6 @@
                   "group_label": "Plants",
                   "stack": "well",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "backup_generator_condition",
                     "option_value": "yes",
                     "sum_by": "parent_id",
@@ -1237,7 +1221,6 @@
                   "group_label": "Plants",
                   "stack": "poorly",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "backup_generator_condition",
                     "option_value": "no",
                     "sum_by": "parent_id",
@@ -1251,7 +1234,6 @@
                   "group_label": "Plants",
                   "stack": "no_backup",
                   "api": {
-                    "form_id": 1749652214711,
                     "question_name": "has_backup_generator",
                     "option_value": "no",
                     "sum_by": "parent_id",

@@ -96,7 +96,137 @@
       "order": 2,
       "sample_question_name": "can_collect_water_sample",
       "test_method_question_name": "water_testing_method",
-      "monitoring_form_id": 1749632545233
+      "monitoring_form_id": 1749632545233,
+      "compliance_formula": {
+        "buckets": [
+          {
+            "value": "not_applicable",
+            "label": "N/A",
+            "all_of": [
+              {
+                "question_name": "water_testing_method",
+                "op": "option_not_contains",
+                "value": "lab_test"
+              }
+            ]
+          },
+          {
+            "value": "non_compliant",
+            "label": "No",
+            "any_of": [
+              {
+                "question_name": "e_coli_lab_count",
+                "op": ">",
+                "value": 0,
+                "label": "E-coli presence"
+              },
+              {
+                "question_name": "turbidity_ntu",
+                "op": ">",
+                "value": 5,
+                "label": "Turbidity"
+              },
+              {
+                "question_name": "total_coliform_cfu_100ml",
+                "op": ">",
+                "value": 0,
+                "label": "Total coliform presence"
+              },
+              {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "op": ">",
+                "value": 0,
+                "label": "Fecal coliform presence"
+              },
+              {
+                "question_name": "temperature_c",
+                "op": ">",
+                "value": 30,
+                "label": "Water Temperature"
+              },
+              { "question_name": "ph", "op": "<", "value": 6.5, "label": "pH" },
+              { "question_name": "ph", "op": ">", "value": 8.5, "label": "pH" },
+              {
+                "question_name": "conductivity",
+                "op": ">",
+                "value": 1000,
+                "label": "Conductivity"
+              },
+              {
+                "question_name": "salinity",
+                "op": ">",
+                "value": 1,
+                "label": "Salinity"
+              },
+              {
+                "label": "E-coli CBT",
+                "all_of": [
+                  {
+                    "question_name": "water_testing_method",
+                    "op": "option_not_contains",
+                    "value": "cbt_test"
+                  },
+                  { "question_name": "e_coli_count_cbt", "op": ">", "value": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "value": "_no_info",
+            "label": "No information available",
+            "any_of": [
+              { "question_name": "e_coli_lab_count", "op": "is_empty" },
+              { "question_name": "turbidity_ntu", "op": "is_empty" },
+              { "question_name": "total_coliform_cfu_100ml", "op": "is_empty" },
+              { "question_name": "fecal_coliform_cfu_100ml", "op": "is_empty" },
+              { "question_name": "temperature_c", "op": "is_empty" },
+              { "question_name": "ph", "op": "is_empty" },
+              { "question_name": "conductivity", "op": "is_empty" },
+              { "question_name": "salinity", "op": "is_empty" },
+              {
+                "all_of": [
+                  {
+                    "question_name": "water_testing_method",
+                    "op": "option_not_contains",
+                    "value": "cbt_test"
+                  },
+                  { "question_name": "e_coli_count_cbt", "op": "is_empty" }
+                ]
+              }
+            ]
+          }
+        ],
+        "default": {
+          "value": "compliant",
+          "label": "Yes"
+        }
+      }
+    },
+    {
+      "id": "compliance_test_method",
+      "chart_type": "dot_strip",
+      "hide": true,
+      "order": 2.1,
+      "label": "Water testing method",
+      "api": {
+        "question_name": "water_testing_method",
+        "group_by": "parent_id",
+        "monitoring": "latest"
+      }
+    },
+    {
+      "id": "param_e_coli_cbt",
+      "chart_type": "dot_strip",
+      "hide": true,
+      "order": 2.2,
+      "label": "E-coli CBT",
+      "api": {
+        "form_id": 1749632545233,
+        "question_name": "e_coli_count_cbt",
+        "group_by": "parent_id",
+        "monitoring": "latest",
+        "repeat_agg": "average"
+      }
     },
     {
       "id": "filters_main",
@@ -219,65 +349,13 @@
           "type": "select",
           "key": "drinking_water_compliance",
           "label": "Drinking water compliance",
-          "formula": {
-            "buckets": [
-              {
-                "value": "compliant",
-                "label": "Yes",
-                "all_of": [
-                  {
-                    "question_name": "e_coli_lab_count",
-                    "op": "<=",
-                    "value": 0
-                  },
-                  {
-                    "question_name": "turbidity_ntu",
-                    "op": "<=",
-                    "value": 5
-                  },
-                  {
-                    "question_name": "total_coliform_cfu_100ml",
-                    "op": "<=",
-                    "value": 0
-                  },
-                  {
-                    "question_name": "fecal_coliform_cfu_100ml",
-                    "op": "<=",
-                    "value": 0
-                  },
-                  {
-                    "question_name": "temperature_c",
-                    "op": "<=",
-                    "value": 30
-                  },
-                  {
-                    "question_name": "ph",
-                    "op": "between",
-                    "min": 6.5,
-                    "max": 8.5
-                  },
-                  {
-                    "question_name": "conductivity",
-                    "op": "<=",
-                    "value": 1000
-                  },
-                  {
-                    "question_name": "salinity",
-                    "op": "<=",
-                    "value": 1
-                  }
-                ]
-              }
-            ],
-            "default": {
-              "value": "non_compliant",
-              "label": "No"
-            }
-          },
+          "form_id": 1749632545233,
+          "formula_ref": "wq_globals",
           "color_map": {
-            "compliant": "#64A73B",
-            "non_compliant": "#e41a1c",
-            "_no_info": "#999999"
+            "compliant": "#2e7d32",
+            "non_compliant": "#c62828",
+            "not_applicable": "#263238",
+            "_no_info": "#90a4ae"
           }
         },
         {
@@ -335,26 +413,30 @@
       "config": {
         "title": "Drinking Water Compliance",
         "xAxisLabel": "Compliant",
-        "yAxisLabel": "EPS count",
-        "color": [
-          "#64A73B",
-          "#e41a1c",
-          "#ff7f00",
-          "#984ea3",
-          "#377eb8",
-          "#a65628",
-          "#f781bf",
-          "#999999",
-          "#cccccc",
-          "#bfbfbf"
-        ]
+        "yAxisLabel": "EPS count"
+      },
+      "color_map": {
+        "Compliant": "#2e7d32",
+        "E-coli presence": "#c62828",
+        "Turbidity": "#ef6c00",
+        "Total coliform presence": "#6a1b9a",
+        "Fecal coliform presence": "#1565c0",
+        "Water Temperature": "#8d4e24",
+        "pH": "#d81b60",
+        "Conductivity": "#00838f",
+        "Salinity": "#9e7c00",
+        "E-coli CBT": "#7c4dff",
+        "No information available": "#90a4ae",
+        "N/A": "#263238"
       },
       "compute": "compliance",
       "include_unanswered": true,
       "params_ref": [
+        "compliance_test_method",
         "param_e_coli",
         "param_total_coliform",
         "param_fecal_coliform",
+        "param_e_coli_cbt",
         "param_turbidity",
         "param_temperature",
         "param_ph",
@@ -410,8 +492,9 @@
         }
       },
       "api": {
+        "form_id": 1749632545233,
         "question_name": "water_testing_method",
-        "group_by": "option",
+        "group_by": "option_combo",
         "monitoring": "latest",
         "include_unanswered": true
       }

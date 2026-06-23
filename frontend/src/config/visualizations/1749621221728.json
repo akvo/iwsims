@@ -16,7 +16,6 @@
       "deadline_question_name": "proposed_completion_date",
       "scope_question_name": "type_of_project",
       "api": {
-        "form_id": 1749621221728,
         "monitoring_form_id": 1749621962296
       },
       "components": [
@@ -148,7 +147,88 @@
       "order": 2,
       "sample_question_name": "water_sample_collected",
       "test_method_question_name": "water_testing_method",
-      "monitoring_form_id": 1749631041125
+      "compliance_formula": {
+        "buckets": [
+          {
+            "value": "non_compliant",
+            "label": "No",
+            "any_of": [
+              {
+                "question_name": "lab_ecoli_count",
+                "op": ">",
+                "value": 0,
+                "label": "E-coli presence"
+              },
+              {
+                "question_name": "lab_turbidity_ntu",
+                "op": ">",
+                "value": 5,
+                "label": "Turbidity"
+              },
+              {
+                "question_name": "lab_total_coliform",
+                "op": ">",
+                "value": 0,
+                "label": "Total coliform presence"
+              },
+              {
+                "question_name": "lab_fecal_coliform",
+                "op": ">",
+                "value": 0,
+                "label": "Fecal coliform presence"
+              },
+              {
+                "question_name": "lab_temperature_c",
+                "op": ">",
+                "value": 30,
+                "label": "Water Temperature"
+              },
+              {
+                "question_name": "lab_ph",
+                "op": "<",
+                "value": 6.5,
+                "label": "pH"
+              },
+              {
+                "question_name": "lab_ph",
+                "op": ">",
+                "value": 8.5,
+                "label": "pH"
+              },
+              {
+                "question_name": "lab_conductivity",
+                "op": ">",
+                "value": 1000,
+                "label": "Conductivity"
+              },
+              {
+                "question_name": "lab_salinity_ppt",
+                "op": ">",
+                "value": 1,
+                "label": "Salinity"
+              }
+            ]
+          },
+          {
+            "value": "_no_info",
+            "label": "No information available",
+            "all_of": [
+              { "question_name": "lab_ecoli_count", "op": "is_empty" },
+              { "question_name": "lab_turbidity_ntu", "op": "is_empty" },
+              { "question_name": "lab_total_coliform", "op": "is_empty" },
+              { "question_name": "lab_fecal_coliform", "op": "is_empty" },
+              { "question_name": "lab_temperature_c", "op": "is_empty" },
+              { "question_name": "lab_ph", "op": "is_empty" },
+              { "question_name": "lab_conductivity", "op": "is_empty" },
+              { "question_name": "lab_salinity_ppt", "op": "is_empty" }
+            ]
+          }
+        ],
+        "default": {
+          "value": "compliant",
+          "label": "Yes"
+        }
+      }
     },
     {
       "id": "filters_main",
@@ -178,7 +258,6 @@
           "order": 3,
           "key": "implementing_agency",
           "question_name": "implementing_agencies",
-          "form_id": 1749621221728,
           "label": "Implementing Agency"
         },
         {
@@ -187,7 +266,6 @@
           "order": 4,
           "key": "water_committee",
           "question_name": "water_committee",
-          "form_id": 1749621221728,
           "label": "Water Committee"
         }
       ]
@@ -200,7 +278,6 @@
       "label": "Total RWS registered",
       "color": "#3C3CFF",
       "api": {
-        "form_id": 1749621221728,
         "monitoring": "latest",
         "ignore_date_filter": true
       }
@@ -213,7 +290,6 @@
       "label": "RWS under construction",
       "color": "#fa8c16",
       "api": {
-        "form_id": 1749631041125,
         "question_name": "infrastructure_status",
         "option_value": "non_operational",
         "monitoring": "latest",
@@ -228,7 +304,6 @@
       "label": "Operational RWS",
       "color": "#64A73B",
       "api": {
-        "form_id": 1749631041125,
         "question_name": "infrastructure_status",
         "option_value": "operational",
         "monitoring": "latest",
@@ -243,7 +318,6 @@
       "label": "RWS with critical issues",
       "color": "#e41a1c",
       "api": {
-        "form_id": 1749631041125,
         "question_name": "major_issues",
         "option_value": "yes",
         "monitoring": "latest",
@@ -258,7 +332,6 @@
       "label": "Operational Systems",
       "color": "#1890ff",
       "api": {
-        "form_id": 1749631041125,
         "question_name": "infrastructure_status",
         "group_by": "option",
         "include_unanswered": true
@@ -286,7 +359,6 @@
       ],
       "globals_ref": "wq_globals",
       "denominator_api": {
-        "form_id": 1749621221728,
         "ignore_date_filter": true
       }
     },
@@ -298,7 +370,6 @@
       "label": "Active Water Committees",
       "color": "#fa8c16",
       "api": {
-        "form_id": 1749621221728,
         "question_name": "water_committee",
         "group_by": "option",
         "include_unanswered": true
@@ -315,21 +386,18 @@
       "color": "#13c2c2",
       "compute": "accessibility_no_issues_kpi",
       "sample_api": {
-        "form_id": 1749621962296,
-        "question_name": "can_take_sample",
+        "question_name": "water_sample_collected",
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
       },
       "issues_api": {
-        "form_id": 1749621962296,
-        "question_name": "improvement_action",
+        "question_name": "major_issues",
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
       },
       "denominator_api": {
-        "form_id": 1749621221728,
         "ignore_date_filter": true
       }
     },
@@ -340,7 +408,6 @@
       "order": 8,
       "col_span": 24,
       "height": 400,
-      "source_form_id": 1749621221728,
       "filters": [
         {
           "type": "select",
@@ -355,61 +422,7 @@
           "type": "select",
           "key": "drinking_water_compliance",
           "label": "Drinking water compliance",
-          "formula": {
-            "buckets": [
-              {
-                "value": "compliant",
-                "label": "Yes",
-                "all_of": [
-                  {
-                    "question_name": "lab_ecoli_count",
-                    "op": "<=",
-                    "value": 0
-                  },
-                  {
-                    "question_name": "lab_turbidity_ntu",
-                    "op": "<=",
-                    "value": 5
-                  },
-                  {
-                    "question_name": "lab_total_coliform",
-                    "op": "<=",
-                    "value": 0
-                  },
-                  {
-                    "question_name": "lab_fecal_coliform",
-                    "op": "<=",
-                    "value": 0
-                  },
-                  {
-                    "question_name": "lab_temperature_c",
-                    "op": "<=",
-                    "value": 30
-                  },
-                  {
-                    "question_name": "lab_ph",
-                    "op": "between",
-                    "min": 6.5,
-                    "max": 8.5
-                  },
-                  {
-                    "question_name": "lab_conductivity",
-                    "op": "<=",
-                    "value": 1000
-                  },
-                  {
-                    "question_name": "lab_salinity_ppt",
-                    "op": "<=",
-                    "value": 1
-                  }
-                ]
-              }
-            ],
-            "default": {
-              "value": "non_compliant",
-              "label": "No"
-            }
-          },
+          "formula_ref": "wq_globals",
           "color_map": {
             "compliant": "#64A73B",
             "non_compliant": "#e41a1c",
@@ -468,7 +481,6 @@
         "stack_by": "option"
       },
       "series_api": {
-        "form_id": 1749621221728,
         "question_name": "implementing_agencies",
         "group_by": "parent_id",
         "stack_by": "option"
@@ -487,8 +499,8 @@
         }
       },
       "api": {
-        "question_name": "water_test_type",
-        "group_by": "option",
+        "question_name": "water_testing_method",
+        "group_by": "option_combo",
         "monitoring": "latest",
         "include_unanswered": true
       }
@@ -513,7 +525,6 @@
         }
       },
       "api": {
-        "form_id": 1749621221728,
         "question_name": "project_target_group",
         "group_by": "option",
         "include_unanswered": true
@@ -530,7 +541,6 @@
       },
       "compute": "kpi_stack",
       "api": {
-        "form_id": 1749631041125,
         "question_name": "infrastructure_status",
         "group_by": "option",
         "include_unanswered": true
@@ -548,14 +558,12 @@
       },
       "compute": "accessibility_bucket",
       "sample_api": {
-        "form_id": 1749621962296,
-        "question_name": "can_take_sample",
+        "question_name": "water_sample_collected",
         "monitoring": "latest",
         "group_by": "parent_id",
         "stack_by": "option"
       },
       "issues_api": {
-        "form_id": 1749631041125,
         "question_name": "major_issues",
         "monitoring": "latest",
         "group_by": "parent_id",
@@ -574,19 +582,19 @@
       "col_span": 8,
       "config": {
         "title": "Drinking Water Compliance",
-        "yAxisLabel": "RWS count",
-        "color": [
-          "#64A73B",
-          "#e41a1c",
-          "#ff7f00",
-          "#984ea3",
-          "#377eb8",
-          "#a65628",
-          "#f781bf",
-          "#999999",
-          "#cccccc",
-          "#bfbfbf"
-        ]
+        "yAxisLabel": "RWS count"
+      },
+      "color_map": {
+        "Compliant": "#64A73B",
+        "E-coli presence": "#e41a1c",
+        "Turbidity": "#ff7f00",
+        "Total coliform presence": "#984ea3",
+        "Fecal coliform presence": "#377eb8",
+        "Water Temperature": "#a65628",
+        "pH": "#f781bf",
+        "Conductivity": "#00838f",
+        "Salinity": "#9e7c00",
+        "No information available": "#999999"
       },
       "compute": "compliance",
       "include_unanswered": true,
@@ -636,7 +644,6 @@
               "label": "RWS with critical issues",
               "color": "#e41a1c",
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "major_issues",
                 "option_value": "yes",
                 "monitoring": "latest",
@@ -650,7 +657,6 @@
               "col_span": 8,
               "label": "RWS where water sample collection was not possible",
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "water_sample_collected",
                 "option_value": "no",
                 "monitoring": "latest",
@@ -666,7 +672,6 @@
               "label": "Escalation List",
               "description": "This table shows all RWS where water quality variables are not within the acceptable range or issues with the system were found.",
               "api": {
-                "form_id": 1749621221728,
                 "monitoring_form_id": 1749631041125,
                 "criteria": [
                   {
@@ -824,7 +829,6 @@
               "label": "RWS with water sample taken last 12 months",
               "description": "Rolling 12-month window; numerator is RWS whose latest water-sample answer is yes.",
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "water_sample_collected",
                 "option_value": "yes",
                 "monitoring": "latest",
@@ -841,7 +845,6 @@
               "col_span": 8,
               "label": "Lab tested RWS",
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "water_testing_method",
                 "option_value": "lab_test",
                 "monitoring": "latest",
@@ -855,7 +858,6 @@
               "col_span": 8,
               "label": "CBT tested RWS",
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "water_testing_method",
                 "option_value": "cbt_test",
                 "monitoring": "latest",
@@ -886,7 +888,6 @@
                 "max": 0
               },
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "lab_ecoli_count",
                 "group_by": "parent_id",
                 "monitoring": "latest",
@@ -910,7 +911,6 @@
                 "max": 0
               },
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "lab_total_coliform",
                 "group_by": "parent_id",
                 "monitoring": "latest",
@@ -935,7 +935,6 @@
                 "max": 0
               },
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "lab_fecal_coliform",
                 "group_by": "parent_id",
                 "monitoring": "latest",
@@ -966,7 +965,6 @@
                 "max": 5
               },
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "lab_turbidity_ntu",
                 "group_by": "parent_id",
                 "monitoring": "latest",
@@ -990,7 +988,6 @@
                 "max": 30
               },
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "lab_temperature_c",
                 "group_by": "parent_id",
                 "monitoring": "latest",
@@ -1022,7 +1019,6 @@
                 "max": 8.5
               },
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "lab_ph",
                 "group_by": "parent_id",
                 "monitoring": "latest",
@@ -1046,7 +1042,6 @@
                 "max": 1000
               },
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "lab_conductivity",
                 "group_by": "parent_id",
                 "monitoring": "latest",
@@ -1070,7 +1065,6 @@
                 "max": 1
               },
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "lab_salinity_ppt",
                 "group_by": "parent_id",
                 "monitoring": "latest",
@@ -1092,7 +1086,6 @@
               "description": "Share of registered RWS still under construction.",
               "color": "#fa8c16",
               "api": {
-                "form_id": 1749631041125,
                 "question_name": "infrastructure_status",
                 "option_value": "non_operational",
                 "monitoring": "latest",
@@ -1149,7 +1142,6 @@
                 }
               },
               "api": {
-                "form_id": 1749621962296,
                 "sum_by": "parent_id",
                 "group_by": "month",
                 "date_question_name": "proposed_completion_date",
@@ -1175,7 +1167,6 @@
               "label": "Escalation List",
               "description": "This table shows all RWS where the percentage of project completion is not in line with the expected project progress.",
               "api": {
-                "form_id": 1749621221728,
                 "monitoring_form_id": 1749621962296,
                 "criteria": [
                   {

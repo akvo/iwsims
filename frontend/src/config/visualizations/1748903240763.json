@@ -44,7 +44,6 @@
       "col_span": 6,
       "label": "Total WWTPs",
       "api": {
-        "form_id": 1748903240763,
         "monitoring": "latest",
         "ignore_date_filter": true
       }
@@ -72,7 +71,6 @@
       "params_ref": ["param_bod", "param_cod", "param_tds"],
       "globals_ref": "wq_globals",
       "denominator_api": {
-        "form_id": 1748903240763,
         "ignore_date_filter": true
       }
     },
@@ -85,7 +83,6 @@
       "color": "#e41a1c",
       "compute": "rules_kpi",
       "denominator_api": {
-        "form_id": 1748903240763,
         "ignore_date_filter": true
       },
       "rules": [
@@ -180,7 +177,6 @@
       "order": 6,
       "col_span": 24,
       "height": 400,
-      "source_form_id": 1748903240763,
       "filters": [
         {
           "type": "select",
