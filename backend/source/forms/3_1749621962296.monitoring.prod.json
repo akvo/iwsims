@@ -68,7 +68,7 @@
         },
         {
           "id": 1749622785185,
-          "name": "can_take_sample",
+          "name": "water_sample_collected",
           "label": "Are you able to take the sample?",
           "order": 6,
           "type": "option",
@@ -108,7 +108,7 @@
         },
         {
           "id": 1749622849604,
-          "name": "water_test_type",
+          "name": "water_testing_method",
           "label": "Water Quality Test Conducted",
           "order": 9,
           "type": "multiple_option",
