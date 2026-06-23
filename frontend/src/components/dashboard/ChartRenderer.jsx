@@ -12,7 +12,6 @@ import { computeCrossTab } from "./compute/crossTab";
 import { computeAccessibilityBucket } from "./compute/accessibility";
 import { computeKpiStack } from "./compute/kpiStack";
 import { computeProcessCounts } from "./compute/processCounts";
-import { computeCapacityCompare } from "./compute/capacityCompare";
 import { computeGroupedStack } from "./compute/groupedStack";
 import { computeBucketBar } from "./compute/bucketBar";
 import { computeDateHistogram } from "./compute/dateHistogram";
@@ -621,11 +620,6 @@ const ChartRenderer = ({
       return computeProcessCounts(item.segments, responses, {
         sort: item.sort,
       });
-    }
-
-    if (item.compute === "capacity_compare") {
-      const responses = computeResponses?.capacity_compare?.[item.id];
-      return computeCapacityCompare(item.measures, responses);
     }
 
     if (item.compute === "grouped_stack") {

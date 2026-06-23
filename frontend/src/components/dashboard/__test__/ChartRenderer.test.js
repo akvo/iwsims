@@ -483,36 +483,6 @@ describe("ChartRenderer", () => {
     expect(axios).not.toHaveBeenCalled();
   });
 
-  test("compute=capacity_compare assembles bar rows from measure responses", () => {
-    const computeResponses = {
-      capacity_compare: {
-        chart_capacity: {
-          design: { data: [{ value: 120 }] },
-          production: { data: [{ value: 98 }] },
-        },
-      },
-    };
-    render(
-      <ChartRenderer
-        item={{
-          id: "chart_capacity",
-          chart_type: "bar",
-          compute: "capacity_compare",
-          measures: [
-            { key: "design", label: "Design capacity" },
-            { key: "production", label: "Production" },
-          ],
-          config: { title: "Production vs Design Capacity" },
-        }}
-        filterState={emptyFilters}
-        today={today}
-        computeResponses={computeResponses}
-      />
-    );
-    expect(screen.getByTestId("chart-bar")).toHaveAttribute("data-rows", "2");
-    expect(axios).not.toHaveBeenCalled();
-  });
-
   test("compute=date_histogram buckets latest dates and applies row colors", async () => {
     axios.mockResolvedValue({
       data: {

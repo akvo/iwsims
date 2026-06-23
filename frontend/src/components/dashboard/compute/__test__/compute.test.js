@@ -11,7 +11,6 @@ import {
 } from "../accessibility";
 import { computeKpiStack } from "../kpiStack";
 import { computeProcessCounts } from "../processCounts";
-import { computeCapacityCompare } from "../capacityCompare";
 import { computeDateHistogram } from "../dateHistogram";
 import { computeStageFlow } from "../stageFlow";
 import { computeValueBuckets } from "../valueBuckets";
@@ -907,42 +906,6 @@ describe("computeProcessCounts", () => {
         { label: "Sedimentation/Clarification", value: 7 },
       ]
     );
-  });
-});
-
-describe("computeCapacityCompare", () => {
-  const measures = [
-    { key: "design", label: "Design capacity" },
-    { key: "production", label: "Production" },
-  ];
-
-  test("maps scalar measure responses into comparison rows", () => {
-    const responses = {
-      design: { data: [{ value: 120.25 }] },
-      production: { data: [{ value: 98.5 }] },
-    };
-    expect(computeCapacityCompare(measures, responses)).toEqual([
-      { label: "Design capacity", value: 120.25 },
-      { label: "Production", value: 98.5 },
-    ]);
-  });
-
-  test("sums grouped rows and coerces numeric strings", () => {
-    const responses = {
-      design: { data: [{ value: "10.5" }, { value: 20 }] },
-      production: { data: [{ value: 3.333 }, { value: 4.333 }] },
-    };
-    expect(computeCapacityCompare(measures, responses)).toEqual([
-      { label: "Design capacity", value: 30.5 },
-      { label: "Production", value: 7.67 },
-    ]);
-  });
-
-  test("missing responses default to zero", () => {
-    expect(computeCapacityCompare(measures, { design: { data: [] } })).toEqual([
-      { label: "Design capacity", value: 0 },
-      { label: "Production", value: 0 },
-    ]);
   });
 });
 

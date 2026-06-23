@@ -391,7 +391,7 @@ const Dashboard = () => {
 
   // ── Cross-form & derived-compute fan-out ──────────────────────────────────
   // Items with compute=cross_tab / accessibility_bucket / kpi_stack /
-  // process_counts / capacity_compare /
+  // process_counts /
   // accessibility_no_issues_kpi each need pre-fetched /values responses
   // combined into a single `computeResponses` tree keyed by
   // {[mode]: {[itemId]: payload}}. This mirrors the compliance fan-out but
@@ -411,10 +411,6 @@ const Dashboard = () => {
   );
   const processCountItems = useMemo(
     () => (config ? collectByCompute(config.items, "process_counts") : []),
-    [config]
-  );
-  const capacityCompareItems = useMemo(
-    () => (config ? collectByCompute(config.items, "capacity_compare") : []),
     [config]
   );
   const groupedStackItems = useMemo(
@@ -447,7 +443,6 @@ const Dashboard = () => {
   );
   const [kpiStackByItem, setKpiStackByItem] = useState({});
   const [processCountsByItem, setProcessCountsByItem] = useState({});
-  const [capacityCompareByItem, setCapacityCompareByItem] = useState({});
   const [groupedStackByItem, setGroupedStackByItem] = useState({});
   const [bucketBarByItem, setBucketBarByItem] = useState({});
   const [accessibilityNoIssuesKpiByItem, setAccessibilityNoIssuesKpiByItem] =
@@ -488,18 +483,6 @@ const Dashboard = () => {
       return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
     });
   }, []);
-  const onCapacityCompareMeasureData = useCallback(
-    (itemId, measureKey, data) => {
-      setCapacityCompareByItem((prev) => {
-        const inner = prev[itemId] || {};
-        if (inner[measureKey] === data) {
-          return prev;
-        }
-        return { ...prev, [itemId]: { ...inner, [measureKey]: data } };
-      });
-    },
-    []
-  );
   const onGroupedStackSegmentData = useCallback((itemId, segmentKey, data) => {
     setGroupedStackByItem((prev) => {
       const inner = prev[itemId] || {};
@@ -546,7 +529,6 @@ const Dashboard = () => {
       accessibility_bucket: accessibilityBucketByItem,
       kpi_stack: kpiStackByItem,
       process_counts: processCountsByItem,
-      capacity_compare: capacityCompareByItem,
       grouped_stack: groupedStackByItem,
       bucket_bar: bucketBarByItem,
       accessibility_no_issues_kpi: accessibilityNoIssuesKpiByItem,
@@ -560,7 +542,6 @@ const Dashboard = () => {
       accessibilityBucketByItem,
       kpiStackByItem,
       processCountsByItem,
-      capacityCompareByItem,
       groupedStackByItem,
       bucketBarByItem,
       accessibilityNoIssuesKpiByItem,
@@ -853,22 +834,6 @@ const Dashboard = () => {
             fiscalYearStartMonth={fyStart}
             customFilterDefs={customFilterDefs}
             onSegmentData={onProcessCountSegmentData}
-          />
-        ))
-      )}
-
-      {/* Invisible capacity_compare measure fetchers — one per (item, measure) pair */}
-      {capacityCompareItems.flatMap((item) =>
-        (item.measures || []).map((measure) => (
-          <SegmentFetcher
-            key={`${item.id}::${measure.key}`}
-            itemId={item.id}
-            segment={measure}
-            filterState={filters.queryParams}
-            parentFormId={config.parent_form_id}
-            fiscalYearStartMonth={fyStart}
-            customFilterDefs={customFilterDefs}
-            onSegmentData={onCapacityCompareMeasureData}
           />
         ))
       )}
