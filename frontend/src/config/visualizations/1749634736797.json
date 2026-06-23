@@ -234,40 +234,39 @@
     },
     {
       "id": "chart_production_vs_design_capacity",
-      "chart_type": "bar",
+      "chart_type": "custom_component",
+      "component": "CapacityComparePerPlant",
       "order": 11,
       "col_span": 12,
-      "compute": "capacity_compare",
+      "height": 480,
+      "row_px": 34,
+      "over_capacity_color": "#f5a623",
       "config": {
         "title": "Production vs Design Capacity",
-        "xAxisLabel": "Capacity",
-        "yAxisLabel": "ML/day"
+        "xAxisLabel": "ML/day per plant"
       },
       "measures": [
         {
           "key": "design",
-          "label": "Design capacity",
+          "label": "Design (ML/d)",
           "api": {
-            "form_id": 1749634736797,
-            "question_id": 1749635313175,
-            "repeat_agg": "sum"
+            "question_name": "designed_capacity_megalitres",
+            "group_by": "parent_id",
+            "repeat_agg": "sum",
+            "ignore_date_filter": true
           }
         },
         {
           "key": "production",
-          "label": "Production",
+          "label": "Production (ML/d)",
           "api": {
-            "form_id": 1749652214711,
-            "question_id": 1749652417794,
+            "question_name": "daily_production_megalitres",
+            "group_by": "parent_id",
             "monitoring": "latest",
             "repeat_agg": "sum"
           }
         }
-      ],
-      "detail": {
-        "mode": "filtered_scope",
-        "enabled_by": "administration_filter"
-      }
+      ]
     },
     {
       "id": "chart_treatment_processes_in_use",
