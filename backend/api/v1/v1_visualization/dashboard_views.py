@@ -218,6 +218,31 @@ def visualization_values(request, version):
             ).exists()
 
         if parent_question and not has_monitoring_question:
+            # Registration attribute. A per-plant query (group_by=parent_id)
+            # wants one value per registration datapoint, but the monitoring
+            # form-pinned path keys on parent_id — NULL for registrations —
+            # and would drop every row. Route that case through the
+            # cross-form helper, whose registration fallback keys on the
+            # registration datapoint instead. Other shapes (single total,
+            # option counts via include_unanswered) keep the form-pinned
+            # path.
+            if validated.get("group_by") == "parent_id":
+                params = {
+                    "administration_id": resolve_default_administration_id(
+                        validated.get("administration_id"),
+                    ),
+                    "group_by": "parent_id",
+                    "value_type": validated.get("value_type", "number"),
+                    "repeat_agg": validated.get("repeat_agg", "average"),
+                    "parent_form_id": parent_form_id,
+                }
+                data, labels = get_values_by_question_name(
+                    question_name, params,
+                )
+                return Response(
+                    {"data": data, "labels": labels},
+                    status=status.HTTP_200_OK,
+                )
             validated["form_id"] = parent_form_id
             validated["question"] = parent_question
         else:

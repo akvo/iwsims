@@ -760,6 +760,23 @@ def get_values_by_question_name(question_name, params):
         date_answer=(qtype == QuestionTypes.date),
     )
 
+    # Registration fallback: mv_cross_form_latest holds monitoring answers
+    # only (parent_id NOT NULL). A registration-form attribute (e.g. a
+    # plant's design capacity) therefore has no rows here. When the query
+    # is scoped to a family (parent_form_id) and that registration form
+    # actually carries the question, read the registrations' own answers
+    # from mv_answer_denormalized instead. The Questions guard ensures we
+    # only fall back for a genuine registration attribute, never masking a
+    # legitimately-empty monitoring question.
+    if (
+        qtype is None
+        and parent_form_id
+        and Questions.objects.filter(
+            form_id=parent_form_id, name=question_name
+        ).exists()
+    ):
+        return _registration_values_by_qname(question_name, params)
+
     # Card / count mode: a single parent count, optionally narrowed to a
     # specific option value. Triggered by sum_by=parent_id or option_value
     # so the number/option aggregation defaults below stay unchanged.
@@ -853,6 +870,97 @@ def _registration_parent_qs(qs, params):
     if administration_id:
         parent_qs = apply_administration_filter(parent_qs, administration_id)
     return parent_qs
+
+
+def _registration_values_by_qname(question_name, params):
+    """Aggregate a registration-form question from the registrations' own
+    answers (``mv_answer_denormalized`` rows with ``parent_id IS NULL``).
+
+    Scoped to a single registration form via ``parent_form_id`` so a
+    registration attribute (e.g. ``designed_capacity_megalitres``) yields
+    one value per plant (the registration datapoint *is* the plant). Used
+    as the fallback when ``mv_cross_form_latest`` — monitoring-only — has
+    no rows for the question. Mirrors the response shape of the cross-form
+    helpers: ``([{value, label, group}], [labels])``.
+
+    Supports number aggregation (``group_by=parent_id`` → per plant, else a
+    single total) honouring ``repeat_agg`` (sum/avg/max/min), plus a basic
+    distinct-datapoint count for card / option_value modes. Dates are
+    ignored: a registration attribute has no monitoring timeline.
+    """
+    parent_form_id = params.get("parent_form_id")
+    group_by = params.get("group_by")
+    repeat_agg = params.get("repeat_agg", "average")
+    option_value = params.get("option_value")
+    sum_by = params.get("sum_by")
+
+    rows = MVAnswerDenormalized.objects.filter(
+        form_id=parent_form_id,
+        parent_id__isnull=True,
+        question_name=question_name,
+    )
+    administration_id = params.get("administration_id")
+    if administration_id:
+        rows = apply_administration_filter_mv(
+            rows, administration_id, field="administration_id",
+        )
+
+    # Card / count mode: distinct registrations, optionally option-matched.
+    if sum_by == "parent_id" or option_value:
+        base = rows
+        if option_value:
+            base = base.filter(answer_options__contains=[option_value])
+        count = base.values("data_id").distinct().count()
+        label = option_value or "Total"
+        return (
+            [{"value": count, "label": label,
+              "group": option_value or "total"}],
+            [label],
+        )
+
+    # Number aggregation. Collapse repeats per registration datapoint.
+    per = {}
+    for r in rows.filter(answer_value__isnull=False).values(
+        "data_id", "answer_value",
+    ):
+        per.setdefault(r["data_id"], []).append(r["answer_value"])
+    if not per:
+        return [], []
+
+    def _agg(values):
+        if repeat_agg == "sum":
+            return sum(values)
+        if repeat_agg == "max":
+            return max(values)
+        if repeat_agg == "min":
+            return min(values)
+        return sum(values) / len(values)
+
+    if group_by == "parent_id":
+        name_map = dict(
+            FormData.objects.filter(id__in=list(per.keys()))
+            .values_list("id", "name")
+        )
+        data = [
+            {
+                "value": round(_agg(vals), 2),
+                "label": name_map.get(data_id, str(data_id)),
+                "group": str(data_id),
+            }
+            for data_id, vals in per.items()
+        ]
+        return data, [d["label"] for d in data]
+
+    all_values = [v for vals in per.values() for v in vals]
+    total = (
+        sum(all_values)
+        if repeat_agg == "sum"
+        else sum(all_values) / len(all_values)
+    )
+    return (
+        [{"value": round(total, 2), "label": "Total", "group": "total"}],
+        ["Total"],
+    )
 
 
 def _count_parents_by_qname(

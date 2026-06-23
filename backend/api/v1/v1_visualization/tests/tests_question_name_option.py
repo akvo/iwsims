@@ -61,6 +61,50 @@ class QuestionNameOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(by_group["rural"], 1)
         self.assertEqual(by_group.get("_no_info", 0), 0)
 
+    def test_registration_number_question_group_by_parent(self):
+        """A registration-form number attribute (absent from the
+        monitoring-only mv_cross_form_latest) resolves per parent via the
+        registration fallback, honouring repeat_agg=sum."""
+        q = Questions.objects.create(
+            form=self.registration,
+            question_group=self.q_reg_option.question_group,
+            name="designed_capacity",
+            label="Designed capacity",
+            type=QuestionTypes.number,
+            order=99,
+        )
+        Answers.objects.create(
+            data=self.reg1, question=q, value=10, created_by=self.user,
+        )
+        Answers.objects.create(
+            data=self.reg2, question=q, value=25, created_by=self.user,
+        )
+        refresh_all_mvs()
+
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name={q.name}"
+            f"&parent_form_id={self.registration.id}"
+            "&group_by=parent_id&repeat_agg=sum"
+        )
+        self.assertEqual(response.status_code, 200)
+        by_group = {
+            row["group"]: row["value"]
+            for row in response.json()["data"]
+        }
+        self.assertEqual(by_group[str(self.reg1.id)], 10)
+        self.assertEqual(by_group[str(self.reg2.id)], 25)
+
+    def test_registration_fallback_skipped_for_unknown_question(self):
+        """A question_name on neither monitoring nor the registration form
+        returns empty — the fallback never fires (guard holds)."""
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name=not_a_real_attr"
+            f"&parent_form_id={self.registration.id}"
+            "&group_by=parent_id"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"], [])
+
     def test_neither_question_name_nor_form_id_returns_400(self):
         """No form_id and no question_name returns 400."""
         response = self.client.get(
