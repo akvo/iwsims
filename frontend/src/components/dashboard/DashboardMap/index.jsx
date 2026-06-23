@@ -108,19 +108,26 @@ const DashboardMap = ({
     const widgetFrom = queryParams.get("from_date");
     const widgetTo = queryParams.get("to_date");
     const widgetIncludeMonitoring = queryParams.get("include_monitoring");
+    const includeMonitoring =
+      Boolean(widgetIncludeMonitoring) && !toggleDisabled;
 
-    if (filterState?.from_date) {
-      query.set("from_date", filterState.from_date);
-    } else if (widgetFrom) {
-      query.set("from_date", widgetFrom);
-    }
-    if (filterState?.to_date) {
-      query.set("to_date", filterState.to_date);
-    } else if (widgetTo) {
-      query.set("to_date", widgetTo);
-    }
-    if (widgetIncludeMonitoring && !toggleDisabled) {
+    // The map shows the whole fleet of plants. A monitoring-period date
+    // range must NOT prune the universe by registration date (the
+    // geolocation endpoint's no-include_monitoring branch filters on the
+    // registration's `created`, which would drop plants onboarded before
+    // the window). So dates are sent to /maps/geolocation only when the
+    // "Monitored last year" toggle is on — there the backend narrows to
+    // plants with a monitoring submission in the toggle's window via the
+    // include_monitoring child-join. The global date range still scopes
+    // marker colours through useMapByParent's /values call.
+    if (includeMonitoring) {
       query.set("include_monitoring", widgetIncludeMonitoring);
+      if (widgetFrom) {
+        query.set("from_date", widgetFrom);
+      }
+      if (widgetTo) {
+        query.set("to_date", widgetTo);
+      }
     }
 
     const qs = query.toString();

@@ -63,7 +63,14 @@ const ComplianceTotalsFetcher = ({
   customFilterDefs,
   onData,
 }) => {
-  const totalsApi = useMemo(() => ({ form_id: parentFormId }), [parentFormId]);
+  // Whole-fleet universe: the "No information available" gap is measured
+  // against every registered plant, so the monitoring-period date range
+  // must not shrink this count (see ignore_date_filter in
+  // applyDashboardFilters).
+  const totalsApi = useMemo(
+    () => ({ form_id: parentFormId, ignore_date_filter: true }),
+    [parentFormId]
+  );
   const { data, loading, error } = useDashboardValues(totalsApi, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,

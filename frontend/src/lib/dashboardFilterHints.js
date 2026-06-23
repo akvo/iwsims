@@ -135,13 +135,23 @@ export const applyDashboardFilters = (
 ) => {
   const out = { ...params };
 
+  // Fleet-scope queries (e.g. "Total WTPs" or a ratio's denominator over
+  // the whole registration universe) opt out of the monitoring-period date
+  // range with `ignore_date_filter: true`. A monitoring-period range must
+  // not prune the plant universe by registration `created` — that would
+  // shrink the denominator and skew ratios (e.g. Critical 42/15 = 280%).
+  // The flag strips dates only; administration scope still applies. Remove
+  // it from the outgoing params so it never reaches the backend.
+  const ignoreDateFilter = out.ignore_date_filter === true;
+  delete out.ignore_date_filter;
+
   // Date range: dashboard filter always wins when provided. Widget
   // hints (fiscal_year, rolling_months) act as defaults for the
   // unfiltered state — once the user picks a range, it overrides.
-  if (filterState?.from_date) {
+  if (!ignoreDateFilter && filterState?.from_date) {
     out.from_date = filterState.from_date;
   }
-  if (filterState?.to_date) {
+  if (!ignoreDateFilter && filterState?.to_date) {
     out.to_date = filterState.to_date;
   }
 

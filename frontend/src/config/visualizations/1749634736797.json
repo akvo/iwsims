@@ -45,7 +45,8 @@
       "label": "Total WTPs",
       "api": {
         "form_id": 1749634736797,
-        "monitoring": "latest"
+        "monitoring": "latest",
+        "ignore_date_filter": true
       }
     },
     {
@@ -93,7 +94,8 @@
       ],
       "globals_ref": "wq_globals",
       "denominator_api": {
-        "form_id": 1749634736797
+        "form_id": 1749634736797,
+        "ignore_date_filter": true
       }
     },
     {
@@ -105,7 +107,8 @@
       "color": "#e41a1c",
       "compute": "critical_kpi",
       "denominator_api": {
-        "form_id": 1749634736797
+        "form_id": 1749634736797,
+        "ignore_date_filter": true
       },
       "params_ref": [
         "param_total_coliform",
@@ -357,7 +360,8 @@
       "root_label": "All WTPs",
       "summary_template": "Of {total} WTPs: {final} reached the final stage.",
       "denominator_api": {
-        "form_id": 1749634736797
+        "form_id": 1749634736797,
+        "ignore_date_filter": true
       },
       "stages": [
         {

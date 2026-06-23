@@ -36,7 +36,8 @@
       "label": "Total Pump Stations",
       "api": {
         "form_id": 1749611049520,
-        "monitoring": "latest"
+        "monitoring": "latest",
+        "ignore_date_filter": true
       }
     },
     {
@@ -61,7 +62,8 @@
       "color": "#64A73B",
       "compute": "rules_kpi",
       "denominator_api": {
-        "form_id": 1749611049520
+        "form_id": 1749611049520,
+        "ignore_date_filter": true
       },
       "rules": [
         {

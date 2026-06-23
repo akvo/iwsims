@@ -136,6 +136,24 @@ describe("applyDashboardFilters", () => {
     expect(out.to_date).toBe("2026-03-31");
   });
 
+  test("ignore_date_filter drops the date range but keeps administration", () => {
+    const out = applyDashboardFilters(
+      { form_id: 1, ignore_date_filter: true },
+      {
+        from_date: "2026-01-01",
+        to_date: "2026-03-31",
+        administration_id: 7,
+      }
+    );
+    // Fleet-scope queries opt out of the monitoring-period window.
+    expect(out.from_date).toBeUndefined();
+    expect(out.to_date).toBeUndefined();
+    // The flag itself must not leak to the backend.
+    expect("ignore_date_filter" in out).toBe(false);
+    // Administration scope still applies.
+    expect(out.administration_id).toBe(7);
+  });
+
   test("dashboard filter overrides widget-expanded defaults (fiscal_year/rolling_months)", () => {
     // A widget with fiscal_year:true hint would have expanded dates
     // pinned by expandApiHints. The user's filter must still win.
