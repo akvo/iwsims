@@ -85,7 +85,12 @@ const resolveComplianceNumerator = (
   if (Object.keys(responsesByKey).length === 0) {
     return null;
   }
-  return getCompliantCount(params, responsesByKey);
+  // Reuse the chart/map's compliance_formula (when the card references one
+  // via globals_ref) so the KPI, the stacked bar, and the map marker all
+  // classify identically — including hidden params the threshold path drops.
+  const formula =
+    definitionsById?.get(item.globals_ref)?.compliance_formula || null;
+  return getCompliantCount(params, responsesByKey, formula);
 };
 
 const resolveAccessibilityNoIssuesNumerator = (item, computeResponses) => {

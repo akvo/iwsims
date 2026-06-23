@@ -133,6 +133,100 @@ describe("computeComplianceStackData", () => {
     expect(out.noCount).toBe(0);
   });
 
+  test("uses ordered formula buckets for Yes, No, no-info, and N/A", () => {
+    const formulaParameters = [
+      {
+        key: "method",
+        api: { question_name: "water_testing_method" },
+      },
+      {
+        key: "e_coli",
+        api: { question_name: "e_coli" },
+      },
+      {
+        key: "ph_formula",
+        api: { question_name: "ph" },
+      },
+    ];
+    const formula = {
+      buckets: [
+        {
+          value: "not_applicable",
+          label: "N/A",
+          all_of: [
+            {
+              question_name: "water_testing_method",
+              op: "option_not_contains",
+              value: "lab_test",
+            },
+          ],
+        },
+        {
+          value: "non_compliant",
+          label: "No",
+          any_of: [
+            {
+              question_name: "e_coli",
+              op: ">",
+              value: 0,
+              label: "E-coli",
+            },
+            {
+              question_name: "ph",
+              op: ">",
+              value: 8.5,
+              label: "pH",
+            },
+          ],
+        },
+        {
+          value: "_no_info",
+          label: "No information available",
+          any_of: [{ question_name: "e_coli", op: "is_empty" }],
+        },
+      ],
+      default: { value: "compliant", label: "Yes" },
+    };
+    const responses = {
+      method: {
+        data: [
+          { group: "1", value: ["lab_test"] },
+          { group: "2", value: ["lab_test"] },
+          { group: "3", value: ["lab_test"] },
+          { group: "4", value: ["cbt_test"] },
+        ],
+      },
+      e_coli: {
+        data: [
+          { group: "1", value: 0 },
+          { group: "2", value: 1 },
+        ],
+      },
+      ph: {
+        data: [{ group: "2", value: 9 }],
+      },
+    };
+
+    const out = computeComplianceStackData(formulaParameters, responses, {
+      formula,
+      totalRegistered: 5,
+    });
+
+    expect(out.yesCount).toBe(1);
+    expect(out.noCount).toBe(1);
+    expect(out.noInfoCount).toBe(1);
+    expect(out.notApplicableCount).toBe(2);
+    expect(out.data).toEqual([
+      { compliance: "Yes", Compliant: 1 },
+      { compliance: "No", "E-coli": 1, pH: 0 },
+      {
+        compliance: "No information available",
+        "No information available": 1,
+      },
+      { compliance: "N/A", "N/A": 2 },
+    ]);
+  });
+
   describe("include_unanswered support", () => {
     const responses = {
       e_coli: {
@@ -297,6 +391,69 @@ describe("getCompliantCount", () => {
   });
 });
 
+describe("getCompliantCount (formula mode)", () => {
+  // Params carry api.question_name so buildByEps populates _answers, which
+  // the formula reads. The fecal param is hidden but MUST still count.
+  const parameters = [
+    { key: "e_coli", api: { question_name: "lab_ecoli_count" } },
+    { key: "turbidity", api: { question_name: "lab_turbidity_ntu" } },
+    {
+      key: "fecal",
+      hide: true,
+      api: { question_name: "lab_fecal_coliform" },
+    },
+  ];
+  const formula = {
+    buckets: [
+      {
+        value: "non_compliant",
+        label: "No",
+        any_of: [
+          { question_name: "lab_ecoli_count", op: ">", value: 0 },
+          { question_name: "lab_turbidity_ntu", op: ">", value: 5 },
+          { question_name: "lab_fecal_coliform", op: ">", value: 0 },
+        ],
+      },
+      {
+        value: "_no_info",
+        label: "No information available",
+        all_of: [
+          { question_name: "lab_ecoli_count", op: "is_empty" },
+          { question_name: "lab_turbidity_ntu", op: "is_empty" },
+          { question_name: "lab_fecal_coliform", op: "is_empty" },
+        ],
+      },
+    ],
+    default: { value: "compliant", label: "Yes" },
+  };
+
+  test("missing-but-present-others counts compliant; all-empty does not", () => {
+    const responses = {
+      // P1: turbidity ok, e_coli/fecal missing -> compliant (1)
+      // P2: turbidity violation -> non_compliant
+      // P3: all empty (no rows) -> _no_info, not counted
+      turbidity: {
+        data: [
+          { group: "1", value: 1.0 },
+          { group: "2", value: 20 },
+        ],
+      },
+    };
+    expect(getCompliantCount(parameters, responses, formula)).toBe(1);
+  });
+
+  test("hidden fecal param violation flips a plant to non-compliant", () => {
+    const responses = {
+      turbidity: { data: [{ group: "1", value: 1.0 }] },
+      fecal: { data: [{ group: "1", value: 3 }] },
+    };
+    // Threshold mode would drop the hidden fecal param and call it compliant;
+    // formula mode honours it -> 0 compliant.
+    expect(getCompliantCount(parameters, responses, formula)).toBe(0);
+    expect(getCompliantCount(parameters, responses)).toBe(1);
+  });
+});
+
 describe("computeCrossTab (column-per-option shape)", () => {
   // Backend response shape after akvo-mis-bvt:
   //   {data: [{label: parent_name, group: parent_id, [opt_label]: count}]}
@@ -455,11 +612,7 @@ describe("deriveAccessibilityBucket (A.2 rule)", () => {
   });
 });
 
-describe("computeAccessibilityBucket (column-per-option shape)", () => {
-  // Backend response shape per akvo-mis-bvt:
-  //   {data: [{label: parent_name, group: parent_id, Yes: 1|0, No: 1|0}]}
-  // Option labels come from the option question's QuestionOptions.
-
+describe("computeAccessibilityBucket", () => {
   const labels = {
     easily_accessible: "Easily accessible",
     accessible_with_issues: "Accessible with issues",
@@ -507,6 +660,35 @@ describe("computeAccessibilityBucket (column-per-option shape)", () => {
             { label: "B", group: 2, Yes: 1, No: 0 },
             { label: "C", group: 3, Yes: 1, No: 0 },
             { label: "D", group: 4, Yes: 1, No: 0 }, // parent w/o sample → excluded
+          ],
+        },
+      },
+      labels
+    );
+    expect(out).toEqual([
+      {
+        category: "Accessibility",
+        "Easily accessible": 1,
+        "Accessible with issues": 1,
+        "Not accessible": 1,
+      },
+    ]);
+  });
+
+  test("supports cross-form value-array responses", () => {
+    const out = computeAccessibilityBucket(
+      {
+        sample: {
+          data: [
+            { label: "A", group: "1", value: ["yes"] },
+            { label: "B", group: "2", value: ["YES"] },
+            { label: "C", group: "3", value: ["no"] },
+          ],
+        },
+        issues: {
+          data: [
+            { label: "A", group: "1", value: ["no"] },
+            { label: "B", group: "2", value: ["yes"] },
           ],
         },
       },

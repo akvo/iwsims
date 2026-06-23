@@ -55,6 +55,7 @@ const useMapByParent = ({ activeFilter, filterState, sourceFormId }) => {
         .get("visualization/values/formula", {
           params: {
             parent_form_id: sourceFormId,
+            ...(activeFilter.form_id ? { form_id: activeFilter.form_id } : {}),
             group_by: "parent_id",
             monitoring: "latest",
             formula: JSON.stringify(activeFilter.formula),

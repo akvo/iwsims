@@ -213,6 +213,7 @@ const DashboardRenderer = ({
             filterState={filterState}
             customFilterDefs={customFilterDefs}
             cellComputers={cellComputersById?.[item.id] || {}}
+            parentFormId={parentFormId}
           />
         </Card>
       );
@@ -224,6 +225,8 @@ const DashboardRenderer = ({
           item={item}
           filterState={filterState}
           customFilterDefs={customFilterDefs}
+          definitionsById={definitionsById}
+          parentFormId={parentFormId}
           height={item.height || 400}
         />
       );
@@ -239,6 +242,7 @@ const DashboardRenderer = ({
           item={item}
           filters={filters}
           onChange={filterActions}
+          parentFormId={parentFormId}
         />
       );
     }

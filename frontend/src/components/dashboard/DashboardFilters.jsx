@@ -46,7 +46,7 @@ const extractOptionsFromWindow = (formId, questionName) => {
  * @param {object} filters       Return value of useDashboardFilters
  * @param {object} onChange      { setDateRange, setAdministrationId, setCustomFilter }
  */
-const DashboardFilters = ({ filterItems, filters, onChange }) => {
+const DashboardFilters = ({ filterItems, filters, onChange, parentFormId }) => {
   const dateCfg = useMemo(
     () => filterItems.find((i) => i.chart_type === "filter_date"),
     [filterItems]
@@ -73,10 +73,13 @@ const DashboardFilters = ({ filterItems, filters, onChange }) => {
   const customOptions = useMemo(() => {
     const out = {};
     customDefs.forEach((d) => {
-      out[d.key] = extractOptionsFromWindow(d.form_id, d.question_name);
+      out[d.key] = extractOptionsFromWindow(
+        d.form_id || parentFormId,
+        d.question_name
+      );
     });
     return out;
-  }, [customDefs]);
+  }, [customDefs, parentFormId]);
 
   // AdministrationDropdown is the source of truth via `store.administration`
   // (an array of levels). It does NOT fire onChange on clear, so we subscribe
@@ -268,6 +271,7 @@ DashboardFilters.propTypes = {
     setAdministrationId: PropTypes.func.isRequired,
     setCustomFilter: PropTypes.func.isRequired,
   }).isRequired,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default DashboardFilters;

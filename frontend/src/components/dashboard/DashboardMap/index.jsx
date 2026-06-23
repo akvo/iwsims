@@ -55,6 +55,8 @@ const DashboardMap = ({
   item,
   filterState,
   customFilterDefs = [],
+  definitionsById,
+  parentFormId,
   height = 400,
 }) => {
   const [points, setPoints] = useState([]);
@@ -62,12 +64,25 @@ const DashboardMap = ({
   const [error, setError] = useState(null);
   const datapointCache = useRef({});
 
-  const sourceFormId = item?.source_form_id;
+  const sourceFormId = item?.source_form_id || parentFormId;
   const urlTemplate =
     item?.click_url_template ||
     "/control-center/data/{parent_form_id}/monitoring/{data_id}";
 
-  const itemFilters = useMemo(() => item?.filters || [], [item]);
+  const itemFilters = useMemo(
+    () =>
+      (item?.filters || []).map((filter) => {
+        if (!filter.formula_ref) {
+          return filter;
+        }
+        const definition = definitionsById?.get(filter.formula_ref);
+        return {
+          ...filter,
+          formula: definition?.compliance_formula,
+        };
+      }),
+    [item, definitionsById]
+  );
 
   const {
     activeKey,
@@ -272,6 +287,8 @@ DashboardMap.propTypes = {
   item: PropTypes.object.isRequired,
   filterState: PropTypes.object,
   customFilterDefs: PropTypes.array,
+  definitionsById: PropTypes.instanceOf(Map),
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   height: PropTypes.number,
 };
 

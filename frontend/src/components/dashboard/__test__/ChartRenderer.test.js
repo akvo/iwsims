@@ -26,6 +26,14 @@ jest.mock("akvo-charts", () => {
       const [opt, setOpt] = ReactMock.useState(null);
       ReactMock.useImperativeHandle(ref, () => ({
         setOption: (o) => setOpt(o),
+        getOption: () => {
+          const dimensions = Array.from(
+            new Set((props.data || []).flatMap((row) => Object.keys(row)))
+          );
+          return {
+            series: dimensions.slice(1).map((name) => ({ name })),
+          };
+        },
       }));
       return ReactMock.createElement("div", {
         "data-testid": testid,
@@ -338,6 +346,62 @@ describe("ChartRenderer", () => {
     );
     expect(screen.getByTestId("chart-stack")).toHaveAttribute("data-rows", "1");
     expect(axios).not.toHaveBeenCalled();
+  });
+
+  test("binds unique compliance colors by series name", () => {
+    const computeResponses = {
+      kpi_stack: {
+        chart_compliance: {
+          compliant: { data: [{ value: 10 }] },
+          salinity: { data: [{ value: 2 }] },
+          e_coli_cbt: { data: [{ value: 1 }] },
+          no_info: { data: [{ value: 3 }] },
+          not_applicable: { data: [{ value: 4 }] },
+        },
+      },
+    };
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_compliance",
+          chart_type: "stack_bar",
+          compute: "kpi_stack",
+          segments: [
+            { key: "compliant", label: "Compliant" },
+            { key: "salinity", label: "Salinity" },
+            { key: "e_coli_cbt", label: "E-coli CBT" },
+            { key: "no_info", label: "No information available" },
+            { key: "not_applicable", label: "N/A" },
+          ],
+          config: {
+            title: "Compliance",
+          },
+          color_map: {
+            Compliant: "#2e7d32",
+            Salinity: "#9e7c00",
+            "E-coli CBT": "#7c4dff",
+            "No information available": "#90a4ae",
+            "N/A": "#263238",
+          },
+        }}
+        filterState={emptyFilters}
+        today={today}
+        computeResponses={computeResponses}
+      />
+    );
+
+    const opt = JSON.parse(
+      screen.getByTestId("chart-stack").getAttribute("data-option")
+    );
+    const colors = opt.series.map((series) => series.itemStyle.color);
+    expect(colors).toEqual([
+      "#2e7d32",
+      "#9e7c00",
+      "#7c4dff",
+      "#90a4ae",
+      "#263238",
+    ]);
+    expect(new Set(colors).size).toBe(colors.length);
   });
 
   test("compute=process_counts assembles horizontal bar rows from segment responses", () => {

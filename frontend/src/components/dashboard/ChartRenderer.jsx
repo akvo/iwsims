@@ -30,6 +30,8 @@ const COMPONENT_BY_TYPE = {
 };
 
 const NO_INFO_COLOR = "#bfbfbf";
+const NOT_APPLICABLE_LABEL = "N/A";
+const NOT_APPLICABLE_COLOR = "#546e7a";
 
 /**
  * akvo-charts' `transformConfig` hardcodes its default tooltip and does NOT
@@ -370,7 +372,10 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       ...tooltipPatch(commonProps.config),
     };
 
-    // Color the "No information available" entry gray regardless of palette.
+    // Color semantic neutral entries gray regardless of palette. This is
+    // especially important for compliance charts: once the number of failure
+    // reasons exceeds config.color's length, ECharts cycles back to the first
+    // colour and would otherwise render N/A with the Compliant green.
     // Two shapes of data arrive here:
     //  • Simple bar  [{label, value}, ...] — one series, per-item color via
     //    series.data + xAxis.data (switching away from dataset+encode).
@@ -378,6 +383,16 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
     //    — one series per stack key; target by series name via chart.getOption().
     const noInfoLabel = uiText.en.noInformationAvailable;
     const noInfoColor = commonProps.config?.noInfoColor || NO_INFO_COLOR;
+    const notApplicableColor =
+      commonProps.config?.notApplicableColor || NOT_APPLICABLE_COLOR;
+    const seriesColorMap = {
+      ...(commonProps.config?.seriesColorMap || {}),
+      [noInfoLabel]:
+        commonProps.config?.seriesColorMap?.[noInfoLabel] || noInfoColor,
+      [NOT_APPLICABLE_LABEL]:
+        commonProps.config?.seriesColorMap?.[NOT_APPLICABLE_LABEL] ||
+        notApplicableColor,
+    };
     const chartData = commonProps.data || [];
     if (chartData.length > 0 && "label" in chartData[0]) {
       // Simple bar chart path.
@@ -412,19 +427,21 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       }
     } else if (
       chartData.length > 0 &&
-      chartData.some((r) => noInfoLabel in r)
+      chartData.some((row) =>
+        Object.keys(seriesColorMap).some((label) => label in row)
+      )
     ) {
-      // kpi_stack path: find the series by name and set its itemStyle.
-      // The no-info key can sit on any row (e.g. the compliance chart puts
-      // it on the last "No information available" category, not chartData[0]),
-      // so probe every row rather than only the first.
+      // Stack path: bind colours by series name rather than array position.
+      // Formula buckets can appear or disappear, which shifts series indexes
+      // and makes a positional palette unreliable.
       const existingSeries = chart.getOption()?.series || [];
-      const noInfoIdx = existingSeries.findIndex((s) => s.name === noInfoLabel);
-      if (noInfoIdx !== -1) {
-        overrides.series = existingSeries.map((_, i) =>
-          i === noInfoIdx ? { itemStyle: { color: noInfoColor } } : {}
-        );
-      }
+      overrides.series = existingSeries.map((series) => {
+        const color = seriesColorMap[series.name];
+        if (color) {
+          return { itemStyle: { color } };
+        }
+        return {};
+      });
     }
 
     // Value-axis minInterval (e.g. integer-only ticks for counts). For a
@@ -543,6 +560,7 @@ const ChartRenderer = ({
     {
       enabled: Boolean(progressDef),
       customFilterDefs,
+      parentFormId,
     }
   );
 
@@ -553,6 +571,13 @@ const ChartRenderer = ({
     }
     const paramsRef = item.params_ref || [];
     return paramsRef.map((id) => definitionsById?.get(id)).filter(Boolean);
+  }, [item, definitionsById]);
+
+  const complianceFormula = useMemo(() => {
+    if (item.compute !== "compliance" || !item.globals_ref) {
+      return null;
+    }
+    return definitionsById?.get(item.globals_ref)?.compliance_formula || null;
   }, [item, definitionsById]);
 
   const data = useMemo(() => {
@@ -645,6 +670,7 @@ const ChartRenderer = ({
       // be appended. Spec: doc/claude/compliance-chart-no-info/.
       const complianceOptions = {
         noInfoLabel: uiText.en.noInformationAvailable,
+        formula: complianceFormula,
       };
       if (item.include_unanswered === true) {
         const total = computeResponses?.compliance_totals?.[item.id];
@@ -653,7 +679,9 @@ const ChartRenderer = ({
           // response. If totalRegistered arrives before the param fetches the
           // gap formula (totalRegistered - 0 - 0) would render the entire
           // registered universe as "No information available".
-          const activeNormalised = normalised.filter((p) => !p.hide);
+          const activeNormalised = complianceFormula
+            ? normalised
+            : normalised.filter((p) => !p.hide);
           const allParamsLoaded =
             activeNormalised.length > 0 &&
             activeNormalised.every((p) => p.key in responsesByKey);
@@ -717,6 +745,7 @@ const ChartRenderer = ({
     progressData,
     complianceResponses,
     complianceParams,
+    complianceFormula,
     computeResponses,
     fiscalYearStartMonth,
     today,
@@ -794,6 +823,15 @@ const ChartRenderer = ({
     config: {
       ...(item.config || {}),
       ...(horizontal ? { horizontal: true } : {}),
+      // Keep the public visualization schema consistent: chart authors use
+      // top-level `color_map`, while the renderer derives both the initial
+      // palette and the name-bound lookup needed by stacked series.
+      ...(item.color_map
+        ? {
+            color: Object.values(item.color_map),
+            seriesColorMap: item.color_map,
+          }
+        : {}),
       // Optional override for the "No information available" bucket colour,
       // taken from the item's color_map._no_info (falls back to the neutral
       // NO_INFO_COLOR grey when absent). Lets a config recolour the no-info

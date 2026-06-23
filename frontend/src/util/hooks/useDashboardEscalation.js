@@ -61,15 +61,18 @@ export const useDashboardEscalation = (
     pageSize = 20,
     enabled = true,
     customFilterDefs = [],
+    parentFormId,
   } = options;
 
   const endpoint = useMemo(() => {
     if (!escalationBlock || !enabled) {
       return null;
     }
-    const parentFormId = escalationBlock?.api?.form_id;
-    return parentFormId ? `visualization/escalation/${parentFormId}` : null;
-  }, [escalationBlock, enabled]);
+    const resolvedParentFormId = escalationBlock?.api?.form_id || parentFormId;
+    return resolvedParentFormId
+      ? `visualization/escalation/${resolvedParentFormId}`
+      : null;
+  }, [escalationBlock, enabled, parentFormId]);
 
   const params = useMemo(() => {
     if (!escalationBlock || !enabled) {
@@ -97,7 +100,7 @@ export const useDashboardEscalation = (
     // Fold in custom filters as AND-narrowing on top of the OR
     // escalation `criteria`. Emitted as `filter_criteria`.
     const withCriteria = applyDashboardFilters(
-      { form_id: escalationBlock.api?.form_id },
+      { form_id: escalationBlock.api?.form_id || parentFormId },
       filterState,
       customFilterDefs
     );
@@ -105,7 +108,15 @@ export const useDashboardEscalation = (
       out.filter_criteria = withCriteria.criteria;
     }
     return out;
-  }, [escalationBlock, filterState, page, pageSize, enabled, customFilterDefs]);
+  }, [
+    escalationBlock,
+    filterState,
+    page,
+    pageSize,
+    enabled,
+    customFilterDefs,
+    parentFormId,
+  ]);
 
   return useVisualizationRequest(endpoint, params);
 };

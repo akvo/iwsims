@@ -216,7 +216,6 @@ describe("useDashboardEscalation", () => {
 
     const block = {
       api: {
-        form_id: 1749623934933,
         monitoring_form_id: 1749632545233,
         criteria: [
           {
@@ -237,7 +236,11 @@ describe("useDashboardEscalation", () => {
     };
 
     const { latest } = mount(() =>
-      useDashboardEscalation(block, emptyFilters, { page: 2, pageSize: 50 })
+      useDashboardEscalation(block, emptyFilters, {
+        page: 2,
+        pageSize: 50,
+        parentFormId: 1749623934933,
+      })
     );
 
     await waitFor(() => expect(latest().loading).toBe(false));
@@ -260,7 +263,6 @@ describe("useDashboardProgress", () => {
     const block = {
       deadline_question_name: "proposed_completion_date",
       api: {
-        form_id: 1749623934933,
         monitoring_form_id: 1749624452908,
         filter_question_name: "is_project_completed",
         filter_option_value: "no",
@@ -271,7 +273,11 @@ describe("useDashboardProgress", () => {
       ],
     };
 
-    const { latest } = mount(() => useDashboardProgress(block, emptyFilters));
+    const { latest } = mount(() =>
+      useDashboardProgress(block, emptyFilters, {
+        parentFormId: 1749623934933,
+      })
+    );
 
     await waitFor(() => expect(latest().loading).toBe(false));
 

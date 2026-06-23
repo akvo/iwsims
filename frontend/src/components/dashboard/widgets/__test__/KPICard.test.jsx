@@ -125,7 +125,7 @@ describe("KPICard — value_type: ratio_percentage (ratio KPI)", () => {
             question_name: "operationality",
             value_type: "ratio_percentage",
           },
-          denominator_api: { form_id: 1748903240763 },
+          denominator_api: {},
         }}
         filterState={emptyFilters}
         parentFormId={1748903240763}
@@ -139,6 +139,7 @@ describe("KPICard — value_type: ratio_percentage (ratio KPI)", () => {
       expect(call.url).toBe("visualization/values");
       expect(call.params.parent_form_id).toBe(1748903240763);
     });
+    expect(calls.some((call) => !call.params.form_id)).toBe(true);
   });
 
   test("M === 0 renders '—' (no div-by-zero)", async () => {
@@ -309,16 +310,16 @@ describe("KPICard — compute: accessibility_no_issues_kpi", () => {
         kpi_acc: {
           sample: {
             data: [
-              { label: "A", group: 1, Yes: 1, No: 0 }, // easily accessible
-              { label: "B", group: 2, Yes: 1, No: 0 }, // accessible w/ issues
-              { label: "C", group: 3, Yes: 0, No: 1 }, // not accessible
+              { label: "A", group: 1, value: ["yes"] }, // easily accessible
+              { label: "B", group: 2, value: ["yes"] }, // accessible w/ issues
+              { label: "C", group: 3, value: ["no"] }, // not accessible
             ],
           },
           issues: {
             data: [
-              { label: "A", group: 1, Yes: 0, No: 1 },
-              { label: "B", group: 2, Yes: 1, No: 0 },
-              { label: "C", group: 3, Yes: 0, No: 1 },
+              { label: "A", group: 1, value: ["no"] },
+              { label: "B", group: 2, value: ["yes"] },
+              { label: "C", group: 3, value: ["no"] },
             ],
           },
         },

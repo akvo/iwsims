@@ -102,10 +102,12 @@ const ProgressFetcher = ({
   progressItem,
   filterState,
   customFilterDefs,
+  parentFormId,
   onData,
 }) => {
   const { data, error } = useDashboardProgress(progressItem, filterState, {
     customFilterDefs,
+    parentFormId,
   });
   useEffect(() => {
     if (data || error) {
@@ -779,6 +781,7 @@ const Dashboard = () => {
           progressItem={progressItem}
           filterState={filters.queryParams}
           customFilterDefs={customFilterDefs}
+          parentFormId={config.parent_form_id}
           onData={onProgressData}
         />
       ))}

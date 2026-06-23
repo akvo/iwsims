@@ -41,12 +41,14 @@ const EscalationTable = ({
   customFilterDefs,
   pageSize = 10,
   cellComputers = {},
+  parentFormId,
 }) => {
   const [page, setPage] = useState(1);
   const { data, loading, error } = useDashboardEscalation(item, filterState, {
     page,
     pageSize,
     customFilterDefs,
+    parentFormId,
   });
   uiText;
   const { active: activeLang } = store.useState((s) => s.language);
@@ -112,7 +114,7 @@ const EscalationTable = ({
       }));
       return (
         <div>
-          {item?.api?.form_id && (
+          {(item?.api?.form_id || parentFormId) && (
             <div
               style={{
                 textAlign: "right",
@@ -122,7 +124,9 @@ const EscalationTable = ({
               }}
             >
               <a
-                href={`/control-center/data/${item.api.form_id}/monitoring/${row.id}`}
+                href={`/control-center/data/${
+                  item?.api?.form_id || parentFormId
+                }/monitoring/${row.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -162,7 +166,7 @@ const EscalationTable = ({
         </div>
       );
     },
-    [visibleColumns, cellComputers]
+    [visibleColumns, cellComputers, parentFormId]
   );
 
   if (error) {
@@ -213,6 +217,7 @@ EscalationTable.propTypes = {
   customFilterDefs: PropTypes.array,
   pageSize: PropTypes.number,
   cellComputers: PropTypes.object,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default EscalationTable;

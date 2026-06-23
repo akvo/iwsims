@@ -13,7 +13,7 @@ import DashboardFilters from "../DashboardFilters";
  * @param {object} filters      Return value of useDashboardFilters
  * @param {object} onChange     { setDateRange, setAdministrationId, setCustomFilter }
  */
-const FilterBarWidget = ({ item, filters, onChange }) => {
+const FilterBarWidget = ({ item, filters, onChange, parentFormId }) => {
   const filterItems = item.items || [];
 
   return (
@@ -22,6 +22,7 @@ const FilterBarWidget = ({ item, filters, onChange }) => {
         filterItems={filterItems}
         filters={filters}
         onChange={onChange}
+        parentFormId={parentFormId}
       />
     </Card>
   );
@@ -37,6 +38,7 @@ FilterBarWidget.propTypes = {
     setAdministrationId: PropTypes.func.isRequired,
     setCustomFilter: PropTypes.func.isRequired,
   }).isRequired,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default FilterBarWidget;
