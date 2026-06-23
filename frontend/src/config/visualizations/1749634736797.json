@@ -948,6 +948,12 @@
                   "top": 32,
                   "bottom": 64,
                   "containLabel": false
+                },
+                "xAxis": {
+                  "axisLabel": {
+                    "rotate": 45
+                  },
+                  "nameGap": 128
                 }
               },
               "api": {
