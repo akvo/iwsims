@@ -71,14 +71,28 @@ def build_escalation_criteria_filter(criteria, latest_ids):
         elif ctype == "overdue":
             completion_qname = parts[0]
             deadline_qname = parts[1]
+            # Optional 3rd/4th parts describe what "still incomplete" means.
+            #   mode "option" (default): the project is incomplete when its
+            #     completion question carries the given option value
+            #     (e.g. is_project_completed = "no").
+            #   mode "lt": the completion question is numeric and the project
+            #     is incomplete when its value is below the threshold
+            #     (e.g. project_completion_percentage < 100). A missing value
+            #     is NOT counted as incomplete.
+            incomplete_value = parts[2] if len(parts) > 2 else "no"
+            mode = parts[3] if len(parts) > 3 else "option"
             today = date.today().isoformat()
-            incomplete = set(
-                MVAnswerDenormalized.objects.filter(
-                    data_id__in=latest_ids,
-                    question_name=completion_qname,
-                    answer_options__contains=["no"],
-                ).values_list("data_id", flat=True)
+            base = MVAnswerDenormalized.objects.filter(
+                data_id__in=latest_ids,
+                question_name=completion_qname,
             )
+            if mode == "lt":
+                base = base.filter(answer_value__lt=float(incomplete_value))
+            else:
+                base = base.filter(
+                    answer_options__contains=[incomplete_value]
+                )
+            incomplete = set(base.values_list("data_id", flat=True))
             overdue_ids = set(
                 MVAnswerDenormalized.objects.filter(
                     data_id__in=latest_ids,

@@ -222,7 +222,7 @@ class EscalationFilterSerializer(serializers.Serializer):
       option_equals:{qid}:{value}
       threshold_gt:{qid}:{value}
       threshold_lt:{qid}:{value}
-      overdue:{completion_qid}:{deadline_qid}
+      overdue:{completion_qid}:{deadline_qid}[:{incomplete_value}[:{mode}]]
 
     Columns format: comma-separated, colon-delimited.
       {key}:parent_name
@@ -280,7 +280,18 @@ class EscalationFilterSerializer(serializers.Serializer):
                 elif ctype == "overdue":
                     completion_qname = validate_qname(parts[1])
                     deadline_qname = validate_qname(parts[2])
-                    normalized = [completion_qname, deadline_qname]
+                    # Optional 4th/5th parts: the value marking a project
+                    # incomplete (default "no") and the comparison mode
+                    # ("option" default, or "lt" for a numeric threshold
+                    # such as project_completion_percentage < 100).
+                    incomplete_value = parts[3] if len(parts) > 3 else "no"
+                    mode = parts[4] if len(parts) > 4 else "option"
+                    if mode == "lt":
+                        float(incomplete_value)
+                    normalized = [
+                        completion_qname, deadline_qname,
+                        incomplete_value, mode,
+                    ]
             except ValueError:
                 raise serializers.ValidationError(
                     f"Invalid numeric value in criteria: '{item}'."

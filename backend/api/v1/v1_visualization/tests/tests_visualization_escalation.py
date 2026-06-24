@@ -158,6 +158,47 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(data["count"], 1)
         self.assertEqual(data["results"][0]["name"], "Site Alpha")
 
+    # -- overdue criteria --
+
+    def test_overdue_numeric_lt_mode(self):
+        """Numeric overdue: incomplete = completion value < threshold.
+
+        criteria=overdue:{measurement}:{inspection_date}:25:lt
+        Both plants' inspection_date (2025) precedes today (overdue).
+        Latest measurement: reg1=20 (<25, incomplete), reg2=40 (complete).
+        Expected: only reg1 (Site Alpha).
+        """
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&criteria=overdue:{self.q_number.name}"
+            f":{self.q_date.name}:25:lt"
+            "&columns=name:parent_name"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Alpha")
+
+    def test_overdue_option_mode_backward_compat(self):
+        """3-part overdue defaults to option mode (incomplete = has option).
+
+        criteria=overdue:{operational_status}:{inspection_date}:active
+        Latest: reg1=active (incomplete), reg2=pending. Both overdue.
+        Expected: only reg1 (Site Alpha).
+        """
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            f"&criteria=overdue:{self.q_option.name}"
+            f":{self.q_date.name}:active"
+            "&columns=name:parent_name"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Alpha")
+
     # -- Dynamic columns --
 
     def test_columns_parent_name_and_administration(self):
