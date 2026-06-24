@@ -7,16 +7,26 @@ import useVisualizationRequest from "./useVisualizationRequest";
  * backend expects.
  *
  * option_equals:qid:value, threshold_gt:qid:value, threshold_lt:qid:value,
- * overdue:completion_qid:deadline_qid
+ * overdue:completion_qid:deadline_qid:incomplete_value:mode
+ *
+ * The 4th/5th overdue parts describe what "still incomplete" means: the value
+ * (default "no") and the mode — "option" (default; the completion question
+ * carries that option) or "lt" (numeric, e.g. project_completion_percentage
+ * < 100). Both default so existing yes/no completion questions keep working.
  */
 export const serializeCriteria = (criteria = []) =>
   criteria
     .filter((c) => !c.hide)
     .map((c) => {
       if (c.type === "overdue") {
-        return `overdue:${c.completion_qid}:${c.deadline_qid}`;
+        const incomplete = c.completion_incomplete_value ?? "no";
+        const mode = c.completion_incomplete_op || "option";
+        return (
+          `overdue:${c.completion_qname}:${c.deadline_qname}` +
+          `:${incomplete}:${mode}`
+        );
       }
-      return `${c.type}:${c.question_id}:${c.value}`;
+      return `${c.type}:${c.question_name}:${c.value}`;
     })
     .join(",");
 
@@ -35,7 +45,7 @@ export const serializeColumns = (columns = []) =>
       if (c.source === "parent_name" || c.source === "administration") {
         return `${c.key}:${c.source}`;
       }
-      return `${c.key}:${c.source}:${c.question_id}`;
+      return `${c.key}:${c.source}:${c.question_name}`;
     })
     .join(",");
 
@@ -61,15 +71,18 @@ export const useDashboardEscalation = (
     pageSize = 20,
     enabled = true,
     customFilterDefs = [],
+    parentFormId,
   } = options;
 
   const endpoint = useMemo(() => {
     if (!escalationBlock || !enabled) {
       return null;
     }
-    const parentFormId = escalationBlock?.api?.form_id;
-    return parentFormId ? `visualization/escalation/${parentFormId}` : null;
-  }, [escalationBlock, enabled]);
+    const resolvedParentFormId = escalationBlock?.api?.form_id || parentFormId;
+    return resolvedParentFormId
+      ? `visualization/escalation/${resolvedParentFormId}`
+      : null;
+  }, [escalationBlock, enabled, parentFormId]);
 
   const params = useMemo(() => {
     if (!escalationBlock || !enabled) {
@@ -78,12 +91,16 @@ export const useDashboardEscalation = (
     const { monitoring_form_id, criteria = [] } = escalationBlock.api || {};
 
     const out = {
-      monitoring_form_id,
       criteria: serializeCriteria(criteria),
       columns: serializeColumns(escalationBlock.columns || []),
       page,
       page_size: pageSize,
     };
+    // Optional: when omitted, the backend resolves the latest answer per
+    // question across every monitoring form (cross-form escalation).
+    if (monitoring_form_id) {
+      out.monitoring_form_id = monitoring_form_id;
+    }
 
     if (filterState?.from_date) {
       out.from_date = filterState.from_date;
@@ -97,7 +114,7 @@ export const useDashboardEscalation = (
     // Fold in custom filters as AND-narrowing on top of the OR
     // escalation `criteria`. Emitted as `filter_criteria`.
     const withCriteria = applyDashboardFilters(
-      { form_id: escalationBlock.api?.form_id },
+      { form_id: escalationBlock.api?.form_id || parentFormId },
       filterState,
       customFilterDefs
     );
@@ -105,7 +122,15 @@ export const useDashboardEscalation = (
       out.filter_criteria = withCriteria.criteria;
     }
     return out;
-  }, [escalationBlock, filterState, page, pageSize, enabled, customFilterDefs]);
+  }, [
+    escalationBlock,
+    filterState,
+    page,
+    pageSize,
+    enabled,
+    customFilterDefs,
+    parentFormId,
+  ]);
 
   return useVisualizationRequest(endpoint, params);
 };

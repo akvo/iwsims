@@ -72,9 +72,14 @@ class MVCrossFormLatest(models.Model):
     Example: If parent_id=100 has Quick Monitoring (ph=7.2, June 1) and
     Comprehensive Monitoring (ph=7.5, June 10), querying question_name='ph'
     returns 7.5 (the most recent).
+
+    parent_form_id is the registration form the parent belongs to. Pass it to
+    scope a question_name query to one registration family; omit it for a
+    national / cross-family overview.
     """
     id = models.BigIntegerField(primary_key=True)
     parent_id = models.BigIntegerField()
+    parent_form_id = models.BigIntegerField()
     administration_id = models.BigIntegerField()
     question_name = models.TextField()
     question_type = models.IntegerField()
@@ -198,6 +203,7 @@ class MVCrossFormLatest(models.Model):
     """Cross-form latest values aggregated by question_name."""
     id = models.BigIntegerField(primary_key=True)
     parent_id = models.BigIntegerField()
+    parent_form_id = models.BigIntegerField()
     administration_id = models.BigIntegerField()
     question_name = models.TextField()
     question_type = models.IntegerField()

@@ -3,8 +3,14 @@ import { render, screen } from "@testing-library/react";
 import CustomComponentWidget from "../widgets/CustomComponentWidget";
 
 jest.mock("../custom-components", () => ({
-  KnownComponent: () => (
-    <div data-testid="known-component">known component rendered</div>
+  KnownComponent: ({ item, parentFormId }) => (
+    <div
+      data-testid="known-component"
+      data-item-id={item.id}
+      data-parent-form-id={parentFormId}
+    >
+      known component rendered
+    </div>
   ),
 }));
 
@@ -23,10 +29,14 @@ describe("CustomComponentWidget", () => {
     render(
       <CustomComponentWidget
         item={{ id: "ok-item", component: "KnownComponent" }}
+        parentFormId={1749634736797}
       />
     );
 
-    expect(screen.getByTestId("known-component")).toBeInTheDocument();
+    const component = screen.getByTestId("known-component");
+    expect(component).toBeInTheDocument();
+    expect(component).toHaveAttribute("data-item-id", "ok-item");
+    expect(component).toHaveAttribute("data-parent-form-id", "1749634736797");
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 

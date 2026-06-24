@@ -55,14 +55,14 @@ describe("expandApiHints", () => {
       {
         form_id: 1749632545233,
         rolling_months: 12,
-        date_question_id: 1749632545235,
+        date_question_name: "inspection_date",
       },
       { today }
     );
     expect(out.from_date).toBe("2025-04-14");
     expect(out.to_date).toBe("2026-04-14");
     expect(out.rolling_months).toBeUndefined();
-    expect(out.date_question_id).toBe(1749632545235);
+    expect(out.date_question_name).toBe("inspection_date");
   });
 
   test("fiscal_year expands using the fiscal_year_start_month", () => {
@@ -80,28 +80,72 @@ describe("expandApiHints", () => {
       {
         form_id: 1749624452908,
         past_due: true,
-        completion_question_id: 1749630516826,
-        deadline_question_id: 1749630516825,
+        completion_question_name: "is_project_completed",
+        deadline_question_name: "proposed_completion_date",
         monitoring: "latest",
         sum_by: "parent_id",
         value_type: "percentage",
       },
       { today }
     );
-    expect(out.question_id).toBe(1749630516826);
+    expect(out.question_name).toBe("is_project_completed");
     expect(out.option_value).toBe("no");
-    expect(out.date_question_id).toBe(1749630516825);
+    expect(out.date_question_name).toBe("proposed_completion_date");
     expect(out.to_date).toBe("2026-04-13");
     expect(out.past_due).toBeUndefined();
-    expect(out.completion_question_id).toBeUndefined();
-    expect(out.deadline_question_id).toBeUndefined();
+    expect(out.completion_question_name).toBeUndefined();
+    expect(out.deadline_question_name).toBeUndefined();
     expect(out.value_type).toBe("percentage");
+  });
+
+  test("past_due uses completion_incomplete_value when provided", () => {
+    const out = expandApiHints(
+      {
+        past_due: true,
+        completion_question_name: "infrastructure_status",
+        completion_incomplete_value: "non_operational",
+        deadline_question_name: "proposed_completion_date",
+        monitoring: "latest",
+        sum_by: "parent_id",
+      },
+      { today }
+    );
+    expect(out.question_name).toBe("infrastructure_status");
+    expect(out.option_value).toBe("non_operational");
+    expect(out.date_question_name).toBe("proposed_completion_date");
+    expect(out.to_date).toBe("2026-04-13");
+    // The hint key is consumed, never forwarded to the backend.
+    expect(out.completion_incomplete_value).toBeUndefined();
+  });
+
+  test("past_due with completion_incomplete_op=lt emits a threshold criterion", () => {
+    const out = expandApiHints(
+      {
+        form_id: 1749621962296,
+        past_due: true,
+        completion_question_name: "project_completion_percentage",
+        completion_incomplete_value: 100,
+        completion_incomplete_op: "lt",
+        deadline_question_name: "proposed_completion_date",
+        monitoring: "latest",
+        sum_by: "parent_id",
+      },
+      { today }
+    );
+    // Numeric completion → criteria, not an option_value.
+    expect(out.criteria).toBe("threshold_lt:project_completion_percentage:100");
+    expect(out.question_name).toBeUndefined();
+    expect(out.option_value).toBeUndefined();
+    expect(out.date_question_name).toBe("proposed_completion_date");
+    expect(out.to_date).toBe("2026-04-13");
+    expect(out.form_id).toBe(1749621962296);
+    expect(out.completion_incomplete_op).toBeUndefined();
   });
 
   test("no-hint block is passed through unchanged", () => {
     const input = {
       form_id: 1,
-      question_id: 2,
+      question_name: "q2",
       option_value: "x",
       monitoring: "latest",
     };
@@ -116,13 +160,13 @@ describe("applyDashboardFilters", () => {
     {
       key: "water_committee",
       chart_type: "filter_option",
-      question_id: 1749624452105,
+      question_name: "water_committee",
       form_id: 1749623934933,
     },
     {
       key: "implementing_agency",
       chart_type: "filter_multi_option",
-      question_id: 1749624452993,
+      question_name: "implementing_agency",
       form_id: 1749623934933,
     },
   ];
@@ -134,6 +178,24 @@ describe("applyDashboardFilters", () => {
     );
     expect(out.from_date).toBe("2026-01-01");
     expect(out.to_date).toBe("2026-03-31");
+  });
+
+  test("ignore_date_filter drops the date range but keeps administration", () => {
+    const out = applyDashboardFilters(
+      { form_id: 1, ignore_date_filter: true },
+      {
+        from_date: "2026-01-01",
+        to_date: "2026-03-31",
+        administration_id: 7,
+      }
+    );
+    // Fleet-scope queries opt out of the monitoring-period window.
+    expect(out.from_date).toBeUndefined();
+    expect(out.to_date).toBeUndefined();
+    // The flag itself must not leak to the backend.
+    expect("ignore_date_filter" in out).toBe(false);
+    // Administration scope still applies.
+    expect(out.administration_id).toBe(7);
   });
 
   test("dashboard filter overrides widget-expanded defaults (fiscal_year/rolling_months)", () => {
@@ -171,7 +233,7 @@ describe("applyDashboardFilters", () => {
       { custom: [{ key: "water_committee", value: "yes" }] },
       customDefs
     );
-    expect(out.criteria).toBe("option_equals:1749624452105:yes");
+    expect(out.criteria).toBe("option_equals:water_committee:yes");
     expect(out.option_value).toBeUndefined();
   });
 
@@ -181,7 +243,7 @@ describe("applyDashboardFilters", () => {
       { custom: [{ key: "implementing_agency", value: ["akvo"] }] },
       customDefs
     );
-    expect(out.criteria).toBe("option_contains:1749624452993:akvo");
+    expect(out.criteria).toBe("option_contains:implementing_agency:akvo");
   });
 
   test("multi_option filter with multiple values uses option_in", () => {
@@ -192,7 +254,7 @@ describe("applyDashboardFilters", () => {
       },
       customDefs
     );
-    expect(out.criteria).toBe("option_in:1749624452993:akvo|oxfam");
+    expect(out.criteria).toBe("option_in:implementing_agency:akvo|oxfam");
   });
 
   test("multiple custom filters AND-join into single criteria param", () => {
@@ -207,7 +269,8 @@ describe("applyDashboardFilters", () => {
       customDefs
     );
     expect(out.criteria).toBe(
-      "option_contains:1749624452993:akvo," + "option_equals:1749624452105:yes"
+      "option_contains:implementing_agency:akvo," +
+        "option_equals:water_committee:yes"
     );
   });
 
@@ -217,7 +280,7 @@ describe("applyDashboardFilters", () => {
       { custom: [{ key: "water_committee", value: "yes" }] },
       customDefs
     );
-    expect(out.criteria).toBe("option_equals:1749624452105:yes");
+    expect(out.criteria).toBe("option_equals:water_committee:yes");
   });
 
   test("empty custom selection is ignored", () => {
@@ -232,5 +295,32 @@ describe("applyDashboardFilters", () => {
       customDefs
     );
     expect(out.criteria).toBeUndefined();
+  });
+
+  test("widget's own criteria is preserved when no custom filters apply", () => {
+    const out = applyDashboardFilters(
+      {
+        form_id: 1749652214711,
+        criteria: "option_equals:has_chlorine_gas_risks:no",
+      },
+      {},
+      customDefs
+    );
+    expect(out.criteria).toBe("option_equals:has_chlorine_gas_risks:no");
+  });
+
+  test("custom filter criteria AND-joins after the widget's own criteria", () => {
+    const out = applyDashboardFilters(
+      {
+        form_id: 1749652214711,
+        criteria: "option_equals:has_chlorine_gas_risks:no",
+      },
+      { custom: [{ key: "water_committee", value: "yes" }] },
+      customDefs
+    );
+    expect(out.criteria).toBe(
+      "option_equals:has_chlorine_gas_risks:no," +
+        "option_equals:water_committee:yes"
+    );
   });
 });

@@ -10,6 +10,20 @@ import {
   deriveAccessibilityBucket,
 } from "../accessibility";
 import { computeKpiStack } from "../kpiStack";
+import { computeProcessCounts } from "../processCounts";
+import { computeDateHistogram } from "../dateHistogram";
+import { computeStageFlow } from "../stageFlow";
+import { computeValueBuckets } from "../valueBuckets";
+import { computeGroupedStack } from "../groupedStack";
+import { computeBucketBar } from "../bucketBar";
+import { computeConditionField } from "../conditionMatrix";
+import { CONDITION_TONE_COLORS } from "../../constants";
+import {
+  computeProcessBars,
+  processToneColor,
+  distinctParentCount,
+} from "../processStatus";
+import { computeComplianceTrend, monthLabelToKey } from "../complianceTrend";
 
 describe("rotateToFiscalOrder", () => {
   const rows = [
@@ -116,6 +130,100 @@ describe("computeComplianceStackData", () => {
     const out = computeComplianceStackData(parameters, responses);
     expect(out.yesCount).toBe(1);
     expect(out.noCount).toBe(0);
+  });
+
+  test("uses ordered formula buckets for Yes, No, no-info, and N/A", () => {
+    const formulaParameters = [
+      {
+        key: "method",
+        api: { question_name: "water_testing_method" },
+      },
+      {
+        key: "e_coli",
+        api: { question_name: "e_coli" },
+      },
+      {
+        key: "ph_formula",
+        api: { question_name: "ph" },
+      },
+    ];
+    const formula = {
+      buckets: [
+        {
+          value: "not_applicable",
+          label: "N/A",
+          all_of: [
+            {
+              question_name: "water_testing_method",
+              op: "option_not_contains",
+              value: "lab_test",
+            },
+          ],
+        },
+        {
+          value: "non_compliant",
+          label: "No",
+          any_of: [
+            {
+              question_name: "e_coli",
+              op: ">",
+              value: 0,
+              label: "E-coli",
+            },
+            {
+              question_name: "ph",
+              op: ">",
+              value: 8.5,
+              label: "pH",
+            },
+          ],
+        },
+        {
+          value: "_no_info",
+          label: "No information available",
+          any_of: [{ question_name: "e_coli", op: "is_empty" }],
+        },
+      ],
+      default: { value: "compliant", label: "Yes" },
+    };
+    const responses = {
+      method: {
+        data: [
+          { group: "1", value: ["lab_test"] },
+          { group: "2", value: ["lab_test"] },
+          { group: "3", value: ["lab_test"] },
+          { group: "4", value: ["cbt_test"] },
+        ],
+      },
+      e_coli: {
+        data: [
+          { group: "1", value: 0 },
+          { group: "2", value: 1 },
+        ],
+      },
+      ph: {
+        data: [{ group: "2", value: 9 }],
+      },
+    };
+
+    const out = computeComplianceStackData(formulaParameters, responses, {
+      formula,
+      totalRegistered: 5,
+    });
+
+    expect(out.yesCount).toBe(1);
+    expect(out.noCount).toBe(1);
+    expect(out.noInfoCount).toBe(1);
+    expect(out.notApplicableCount).toBe(2);
+    expect(out.data).toEqual([
+      { compliance: "Yes", Compliant: 1 },
+      { compliance: "No", "E-coli": 1, pH: 0 },
+      {
+        compliance: "No information available",
+        "No information available": 1,
+      },
+      { compliance: "N/A", "N/A": 2 },
+    ]);
   });
 
   describe("include_unanswered support", () => {
@@ -282,6 +390,69 @@ describe("getCompliantCount", () => {
   });
 });
 
+describe("getCompliantCount (formula mode)", () => {
+  // Params carry api.question_name so buildByEps populates _answers, which
+  // the formula reads. The fecal param is hidden but MUST still count.
+  const parameters = [
+    { key: "e_coli", api: { question_name: "lab_ecoli_count" } },
+    { key: "turbidity", api: { question_name: "lab_turbidity_ntu" } },
+    {
+      key: "fecal",
+      hide: true,
+      api: { question_name: "lab_fecal_coliform" },
+    },
+  ];
+  const formula = {
+    buckets: [
+      {
+        value: "non_compliant",
+        label: "No",
+        any_of: [
+          { question_name: "lab_ecoli_count", op: ">", value: 0 },
+          { question_name: "lab_turbidity_ntu", op: ">", value: 5 },
+          { question_name: "lab_fecal_coliform", op: ">", value: 0 },
+        ],
+      },
+      {
+        value: "_no_info",
+        label: "No information available",
+        all_of: [
+          { question_name: "lab_ecoli_count", op: "is_empty" },
+          { question_name: "lab_turbidity_ntu", op: "is_empty" },
+          { question_name: "lab_fecal_coliform", op: "is_empty" },
+        ],
+      },
+    ],
+    default: { value: "compliant", label: "Yes" },
+  };
+
+  test("missing-but-present-others counts compliant; all-empty does not", () => {
+    const responses = {
+      // P1: turbidity ok, e_coli/fecal missing -> compliant (1)
+      // P2: turbidity violation -> non_compliant
+      // P3: all empty (no rows) -> _no_info, not counted
+      turbidity: {
+        data: [
+          { group: "1", value: 1.0 },
+          { group: "2", value: 20 },
+        ],
+      },
+    };
+    expect(getCompliantCount(parameters, responses, formula)).toBe(1);
+  });
+
+  test("hidden fecal param violation flips a plant to non-compliant", () => {
+    const responses = {
+      turbidity: { data: [{ group: "1", value: 1.0 }] },
+      fecal: { data: [{ group: "1", value: 3 }] },
+    };
+    // Threshold mode would drop the hidden fecal param and call it compliant;
+    // formula mode honours it -> 0 compliant.
+    expect(getCompliantCount(parameters, responses, formula)).toBe(0);
+    expect(getCompliantCount(parameters, responses)).toBe(1);
+  });
+});
+
 describe("computeCrossTab (column-per-option shape)", () => {
   // Backend response shape after akvo-mis-bvt:
   //   {data: [{label: parent_name, group: parent_id, [opt_label]: count}]}
@@ -440,11 +611,7 @@ describe("deriveAccessibilityBucket (A.2 rule)", () => {
   });
 });
 
-describe("computeAccessibilityBucket (column-per-option shape)", () => {
-  // Backend response shape per akvo-mis-bvt:
-  //   {data: [{label: parent_name, group: parent_id, Yes: 1|0, No: 1|0}]}
-  // Option labels come from the option question's QuestionOptions.
-
+describe("computeAccessibilityBucket", () => {
   const labels = {
     easily_accessible: "Easily accessible",
     accessible_with_issues: "Accessible with issues",
@@ -492,6 +659,35 @@ describe("computeAccessibilityBucket (column-per-option shape)", () => {
             { label: "B", group: 2, Yes: 1, No: 0 },
             { label: "C", group: 3, Yes: 1, No: 0 },
             { label: "D", group: 4, Yes: 1, No: 0 }, // parent w/o sample → excluded
+          ],
+        },
+      },
+      labels
+    );
+    expect(out).toEqual([
+      {
+        category: "Accessibility",
+        "Easily accessible": 1,
+        "Accessible with issues": 1,
+        "Not accessible": 1,
+      },
+    ]);
+  });
+
+  test("supports cross-form value-array responses", () => {
+    const out = computeAccessibilityBucket(
+      {
+        sample: {
+          data: [
+            { label: "A", group: "1", value: ["yes"] },
+            { label: "B", group: "2", value: ["YES"] },
+            { label: "C", group: "3", value: ["no"] },
+          ],
+        },
+        issues: {
+          data: [
+            { label: "A", group: "1", value: ["no"] },
+            { label: "B", group: "2", value: ["yes"] },
           ],
         },
       },
@@ -662,5 +858,547 @@ describe("computeKpiStack", () => {
     const responses = { operational: { data: [{ value: 1 }] } };
     const out = computeKpiStack(segments2, responses);
     expect(typeof out[0].category).toBe("string");
+  });
+});
+
+describe("computeProcessCounts", () => {
+  const segments = [
+    { key: "flocculation", label: "Coagulation/Flocculation" },
+    { key: "sedimentation", label: "Sedimentation/Clarification" },
+    { key: "filtration", label: "Filtration" },
+  ];
+
+  test("maps scalar segment responses into horizontal bar rows", () => {
+    const responses = {
+      flocculation: { data: [{ value: 18 }] },
+      sedimentation: { data: [{ value: 7 }] },
+      filtration: { data: [{ value: 9 }] },
+    };
+    expect(computeProcessCounts(segments, responses)).toEqual([
+      { label: "Coagulation/Flocculation", value: 18 },
+      { label: "Sedimentation/Clarification", value: 7 },
+      { label: "Filtration", value: 9 },
+    ]);
+  });
+
+  test("missing responses default to zero", () => {
+    const responses = {
+      flocculation: { data: [{ value: 18 }] },
+      filtration: { data: [] },
+    };
+    expect(computeProcessCounts(segments, responses)).toEqual([
+      { label: "Coagulation/Flocculation", value: 18 },
+      { label: "Sedimentation/Clarification", value: 0 },
+      { label: "Filtration", value: 0 },
+    ]);
+  });
+
+  test("can sort descending for top-process bars", () => {
+    const responses = {
+      flocculation: { data: [{ value: 18 }] },
+      sedimentation: { data: [{ value: 7 }] },
+      filtration: { data: [{ value: 9 }] },
+    };
+    expect(computeProcessCounts(segments, responses, { sort: "desc" })).toEqual(
+      [
+        { label: "Coagulation/Flocculation", value: 18 },
+        { label: "Filtration", value: 9 },
+        { label: "Sedimentation/Clarification", value: 7 },
+      ]
+    );
+  });
+});
+
+describe("computeDateHistogram", () => {
+  const today = new Date(Date.UTC(2026, 5, 19));
+
+  test("buckets dates into overdue plus recent monthly buckets", () => {
+    const out = computeDateHistogram(
+      [
+        { value: "2026-06-01" },
+        { value: "2026-05-15" },
+        { value: "2025-12-01" },
+        { value: "2024-11-30" },
+      ],
+      today,
+      { months: 3, overdue_label: "> 3 mo" }
+    );
+    expect(out).toEqual([
+      { label: "> 3 mo", value: 2, color: "#d93c35" },
+      { label: "Apr '26", value: 0, color: "#2fb36d" },
+      { label: "May '26", value: 1, color: "#2fb36d" },
+      { label: "Jun '26", value: 1, color: "#2fb36d" },
+    ]);
+  });
+
+  test("colors older visible months amber and red by recency", () => {
+    const out = computeDateHistogram([], today, { months: 14 });
+    const jan2026 = out.find((row) => row.label === "Jan '26");
+    const jun2025 = out.find((row) => row.label === "Jun '25");
+    const may2025 = out.find((row) => row.label === "May '25");
+    expect(jan2026.color).toBe("#2fb36d");
+    expect(jun2025.color).toBe("#f5a623");
+    expect(may2025.color).toBe("#d93c35");
+    expect(out[0].color).toBe("#d93c35");
+  });
+});
+
+describe("computeValueBuckets", () => {
+  const buckets = [
+    { label: "0", value: 0 },
+    { label: "1", value: 1 },
+    { label: "2", value: 2 },
+    { label: "3", value: 3 },
+    { label: "4+", min: 4 },
+  ];
+
+  test("counts exact numeric buckets and open-ended final bucket", () => {
+    const rows = [
+      { value: 0 },
+      { value: 1 },
+      { value: 2 },
+      { value: "2" },
+      { value: 3 },
+      { value: 4 },
+      { value: 6 },
+      { value: null },
+      { value: "not-a-number" },
+    ];
+    expect(computeValueBuckets(rows, buckets)).toEqual([
+      { label: "0", value: 1 },
+      { label: "1", value: 1 },
+      { label: "2", value: 2 },
+      { label: "3", value: 1 },
+      { label: "4+", value: 2 },
+    ]);
+  });
+
+  test("emits configured buckets even when counts are zero", () => {
+    expect(computeValueBuckets([], buckets)).toEqual([
+      { label: "0", value: 0 },
+      { label: "1", value: 0 },
+      { label: "2", value: 0 },
+      { label: "3", value: 0 },
+      { label: "4+", value: 0 },
+    ]);
+  });
+});
+
+describe("computeStageFlow", () => {
+  test("computes sequential positive-response stage intersections", () => {
+    const flow = computeStageFlow({
+      total: 5,
+      rootLabel: "All WTPs",
+      stages: [
+        {
+          key: "policy",
+          label: "Has policy",
+          fail_label: "No policy",
+        },
+        {
+          key: "use",
+          label: "Staff use",
+          fail_label: "Does not use",
+        },
+        {
+          key: "comply",
+          label: "Staff comply",
+          fail_label: "Not complying",
+        },
+      ],
+      responses: {
+        policy: {
+          data: [
+            { group: 1, value: ["yes"] },
+            { group: 2, value: ["yes"] },
+            { group: 3, value: ["yes"] },
+            { group: 4, value: ["no"] },
+          ],
+        },
+        use: {
+          data: [
+            { group: 1, value: ["yes"] },
+            { group: 2, value: ["no"] },
+            { group: 3, value: ["yes"] },
+          ],
+        },
+        comply: {
+          data: [
+            { group: 1, value: ["yes"] },
+            { group: 2, value: ["yes"] },
+            { group: 3, value: ["no"] },
+          ],
+        },
+      },
+    });
+
+    expect(flow.counts).toEqual({ all: 5 });
+    expect(flow.steps).toEqual([
+      {
+        key: "policy",
+        label: "Has policy",
+        passed: 3,
+        failed: 2,
+        failLabel: "No policy",
+      },
+      {
+        key: "use",
+        label: "Staff use",
+        passed: 2,
+        failed: 1,
+        failLabel: "Does not use",
+      },
+      {
+        key: "comply",
+        label: "Staff comply",
+        passed: 1,
+        failed: 1,
+        failLabel: "Not complying",
+      },
+    ]);
+    expect(flow.links).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "Staff use",
+          target: "Staff comply",
+          value: 1,
+        }),
+        expect.objectContaining({
+          source: "Staff use",
+          target: "Not complying",
+          value: 1,
+        }),
+      ])
+    );
+  });
+});
+
+describe("computeGroupedStack", () => {
+  const stacks = [
+    { key: "working", label: "In use · working" },
+    { key: "issue", label: "In use · issue logged" },
+  ];
+  const segments = [
+    {
+      key: "chlorine__working",
+      group: "chlorine",
+      group_label: "Chlorine",
+      stack: "working",
+    },
+    {
+      key: "chlorine__issue",
+      group: "chlorine",
+      group_label: "Chlorine",
+      stack: "issue",
+    },
+    {
+      key: "lime__working",
+      group: "lime",
+      group_label: "Lime",
+      stack: "working",
+    },
+    { key: "lime__issue", group: "lime", group_label: "Lime", stack: "issue" },
+  ];
+
+  test("collapses segments into one row per group with stack labels as keys", () => {
+    const responses = {
+      chlorine__working: { data: [{ value: 5, label: "chlorine" }] },
+      chlorine__issue: { data: [{ value: 2, label: "chlorine" }] },
+      lime__working: { data: [{ value: 3, label: "lime" }] },
+      lime__issue: { data: [] },
+    };
+    const out = computeGroupedStack(segments, stacks, responses);
+    expect(out).toEqual([
+      {
+        category: "Chlorine",
+        "In use · working": 5,
+        "In use · issue logged": 2,
+      },
+      { category: "Lime", "In use · working": 3, "In use · issue logged": 0 },
+    ]);
+  });
+
+  test("preserves first-seen group order", () => {
+    const responses = {};
+    const out = computeGroupedStack(segments, stacks, responses);
+    expect(out.map((r) => r.category)).toEqual(["Chlorine", "Lime"]);
+  });
+
+  test("defaults every stack to 0 when responses are missing", () => {
+    const out = computeGroupedStack(segments, stacks, {});
+    expect(out[0]).toEqual({
+      category: "Chlorine",
+      "In use · working": 0,
+      "In use · issue logged": 0,
+    });
+  });
+
+  test("returns [] for empty segments", () => {
+    expect(computeGroupedStack([], stacks, {})).toEqual([]);
+  });
+});
+
+describe("computeBucketBar", () => {
+  const buckets = [
+    { label: "No meter", segment: "no_meter" },
+    { label: "Inflow", subtract: ["inflow_total", "both"] },
+    { label: "Outflow", subtract: ["outflow_total", "both"] },
+    { label: "Both", segment: "both" },
+  ];
+  const responses = {
+    no_meter: { data: [{ value: 11, label: "no" }] },
+    inflow_total: { data: [{ value: 17, label: "inflow" }] },
+    outflow_total: { data: [{ value: 36, label: "outflow" }] },
+    both: { data: [{ value: 15, label: "inflow" }] },
+  };
+
+  test("resolves direct segments and subtraction buckets", () => {
+    expect(computeBucketBar(buckets, responses)).toEqual([
+      { label: "No meter", value: 11 },
+      { label: "Inflow", value: 2 },
+      { label: "Outflow", value: 21 },
+      { label: "Both", value: 15 },
+    ]);
+  });
+
+  test("floors subtraction at zero", () => {
+    const out = computeBucketBar([{ label: "X", subtract: ["a", "b"] }], {
+      a: { data: [{ value: 1 }] },
+      b: { data: [{ value: 5 }] },
+    });
+    expect(out).toEqual([{ label: "X", value: 0 }]);
+  });
+
+  test("treats missing responses as zero", () => {
+    expect(computeBucketBar(buckets, {})).toEqual([
+      { label: "No meter", value: 0 },
+      { label: "Inflow", value: 0 },
+      { label: "Outflow", value: 0 },
+      { label: "Both", value: 0 },
+    ]);
+  });
+
+  test("returns [] for empty buckets", () => {
+    expect(computeBucketBar([], responses)).toEqual([]);
+  });
+});
+
+describe("computeConditionField", () => {
+  const groundOptions = [
+    { value: "good", label: "Good", tone: "good" },
+    { value: "satisfactory", label: "Satisfactory", tone: "good" },
+    {
+      value: "maintenance_in_progress",
+      label: "Maintenance in progress",
+      tone: "mid",
+    },
+    { value: "poor", label: "Poor", tone: "bad" },
+  ];
+  const response = {
+    data: [
+      { group: "good", label: "Good", value: 36 },
+      { group: "satisfactory", label: "Satisfactory", value: 18 },
+      {
+        group: "maintenance_in_progress",
+        label: "Maintenance in progress",
+        value: 7,
+      },
+      { group: "poor", label: "Poor", value: 3 },
+    ],
+  };
+
+  test("counts options, resolves tone colors, and rounds % good", () => {
+    const out = computeConditionField(groundOptions, response);
+    expect(out.total).toBe(64);
+    expect(out.goodCount).toBe(54);
+    expect(out.goodPct).toBe(84);
+    expect(out.options.map((o) => o.count)).toEqual([36, 18, 7, 3]);
+    expect(out.options[0].color).toBe(CONDITION_TONE_COLORS.good);
+    expect(out.options[2].color).toBe(CONDITION_TONE_COLORS.mid);
+    expect(out.options[3].color).toBe(CONDITION_TONE_COLORS.bad);
+  });
+
+  test("preserves config order even when the response is unordered", () => {
+    const shuffled = { data: [...response.data].reverse() };
+    const out = computeConditionField(groundOptions, shuffled);
+    expect(out.options.map((o) => o.value)).toEqual([
+      "good",
+      "satisfactory",
+      "maintenance_in_progress",
+      "poor",
+    ]);
+  });
+
+  test("excludes _no_info from the bar and the denominator", () => {
+    const withNoInfo = {
+      data: [
+        ...response.data,
+        { group: "_no_info", label: "No information", value: 10 },
+      ],
+    };
+    const out = computeConditionField(groundOptions, withNoInfo);
+    expect(out.total).toBe(64);
+    expect(out.options.find((o) => o.value === "_no_info")).toBeUndefined();
+  });
+
+  test("appends unknown option groups with the neutral tone", () => {
+    const withExtra = {
+      data: [
+        ...response.data,
+        { group: "mystery", label: "Mystery", value: 5 },
+      ],
+    };
+    const out = computeConditionField(groundOptions, withExtra);
+    const extra = out.options.find((o) => o.value === "mystery");
+    expect(extra).toMatchObject({
+      tone: "neutral",
+      color: CONDITION_TONE_COLORS.neutral,
+      count: 5,
+    });
+    expect(out.total).toBe(69);
+  });
+
+  test("returns null % good for empty/missing data", () => {
+    expect(computeConditionField(groundOptions, null).goodPct).toBeNull();
+    expect(computeConditionField(groundOptions, { data: [] }).total).toBe(0);
+  });
+
+  test("primaryCount is the first option's count (yes/no readout numerator)", () => {
+    const yesNo = [
+      { value: "yes", label: "Yes", tone: "good" },
+      { value: "no", label: "No", tone: "bad" },
+    ];
+    const out = computeConditionField(yesNo, {
+      data: [
+        { group: "yes", label: "Yes", value: 31 },
+        { group: "no", label: "No", value: 11 },
+      ],
+    });
+    expect(out.primaryCount).toBe(31);
+    expect(out.total).toBe(42);
+  });
+});
+
+describe("processStatus", () => {
+  test("processToneColor: normal/operational green, non-operational red, else amber", () => {
+    expect(processToneColor("normal")).toBe(CONDITION_TONE_COLORS.good);
+    expect(processToneColor("normal_operation")).toBe(
+      CONDITION_TONE_COLORS.good
+    );
+    expect(processToneColor("operational")).toBe(CONDITION_TONE_COLORS.good);
+    expect(processToneColor("not_operational")).toBe(CONDITION_TONE_COLORS.bad);
+    expect(processToneColor("bad_odor")).toBe(CONDITION_TONE_COLORS.mid);
+  });
+
+  test("computeProcessBars maps counts in config order with rule/override colors", () => {
+    const options = [
+      { value: "normal", label: "Normal" },
+      { value: "bad_odor", label: "Bad odor" },
+      { value: "no_station", label: "No station", tone: "neutral" },
+    ];
+    const bars = computeProcessBars(options, {
+      data: [
+        { group: "bad_odor", label: "Bad odor", value: 2 },
+        { group: "normal", label: "Normal", value: 9 },
+      ],
+    });
+    expect(bars.map((b) => [b.label, b.count])).toEqual([
+      ["Normal", 9],
+      ["Bad odor", 2],
+      ["No station", 0],
+    ]);
+    expect(bars[0].color).toBe(CONDITION_TONE_COLORS.good);
+    expect(bars[1].color).toBe(CONDITION_TONE_COLORS.mid);
+    expect(bars[2].color).toBe(CONDITION_TONE_COLORS.neutral);
+  });
+
+  test("distinctParentCount counts per-parent rows", () => {
+    expect(distinctParentCount({ data: [{}, {}, {}] })).toBe(3);
+    expect(distinctParentCount(null)).toBe(0);
+  });
+});
+
+describe("computeComplianceTrend", () => {
+  test("monthLabelToKey parses 'Mon YYYY' to YYYY-MM", () => {
+    expect(monthLabelToKey("Jun 2025")).toBe("2025-06");
+    expect(monthLabelToKey("Dec 2025")).toBe("2025-12");
+    expect(monthLabelToKey("bogus")).toBeNull();
+  });
+
+  const axis = [
+    { key: "2025-05", label: "May" },
+    { key: "2025-06", label: "Jun" },
+  ];
+
+  test("option_share = pass option over all answered, per month, aligned to axis", () => {
+    const out = computeComplianceTrend(
+      [
+        {
+          key: "ohs",
+          label: "OHS",
+          color: "#f0ad4e",
+          type: "option_share",
+          question_name: "ohs_equipment_available",
+          pass_value: "yes",
+        },
+      ],
+      axis,
+      {
+        ohs__share: {
+          data: [
+            { month: "May 2025", Yes: 1, No: 3 },
+            { month: "Jun 2025", Yes: 3, No: 1 },
+          ],
+        },
+      }
+    );
+    expect(out.months).toEqual(["May", "Jun"]);
+    expect(out.series[0].data).toEqual([25, 75]);
+  });
+
+  test("threshold_all passes a parent only if all present params satisfy", () => {
+    const domain = {
+      key: "effluent",
+      label: "Effluent",
+      type: "threshold_all",
+      params: [
+        { question_name: "bod", op: "<", value: 40 },
+        { question_name: "cod", op: "<", value: 100 },
+      ],
+    };
+    const out = computeComplianceTrend([domain], axis, {
+      // May: P1 passes (30,90); P2 fails cod (10,150) -> 1/2 = 50%
+      effluent__bod: {
+        data: [{ month: "May 2025", P1: 30, P2: 10 }],
+      },
+      effluent__cod: {
+        data: [{ month: "May 2025", P1: 90, P2: 150 }],
+      },
+    });
+    expect(out.series[0].data[0]).toBe(50);
+    // Jun has no data -> null gap
+    expect(out.series[0].data[1]).toBeNull();
+  });
+
+  test("missing param value is no-data, not a failure", () => {
+    const domain = {
+      key: "effluent",
+      label: "Effluent",
+      type: "threshold_all",
+      params: [
+        { question_name: "bod", op: "<", value: 40 },
+        { question_name: "cod", op: "<", value: 100 },
+      ],
+    };
+    // P1 only has bod (passes); cod missing -> still counts as pass
+    const out = computeComplianceTrend(
+      [domain],
+      [{ key: "2025-05", label: "May" }],
+      {
+        effluent__bod: { data: [{ month: "May 2025", P1: 30 }] },
+        effluent__cod: { data: [{ month: "May 2025" }] },
+      }
+    );
+    expect(out.series[0].data[0]).toBe(100);
   });
 });

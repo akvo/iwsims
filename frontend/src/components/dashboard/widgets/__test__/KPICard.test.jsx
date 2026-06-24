@@ -111,6 +111,37 @@ describe("KPICard — value_type: ratio_percentage (ratio KPI)", () => {
     expect(params.value_type).not.toBe("ratio_percentage");
   });
 
+  test("passes parent_form_id to primary and denominator requests", async () => {
+    axiosValue(42);
+    axiosValue(50);
+    render(
+      <KPICard
+        item={{
+          id: "kpi_scoped",
+          chart_type: "card",
+          label: "Scoped KPI",
+          api: {
+            form_id: 1749631041125,
+            question_name: "operationality",
+            value_type: "ratio_percentage",
+          },
+          denominator_api: {},
+        }}
+        filterState={emptyFilters}
+        parentFormId={1748903240763}
+      />
+    );
+    await screen.findByText("42/50 (84%)");
+
+    const calls = axios.mock.calls.map(([cfg]) => cfg);
+    expect(calls).toHaveLength(2);
+    calls.forEach((call) => {
+      expect(call.url).toBe("visualization/values");
+      expect(call.params.parent_form_id).toBe(1748903240763);
+    });
+    expect(calls.some((call) => !call.params.form_id)).toBe(true);
+  });
+
   test("M === 0 renders '—' (no div-by-zero)", async () => {
     axiosValue(0); // numerator
     axiosValue(0); // denominator
@@ -203,6 +234,74 @@ describe("KPICard — compute: compliance_kpi", () => {
   });
 });
 
+describe("KPICard — compute: critical_kpi", () => {
+  const definitionsById = new Map([
+    ["param_x", { id: "param_x", threshold: { max: 0 } }],
+  ]);
+  // param_x: parent 1 = 5 (non-compliant), parent 2 = 0 (compliant).
+  // op segment: parent 1 = no (operational), parent 2 = yes (non-operational).
+  // → both parents critical (1 via compliance, 2 via operational) = 2.
+  const computeResponses = {
+    compliance: {
+      param_x: {
+        data: [
+          { group: "1", value: 5 },
+          { group: "2", value: 0 },
+        ],
+      },
+    },
+    critical: {
+      kpi_critical: {
+        op: {
+          data: [
+            { group: "1", value: ["no"] },
+            { group: "2", value: ["yes"] },
+          ],
+        },
+      },
+    },
+  };
+  const baseItem = {
+    id: "kpi_critical",
+    chart_type: "card",
+    label: "Critical",
+    compute: "critical_kpi",
+    params_ref: ["param_x"],
+    operational_segments: [
+      {
+        key: "op",
+        rule: { op: "option_not_equals", value: "yes" },
+        api: { question_name: "q", group_by: "parent_id" },
+      },
+    ],
+  };
+
+  test("renders a scalar count when no denominator_api", async () => {
+    render(
+      <KPICard
+        item={baseItem}
+        filterState={emptyFilters}
+        definitionsById={definitionsById}
+        computeResponses={computeResponses}
+      />
+    );
+    expect(await screen.findByText("2")).toBeInTheDocument();
+  });
+
+  test("renders 'N/M (P%)' when denominator_api is present", async () => {
+    axiosValue(50); // denominator
+    render(
+      <KPICard
+        item={{ ...baseItem, denominator_api: { form_id: 1 } }}
+        filterState={emptyFilters}
+        definitionsById={definitionsById}
+        computeResponses={computeResponses}
+      />
+    );
+    expect(await screen.findByText("2/50 (4%)")).toBeInTheDocument();
+  });
+});
+
 describe("KPICard — compute: accessibility_no_issues_kpi", () => {
   test("counts easily_accessible bucket as numerator", async () => {
     axiosValue(50); // denominator
@@ -211,16 +310,16 @@ describe("KPICard — compute: accessibility_no_issues_kpi", () => {
         kpi_acc: {
           sample: {
             data: [
-              { label: "A", group: 1, Yes: 1, No: 0 }, // easily accessible
-              { label: "B", group: 2, Yes: 1, No: 0 }, // accessible w/ issues
-              { label: "C", group: 3, Yes: 0, No: 1 }, // not accessible
+              { label: "A", group: 1, value: ["yes"] }, // easily accessible
+              { label: "B", group: 2, value: ["yes"] }, // accessible w/ issues
+              { label: "C", group: 3, value: ["no"] }, // not accessible
             ],
           },
           issues: {
             data: [
-              { label: "A", group: 1, Yes: 0, No: 1 },
-              { label: "B", group: 2, Yes: 1, No: 0 },
-              { label: "C", group: 3, Yes: 0, No: 1 },
+              { label: "A", group: 1, value: ["no"] },
+              { label: "B", group: 2, value: ["yes"] },
+              { label: "C", group: 3, value: ["no"] },
             ],
           },
         },

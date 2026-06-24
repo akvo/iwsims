@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons";
 import "./style.scss";
 import { buildOffsetCoordinates } from "./overlapUtils";
+import { conicGradient } from "./markerGradient";
 
 const MapView = ({ dataset, loading, position }) => {
   const selectedForm = store.useState((s) => s.selectedForm);
@@ -36,14 +37,9 @@ const MapView = ({ dataset, loading, position }) => {
   const renderMarker = useCallback(
     (d) => {
       if (d?.values?.length) {
-        return `<span style="background: conic-gradient(${d.values
-          .map(
-            (v, i) =>
-              `${v.color} ${i * (100 / d.values.length)}% ${
-                (i + 1) * (100 / d.values.length)
-              }%`
-          )
-          .join(", ")})"></span>`;
+        return `<span style="background: ${conicGradient(
+          d.values.map((v) => v.color)
+        )}"></span>`;
       }
       const bgColor = d?.color || "#64A73B";
       return `<span class="custom-marker" style="background-color:${bgColor};">${getMarkerDisplayText(

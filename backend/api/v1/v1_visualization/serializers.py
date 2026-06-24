@@ -5,6 +5,7 @@ from api.v1.v1_data.models import (
     Administration,
 )
 from api.v1.v1_forms.models import (
+    Forms,
     Questions,
     QuestionOptions,
     QuestionTypes,
@@ -14,6 +15,12 @@ from utils.custom_serializer_fields import (
     CustomIntegerField,
 )
 from api.v1.v1_visualization.formula import validate_shape
+from api.v1.v1_visualization.constants import (
+    VALID_VALUES_CRITERIA_TYPES,
+)
+from api.v1.v1_visualization.functions import (
+    parse_criteria_string,
+)
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -92,11 +99,31 @@ class GeoLocationListSerializer(serializers.ModelSerializer):
 
 class DatapointDetailSerializer(serializers.ModelSerializer):
     administration_full_name = serializers.SerializerMethodField()
+    updated = serializers.SerializerMethodField()
 
     def get_administration_full_name(self, obj):
         if obj.administration:
             return obj.administration.full_name
         return ""
+
+    def get_updated(self, obj):
+        # "Last update" for a site is the most recent monitoring
+        # submission across any of its monitoring forms. The
+        # registration datapoint's own ``updated`` is null unless the
+        # registration itself was edited, so fall back to it (then to
+        # the registration's ``created``) only when there is no
+        # monitoring yet.
+        latest_monitoring = (
+            FormData.objects.filter(
+                parent_id=obj.id,
+                is_pending=False,
+                is_draft=False,
+            )
+            .order_by("-created")
+            .values_list("created", flat=True)
+            .first()
+        )
+        return latest_monitoring or obj.updated or obj.created
 
     class Meta:
         model = FormData
@@ -122,12 +149,6 @@ class GeoLocationFilterSerializer(serializers.Serializer):
         ).queryset = Administration.objects.all()
 
     def validate_criteria(self, value):
-        from api.v1.v1_visualization.constants import (
-            VALID_VALUES_CRITERIA_TYPES,
-        )
-        from api.v1.v1_visualization.functions import (
-            parse_criteria_string,
-        )
         try:
             return parse_criteria_string(
                 value, VALID_VALUES_CRITERIA_TYPES,
@@ -150,7 +171,8 @@ class FormulaValuesSerializer(serializers.Serializer):
     ``validate_formula`` hook parses and structurally validates it.
     """
 
-    form_id = serializers.IntegerField(required=True)
+    parent_form_id = serializers.IntegerField(required=True)
+    form_id = serializers.IntegerField(required=False)
     group_by = serializers.ChoiceField(
         choices=["parent_id"], required=True,
     )
@@ -158,11 +180,11 @@ class FormulaValuesSerializer(serializers.Serializer):
         choices=["latest"], required=False, default="latest",
     )
     formula = serializers.CharField(required=True)
-    criteria = serializers.CharField(required=False)
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
 
     def validate_formula(self, value):
+        from api.v1.v1_visualization.functions import validate_qname
         try:
             parsed = json.loads(value)
         except (TypeError, ValueError) as exc:
@@ -170,26 +192,37 @@ class FormulaValuesSerializer(serializers.Serializer):
                 f"formula is not valid JSON: {exc}"
             )
         try:
-            return validate_shape(parsed)
+            validated = validate_shape(parsed)
         except ValueError as exc:
             raise serializers.ValidationError(str(exc))
+        # Conditions are question_name-only: reject a numeric question_name
+        # (a leaked question_id) with a 400 (Part A guard).
 
-    def validate_criteria(self, value):
-        from api.v1.v1_visualization.constants import (
-            VALID_VALUES_CRITERIA_TYPES,
-        )
-        from api.v1.v1_visualization.functions import (
-            parse_criteria_string,
-        )
-        try:
-            return parse_criteria_string(
-                value, VALID_VALUES_CRITERIA_TYPES,
+        def validate_condition_names(condition):
+            for group in ("all_of", "any_of"):
+                if group in condition:
+                    for child in condition[group]:
+                        validate_condition_names(child)
+                    return
+            validate_qname(condition.get("question_name"))
+
+        for bucket in validated.get("buckets", []):
+            validate_condition_names(bucket)
+        return validated
+
+    def validate(self, attrs):
+        form_id = attrs.get("form_id")
+        if form_id and not Forms.objects.filter(
+            id=form_id,
+            parent_id=attrs["parent_form_id"],
+        ).exists():
+            raise serializers.ValidationError(
+                "form_id must be a monitoring form of parent_form_id"
             )
-        except ValueError as e:
-            raise serializers.ValidationError(str(e))
+        return attrs
 
     class Meta:
         fields = [
-            "form_id", "group_by", "monitoring", "formula",
-            "criteria", "from_date", "to_date",
+            "parent_form_id", "form_id", "group_by", "monitoring", "formula",
+            "from_date", "to_date",
         ]

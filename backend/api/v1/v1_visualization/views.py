@@ -17,9 +17,13 @@ from api.v1.v1_visualization.serializers import (
 )
 from api.v1.v1_visualization.models import (
     ViewDataOptions,
+    MVAnswerDenormalized,
+    MVCrossFormLatest,
 )
 from api.v1.v1_visualization.functions import (
     apply_criteria_to_monitoring_qs,
+    build_date_filters,
+    get_latest_monitoring_subquery,
 )
 from api.v1.v1_visualization.formula import (
     evaluate as formula_evaluate,
@@ -429,17 +433,23 @@ class DatapointDetailView(APIView):
 
 @extend_schema(
     description=(
-        "Evaluate a formula against the latest monitoring child of "
-        "each datapoint and group the resulting bucket value by "
-        "parent_id. Same response shape as /visualization/values."
+        "Evaluate a formula against the latest answer for each "
+        "registration datapoint in a family, taken across ALL of its "
+        "monitoring forms (mv_cross_form_latest) and falling back to "
+        "the registration's own answer for questions that only exist "
+        "on the registration form. Groups the resulting bucket value "
+        "by parent_id. Same response shape as /visualization/values."
     ),
     tags=["Visualization"],
     parameters=[
         OpenApiParameter(
-            name="form_id", required=True,
+            name="parent_form_id", required=True,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
-            description="The monitoring form id.",
+            description=(
+                "The registration (parent) form id. Scopes the "
+                "cross-form latest lookup to this registration family."
+            ),
         ),
         OpenApiParameter(
             name="group_by", required=True,
@@ -463,15 +473,6 @@ class DatapointDetailView(APIView):
             ),
         ),
         OpenApiParameter(
-            name="criteria", required=False,
-            type=OpenApiTypes.STR,
-            location=OpenApiParameter.QUERY,
-            description=(
-                "AND-joined multi-criteria filter "
-                "(same grammar as /values)."
-            ),
-        ),
-        OpenApiParameter(
             name="from_date", required=False,
             type=OpenApiTypes.DATE,
             location=OpenApiParameter.QUERY,
@@ -485,18 +486,24 @@ class DatapointDetailView(APIView):
 )
 @api_view(["GET"])
 def visualization_values_formula(request, version):
-    """Evaluate a formula per datapoint.
+    """Evaluate a formula per registration datapoint, cross-form.
 
-    For monitoring forms (form.parent is set): groups by parent_id,
-    using the latest monitoring child per registration datapoint.
-    ``group`` in the response is the registration datapoint id.
+    Scope is the registration family identified by ``parent_form_id``.
+    For each registration datapoint (the ``group`` in the response) the
+    formula is evaluated against a single answer map built in two layers:
 
-    For registration forms (form.parent is None): evaluates the formula
-    directly against each registration datapoint's answers.
-    ``group`` in the response is the datapoint's own id.
+    1. The registration datapoint's own answers (fallback layer). This
+       is the only source for questions that live solely on the
+       registration form (e.g. ``water_committee``).
+    2. The latest value per ``question_name`` taken across ALL of the
+       family's monitoring forms (``mv_cross_form_latest``). This layer
+       overlays the fallback so a monitoring answer always wins over a
+       registration answer for the same question_name.
 
-    Both cases produce {group: datapoint_id, label: bucket_value} so
-    the frontend's byParent[point.id] lookup works identically.
+    This produces {group: parent_id, label: bucket_value}, matching the
+    frontend's byParent[point.id] lookup. Question names that exist on
+    neither layer simply fail their bucket conditions and fall through
+    to the formula's ``default`` bucket.
     """
     serializer = FormulaValuesSerializer(data=request.query_params)
     if not serializer.is_valid():
@@ -506,60 +513,166 @@ def visualization_values_formula(request, version):
         )
 
     validated = serializer.validated_data
-    form = get_object_or_404(Forms, pk=validated["form_id"])
+    parent_form_id = validated["parent_form_id"]
+    form_id = validated.get("form_id")
     formula = validated["formula"]
-    criteria = validated.get("criteria")
     from_date = validated.get("from_date")
     to_date = validated.get("to_date")
 
-    is_registration = form.parent_id is None
-
-    qs = form.form_form_data.filter(
-        is_pending=False,
-        is_draft=False,
-        parent__isnull=is_registration,
-    )
-    if criteria:
-        qs = apply_criteria_to_monitoring_qs(qs, False, criteria)
-    if from_date:
-        qs = qs.filter(created__date__gte=from_date)
-    if to_date:
-        qs = qs.filter(created__date__lte=to_date)
-
-    if is_registration:
-        # Each registration datapoint is its own "group".
-        data_ids = list(qs.values_list("id", flat=True))
-        if not data_ids:
-            return Response({"data": []}, status=status.HTTP_200_OK)
-        id_to_group = {d: d for d in data_ids}
-    else:
-        # Latest monitoring child per parent_id.
-        monitorings = qs.order_by("parent_id", "-created").values(
-            "id", "parent_id", "created"
+    if form_id:
+        date_params = {
+            "from_date": from_date,
+            "to_date": to_date,
+        }
+        date_filters = build_date_filters(date_params)
+        parents = FormData.objects.filter(
+            form_id=parent_form_id,
+            parent__isnull=True,
+            is_pending=False,
+            is_draft=False,
+        ).annotate(
+            latest_id=get_latest_monitoring_subquery(
+                form_id, date_filters or None,
+            ),
         )
-        latest_by_parent = {}
-        for row in monitorings:
-            parent_id = row["parent_id"]
-            if parent_id not in latest_by_parent:
-                latest_by_parent[parent_id] = row["id"]
-        if not latest_by_parent:
-            return Response({"data": []}, status=status.HTTP_200_OK)
-        # Map data_id → group (parent_id) for response assembly.
-        id_to_group = {v: k for k, v in latest_by_parent.items()}
-        data_ids = list(id_to_group.keys())
+        answers_by_parent = {
+            parent_id: {}
+            for parent_id in parents.values_list("id", flat=True)
+        }
+        latest = {
+            parent_id: latest_id
+            for parent_id, latest_id in parents.exclude(
+                latest_id__isnull=True,
+            ).values_list("id", "latest_id")
+        }
+        rows = MVAnswerDenormalized.objects.filter(
+            data_id__in=latest.values(),
+        ).values(
+            "parent_id", "question_name", "answer_value",
+            "answer_options",
+        )
+        numeric = {}
+        option_values = {}
+        for row in rows:
+            key = (row["parent_id"], row["question_name"])
+            if row["answer_value"] is not None:
+                numeric.setdefault(key, []).append(row["answer_value"])
+            if row["answer_options"] is not None:
+                option_values.setdefault(key, set()).update(
+                    row["answer_options"] or []
+                )
+        for (parent_id, question_name), values in numeric.items():
+            answers_by_parent[parent_id][question_name] = {
+                "question_name": question_name,
+                "value": sum(values) / len(values),
+                "options": None,
+                "index": 0,
+            }
+        for (parent_id, question_name), values in option_values.items():
+            answers_by_parent[parent_id][question_name] = {
+                "question_name": question_name,
+                "value": None,
+                "options": sorted(values),
+                "index": 0,
+            }
 
-    answers = Answers.objects.filter(
-        data_id__in=data_ids
-    ).values("data_id", "question_id", "value", "options", "index")
+        data = [
+            {
+                "group": parent_id,
+                "label": formula_evaluate(formula, per_question),
+            }
+            for parent_id, per_question in answers_by_parent.items()
+        ]
+        return Response({"data": data}, status=status.HTTP_200_OK)
 
-    answers_by_data = {}
-    for ans in answers:
-        answers_by_data.setdefault(ans["data_id"], []).append(ans)
+    # Layer 1: registration datapoints' own answers. parent_id is NULL
+    # for registrations in the denormalized MV; data_id is the
+    # registration datapoint id, which is also the group key the map
+    # uses (point.id). Collect per datapoint so repeat groups resolve to
+    # their latest index via pick_latest_repeat.
+    reg_answers = MVAnswerDenormalized.objects.filter(
+        form_id=parent_form_id,
+        parent_id__isnull=True,
+    ).values(
+        "data_id", "question_name",
+        "answer_value", "answer_options", "answer_index",
+    )
+    reg_lists = {}
+    for ans in reg_answers:
+        reg_lists.setdefault(ans["data_id"], []).append({
+            "question_name": ans["question_name"],
+            "value": ans["answer_value"],
+            "options": ans["answer_options"],
+            "index": ans["answer_index"],
+        })
+    answers_by_parent = {
+        data_id: pick_latest_repeat(rows)
+        for data_id, rows in reg_lists.items()
+    }
 
-    data = []
-    for data_id, group in id_to_group.items():
-        per_question = pick_latest_repeat(answers_by_data.get(data_id, []))
-        bucket = formula_evaluate(formula, per_question)
-        data.append({"group": group, "label": bucket})
+    # Layer 2: latest monitoring answer per (parent_id, question_name)
+    # across ALL of the family's monitoring forms. Overlays the
+    # registration fallback so a monitoring answer wins over a
+    # registration answer for the same question_name.
+    if from_date or to_date:
+        # Date-bounded: mv_cross_form_latest is pre-collapsed to each
+        # question's absolute latest, so a window can only include or
+        # exclude it — it cannot reveal an earlier in-range value.
+        # Recompute the latest-in-range from the denormalized MV instead,
+        # mirroring mv_cross_form_latest's tiebreak (created, data_id,
+        # answer_id all DESC → newest submission, latest repeat).
+        family_form_ids = list(
+            Forms.objects.filter(parent_id=parent_form_id)
+            .values_list("id", flat=True)
+        )
+        mon = MVAnswerDenormalized.objects.filter(
+            form_id__in=family_form_ids,
+            parent_id__isnull=False,
+        )
+        if from_date:
+            mon = mon.filter(data_created__date__gte=from_date)
+        if to_date:
+            mon = mon.filter(data_created__date__lte=to_date)
+        mon_rows = mon.order_by(
+            "parent_id", "question_name",
+            "-data_created", "-data_id", "-answer_id",
+        ).values(
+            "parent_id", "question_name",
+            "answer_value", "answer_options",
+        )
+        seen = set()
+        for row in mon_rows:
+            key = (row["parent_id"], row["question_name"])
+            if key in seen:
+                continue
+            seen.add(key)
+            per_question = answers_by_parent.setdefault(row["parent_id"], {})
+            per_question[row["question_name"]] = {
+                "question_name": row["question_name"],
+                "value": row["answer_value"],
+                "options": row["answer_options"],
+                "index": 0,
+            }
+    else:
+        # No window: the pre-aggregated cross-form view is the fast path.
+        cross_rows = MVCrossFormLatest.objects.filter(
+            parent_form_id=parent_form_id,
+        ).values(
+            "parent_id", "question_name",
+            "latest_numeric_value", "latest_option_values",
+        )
+        for row in cross_rows:
+            per_question = answers_by_parent.setdefault(row["parent_id"], {})
+            per_question[row["question_name"]] = {
+                "question_name": row["question_name"],
+                "value": row["latest_numeric_value"],
+                "options": row["latest_option_values"],
+                "index": 0,
+            }
+
+    data = [
+        {"group": parent_id, "label": formula_evaluate(formula, per_question)}
+        for parent_id, per_question in answers_by_parent.items()
+    ]
 
     return Response({"data": data}, status=status.HTTP_200_OK)

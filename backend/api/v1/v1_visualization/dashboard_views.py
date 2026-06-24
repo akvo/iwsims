@@ -6,7 +6,7 @@ from drf_spectacular.utils import (
 )
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import get_object_or_404
-from api.v1.v1_forms.models import Forms
+from api.v1.v1_forms.models import Forms, Questions
 from api.v1.v1_forms.constants import QuestionTypes
 from api.v1.v1_visualization.dashboard_serializers import (
     ValuesFilterSerializer,
@@ -31,6 +31,7 @@ from api.v1.v1_visualization.progress_functions import (
     handle_progress,
 )
 from api.v1.v1_visualization.functions import (
+    get_values_by_question_name,
     resolve_default_administration_id,
     split_criteria_by_form,
 )
@@ -61,14 +62,29 @@ from utils.custom_serializer_fields import (
     examples=VALUES_EXAMPLES,
     parameters=[
         OpenApiParameter(
-            name="form_id", required=True,
+            name="form_id", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
+            description=(
+                "Registration or monitoring form ID. "
+                "Optional when question_name or parent_form_id is provided. "
+                "For count-only requests, parent_form_id is the fallback."
+            ),
         ),
         OpenApiParameter(
             name="question_id", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="question_name", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "Query by question name across all monitoring forms "
+                "using mv_cross_form_latest. "
+                "Either question_name OR form_id is required."
+            ),
         ),
         OpenApiParameter(
             name="monitoring", required=False,
@@ -82,7 +98,7 @@ from utils.custom_serializer_fields import (
             location=OpenApiParameter.QUERY,
             enum=[
                 "date", "month", "id",
-                "parent_id", "option",
+                "parent_id", "option", "option_combo",
             ],
         ),
         OpenApiParameter(
@@ -122,7 +138,7 @@ from utils.custom_serializer_fields import (
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name="date_question_id", required=False,
+            name="date_question_name", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
@@ -135,6 +151,19 @@ from utils.custom_serializer_fields import (
             name="option_value", required=False,
             type=OpenApiTypes.STR,
             location=OpenApiParameter.QUERY,
+            description=(
+                "With question_name + sum_by=parent_id, count only "
+                "parents whose latest option value matches."
+            ),
+        ),
+        OpenApiParameter(
+            name="rolling_months", required=False,
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "With question_name, keep only parents whose latest "
+                "answer is within the last N months."
+            ),
         ),
         OpenApiParameter(
             name="criteria", required=False,
@@ -168,6 +197,80 @@ def visualization_values(request, version):
         )
 
     validated = serializer.validated_data
+    question_name = validated.get("question_name")
+
+    # Global cross-form path: question_name with NO form_id. When the
+    # question exists only on the registration form identified by
+    # parent_form_id, use that form as the family fallback. Monitoring
+    # questions continue through mv_cross_form_latest across all children.
+    if question_name and not validated.get("form_id"):
+        parent_form_id = validated.get("parent_form_id")
+        parent_question = None
+        has_monitoring_question = False
+        if parent_form_id:
+            parent_question = Questions.objects.filter(
+                form_id=parent_form_id,
+                name=question_name,
+            ).first()
+            has_monitoring_question = Questions.objects.filter(
+                form__parent_id=parent_form_id,
+                name=question_name,
+            ).exists()
+
+        if parent_question and not has_monitoring_question:
+            # Registration attribute. A per-plant query (group_by=parent_id)
+            # wants one value per registration datapoint, but the monitoring
+            # form-pinned path keys on parent_id — NULL for registrations —
+            # and would drop every row. Route that case through the
+            # cross-form helper, whose registration fallback keys on the
+            # registration datapoint instead. Other shapes (single total,
+            # option counts via include_unanswered) keep the form-pinned
+            # path.
+            if validated.get("group_by") == "parent_id":
+                params = {
+                    "administration_id": resolve_default_administration_id(
+                        validated.get("administration_id"),
+                    ),
+                    "group_by": "parent_id",
+                    "stack_by": validated.get("stack_by"),
+                    "value_type": validated.get("value_type", "number"),
+                    "repeat_agg": validated.get("repeat_agg", "average"),
+                    "parent_form_id": parent_form_id,
+                }
+                data, labels = get_values_by_question_name(
+                    question_name, params,
+                )
+                return Response(
+                    {"data": data, "labels": labels},
+                    status=status.HTTP_200_OK,
+                )
+            validated["form_id"] = parent_form_id
+            validated["question"] = parent_question
+        else:
+            params = {
+                "administration_id": resolve_default_administration_id(
+                    validated.get("administration_id"),
+                ),
+                "group_by": validated.get("group_by"),
+                "stack_by": validated.get("stack_by"),
+                "value_type": validated.get("value_type", "number"),
+                "sum_by": validated.get("sum_by"),
+                "option_value": validated.get("option_value"),
+                "rolling_months": validated.get("rolling_months"),
+                "from_date": validated.get("from_date"),
+                "to_date": validated.get("to_date"),
+                "parent_form_id": parent_form_id,
+                "include_unanswered": validated.get(
+                    "include_unanswered", False
+                ),
+                "include_empty": validated.get("include_empty", False),
+            }
+            data, labels = get_values_by_question_name(question_name, params)
+            return Response(
+                {"data": data, "labels": labels},
+                status=status.HTTP_200_OK,
+            )
+
     form = get_object_or_404(
         Forms, pk=validated["form_id"]
     )
@@ -188,8 +291,8 @@ def visualization_values(request, version):
         ),
         "from_date": validated.get("from_date"),
         "to_date": validated.get("to_date"),
-        "date_question_id": validated.get(
-            "date_question_id"
+        "date_question_name": validated.get(
+            "date_question_name"
         ),
         "administration_id": resolve_default_administration_id(
             validated.get("administration_id"),
@@ -293,7 +396,7 @@ def visualization_values(request, version):
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name="date_question_id", required=False,
+            name="date_question_name", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
@@ -328,7 +431,7 @@ def visualization_escalation(request, form_id, version):
     validated = serializer.validated_data
     result = handle_escalation(
         parent_form=parent_form,
-        monitoring_form_id=validated["monitoring_form_id"],
+        monitoring_form_id=validated.get("monitoring_form_id"),
         criteria=validated["criteria"],
         columns=validated["columns"],
         params={
@@ -339,8 +442,8 @@ def visualization_escalation(request, form_id, version):
             ),
             "from_date": validated.get("from_date"),
             "to_date": validated.get("to_date"),
-            "date_question_id": validated.get(
-                "date_question_id"
+            "date_question_name": validated.get(
+                "date_question_name"
             ),
             "filter_criteria": validated.get("filter_criteria"),
             "query_string": [
@@ -420,7 +523,7 @@ def visualization_escalation(request, form_id, version):
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name="date_question_id", required=False,
+            name="date_question_name", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
         ),
@@ -462,22 +565,22 @@ def visualization_progress(request, form_id, version):
         monitoring_form_id=validated["monitoring_form_id"],
         components=validated["components"],
         params={
-            "filter_question_id": validated.get(
-                "filter_question_id"
+            "filter_question_name": validated.get(
+                "filter_question_name"
             ),
             "filter_option_value": validated.get(
                 "filter_option_value"
             ),
-            "scope_question_id": validated.get(
-                "scope_question_id"
+            "scope_question_name": validated.get(
+                "scope_question_name"
             ),
             "administration_id": resolve_default_administration_id(
                 validated.get("administration_id"),
             ),
             "from_date": validated.get("from_date"),
             "to_date": validated.get("to_date"),
-            "date_question_id": validated.get(
-                "date_question_id"
+            "date_question_name": validated.get(
+                "date_question_name"
             ),
             "criteria": mon_criteria,
             "parent_criteria": parent_criteria,

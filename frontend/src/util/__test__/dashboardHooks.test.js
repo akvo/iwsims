@@ -35,19 +35,25 @@ beforeEach(() => {
 describe("serializeCriteria", () => {
   test("formats option_equals, threshold_gt, and overdue entries", () => {
     const out = serializeCriteria([
-      { type: "option_equals", question_id: 1, value: "no" },
-      { type: "threshold_gt", question_id: 2, value: 5 },
-      { type: "overdue", completion_qid: 10, deadline_qid: 11 },
+      { type: "option_equals", question_name: "ph", value: "no" },
+      { type: "threshold_gt", question_name: "bod", value: 5 },
+      {
+        type: "overdue",
+        completion_qname: "is_done",
+        deadline_qname: "due_date",
+      },
     ]);
-    expect(out).toBe("option_equals:1:no,threshold_gt:2:5,overdue:10:11");
+    expect(out).toBe(
+      "option_equals:ph:no,threshold_gt:bod:5,overdue:is_done:due_date"
+    );
   });
 
   test("skips hidden criteria", () => {
     const out = serializeCriteria([
-      { type: "option_equals", question_id: 1, value: "no", hide: true },
-      { type: "option_equals", question_id: 2, value: "yes" },
+      { type: "option_equals", question_name: "ph", value: "no", hide: true },
+      { type: "option_equals", question_name: "status", value: "yes" },
     ]);
-    expect(out).toBe("option_equals:2:yes");
+    expect(out).toBe("option_equals:status:yes");
   });
 });
 
@@ -55,15 +61,15 @@ describe("serializeColumns", () => {
   test("emits source-specific formats and skips computed/hidden", () => {
     const out = serializeColumns([
       { key: "name", source: "parent_name" },
-      { key: "village", source: "parent_answer", question_id: 10 },
+      { key: "village", source: "parent_answer", question_name: "village" },
       { key: "admin", source: "administration" },
-      { key: "status", source: "answer", question_id: 20 },
-      { key: "date", source: "latest_date", question_id: 30 },
+      { key: "status", source: "answer", question_name: "status" },
+      { key: "date", source: "latest_date", question_name: "inspected_at" },
       { key: "progress", computed: true },
-      { key: "secret", source: "answer", question_id: 99, hide: true },
+      { key: "secret", source: "answer", question_name: "secret", hide: true },
     ]);
     expect(out).toBe(
-      "name:parent_name,village:parent_answer:10,admin:administration,status:answer:20,date:latest_date:30"
+      "name:parent_name,village:parent_answer:village,admin:administration,status:answer:status,date:latest_date:inspected_at"
     );
   });
 });
@@ -71,24 +77,24 @@ describe("serializeColumns", () => {
 describe("serializeComponents", () => {
   test("formats formula:qid1:qid2... with optional total_items", () => {
     const out = serializeComponents([
-      { key: "concrete", formula: "any_yes", question_ids: [1, 2, 3] },
-      { key: "urf", formula: "completed_binary", question_ids: [10] },
-      { key: "pipes", formula: "ratio", question_ids: [20, 21] },
+      { key: "concrete", formula: "any_yes", question_names: ["a", "b", "c"] },
+      { key: "urf", formula: "completed_binary", question_names: ["d"] },
+      { key: "pipes", formula: "ratio", question_names: ["impl", "plan"] },
       {
         key: "security",
         formula: "multi_select_proportion",
-        question_ids: [30],
+        question_names: ["sec"],
         total_items: 3,
       },
       {
         key: "hidden",
         formula: "completed_binary",
-        question_ids: [99],
+        question_names: ["x"],
         hide: true,
       },
     ]);
     expect(out).toBe(
-      "concrete:any_yes:1:2:3,urf:completed_binary:10,pipes:ratio:20:21,security:multi_select_proportion:30:3"
+      "concrete:any_yes:a:b:c,urf:completed_binary:d,pipes:ratio:impl:plan,security:multi_select_proportion:sec:3"
     );
   });
 });
@@ -142,6 +148,34 @@ describe("useDashboardValues", () => {
     expect(latest().data.data[0].value).toBe(42);
   });
 
+  test("adds parent_form_id when parentFormId option is provided", async () => {
+    axios.mockResolvedValue({
+      data: { data: [{ value: 7 }], labels: ["WTP"] },
+    });
+
+    const { latest } = mount(() =>
+      useDashboardValues(
+        {
+          form_id: 1749634736797,
+          question_name: "water_testing_method",
+          group_by: "option",
+        },
+        emptyFilters,
+        {
+          today,
+          parentFormId: 1748903240763,
+        }
+      )
+    );
+
+    await waitFor(() => expect(latest().loading).toBe(false));
+
+    const call = axios.mock.calls[0][0];
+    expect(call.url).toBe("visualization/values");
+    expect(call.params.question_name).toBe("water_testing_method");
+    expect(call.params.parent_form_id).toBe(1748903240763);
+  });
+
   test("deduplicates concurrent requests with the same params", async () => {
     axios.mockResolvedValue({ data: { data: [] } });
 
@@ -182,29 +216,40 @@ describe("useDashboardEscalation", () => {
 
     const block = {
       api: {
-        form_id: 1749623934933,
         monitoring_form_id: 1749632545233,
         criteria: [
-          { type: "option_equals", question_id: 1749632647507, value: "no" },
+          {
+            type: "option_equals",
+            question_name: "can_take_sample",
+            value: "no",
+          },
         ],
       },
       columns: [
         { key: "name", source: "parent_name" },
-        { key: "village", source: "parent_answer", question_id: 1749624452991 },
+        {
+          key: "village",
+          source: "parent_answer",
+          question_name: "village_name",
+        },
       ],
     };
 
     const { latest } = mount(() =>
-      useDashboardEscalation(block, emptyFilters, { page: 2, pageSize: 50 })
+      useDashboardEscalation(block, emptyFilters, {
+        page: 2,
+        pageSize: 50,
+        parentFormId: 1749623934933,
+      })
     );
 
     await waitFor(() => expect(latest().loading).toBe(false));
 
     const call = axios.mock.calls[0][0];
     expect(call.url).toBe("visualization/escalation/1749623934933");
-    expect(call.params.criteria).toBe("option_equals:1749632647507:no");
+    expect(call.params.criteria).toBe("option_equals:can_take_sample:no");
     expect(call.params.columns).toBe(
-      "name:parent_name,village:parent_answer:1749624452991"
+      "name:parent_name,village:parent_answer:village_name"
     );
     expect(call.params.page).toBe(2);
     expect(call.params.page_size).toBe(50);
@@ -216,30 +261,33 @@ describe("useDashboardProgress", () => {
     axios.mockResolvedValue({ data: { histogram: [], details: [] } });
 
     const block = {
-      deadline_question_id: 1749630516825,
+      deadline_question_name: "proposed_completion_date",
       api: {
-        form_id: 1749623934933,
         monitoring_form_id: 1749624452908,
-        filter_question_id: 1749630516826,
+        filter_question_name: "is_project_completed",
         filter_option_value: "no",
       },
       components: [
-        { key: "urf", formula: "completed_binary", question_ids: [1] },
-        { key: "pipes", formula: "ratio", question_ids: [2, 3] },
+        { key: "urf", formula: "completed_binary", question_names: ["urf"] },
+        { key: "pipes", formula: "ratio", question_names: ["impl", "plan"] },
       ],
     };
 
-    const { latest } = mount(() => useDashboardProgress(block, emptyFilters));
+    const { latest } = mount(() =>
+      useDashboardProgress(block, emptyFilters, {
+        parentFormId: 1749623934933,
+      })
+    );
 
     await waitFor(() => expect(latest().loading).toBe(false));
 
     const call = axios.mock.calls[0][0];
     expect(call.url).toBe("visualization/progress/1749623934933");
     expect(call.params.components).toBe(
-      "urf:completed_binary:1,pipes:ratio:2:3"
+      "urf:completed_binary:urf,pipes:ratio:impl:plan"
     );
     expect(call.params.filter_option_value).toBe("no");
-    expect(call.params.deadline_question_id).toBe(1749630516825);
+    expect(call.params.deadline_question_name).toBe("proposed_completion_date");
   });
 });
 

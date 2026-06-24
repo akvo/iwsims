@@ -17,8 +17,12 @@ class PublishDraftFormDataTestCase(TestCase, ProfileTestHelperMixin):
         call_command("default_roles_seeder", "--test", 1)
         self.form = Forms.objects.get(pk=1)
 
+        # Deterministic pick — order_by("?") made this setUp intermittently
+        # 400 on submission (flaky under --shuffle --parallel).
         self.administration = (
-            Administration.objects.filter(level__level=3).order_by("?").first()
+            Administration.objects.filter(level__level=3)
+            .order_by("id")
+            .first()
         )
 
         self.user = self.create_user(

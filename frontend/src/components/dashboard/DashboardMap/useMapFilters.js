@@ -137,15 +137,14 @@ const useMapFilters = (itemFilters, filterState) => {
           params.set("from_date", isoDate(from));
           params.set("to_date", isoDate(today));
           params.set("include_monitoring", "true");
-          const monFormId = selectFilters[0]?.form_id;
-          if (monFormId) {
-            params.set("monitoring_form_id", monFormId);
-          }
+          // No monitoring_form_id: "monitored last year" counts a
+          // datapoint as monitored if it has ANY monitoring child in
+          // range (cross-form), matching the select filters' scope.
         }
       });
     }
     return params;
-  }, [toggleFilters, toggleValues, toggleDisabled, selectFilters]);
+  }, [toggleFilters, toggleValues, toggleDisabled]);
 
   return {
     activeKey,

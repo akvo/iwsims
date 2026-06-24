@@ -10,7 +10,9 @@ export const serializeComponents = (components = []) =>
   components
     .filter((c) => !c.hide)
     .map((c) => {
-      const base = `${c.key}:${c.formula}:${(c.question_ids || []).join(":")}`;
+      const base = `${c.key}:${c.formula}:${(c.question_names || []).join(
+        ":"
+      )}`;
       const withExtra =
         c.formula === "multi_select_proportion" && c.total_items
           ? `${base}:${c.total_items}`
@@ -34,36 +36,36 @@ export const useDashboardProgress = (
   filterState,
   options = {}
 ) => {
-  const { enabled = true, customFilterDefs = [] } = options;
+  const { enabled = true, customFilterDefs = [], parentFormId } = options;
 
   const endpoint = useMemo(() => {
     if (!progressBlock || !enabled) {
       return null;
     }
-    const formId = progressBlock?.api?.form_id;
+    const formId = progressBlock?.api?.form_id || parentFormId;
     return formId ? `visualization/progress/${formId}` : null;
-  }, [progressBlock, enabled]);
+  }, [progressBlock, enabled, parentFormId]);
 
   const params = useMemo(() => {
     if (!progressBlock || !enabled) {
       return null;
     }
-    const { monitoring_form_id, filter_question_id, filter_option_value } =
+    const { monitoring_form_id, filter_question_name, filter_option_value } =
       progressBlock.api || {};
 
     const out = {
       monitoring_form_id,
-      filter_question_id,
+      filter_question_name,
       filter_option_value,
       components: serializeComponents(progressBlock.components || []),
     };
 
-    if (progressBlock.deadline_question_id) {
-      out.deadline_question_id = progressBlock.deadline_question_id;
+    if (progressBlock.deadline_question_name) {
+      out.deadline_question_name = progressBlock.deadline_question_name;
     }
 
-    if (progressBlock.scope_question_id) {
-      out.scope_question_id = progressBlock.scope_question_id;
+    if (progressBlock.scope_question_name) {
+      out.scope_question_name = progressBlock.scope_question_name;
     }
 
     if (filterState?.from_date) {
@@ -78,7 +80,7 @@ export const useDashboardProgress = (
     // Fold in multi-criteria custom filters. All criteria are emitted
     // regardless of form; the backend splits by form where supported.
     const withCriteria = applyDashboardFilters(
-      { ...out, form_id: progressBlock.api?.form_id },
+      { ...out, form_id: progressBlock.api?.form_id || parentFormId },
       filterState,
       customFilterDefs
     );
@@ -86,7 +88,7 @@ export const useDashboardProgress = (
       out.criteria = withCriteria.criteria;
     }
     return out;
-  }, [progressBlock, filterState, enabled, customFilterDefs]);
+  }, [progressBlock, filterState, enabled, customFilterDefs, parentFormId]);
 
   return useVisualizationRequest(endpoint, params);
 };

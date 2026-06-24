@@ -1,28 +1,35 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Select, Space, Switch, Tooltip } from "antd";
-import getQuestionOptions from "./getQuestionOptions";
+import getCrossFormQuestionOptions from "./getCrossFormQuestionOptions";
+import resolveColorMap, { DEFAULT_BUCKET_COLOR } from "./resolveColorMap";
 
 const DEFAULT_NO_INFO_LABEL = "No information available";
 
 /**
  * Resolve the bucket entries (value, label, color) for a given
  * select filter — the chips users can click to narrow markers.
- * Includes the formula `default` bucket and the `_no_info` fallback
- * when present in the color_map.
+ * Includes the formula `default` bucket and an always-present
+ * `_no_info` fallback.
+ *
+ * For question_name filters, options are resolved cross-form across the
+ * registration family rooted at `sourceFormId` (matching
+ * useMapByParent's scope). Colours default to each option's `color` and
+ * are overridden per-value by the filter's `color_map` (see
+ * resolveColorMap).
  */
-export const resolveBuckets = (filter) => {
+export const resolveBuckets = (filter, sourceFormId) => {
   if (!filter) {
     return [];
   }
-  const map = filter.color_map || {};
+  const colorMap = resolveColorMap(filter, sourceFormId);
   const out = [];
   if (filter.formula) {
     (filter.formula.buckets || []).forEach((b) => {
       out.push({
         value: b.value,
         label: b.label,
-        color: map[b.value] || "#1890ff",
+        color: colorMap[b.value] || DEFAULT_BUCKET_COLOR,
       });
     });
     const fallback = filter.formula.default;
@@ -30,24 +37,27 @@ export const resolveBuckets = (filter) => {
       out.push({
         value: fallback.value,
         label: fallback.label,
-        color: map[fallback.value] || "#1890ff",
+        color: colorMap[fallback.value] || DEFAULT_BUCKET_COLOR,
       });
     }
-  } else if (filter.question_id) {
-    const opts = getQuestionOptions(filter.form_id, filter.question_id);
+  } else if (filter.question_name) {
+    const opts = getCrossFormQuestionOptions(
+      sourceFormId,
+      filter.question_name
+    );
     opts.forEach((o) => {
       out.push({
         value: o.value,
         label: o.label,
-        color: map[o.value] || "#1890ff",
+        color: colorMap[o.value] || DEFAULT_BUCKET_COLOR,
       });
     });
   }
-  if (map._no_info) {
+  if (!out.some((b) => b.value === "_no_info")) {
     out.push({
       value: "_no_info",
       label: DEFAULT_NO_INFO_LABEL,
-      color: map._no_info,
+      color: colorMap._no_info,
     });
   }
   return out;
@@ -70,6 +80,7 @@ const DashboardMapHeader = ({
   toggleValues,
   onToggleChange,
   toggleDisabled,
+  sourceFormId,
 }) => {
   const selectFilters = useMemo(
     () => filters.filter((f) => f.type === "select"),
@@ -89,7 +100,10 @@ const DashboardMapHeader = ({
     [selectFilters]
   );
 
-  const buckets = useMemo(() => resolveBuckets(activeFilter), [activeFilter]);
+  const buckets = useMemo(
+    () => resolveBuckets(activeFilter, sourceFormId),
+    [activeFilter, sourceFormId]
+  );
   const allBucketValues = useMemo(() => buckets.map((b) => b.value), [buckets]);
 
   if (!title && selectFilters.length === 0 && toggleFilters.length === 0) {
@@ -172,6 +186,7 @@ DashboardMapHeader.propTypes = {
   toggleValues: PropTypes.object.isRequired,
   onToggleChange: PropTypes.func.isRequired,
   toggleDisabled: PropTypes.bool,
+  sourceFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default DashboardMapHeader;

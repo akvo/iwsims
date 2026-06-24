@@ -60,41 +60,52 @@ const DotsChart = ({ data, colors, height }) => {
 
   const nodes = useMemo(
     () =>
-      data.map((d, i) => {
-        const baseSize = scaleSymbolSize(Number(d.value) || 0, maxValue);
+      data.flatMap((d, i) => {
+        const value = Number(d.value) || 0;
+        // A packed bubble represents magnitude through area. Rendering the
+        // minimum symbol for a zero value makes an empty category look like
+        // it contains data. Keep zero rows in the API response (other chart
+        // types use them for stable legends), but omit them from this chart.
+        if (value <= 0) {
+          return [];
+        }
+
+        const baseSize = scaleSymbolSize(value, maxValue);
         const isSelected = selectedLabel === d.label;
         const isDimmed = selectedLabel !== null && !isSelected;
         const size = isSelected ? baseSize * SELECTED_SCALE : baseSize;
         const isNoInfo = d.label === uiText.en.noInformationAvailable;
-        return {
-          id: d.label,
-          name: d.label,
-          value: Number(d.value) || 0,
-          symbolSize: size,
-          itemStyle: {
-            color: isNoInfo ? NO_INFO_COLOR : palette[i % palette.length],
-            opacity: isDimmed ? 0.4 : 1,
-            borderColor: isSelected ? "#ffffff" : "transparent",
-            borderWidth: isSelected ? 3 : 0,
-            shadowBlur: isSelected ? 20 : 0,
-            shadowColor: "rgba(0,0,0,0.25)",
-          },
-          label: {
-            show: true,
-            position: "inside",
-            formatter: (p) => truncate(p.name, p.data.symbolSize),
-            color: "#ffffff",
-            fontWeight: 600,
-            fontSize: Math.max(10, Math.min(14, Math.round(size / 9))),
-          },
-          emphasis: {
-            scale: true,
+        return [
+          {
+            id: d.label,
+            name: d.label,
+            value,
+            symbolSize: size,
             itemStyle: {
-              shadowBlur: 20,
-              shadowColor: "rgba(0,0,0,0.3)",
+              color: isNoInfo ? NO_INFO_COLOR : palette[i % palette.length],
+              opacity: isDimmed ? 0.4 : 1,
+              borderColor: isSelected ? "#ffffff" : "transparent",
+              borderWidth: isSelected ? 3 : 0,
+              shadowBlur: isSelected ? 20 : 0,
+              shadowColor: "rgba(0,0,0,0.25)",
+            },
+            label: {
+              show: true,
+              position: "inside",
+              formatter: (p) => truncate(p.name, p.data.symbolSize),
+              color: "#ffffff",
+              fontWeight: 600,
+              fontSize: Math.max(10, Math.min(14, Math.round(size / 9))),
+            },
+            emphasis: {
+              scale: true,
+              itemStyle: {
+                shadowBlur: 20,
+                shadowColor: "rgba(0,0,0,0.3)",
+              },
             },
           },
-        };
+        ];
       }),
     [data, maxValue, selectedLabel, palette]
   );

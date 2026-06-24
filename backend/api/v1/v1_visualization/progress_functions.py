@@ -1,46 +1,52 @@
-from api.v1.v1_data.models import FormData, Answers
+from api.v1.v1_data.models import FormData
 from api.v1.v1_visualization.functions import (
     apply_administration_filter,
+    apply_administration_filter_mv,
     apply_criteria_to_monitoring_qs,
     apply_parent_criteria_to_qs,
     build_date_filters,
-    latest_monitoring_subquery,
+    get_latest_monitoring_subquery,
+    narrow_data_ids_by_criteria,
+)
+from api.v1.v1_visualization.models import (
+    MVAnswerDenormalized,
+    MVLatestMonitoring,
 )
 
 
-def compute_any_yes(latest_data_id, question_ids, answers_map, **kwargs):
+def compute_any_yes(latest_data_id, question_names, answers_map, **kwargs):
     """100% if ANY listed question answered 'Yes'."""
-    for qid in question_ids:
-        a = answers_map.get((latest_data_id, qid))
+    for qname in question_names:
+        a = answers_map.get((latest_data_id, qname))
         if a and a.get("options") and "yes" in a["options"]:
             return 100.0
     return 0.0
 
 
 def compute_completed_binary(
-    latest_data_id, question_ids, answers_map, **kwargs
+    latest_data_id, question_names, answers_map, **kwargs
 ):
     """100% if answered 'Completed'."""
-    for qid in question_ids:
-        a = answers_map.get((latest_data_id, qid))
+    for qname in question_names:
+        a = answers_map.get((latest_data_id, qname))
         if a and a.get("options") and "completed" in a["options"]:
             return 100.0
     return 0.0
 
 
 def compute_ratio(
-    latest_data_id, question_ids, answers_map, **kwargs
+    latest_data_id, question_names, answers_map, **kwargs
 ):
     """(Implemented / Planned) * 100, clamped to [0, 100].
 
-    Expects question_ids = [implemented_qid, planned_qid].
+    Expects question_names = [implemented_qname, planned_qname].
     Returns 0.0 if either value is missing or planned <= 0.
     """
-    if len(question_ids) < 2:
+    if len(question_names) < 2:
         return 0.0
-    implemented_qid, planned_qid = question_ids[0], question_ids[1]
-    impl_row = answers_map.get((latest_data_id, implemented_qid))
-    plan_row = answers_map.get((latest_data_id, planned_qid))
+    implemented_qname, planned_qname = question_names[0], question_names[1]
+    impl_row = answers_map.get((latest_data_id, implemented_qname))
+    plan_row = answers_map.get((latest_data_id, planned_qname))
     implemented = impl_row.get("value") if impl_row else None
     planned = plan_row.get("value") if plan_row else None
     if implemented is None or planned is None:
@@ -56,13 +62,13 @@ def compute_ratio(
 
 
 def compute_multi_select_proportion(
-    latest_data_id, question_ids, answers_map,
+    latest_data_id, question_names, answers_map,
     total_items=1, **kwargs
 ):
     """Percentage based on number of selected options."""
     selected = None
-    for qid in question_ids:
-        a = answers_map.get((latest_data_id, qid))
+    for qname in question_names:
+        a = answers_map.get((latest_data_id, qname))
         if a and a.get("options"):
             selected = a["options"]
             break
@@ -112,7 +118,7 @@ def compute_component_scores(
             kwargs["total_items"] = comp["total_items"]
         scores[comp["key"]] = handler(
             latest_id,
-            comp["question_ids"],
+            comp["question_names"],
             answers_map,
             **kwargs,
         )
@@ -122,20 +128,27 @@ def compute_component_scores(
 def build_progress_answers_map(latest_ids, components):
     """Bulk-fetch answers needed to score all components for all parents.
 
-    Returns dict keyed by (data_id, question_id) carrying the fields
+    Returns dict keyed by (data_id, question_name) carrying the fields
     formula handlers read (options, value).
     """
-    qids = {
-        q for c in components for q in c.get("question_ids", [])
+    qnames = {
+        q for c in components for q in c.get("question_names", [])
     }
-    if not qids or not latest_ids:
+    if not qnames or not latest_ids:
         return {}
-    rows = Answers.objects.filter(
+    rows = MVAnswerDenormalized.objects.filter(
         data_id__in=latest_ids,
-        question_id__in=qids,
-    ).values("data_id", "question_id", "options", "value")
+        question_name__in=qnames,
+    ).values(
+        "data_id", "question_name",
+        "answer_options", "answer_value",
+    )
     return {
-        (r["data_id"], r["question_id"]): r for r in rows
+        (r["data_id"], r["question_name"]): {
+            "options": r["answer_options"],
+            "value": r["answer_value"],
+        }
+        for r in rows
     }
 
 
@@ -169,6 +182,14 @@ def handle_progress(
 ):
     """Handle progress query.
 
+    Uses mv_latest_monitoring as the primary queryset when no date
+    filters are set — the MV has parent_id, parent_name and
+    latest_data_id pre-joined so no FormData outer query is needed.
+
+    Falls back to FormData + correlated subquery when date_filters is
+    set: the MV stores the absolute latest monitoring, not the most
+    recent within a date range.
+
     Args:
         parent_form: Registration form instance.
         monitoring_form_id: Monitoring form ID.
@@ -182,74 +203,120 @@ def handle_progress(
         Dict with histogram and details.
     """
     administration_id = params.get("administration_id")
-    filter_qid = params.get("filter_question_id")
+    filter_qname = params.get("filter_question_name")
     filter_value = params.get("filter_option_value")
+    criteria = params.get("criteria")
+    parent_criteria = params.get("parent_criteria")
+    scope_qname = params.get("scope_question_name")
 
     date_filters = build_date_filters(params)
 
-    parents = FormData.objects.filter(
-        form=parent_form,
-        parent__isnull=True,
-        is_pending=False,
-        is_draft=False,
-    ).annotate(
-        latest_id=latest_monitoring_subquery(
-            monitoring_form_id, date_filters or None
-        ),
-    ).filter(latest_id__isnull=False)
-
-    if administration_id:
-        parents = apply_administration_filter(
-            parents, administration_id
+    if not date_filters:
+        # MV path: single indexed lookup, no FormData join needed.
+        # The mixin always refreshes MVs in setUp, so this path also
+        # works correctly inside TestCase transactions.
+        mv_qs = MVLatestMonitoring.objects.filter(
+            form_id=monitoring_form_id
         )
 
-    # Multi-criteria AND filter (shared grammar with /values).
-    parents = apply_criteria_to_monitoring_qs(
-        parents, True, params.get("criteria"),
-    )
-    parents = apply_parent_criteria_to_qs(
-        parents, True, params.get("parent_criteria"),
-    )
+        if administration_id:
+            mv_qs = apply_administration_filter_mv(
+                mv_qs, administration_id,
+                'parent_administration_id',
+            )
 
-    # Optional filter by latest monitoring option value
-    if filter_qid and filter_value:
-        latest_ids = parents.values_list(
-            "latest_id", flat=True
+        if criteria:
+            ids = list(
+                mv_qs.values_list("latest_data_id", flat=True)
+            )
+            narrowed = narrow_data_ids_by_criteria(ids, criteria)
+            mv_qs = mv_qs.filter(latest_data_id__in=narrowed)
+
+        if parent_criteria:
+            pids = list(
+                mv_qs.values_list("parent_id", flat=True)
+            )
+            narrowed = narrow_data_ids_by_criteria(
+                pids, parent_criteria
+            )
+            mv_qs = mv_qs.filter(parent_id__in=narrowed)
+
+        if filter_qname and filter_value:
+            matching = MVAnswerDenormalized.objects.filter(
+                data_id__in=mv_qs.values("latest_data_id"),
+                question_name=filter_qname,
+                answer_options__contains=[filter_value],
+            ).values_list("data_id", flat=True)
+            mv_qs = mv_qs.filter(latest_data_id__in=matching)
+
+        parents_data = list(
+            mv_qs.values("parent_id", "parent_name", "latest_data_id")
         )
-        matching_ids = Answers.objects.filter(
-            data_id__in=latest_ids,
-            question_id=filter_qid,
-            options__contains=[filter_value],
-        ).values_list("data_id", flat=True)
-        parents = parents.filter(
-            latest_id__in=matching_ids
+        latest_ids = [p["latest_data_id"] for p in parents_data]
+
+    else:
+        # FormData fallback for date-filtered queries.
+        # The correlated subquery finds the most recent submission
+        # WITHIN the date range — semantics the MV cannot provide.
+        fd_qs = FormData.objects.filter(
+            form=parent_form,
+            parent__isnull=True,
+            is_pending=False,
+            is_draft=False,
+        ).annotate(
+            latest_id=get_latest_monitoring_subquery(
+                monitoring_form_id, date_filters
+            ),
+        ).filter(latest_id__isnull=False)
+
+        if administration_id:
+            fd_qs = apply_administration_filter(
+                fd_qs, administration_id
+            )
+
+        fd_qs = apply_criteria_to_monitoring_qs(
+            fd_qs, True, criteria,
+        )
+        fd_qs = apply_parent_criteria_to_qs(
+            fd_qs, True, parent_criteria,
         )
 
-    # Compute scores per parent
-    scope_qid = params.get("scope_question_id")
-    parents = list(parents.only("id", "name"))
-    latest_ids = [p.latest_id for p in parents]
-    answers_map = build_progress_answers_map(
-        latest_ids, components
-    )
+        if filter_qname and filter_value:
+            matching = MVAnswerDenormalized.objects.filter(
+                data_id__in=fd_qs.values("latest_id"),
+                question_name=filter_qname,
+                answer_options__contains=[filter_value],
+            ).values_list("data_id", flat=True)
+            fd_qs = fd_qs.filter(latest_id__in=matching)
 
-    # Build scope lookup: latest_id -> scope option value
+        parents_data = [
+            {
+                "parent_id": p.id,
+                "parent_name": p.name,
+                "latest_data_id": p.latest_id,
+            }
+            for p in fd_qs.only("id", "name")
+        ]
+        latest_ids = [p["latest_data_id"] for p in parents_data]
+
+    answers_map = build_progress_answers_map(latest_ids, components)
+
     scope_map = {}
-    if scope_qid:
-        scope_rows = Answers.objects.filter(
+    if scope_qname:
+        scope_rows = MVAnswerDenormalized.objects.filter(
             data_id__in=latest_ids,
-            question_id=scope_qid,
-        ).values("data_id", "options")
+            question_name=scope_qname,
+        ).values("data_id", "answer_options")
         for row in scope_rows:
-            opts = row.get("options") or []
+            opts = row.get("answer_options") or []
             if opts:
                 scope_map[row["data_id"]] = opts[0]
 
     eps_results = []
-    for parent in parents:
-        scope_value = scope_map.get(parent.latest_id)
+    for parent in parents_data:
+        scope_value = scope_map.get(parent["latest_data_id"])
         scores = compute_component_scores(
-            parent.latest_id, components, answers_map,
+            parent["latest_data_id"], components, answers_map,
             scope_value=scope_value,
         )
         overall = (
@@ -257,15 +324,11 @@ def handle_progress(
             if scores else 0.0
         )
         eps_results.append({
-            "label": parent.name,
-            "group": str(parent.id),
+            "label": parent["parent_name"],
+            "group": str(parent["parent_id"]),
             "components": scores,
             "overall": overall,
         })
 
     histogram = build_histogram(eps_results)
-
-    return {
-        "histogram": histogram,
-        "details": eps_results,
-    }
+    return {"histogram": histogram, "details": eps_results}

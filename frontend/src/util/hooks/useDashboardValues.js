@@ -27,6 +27,7 @@ export const useDashboardValues = (apiBlock, filterState, options = {}) => {
     fiscalYearStartMonth,
     customFilterDefs = [],
     enabled = true,
+    parentFormId,
   } = options;
 
   const params = useMemo(() => {
@@ -34,7 +35,15 @@ export const useDashboardValues = (apiBlock, filterState, options = {}) => {
       return null;
     }
     const expanded = expandApiHints(apiBlock, { today, fiscalYearStartMonth });
-    return applyDashboardFilters(expanded, filterState, customFilterDefs);
+    const merged = applyDashboardFilters(
+      expanded,
+      filterState,
+      customFilterDefs
+    );
+    if (parentFormId) {
+      merged.parent_form_id = parentFormId;
+    }
+    return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     apiBlock,
@@ -43,6 +52,7 @@ export const useDashboardValues = (apiBlock, filterState, options = {}) => {
     today,
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
   ]);
 
   return useVisualizationRequest(

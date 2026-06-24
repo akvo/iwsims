@@ -2,10 +2,10 @@
 
 Each formula has a list of ``buckets``; for each bucket we test that
 **all** conditions in ``all_of`` pass against the supplied
-``answers_by_qid`` mapping. The first bucket whose conditions all pass
+``answers_by_qname`` mapping. The first bucket whose conditions all pass
 wins; otherwise the formula's ``default`` bucket is returned.
 
-``answers_by_qid`` maps ``question_id`` to whatever Answers row should
+``answers_by_qname`` maps ``question_name`` to whatever Answers row should
 be considered the "current" value — for repeatable groups the caller
 selects the latest repeat (highest ``index``) per question and passes
 *that* row in.
@@ -39,13 +39,38 @@ def _answer_options(answer):
     return options or []
 
 
-def _match(condition, answers_by_qid):
-    """Return True iff the condition passes against the answers map."""
-    qid = condition.get("question_id")
-    op = condition.get("op")
-    answer = answers_by_qid.get(qid)
+def _answer_empty(answer):
+    """Return True when a numeric/option answer is absent or blank."""
     if answer is None:
-        return False
+        return True
+    return _answer_numeric(answer) is None and not _answer_options(answer)
+
+
+def _match(condition, answers_by_qname):
+    """Return True iff the condition passes against the answers map."""
+    if "all_of" in condition:
+        return all(
+            _match(child, answers_by_qname)
+            for child in condition.get("all_of") or []
+        )
+    if "any_of" in condition:
+        return any(
+            _match(child, answers_by_qname)
+            for child in condition.get("any_of") or []
+        )
+
+    qname = condition.get("question_name")
+    op = condition.get("op")
+    answer = answers_by_qname.get(qname)
+
+    if op == "is_empty":
+        return _answer_empty(answer)
+    if op == "is_not_empty":
+        return not _answer_empty(answer)
+    if op == "option_not_contains":
+        return condition.get("value") not in _answer_options(answer)
+    if op in ("option_contains", "option_equals"):
+        return condition.get("value") in _answer_options(answer)
 
     if op in NUMERIC_OPS:
         value = _answer_numeric(answer)
@@ -59,9 +84,6 @@ def _match(condition, answers_by_qid):
             return False
         return condition["min"] <= value <= condition["max"]
 
-    if op == "option_equals":
-        return condition["value"] in _answer_options(answer)
-
     if op == "option_in":
         opts = _answer_options(answer)
         return any(v in opts for v in condition.get("values", []))
@@ -69,7 +91,7 @@ def _match(condition, answers_by_qid):
     return False
 
 
-def evaluate(formula, answers_by_qid):
+def evaluate(formula, answers_by_qname):
     """Return the bucket value matching the answers, or the default.
 
     ``formula`` shape::
@@ -83,37 +105,44 @@ def evaluate(formula, answers_by_qid):
         }
     """
     for bucket in formula.get("buckets", []):
-        conditions = bucket.get("all_of") or []
-        if all(_match(c, answers_by_qid) for c in conditions):
+        group = (
+            {"all_of": bucket["all_of"]}
+            if "all_of" in bucket
+            else {"any_of": bucket.get("any_of") or []}
+        )
+        if _match(group, answers_by_qname):
             return bucket["value"]
     return formula.get("default", {}).get("value")
 
 
 def pick_latest_repeat(answers):
-    """Pick the highest-index Answers row per ``question_id``.
+    """Pick the highest-index Answers row per ``question_name``.
 
-    Accepts either a list of Answers model instances or a list of dicts
-    with at least ``question`` (or ``question_id``) and ``index`` keys.
-    Returns ``dict[question_id -> answer_row]``.
+    Accepts either a list of Answers-shaped objects (with a
+    ``question_name`` attribute) or a list of dicts with at least
+    ``question_name`` and ``index`` keys. The rows must therefore carry
+    ``question_name`` — source them from ``mv_answer_denormalized``, not
+    the base ``Answers`` table.
+    Returns ``dict[question_name -> answer_row]``.
     """
     out = {}
     best_idx = {}
     for ans in answers:
-        if hasattr(ans, "question_id"):
-            qid = ans.question_id
+        if hasattr(ans, "question_name"):
+            qname = ans.question_name
         elif isinstance(ans, dict):
-            qid = ans.get("question") or ans.get("question_id")
+            qname = ans.get("question_name")
         else:
-            qid = None
-        if qid is None:
+            qname = None
+        if qname is None:
             continue
         idx = getattr(ans, "index", None)
         if idx is None and isinstance(ans, dict):
             idx = ans.get("index", 0)
         idx = idx or 0
-        if qid not in best_idx or idx > best_idx[qid]:
-            best_idx[qid] = idx
-            out[qid] = ans
+        if qname not in best_idx or idx > best_idx[qname]:
+            best_idx[qname] = idx
+            out[qname] = ans
     return out
 
 
@@ -128,6 +157,67 @@ def validate_shape(formula):
     buckets = formula.get("buckets")
     if not isinstance(buckets, list) or not buckets:
         raise ValueError("formula.buckets must be a non-empty array")
+
+    def validate_condition(cond, location):
+        if not isinstance(cond, dict):
+            raise ValueError(f"{location} must be an object")
+        groups = [key for key in ("all_of", "any_of") if key in cond]
+        if groups:
+            if len(groups) != 1:
+                raise ValueError(
+                    f"{location} must use exactly one condition group"
+                )
+            children = cond[groups[0]]
+            if not isinstance(children, list) or not children:
+                raise ValueError(
+                    f"{location}.{groups[0]} must be a non-empty array"
+                )
+            for index, child in enumerate(children):
+                validate_condition(
+                    child, f"{location}.{groups[0]}[{index}]"
+                )
+            return
+
+        if "question_name" not in cond or "op" not in cond:
+            raise ValueError(
+                f"{location} requires 'question_name' and 'op'"
+            )
+        op = cond["op"]
+        if op == "between":
+            if "min" not in cond or "max" not in cond:
+                raise ValueError(
+                    f"{location} op 'between' requires 'min' and 'max'"
+                )
+            if not isinstance(cond["min"], (int, float)) or \
+                    not isinstance(cond["max"], (int, float)):
+                raise ValueError(
+                    f"{location} op 'between' 'min' and 'max' "
+                    "must be numbers"
+                )
+        elif op == "option_in":
+            if not isinstance(cond.get("values"), list):
+                raise ValueError(
+                    f"{location} op 'option_in' requires 'values' array"
+                )
+        elif op in NUMERIC_OPS:
+            if "value" not in cond:
+                raise ValueError(
+                    f"{location} op '{op}' requires 'value'"
+                )
+            if not isinstance(cond["value"], (int, float)):
+                raise ValueError(
+                    f"{location} op '{op}' 'value' must be a number"
+                )
+        elif op in (
+            "option_equals", "option_contains", "option_not_contains",
+        ):
+            if "value" not in cond:
+                raise ValueError(
+                    f"{location} op '{op}' requires 'value'"
+                )
+        elif op not in ("is_empty", "is_not_empty"):
+            raise ValueError(f"{location} unsupported op '{op}'")
+
     for i, bucket in enumerate(buckets):
         if not isinstance(bucket, dict):
             raise ValueError(f"buckets[{i}] must be an object")
@@ -135,61 +225,14 @@ def validate_shape(formula):
             raise ValueError(
                 f"buckets[{i}] must include 'value' and 'label'"
             )
-        conditions = bucket.get("all_of")
-        if not isinstance(conditions, list) or not conditions:
+        groups = [key for key in ("all_of", "any_of") if key in bucket]
+        if len(groups) != 1:
             raise ValueError(
-                f"buckets[{i}].all_of must be a non-empty array"
+                f"buckets[{i}] must use exactly one of 'all_of' or 'any_of'"
             )
-        for j, cond in enumerate(conditions):
-            if not isinstance(cond, dict):
-                raise ValueError(
-                    f"buckets[{i}].all_of[{j}] must be an object"
-                )
-            if "question_id" not in cond or "op" not in cond:
-                raise ValueError(
-                    f"buckets[{i}].all_of[{j}] requires "
-                    "'question_id' and 'op'"
-                )
-            op = cond["op"]
-            if op == "between":
-                if "min" not in cond or "max" not in cond:
-                    raise ValueError(
-                        f"buckets[{i}].all_of[{j}] op 'between' "
-                        "requires 'min' and 'max'"
-                    )
-                if not isinstance(cond["min"], (int, float)) or \
-                        not isinstance(cond["max"], (int, float)):
-                    raise ValueError(
-                        f"buckets[{i}].all_of[{j}] op 'between' "
-                        "'min' and 'max' must be numbers"
-                    )
-            elif op == "option_in":
-                if not isinstance(cond.get("values"), list):
-                    raise ValueError(
-                        f"buckets[{i}].all_of[{j}] op 'option_in' "
-                        "requires 'values' array"
-                    )
-            elif op in NUMERIC_OPS:
-                if "value" not in cond:
-                    raise ValueError(
-                        f"buckets[{i}].all_of[{j}] op '{op}' "
-                        "requires 'value'"
-                    )
-                if not isinstance(cond["value"], (int, float)):
-                    raise ValueError(
-                        f"buckets[{i}].all_of[{j}] op '{op}' "
-                        "'value' must be a number"
-                    )
-            elif op == "option_equals":
-                if "value" not in cond:
-                    raise ValueError(
-                        f"buckets[{i}].all_of[{j}] op '{op}' "
-                        "requires 'value'"
-                    )
-            else:
-                raise ValueError(
-                    f"buckets[{i}].all_of[{j}] unsupported op '{op}'"
-                )
+        validate_condition(
+            {groups[0]: bucket[groups[0]]}, f"buckets[{i}]"
+        )
     default = formula.get("default")
     if not isinstance(default, dict):
         raise ValueError("formula.default must be an object")
