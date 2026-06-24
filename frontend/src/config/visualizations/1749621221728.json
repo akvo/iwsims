@@ -1122,18 +1122,19 @@
             },
             {
               "id": "kpi_construction_past_due",
-              "info": "if What percentage of project is complete? != 100 then:\n\nTRUE if (Construction Start Date >= Today) else past_due_completion_date = FALSE",
+              "info": "Count RWS still under construction with an overdue deadline:\n  • What percentage of project is complete? < 100 (latest construction monitoring), AND\n  • Proposed Completion Date? < Today.",
               "chart_type": "card",
               "order": 2,
               "col_span": 12,
               "label": "RWS with a past-due completion date",
               "api": {
-                "form_id": 1749631041125,
+                "form_id": 1749621962296,
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "past_due": true,
-                "completion_question_name": "infrastructure_status",
-                "completion_incomplete_value": "non_operational",
+                "completion_question_name": "project_completion_percentage",
+                "completion_incomplete_value": 100,
+                "completion_incomplete_op": "lt",
                 "deadline_question_name": "proposed_completion_date"
               }
             },
@@ -1202,8 +1203,9 @@
                 "criteria": [
                   {
                     "type": "overdue",
-                    "completion_qname": "infrastructure_status",
-                    "completion_incomplete_value": "non_operational",
+                    "completion_qname": "project_completion_percentage",
+                    "completion_incomplete_value": 100,
+                    "completion_incomplete_op": "lt",
                     "deadline_qname": "proposed_completion_date",
                     "hide": false
                   }

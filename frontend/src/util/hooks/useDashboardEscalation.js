@@ -7,14 +7,24 @@ import useVisualizationRequest from "./useVisualizationRequest";
  * backend expects.
  *
  * option_equals:qid:value, threshold_gt:qid:value, threshold_lt:qid:value,
- * overdue:completion_qid:deadline_qid
+ * overdue:completion_qid:deadline_qid:incomplete_value:mode
+ *
+ * The 4th/5th overdue parts describe what "still incomplete" means: the value
+ * (default "no") and the mode — "option" (default; the completion question
+ * carries that option) or "lt" (numeric, e.g. project_completion_percentage
+ * < 100). Both default so existing yes/no completion questions keep working.
  */
 export const serializeCriteria = (criteria = []) =>
   criteria
     .filter((c) => !c.hide)
     .map((c) => {
       if (c.type === "overdue") {
-        return `overdue:${c.completion_qname}:${c.deadline_qname}`;
+        const incomplete = c.completion_incomplete_value ?? "no";
+        const mode = c.completion_incomplete_op || "option";
+        return (
+          `overdue:${c.completion_qname}:${c.deadline_qname}` +
+          `:${incomplete}:${mode}`
+        );
       }
       return `${c.type}:${c.question_name}:${c.value}`;
     })

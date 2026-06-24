@@ -84,6 +84,8 @@ export const expandApiHints = (apiBlock, ctx = {}) => {
     fiscal_year,
     past_due,
     completion_question_name,
+    completion_incomplete_value,
+    completion_incomplete_op,
     deadline_question_name,
     ...rest
   } = apiBlock || {};
@@ -103,8 +105,15 @@ export const expandApiHints = (apiBlock, ctx = {}) => {
 
   if (past_due === true) {
     if (completion_question_name) {
-      out.question_name = completion_question_name;
-      out.option_value = "no";
+      if (completion_incomplete_op === "lt") {
+        // Numeric completion (e.g. project_completion_percentage < 100):
+        // express the "still incomplete" test as a threshold criterion so
+        // the count keys on the deadline question instead of an option.
+        out.criteria = `threshold_lt:${completion_question_name}:${completion_incomplete_value}`;
+      } else {
+        out.question_name = completion_question_name;
+        out.option_value = completion_incomplete_value || "no";
+      }
     }
     if (deadline_question_name) {
       out.date_question_name = deadline_question_name;

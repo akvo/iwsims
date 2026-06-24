@@ -98,6 +98,50 @@ describe("expandApiHints", () => {
     expect(out.value_type).toBe("percentage");
   });
 
+  test("past_due uses completion_incomplete_value when provided", () => {
+    const out = expandApiHints(
+      {
+        past_due: true,
+        completion_question_name: "infrastructure_status",
+        completion_incomplete_value: "non_operational",
+        deadline_question_name: "proposed_completion_date",
+        monitoring: "latest",
+        sum_by: "parent_id",
+      },
+      { today }
+    );
+    expect(out.question_name).toBe("infrastructure_status");
+    expect(out.option_value).toBe("non_operational");
+    expect(out.date_question_name).toBe("proposed_completion_date");
+    expect(out.to_date).toBe("2026-04-13");
+    // The hint key is consumed, never forwarded to the backend.
+    expect(out.completion_incomplete_value).toBeUndefined();
+  });
+
+  test("past_due with completion_incomplete_op=lt emits a threshold criterion", () => {
+    const out = expandApiHints(
+      {
+        form_id: 1749621962296,
+        past_due: true,
+        completion_question_name: "project_completion_percentage",
+        completion_incomplete_value: 100,
+        completion_incomplete_op: "lt",
+        deadline_question_name: "proposed_completion_date",
+        monitoring: "latest",
+        sum_by: "parent_id",
+      },
+      { today }
+    );
+    // Numeric completion → criteria, not an option_value.
+    expect(out.criteria).toBe("threshold_lt:project_completion_percentage:100");
+    expect(out.question_name).toBeUndefined();
+    expect(out.option_value).toBeUndefined();
+    expect(out.date_question_name).toBe("proposed_completion_date");
+    expect(out.to_date).toBe("2026-04-13");
+    expect(out.form_id).toBe(1749621962296);
+    expect(out.completion_incomplete_op).toBeUndefined();
+  });
+
   test("no-hint block is passed through unchanged", () => {
     const input = {
       form_id: 1,
