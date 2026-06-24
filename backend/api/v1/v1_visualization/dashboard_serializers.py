@@ -231,7 +231,7 @@ class EscalationFilterSerializer(serializers.Serializer):
       {key}:latest_date:{date_qid}
     """
 
-    monitoring_form_id = serializers.IntegerField(required=True)
+    monitoring_form_id = serializers.IntegerField(required=False)
     criteria = serializers.CharField(required=True)
     columns = serializers.CharField(required=True)
     page = serializers.IntegerField(default=1, min_value=1)

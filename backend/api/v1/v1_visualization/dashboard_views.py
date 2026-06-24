@@ -431,7 +431,7 @@ def visualization_escalation(request, form_id, version):
     validated = serializer.validated_data
     result = handle_escalation(
         parent_form=parent_form,
-        monitoring_form_id=validated["monitoring_form_id"],
+        monitoring_form_id=validated.get("monitoring_form_id"),
         criteria=validated["criteria"],
         columns=validated["columns"],
         params={

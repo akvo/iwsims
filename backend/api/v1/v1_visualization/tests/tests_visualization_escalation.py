@@ -199,6 +199,52 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(data["count"], 1)
         self.assertEqual(data["results"][0]["name"], "Site Alpha")
 
+    # -- cross-form (no monitoring_form_id) --
+
+    def test_cross_form_no_monitoring_form_id_is_allowed(self):
+        """monitoring_form_id is now optional — request validates."""
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?criteria=option_equals:{self.q_option.name}:pending"
+            "&columns=name:parent_name"
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_cross_form_option_equals_and_answer_column(self):
+        """Cross-form resolves latest per question via the cross-form MV.
+
+        With one monitoring form the result matches the pinned path:
+        operational_status=pending → reg2 (Site Beta), and the answer
+        column reads from the cross-form latest.
+        """
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?criteria=option_equals:{self.q_option.name}:pending"
+            f"&columns=name:parent_name,status:answer:{self.q_option.name}"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Beta")
+        self.assertEqual(data["results"][0]["status"], "pending")
+
+    def test_cross_form_overdue_numeric(self):
+        """Cross-form overdue with a numeric incomplete threshold.
+
+        reg1 latest measurement=20 (<25), inspection_date 2025 (overdue)
+        → Site Alpha; reg2 measurement=40 is complete.
+        """
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?criteria=overdue:{self.q_number.name}"
+            f":{self.q_date.name}:25:lt"
+            "&columns=name:parent_name"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Alpha")
+
     # -- Dynamic columns --
 
     def test_columns_parent_name_and_administration(self):
