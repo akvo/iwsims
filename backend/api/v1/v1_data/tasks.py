@@ -44,6 +44,12 @@ def refresh_mv_concurrency():
         )
 
 
+def generate_data_as_json(data: FormData):
+    if not data.form.parent and not settings.TEST_ENV:
+        # If the form is a parent form, save to file
+        data.save_to_file
+
+
 def seed_approved_data(data: FormData):
     """
     Update FormData object from pending status to approved status
@@ -52,11 +58,8 @@ def seed_approved_data(data: FormData):
     data.updated = timezone.now()
     data.is_pending = False
     data.save()
-
     # Save to file after approval
-    if not data.form.parent and not settings.TEST_ENV:
-        # If the form is a parent form, save to file
-        data.save_to_file
+    generate_data_as_json(data=data)
     # Refresh materialized view after saving data
     refresh_mv_concurrency()
 

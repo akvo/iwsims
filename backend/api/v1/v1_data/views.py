@@ -1163,6 +1163,9 @@ class PublishDraftFormDataView(APIView):
         # Save to file if it's published and not pending
         if direct_to_data:
             async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
+            async_task(
+                "api.v1.v1_data.tasks.generate_data_as_json", draft_data
+            )
 
         return Response(
             {"message": "Draft published successfully"},

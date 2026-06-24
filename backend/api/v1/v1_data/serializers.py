@@ -262,6 +262,7 @@ class SubmitFormSerializer(serializers.Serializer):
             )
         # Refresh materialized view via async task
         async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
+        async_task("api.v1.v1_data.tasks.generate_data_as_json", obj_data)
 
         return object
 
@@ -740,6 +741,7 @@ class SubmitPendingFormSerializer(serializers.Serializer):
         ):
             # Refresh materialized view via async task
             async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
+            async_task("api.v1.v1_data.tasks.generate_data_as_json", obj_data)
 
         return obj_data
 
