@@ -232,6 +232,7 @@ def visualization_values(request, version):
                         validated.get("administration_id"),
                     ),
                     "group_by": "parent_id",
+                    "stack_by": validated.get("stack_by"),
                     "value_type": validated.get("value_type", "number"),
                     "repeat_agg": validated.get("repeat_agg", "average"),
                     "parent_form_id": parent_form_id,

@@ -94,6 +94,53 @@ class QuestionNameOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(by_group[str(self.reg1.id)], 10)
         self.assertEqual(by_group[str(self.reg2.id)], 25)
 
+    def _seed_reg_option_answers(self):
+        Answers.objects.create(
+            data=self.reg1, question=self.q_reg_option,
+            options=["urban"], created_by=self.user,
+        )
+        Answers.objects.create(
+            data=self.reg2, question=self.q_reg_option,
+            options=["rural"], created_by=self.user,
+        )
+        refresh_all_mvs()
+
+    def test_registration_option_group_by_parent_value_array(self):
+        """Registration option attribute, no stack_by → one value array per
+        datapoint (shape the map marker / chip consumers expect)."""
+        self._seed_reg_option_answers()
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name={self.q_reg_option.name}"
+            f"&parent_form_id={self.registration.id}"
+            "&group_by=parent_id"
+        )
+        self.assertEqual(response.status_code, 200)
+        by_group = {
+            row["group"]: row["value"]
+            for row in response.json()["data"]
+        }
+        self.assertEqual(by_group[str(self.reg1.id)], ["urban"])
+        self.assertEqual(by_group[str(self.reg2.id)], ["rural"])
+
+    def test_registration_option_stack_by_option_columns(self):
+        """Registration option attribute with stack_by=option → option-as-
+        columns shape with an int group, so cross_tab can join it."""
+        self._seed_reg_option_answers()
+        urban_label = QuestionOptions.objects.get(
+            question=self.q_reg_option, value="urban",
+        ).label
+        response = self.client.get(
+            f"{self.BASE_URL}?question_name={self.q_reg_option.name}"
+            f"&parent_form_id={self.registration.id}"
+            "&group_by=parent_id&stack_by=option"
+        )
+        self.assertEqual(response.status_code, 200)
+        by_group = {row["group"]: row for row in response.json()["data"]}
+        # int group (matches the form-pinned category response) + option
+        # label column carrying the selection count.
+        self.assertIn(self.reg1.id, by_group)
+        self.assertEqual(by_group[self.reg1.id][urban_label], 1)
+
     def test_registration_fallback_skipped_for_unknown_question(self):
         """A question_name on neither monitoring nor the registration form
         returns empty — the fallback never fires (guard holds)."""

@@ -918,6 +918,58 @@ def _registration_values_by_qname(question_name, params):
             [label],
         )
 
+    qtype = rows.values_list("question_type", flat=True).first()
+    stack_by = params.get("stack_by")
+
+    # Option / multiple_option grouped per registration datapoint.
+    if group_by == "parent_id" and qtype in (5, 6):
+        selected = {}
+        for r in rows.filter(answer_options__isnull=False).values(
+            "data_id", "answer_options",
+        ):
+            selected.setdefault(r["data_id"], []).extend(
+                r["answer_options"] or []
+            )
+        if not selected:
+            return [], []
+        name_map = dict(
+            FormData.objects.filter(id__in=list(selected.keys()))
+            .values_list("id", "name")
+        )
+
+        # stack_by=option → option-as-columns shape with an INT group, so
+        # cross_tab can join it against the form-pinned category response
+        # (mirrors _stack_option_by_parent_from_mv). Otherwise → one value
+        # array per datapoint (mirrors _values_by_qname_option), as the map
+        # marker / chip consumers expect.
+        if stack_by == "option":
+            opts = list(
+                QuestionOptions.objects.filter(
+                    question__name=question_name,
+                    question__form_id=parent_form_id,
+                    value__isnull=False,
+                ).order_by("order", "value").values("value", "label")
+            )
+            data = []
+            for data_id, chosen in selected.items():
+                row = {"label": name_map.get(data_id, ""), "group": data_id}
+                for opt in opts:
+                    row[opt["label"] or opt["value"]] = chosen.count(
+                        opt["value"]
+                    )
+                data.append(row)
+            return data, [d["label"] for d in data]
+
+        data = [
+            {
+                "value": sorted(set(chosen)),
+                "label": name_map.get(data_id, str(data_id)),
+                "group": str(data_id),
+            }
+            for data_id, chosen in selected.items()
+        ]
+        return data, [d["label"] for d in data]
+
     # Number aggregation. Collapse repeats per registration datapoint.
     per = {}
     for r in rows.filter(answer_value__isnull=False).values(
