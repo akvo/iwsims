@@ -252,6 +252,7 @@ def visualization_values(request, version):
                     validated.get("administration_id"),
                 ),
                 "group_by": validated.get("group_by"),
+                "stack_by": validated.get("stack_by"),
                 "value_type": validated.get("value_type", "number"),
                 "sum_by": validated.get("sum_by"),
                 "option_value": validated.get("option_value"),

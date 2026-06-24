@@ -1044,8 +1044,14 @@
                   "left": 180,
                   "right": 32,
                   "top": 32,
-                  "bottom": 48,
+                  "bottom": 72,
                   "containLabel": false
+                },
+                "xAxis": {
+                  "axisLabel": {
+                    "rotate": 30
+                  },
+                  "nameGap": 120
                 }
               },
               "api": {
@@ -1143,8 +1149,14 @@
                   "left": 180,
                   "right": 32,
                   "top": 32,
-                  "bottom": 48,
+                  "bottom": 72,
                   "containLabel": false
+                },
+                "xAxis": {
+                  "axisLabel": {
+                    "rotate": 30
+                  },
+                  "nameGap": 120
                 }
               },
               "api": {

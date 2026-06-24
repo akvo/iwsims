@@ -5,13 +5,13 @@ from django.db import connection
 from django.db.models import (
     Avg, Count, Q, Subquery, OuterRef, Exists,
 )
-from django.db.models.functions import Substr
+from django.db.models.functions import Substr, TruncMonth
 from datetime import datetime as dt_datetime, timedelta, date
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from api.v1.v1_data.models import FormData, Answers
-from api.v1.v1_forms.models import Questions, QuestionOptions
+from api.v1.v1_forms.models import Forms, Questions, QuestionOptions
 from api.v1.v1_forms.constants import QuestionTypes
 from api.v1.v1_profile.models import Administration
 from api.v1.v1_visualization.constants import MATERIALIZED_VIEWS
@@ -735,6 +735,14 @@ def get_values_by_question_name(question_name, params):
     from_date = params.get("from_date")
     to_date = params.get("to_date")
 
+    # Monthly trend across ALL monitoring submissions (not just the latest
+    # per parent). mv_cross_form_latest collapses to one row per parent, so a
+    # month axis would only ever carry each plant's most-recent answer. The
+    # Compliance-Trend widget instead wants every submission bucketed by the
+    # month it was captured — read those straight from the submissions.
+    if group_by == "month":
+        return _values_by_qname_month(question_name, params)
+
     qs = MVCrossFormLatest.objects.filter(question_name=question_name)
 
     # Optional: scope to a single registration family. Omitted → national
@@ -1086,6 +1094,112 @@ def _qname_combo_label(combo_values, option_labels):
     return " + ".join(
         option_labels.get(value, value) for value in combo_values
     )
+
+
+def _values_by_qname_month(question_name, params):
+    """Bucket monitoring answers for a question_name by submission month.
+
+    Reads ``mv_answer_denormalized`` — the pre-joined view holding *every*
+    answer with its submission metadata — rather than ``mv_cross_form_latest``
+    (which keeps only the latest answer per parent). The Compliance-Trend
+    widget needs the full history so each month reflects the plants actually
+    monitored that month. Monitoring rows are isolated via
+    ``parent_id IS NOT NULL``; a family is scoped by the registration form's
+    child (monitoring) form ids.
+
+    Each row is one month carrying either:
+
+    - ``stack_by == "parent_id"`` (number questions): one numeric column per
+      plant (its mean value that month), consumed by ``threshold_all`` domains.
+    - ``stack_by == "option"`` (option questions): one count column per
+      answer-option label, consumed by ``option_share`` domains.
+
+    Returns ``(data, labels)`` where each row also carries ``month``
+    ("Jun 2025") and ``group`` ("2025-06"), the keys the frontend buckets on.
+    """
+    parent_form_id = params.get("parent_form_id")
+    administration_id = params.get("administration_id")
+    rolling_months = params.get("rolling_months")
+    from_date = params.get("from_date")
+    to_date = params.get("to_date")
+
+    qs = MVAnswerDenormalized.objects.filter(
+        question_name=question_name,
+        parent_id__isnull=False,
+    )
+    if parent_form_id:
+        monitoring_form_ids = list(
+            Forms.objects.filter(parent_id=parent_form_id)
+            .values_list("id", flat=True)
+        )
+        qs = qs.filter(form_id__in=monitoring_form_ids)
+    if administration_id:
+        qs = apply_administration_filter_mv(
+            qs, administration_id, field="administration_id"
+        )
+    if rolling_months:
+        cutoff = timezone.now() - timedelta(days=30 * rolling_months)
+        qs = qs.filter(data_created__gte=cutoff)
+    if from_date:
+        qs = qs.filter(data_created__date__gte=from_date)
+    if to_date:
+        qs = qs.filter(data_created__date__lte=to_date)
+
+    qtype = qs.values_list("question_type", flat=True).first()
+    if qtype is None:
+        return [], []
+
+    qs = qs.annotate(month=TruncMonth("data_created"))
+
+    if qtype == QuestionTypes.number:
+        rows = (
+            qs.filter(answer_value__isnull=False)
+            .values("month", "parent_id")
+            .annotate(v=Avg("answer_value"))
+        )
+        buckets = defaultdict(dict)
+        for r in rows:
+            buckets[r["month"]][str(r["parent_id"])] = round(r["v"], 2)
+        data = []
+        for month in sorted(buckets):
+            row = {
+                "month": format_month_label(month),
+                "group": format_month_group(month),
+            }
+            row.update(buckets[month])
+            data.append(row)
+        return data, [d["month"] for d in data]
+
+    if qtype in (QuestionTypes.option, QuestionTypes.multiple_option):
+        raw_opts = QuestionOptions.objects.filter(question__name=question_name)
+        if parent_form_id:
+            raw_opts = raw_opts.filter(
+                question__form__parent_id=parent_form_id
+            )
+        label_by_value = {}
+        for opt in raw_opts.order_by("order", "value").values(
+            "value", "label"
+        ):
+            label_by_value.setdefault(
+                opt["value"], opt["label"] or opt["value"]
+            )
+
+        counts = defaultdict(lambda: defaultdict(int))
+        for r in qs.values("month", "answer_options"):
+            for val in (r["answer_options"] or []):
+                counts[r["month"]][val] += 1
+        data = []
+        for month in sorted(counts):
+            row = {
+                "month": format_month_label(month),
+                "group": format_month_group(month),
+            }
+            for val, label in label_by_value.items():
+                row[label] = counts[month].get(val, 0)
+            data.append(row)
+        return data, [d["month"] for d in data]
+
+    return [], []
 
 
 def _values_by_qname_number(qs, group_by, value_type):

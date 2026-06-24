@@ -222,19 +222,19 @@
     },
     {
       "id": "chart_compliance_trend",
-      "info": "Group inspections by month. Per month: % WWTPs passing each domain (effluent / OHS / derived operational).",
+      "info": "Group monitoring submissions by month over the last 12 months. Per month, each line is the % of plants passing that domain:\n  • Drinking water — BOD<40 AND COD<100 AND TDS<1000\n  • Pumps & dosing — Are there any influent pump station? = Yes\n  • Operational — Working tools? = Yes\n  • OHS — OHS equipment available? = Yes",
       "chart_type": "custom_component",
       "component": "ComplianceTrendWidget",
       "order": 8,
       "col_span": 24,
       "title": "Compliance Trend",
-      "subtitle": "last 12 months · % WWTPs passing each domain",
+      "subtitle": "last 12 months · % plants passing each domain",
       "months": 12,
       "domains": [
         {
-          "key": "effluent",
-          "label": "Effluent",
-          "color": "#1AB99F",
+          "key": "drinking_water",
+          "label": "Drinking water",
+          "color": "#1f6fd6",
           "type": "threshold_all",
           "params": [
             { "question_name": "bod", "op": "<", "value": 40 },
@@ -249,6 +249,22 @@
               "value": 1000
             }
           ]
+        },
+        {
+          "key": "pumps_dosing",
+          "label": "Pumps & dosing",
+          "color": "#17b3a3",
+          "type": "option_share",
+          "question_name": "influent_pump_station",
+          "pass_value": "yes"
+        },
+        {
+          "key": "operational",
+          "label": "Operational",
+          "color": "#3cb44b",
+          "type": "option_share",
+          "question_name": "working_tools",
+          "pass_value": "yes"
         },
         {
           "key": "ohs",
