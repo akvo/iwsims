@@ -272,6 +272,7 @@
     },
     {
       "id": "kpi_total_registered",
+      "info": "count n_unique EPS Name",
       "chart_type": "card",
       "order": 4,
       "col_span": 6,
@@ -283,6 +284,7 @@
     },
     {
       "id": "kpi_under_construction",
+      "info": "If Is the project completed? == \"Yes\" -- assign NO\nelsif: Is the project completed? == \"No\" -- asign YES\n\nelse: assign: \"No information available\"",
       "chart_type": "card",
       "order": 5,
       "col_span": 6,
@@ -299,6 +301,7 @@
     },
     {
       "id": "kpi_operational",
+      "info": "if EPS_id_registry in EPS_id_WQM:\n     if The current status of this system? == \" Operational\" --> operational\n     ifelse The current status of this system? == \"Issue with system\" --> issue with system\n     else: \"No information available\"\n\nElse: no information available",
       "chart_type": "card",
       "order": 6,
       "col_span": 6,
@@ -314,6 +317,7 @@
     },
     {
       "id": "kpi_critical_issues",
+      "info": "If The current status of this system? == \"Issue with system\"",
       "chart_type": "card",
       "order": 7,
       "col_span": 6,
@@ -388,6 +392,7 @@
     },
     {
       "id": "chart_operational_status",
+      "info": "if EPS_id_registry in EPS_id_WQM:\n     if The current status of this system? == \" Operational\" --> operational\n     ifelse The current status of this system? == \"Issue with system\" --> issue with system\n     else: \"No information available\"\n\nElse: no information available",
       "chart_type": "doughnut",
       "order": 10,
       "col_span": 12,
@@ -407,6 +412,7 @@
     },
     {
       "id": "chart_drinking_water_compliance",
+      "info": "[Construction monitoring]\nif all true: Compliant\nIf one of false: Non_compliant\nIf one of empty: No_information available\n\n=IF([@Water test conducted?]<>\"Lab-tested\", \"N/A\",\n  IF(OR(\n    [@Number of E-coli for the Lab]>0,\n    [@What is the Turbidity in NTU?]>5,\n    [@What is the Total Coliform Level?]>0,\n    [@What is the Fecal Coliform Level?]>0,\n    [@Temperature °C - 2550B (APHA Method Code)]>30,\n    [@pH - 4500-H+B (APHA Method Code)]<6.5, [@pH - 4500-H+B (APHA Method Code)]>8.5,\n    [@Conductivity µS/cm - 2510B (APHA Method Code)]>1000,\n    [@Salinity PPT 2520B 0.2 (APHA Method Code)]>1,\n    AND([@Water test conducted?]<>\"CBT-bag\", [@Level of Contamination using CBT bags?]>0)\n  ), \"Non-Compliant\",\n  IF(OR(\n    ISBLANK([@Number of E-coli for the Lab]),\n    ISBLANK([@What is the Turbidity in NTU?]),\n    ISBLANK([@What is the Total Coliform Level?]),\n    ISBLANK([@What is the Fecal Coliform Level?]),\n    ISBLANK([@Temperature °C - 2550B (APHA Method Code)]),\n    ISBLANK([@pH - 4500-H+B (APHA Method Code)]),\n    ISBLANK([@Conductivity µS/cm - 2510B (APHA Method Code)]),\n    ISBLANK([@Salinity PPT 2520B 0.2 (APHA Method Code)]),\n    AND([@Water test conducted?]<>\"CBT-bag\", ISBLANK([@Level of Contamination using CBT bags?]))\n  ), \"No Information Available\",\n  \"Compliant\")))\n\n[Water quality monitoring]\nif all true: Compliant\nIf one of false: Non_compliant\nIf one of empty: No_information available\n\n=IF([@Method of Water Testing Used?]<>\"Lab-tested\", \"N/A\",\n  IF(OR(\n    [@Number of E. coli for the Lab Test]>0,\n    [@What is the Turbidity in NTU?]>5,\n    [@What is the Total Coliform count in 1cfu/100ml?]>0,\n    [@What is the Fecal Coliform count in 1cfu/100ml?]>0,\n    [@Temperature °C - 2550B (APHA Method Code)]>30,\n    [@pH - 4500-H+B (APHA Method Code)]<6.5, [@pH - 4500-H+B (APHA Method Code)]>8.5,\n    [@Conductivity µS/cm - 2510B (APHA Method Code)]>1000,\n    [@Salinity PPT 2520B 0.2 (APHA Method Code)]>1,\n    AND([@174963301462]<>\"CBT-bag\", [@What is the E. coli Count using CBT Bags?]>0)\n  ), \"Non-Compliant\",\n  IF(OR(\n    ISBLANK([@Number of E. coli for the Lab Test]),\n    ISBLANK([@What is the Turbidity in NTU?]),\n    ISBLANK([@What is the Total Coliform count in 1cfu/100ml?]),\n    ISBLANK([@What is the Fecal Coliform count in 1cfu/100ml?]),\n    ISBLANK([@Temperature °C - 2550B (APHA Method Code)]),\n    ISBLANK([@pH - 4500-H+B (APHA Method Code)]),\n    ISBLANK([@Conductivity µS/cm - 2510B (APHA Method Code)]),\n    ISBLANK([@Salinity PPT 2520B 0.2 (APHA Method Code)]),\n    AND([@174963301462]<>\"CBT-bag\", ISBLANK([@What is the E. coli Count using CBT Bags?]))\n  ), \"No Information Available\",\n  \"Compliant\")))",
       "chart_type": "stack_bar",
       "order": 11,
       "col_span": 12,
@@ -447,6 +453,7 @@
     },
     {
       "id": "chart_water_committee",
+      "info": "Do you have Water Committee and Is it active?",
       "chart_type": "doughnut",
       "order": 12,
       "col_span": 8,
@@ -466,6 +473,7 @@
     },
     {
       "id": "chart_implementing_authority",
+      "info": "Who is the implementing agency/agencies?",
       "chart_type": "dots",
       "order": 13,
       "col_span": 8,
@@ -481,6 +489,7 @@
     },
     {
       "id": "chart_test_method",
+      "info": "Method of Water Testing Used?",
       "chart_type": "half_doughnut",
       "order": 14,
       "col_span": 8,
@@ -511,6 +520,7 @@
           "items": [
             {
               "id": "kpi_monitored_last_12_months",
+              "info": "TODAY - Last_monitored < 12 months",
               "chart_type": "card",
               "order": 3,
               "col_span": 8,
@@ -527,6 +537,7 @@
             },
             {
               "id": "kpi_critical_issues_2",
+              "info": "if EPS_id_registry in EPS_id_WQM:\n     if The current status of this system? == \" Operational\" --> no_noissue\n     ifelse The current status of this system? == \"Issue with system\" --> Yes_issue\n     else: \"No information available\"\n\nElse: no information available",
               "chart_type": "card",
               "order": 1,
               "col_span": 8,
@@ -542,6 +553,7 @@
             },
             {
               "id": "kpi_no_water_sample",
+              "info": "Count \"No\" in Are you able to collect the water sample?",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
@@ -715,6 +727,7 @@
           "items": [
             {
               "id": "kpi_water_sample_last_12_months",
+              "info": "Count \"Yes\" in Are you able to collect the water sample? (latest monitoring) where TODAY - Last_monitored < 12 months\n\n% = EPS with sample taken / total EPS",
               "chart_type": "card",
               "order": 1,
               "col_span": 8,
@@ -734,6 +747,7 @@
             },
             {
               "id": "kpi_lab_tested",
+              "info": "[Construction monitoring]\nWater test conducted? = Lab --> Lab \nWater test conducted? = CBT -- > CBT\nWater test conducted? = empty --> No information available\n\n[Water quality monitoring]\nMethod of Water Testing Used? = Lab --> Lab \nMethod of Water Testing Used? = CBT -- > CBT\nMethod of Water Testing Used? = empty --> No information available",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
@@ -983,6 +997,7 @@
           "items": [
             {
               "id": "kpi_under_construction_pct",
+              "info": "If Is the project completed? == \"Yes\" -- assign NO\nelsif: Is the project completed? == \"No\" -- asign YES\n\nelse: assign: \"No information available\"",
               "chart_type": "card",
               "order": 1,
               "col_span": 12,
@@ -1001,6 +1016,7 @@
             },
             {
               "id": "kpi_construction_past_due",
+              "info": "if Proposed Completion Date? > Today --> completion date is due\nifelse Proposed Completion Date? < - Today --> completion date is not due\nelse: no information available",
               "chart_type": "card",
               "order": 2,
               "col_span": 12,
@@ -1016,6 +1032,7 @@
             },
             {
               "id": "chart_construction_progression",
+              "info": "IFERROR(\n  SUMPRODUCT(\n    -- Concrete Base Construction\n    IF(ISNUMBER(SEARCH(\"Concrete Base\", [@Project Scope])),\n      IF(OR([@2m x 2m square base]=\"YES\", [@Constructed within a 300mm vertical offset between URF and EPS]=\"YES\", [@Constructed within a 300mm vertical offset between EPS and Storage]=\"YES\"), 1, 0),\n      0),\n\n    -- URF Tank\n    IF(ISNUMBER(SEARCH(\"URF Tank\", [@Project Scope])),\n      IF([@What is the current status of the tank implementation for this URF?]=\"Completed\", 1, 0),\n      0),\n\n    -- EPS Tank\n    IF(ISNUMBER(SEARCH(\"EPS Tank\", [@Project Scope])),\n      IF([@What is the current status of the tank implementation for this EPS tank?]=\"Completed\", 1, 0),\n      0),\n\n    -- Balance Tank\n    IF(ISNUMBER(SEARCH(\"Balance Tank\", [@Project Scope])),\n      IF([@What is the current status of the tank implementation for this balance tank?]=\"Completed\", 1, 0),\n      0),\n\n    -- Storage Tank\n    IF(ISNUMBER(SEARCH(\"Storage Tank\", [@Project Scope])),\n      IF([@What is the current status of the tank implementation for the storage tank?]=\"Completed\", 1, 0),\n      0),\n\n    -- Standpipes\n    IF(ISNUMBER(SEARCH(\"Standpipes\", [@Project Scope])),\n      IFERROR([@1849634900001_implemented]/[@1849634900001_tobeimplemented], 0),\n      0),\n\n    -- Drainage (placeholder)\n    IF(ISNUMBER(SEARCH(\"Drainage\", [@Project Scope])),\n      0, -- replace with actual logic once defined\n      0),\n\n    -- Site Security\n    IF(ISNUMBER(SEARCH(\"Site Security\", [@Project Scope])),\n      (IF([@1849635500001_a]=\"Selected\", 1/3, 0) +\n       IF([@1849635500001_b]=\"Selected\", 1/3, 0) +\n       IF([@1849635500001_c]=\"Selected\", 1/3, 0)),\n      0)\n  )\n  /\n  -- Denominator: count of components in scope\n  SUMPRODUCT(\n    (ISNUMBER(SEARCH(\"Concrete Base\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"URF Tank\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"EPS Tank\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Balance Tank\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Storage Tank\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Standpipes\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Drainage\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Site Security\", [@Project Scope])))*1\n  ),\n\"\")",
               "chart_type": "bar",
               "order": 10,
               "col_span": 12,

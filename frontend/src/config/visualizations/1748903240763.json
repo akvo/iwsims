@@ -39,6 +39,7 @@
     },
     {
       "id": "kpi_total_wwtps",
+      "info": "Count registration records.",
       "chart_type": "card",
       "order": 2,
       "col_span": 6,
@@ -50,6 +51,7 @@
     },
     {
       "id": "kpi_inspected_12_mo",
+      "info": "Count of Inspected Plant.",
       "chart_type": "card",
       "order": 3,
       "col_span": 6,
@@ -62,6 +64,7 @@
     },
     {
       "id": "kpi_effluent_compliance",
+      "info": "Pin colour: green if BOD<40 AND COD<100 AND TDS<1000, red otherwise.",
       "chart_type": "card",
       "order": 4,
       "col_span": 6,
@@ -76,6 +79,7 @@
     },
     {
       "id": "kpi_critical_issues_percentage",
+      "info": "Plant Critical when ANY:\n  • Effluent not compliant (rule above)\n  • Op/Non-op process = Not Operational\n% = Critical / total.",
       "chart_type": "card",
       "order": 5,
       "col_span": 6,
@@ -218,6 +222,7 @@
     },
     {
       "id": "chart_compliance_trend",
+      "info": "Group inspections by month. Per month: % WWTPs passing each domain (effluent / OHS / derived operational).",
       "chart_type": "custom_component",
       "component": "ComplianceTrendWidget",
       "order": 8,
@@ -267,6 +272,7 @@
           "items": [
             {
               "id": "kpi_monitored_12_mo",
+              "info": "COUNT DISTINCT plants with latest Plant inspection date? ≥ TODAY()−365.",
               "chart_type": "card",
               "order": 1,
               "col_span": 8,
@@ -280,6 +286,7 @@
             },
             {
               "id": "kpi_critical_issues",
+              "info": "Count of WWTPs with risk = red (per row 6 rule).",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
@@ -376,6 +383,7 @@
             },
             {
               "id": "kpi_no_sample_taken",
+              "info": "COUNT plants where latest Are you able to take the sample? = No.",
               "chart_type": "card",
               "order": 3,
               "col_span": 8,
@@ -390,6 +398,7 @@
             },
             {
               "id": "rank_most_recently_monitored",
+              "info": "Top 8 plants ORDER BY latest Plant inspection date? DESC.",
               "chart_type": "ranking",
               "order": 4,
               "col_span": 12,
@@ -403,6 +412,7 @@
             },
             {
               "id": "rank_needs_monitoring",
+              "info": "Top 8 plants ORDER BY latest inspection date ASC.",
               "chart_type": "ranking",
               "order": 5,
               "col_span": 12,
@@ -491,6 +501,7 @@
           "items": [
             {
               "id": "condition_matrix_plant_condition",
+              "info": "Plants by condition on the 4-option scale (Good / Satisfactory / Maintenance in progress / Poor), latest monitoring, for: Building condition, Fence condition, Security lights, Transport availability.",
               "chart_type": "custom_component",
               "component": "ConditionMatrixWidget",
               "order": 1,
@@ -632,6 +643,7 @@
             },
             {
               "id": "condition_matrix_tools_ohs_maintenance",
+              "info": "Count of plants answering Yes (of total) on the latest monitoring, for: Working tools available, OHS equipment present, Effluent pumping at the plant, Urgent maintenance programs, Preventative maintenance programs, Upgrading programs.",
               "chart_type": "custom_component",
               "component": "ConditionMatrixWidget",
               "order": 2,
@@ -771,6 +783,7 @@
             },
             {
               "id": "chart_influent_pumping",
+              "info": "• Presence: COUNT(Yes) of Are there any influent pump station?.\n• Status bar: count per option of Comment on the influent pumping system (Normal operation / Inadequate pumping during wet weather flows / Screens overloaded / Poor ventilation / Pumps not operational / Pump house in bad condition / Pump house in good condition / No influent Pump Station in the plant).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -839,6 +852,7 @@
             },
             {
               "id": "chart_primary_clarifier",
+              "info": "Count per option of Comment on the operation of the primary clarifiers (multi-select).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -917,6 +931,7 @@
             },
             {
               "id": "chart_trickling_filters",
+              "info": "Count per option of Comment on the operation of the Trickling Filters (multi-select).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -979,6 +994,7 @@
             },
             {
               "id": "chart_activated_sludge_system",
+              "info": "Count per option of Comment on the operation of the Activated Sludge System (multi-select).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1041,6 +1057,7 @@
             },
             {
               "id": "chart_stabilization_lagoons",
+              "info": "Count per option of Comment on the operation of the stabilization lagoons (multi-select).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1099,6 +1116,7 @@
             },
             {
               "id": "process_anaerobic_lagoons",
+              "info": "Count per option of Comment on the Anaerobic lagoons (multi-select).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1157,6 +1175,7 @@
             },
             {
               "id": "chart_secondary_clarifier",
+              "info": "Count per option of Comment on the operation of the secondary clarifiers (multi-select).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1231,6 +1250,7 @@
             },
             {
               "id": "chart_oxidation_ponds",
+              "info": "Count per option of Comment on the operation of Oxidation Ponds: Operational / Not Operational.",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1261,6 +1281,7 @@
             },
             {
               "id": "chart_pasveer_ditches",
+              "info": "Count per option of Comment on the operation of Pasveer Ditches.",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1291,6 +1312,7 @@
             },
             {
               "id": "chart_idea_lagoons",
+              "info": "Count per option of Comment on the operation of IDEA Lagoons.",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1321,6 +1343,7 @@
             },
             {
               "id": "chart_polishing_ponds",
+              "info": "Count per option of Comment on the operation of Polishing Ponds.",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1351,6 +1374,7 @@
             },
             {
               "id": "chart_aerobic_lagoons",
+              "info": "Count per option of Comment on the operation of Aerobic Lagoons.",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1381,6 +1405,7 @@
             },
             {
               "id": "chart_sludge_digester",
+              "info": "Count per option of Comment on the operation of Sludge Digester.",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1411,6 +1436,7 @@
             },
             {
               "id": "chart_imhoff_tanks",
+              "info": "Count per option of Comment on the operation of IMHOFF.",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1441,6 +1467,7 @@
             },
             {
               "id": "chart_sludge_aerobic_digestion",
+              "info": "Count per option of Comment on operation of the sludge aerobic digestion (multi).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1495,6 +1522,7 @@
             },
             {
               "id": "chart_sludge_handling",
+              "info": "Count per option of Comment on the sludge handling system (multi).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1553,6 +1581,7 @@
             },
             {
               "id": "chart_drying_beds",
+              "info": "Count per option of Comment on the drying beds (multi).",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,
@@ -1603,6 +1632,7 @@
             },
             {
               "id": "chart_plant_effluent_observations",
+              "info": "Count per option of Comment on the plant effluent: Effluent Clear / Bad odor / Low DO / Excessive SS-turbidity-foam-grease-scum-colour / Other.",
               "chart_type": "custom_component",
               "component": "ProcessStatusWidget",
               "col_span": 12,

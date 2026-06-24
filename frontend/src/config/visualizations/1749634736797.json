@@ -39,6 +39,7 @@
     },
     {
       "id": "kpi_total_wtps",
+      "info": "Count registration records.",
       "chart_type": "card",
       "order": 2,
       "col_span": 5,
@@ -50,6 +51,7 @@
     },
     {
       "id": "kpi_inspected_12_mo",
+      "info": "COUNT DISTINCT IDs WHERE Date of inspection? < 12 months.",
       "chart_type": "card",
       "order": 3,
       "col_span": 5,
@@ -63,6 +65,7 @@
     },
     {
       "id": "kpi_operational",
+      "info": "Plant is OPERATIONAL when :\n  • Have you noted any production constraints? = No (no production constraints), AND\n  • What is the average daily production of the plant in megalitres? > 0, AND\n  • Are there any risks associated with the Pumps/Rising Main? = No (where Pumps/Rising Main is part of transport), AND\n  • Are there any risks associated with the Borehole Pump? = No (where Borehole Pump is part of transport), AND\n  • Are there any risks associated with the Borehole Gallery Pumps? = No (where Borehole Gallery Pumps part of transport).\n% = operational / total plants.",
       "chart_type": "metric_card",
       "order": 4,
       "col_span": 5,
@@ -78,6 +81,7 @@
     },
     {
       "id": "kpi_dw_compliance",
+      "info": "Plant compliant when :\n  • E.coli (What is the number of E.Coli (using Lab test)? OR What is the number of E.Coli (using CBT bag test)?) = 0 /100mL, AND\n  • Total coliform (What is the Total Coliform in cfu/100ml?) = 0, AND\n  • Faecal coliform (What is the Feacal Coliform in cfu/100ml?) = 0, AND\n  • Turbidity (What is the Turbidity in NTU?) < 5 NTU, AND\n  • Residual Cl (What is the Residual Chlorine in mg/L?) ∈ [0.2, 0.5] mg/L, AND\n  • pH (pH - 4500-H+B (APHA Method Code)) ∈ [6.5, 8.5], AND\n  • Conductivity (Conductivity µS/cm - 2510B (APHA Method Code)) < 1000 µS/cm, AND\n  • Salinity (Salinity PPT 2520B 0.2 (APHA Method Code)) < 1 ppt\n% = compliant / total plants.",
       "chart_type": "card",
       "order": 5,
       "col_span": 5,
@@ -98,6 +102,7 @@
     },
     {
       "id": "kpi_critical_red",
+      "info": "Plant RED when: DW Compliance = Non-compliant OR Plant is Non-Operational",
       "chart_type": "card",
       "order": 6,
       "col_span": 4,
@@ -196,6 +201,7 @@
     },
     {
       "id": "chart_drinking_water_compliance_by_parameter",
+      "info": "Stacked-bar per parameter (Pass / Fail), each plant counted once:\n  E. coli: COUNT(value = 0 using either lab What is the number of E.Coli (using Lab test)? or CBT What is the number of E.Coli (using CBT bag test)?)\n  Total coliform: COUNT(What is the Total Coliform in cfu/100ml? = 0)\n  Faecal coliform: COUNT(What is the Feacal Coliform in cfu/100ml? = 0)\n  Turbidity: COUNT(What is the Turbidity in NTU? < 5)\n  Residual Cl: COUNT(What is the Residual Chlorine in mg/L? ∈ [0.2, 0.5])\n  pH: COUNT(pH - 4500-H+B (APHA Method Code) ∈ [6.5, 8.5])\n  Conductivity: COUNT(Conductivity µS/cm - 2510B (APHA Method Code) < 1000)\n  Salinity: COUNT(Salinity PPT 2520B 0.2 (APHA Method Code) < 1)",
       "chart_type": "stack_bar",
       "order": 9,
       "col_span": 24,
@@ -215,6 +221,7 @@
     },
     {
       "id": "chart_sample_method",
+      "info": "Donut: COUNT plants per option of Method of Water Testing used? (multi-select — a plant choosing both counts in both segments OR show three categories Lab / CBT / Both).",
       "chart_type": "half_doughnut",
       "order": 10,
       "col_span": 12,
@@ -234,6 +241,7 @@
     },
     {
       "id": "chart_production_vs_design_capacity",
+      "info": "Per plant: utilisation = What is the average daily production of the plant in megalitres? / What is the Designed Capacity of Plant in megalitres?. Plot bar per plant (design vs production) for each division.",
       "chart_type": "custom_component",
       "component": "CapacityComparePerPlant",
       "order": 11,
@@ -270,6 +278,7 @@
     },
     {
       "id": "chart_treatment_processes_in_use",
+      "info": "Horizontal bar: # plants per process. Derive 'process in use' from:\n  • Coagulation/Flocculation — Are there any Floc Tanks used in the Plant? = Yes\n  • Sedimentation/Clarification — Are there any Clarifier /Sedimentation Tanks at the Plant? = Yes\n  • Filtration — Are there any Filtration System at the Plant? = Yes\n  • Backwash sludge removal — Are there any Backwash Sludge Removal System at the Plant? = Yes\n  • Disinfection — What Disinfection Techniques are used at the Plant? non-empty\n  • Chemical-specific (Alum, Polymer, Lime, Soda Ash) — What chemicals are use for water treatment on the day of Inspection ? options",
       "chart_type": "bar",
       "order": 12,
       "col_span": 24,
@@ -350,6 +359,7 @@
     },
     {
       "id": "chart_ohs_policy_flow",
+      "info": "Sankey stages:\n  All plants → Do you have a OHS policy for the Plant? = Yes → Do your staff use OHS equipment at the work place? = Yes → Do plant staff comply to the requirements of the OHS Policy? = Yes.\nEach transition's width = count of plants meeting all prior conditions.",
       "chart_type": "custom_component",
       "component": "StageFlowWidget",
       "order": 13,
@@ -406,6 +416,7 @@
           "items": [
             {
               "id": "kpi_monitored_12_mo",
+              "info": "COUNT DISTINCT plants with Date of inspection? in last 12 months.",
               "chart_type": "card",
               "order": 1,
               "col_span": 8,
@@ -418,6 +429,7 @@
             },
             {
               "id": "kpi_critical_issues",
+              "info": "Count of WTPs with risk = red (per row 6 rule).",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
@@ -480,6 +492,7 @@
             },
             {
               "id": "kpi_no_waterquality_check",
+              "info": "COUNT plants where latest Are you able to take water sample? = No.",
               "chart_type": "card",
               "order": 3,
               "col_span": 8,
@@ -494,6 +507,7 @@
             },
             {
               "id": "chart_inspectiondate_histogram",
+              "info": "Bucket plants by months since last submission (0–17 + >18). Bar coloured by recency (≤6 mo green, 7–12 amber, >12 red).",
               "chart_type": "bar",
               "order": 4,
               "col_span": 24,
@@ -529,6 +543,7 @@
             },
             {
               "id": "rank_most_recently_monitored",
+              "info": "Top 8 plants ORDER BY latest submission DESC.",
               "chart_type": "ranking",
               "order": 5,
               "col_span": 12,
@@ -542,6 +557,7 @@
             },
             {
               "id": "rank_needs_monitoring",
+              "info": "Top 8 plants ORDER BY latest submission ASC (oldest first).",
               "chart_type": "ranking",
               "order": 6,
               "col_span": 12,
@@ -561,6 +577,7 @@
           "items": [
             {
               "id": "kpi_sampled_12_mo",
+              "info": "% plants with latest Are you able to take water sample? = Yes within last 12 months.",
               "chart_type": "metric_card",
               "order": 1,
               "col_span": 8,
@@ -576,6 +593,7 @@
             },
             {
               "id": "kpi_lab_tested",
+              "info": "COUNT plants where Method of Water Testing used? contains 'Lab Test'.",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
@@ -589,6 +607,7 @@
             },
             {
               "id": "kpi_cbt_tested",
+              "info": "COUNT plants where Method of Water Testing used? contains 'CBT Bag Test'.",
               "chart_type": "card",
               "order": 3,
               "col_span": 8,
@@ -602,6 +621,7 @@
             },
             {
               "id": "param_total_coliform",
+              "info": "Jitter plot of What is the Total Coliform in cfu/100ml?",
               "chart_type": "dot_strip",
               "order": 4,
               "col_span": 12,
@@ -623,6 +643,7 @@
             },
             {
               "id": "param_turbidity",
+              "info": "Jitter plot of What is the Turbidity in NTU?",
               "chart_type": "dot_strip",
               "order": 5,
               "col_span": 12,
@@ -644,6 +665,7 @@
             },
             {
               "id": "param_residual_chlorine",
+              "info": "Jitter plot of What is the Residual Chlorine in mg/L?",
               "chart_type": "dot_strip",
               "order": 6,
               "col_span": 12,
@@ -666,6 +688,7 @@
             },
             {
               "id": "param_ph",
+              "info": "Jitter plot of pH - 4500-H+B (APHA Method Code)",
               "chart_type": "dot_strip",
               "order": 7,
               "col_span": 12,
@@ -688,6 +711,7 @@
             },
             {
               "id": "param_conductivity",
+              "info": "Jitter plot of Conductivity µS/cm - 2510B (APHA Method Code)",
               "chart_type": "dot_strip",
               "order": 8,
               "col_span": 12,
@@ -715,6 +739,7 @@
           "items": [
             {
               "id": "chart_treatment_chemicals",
+              "info": "Horizontal bar per chemical (Chlorine / Potassium Aluminium Sulphate / Polymer / Lime / Sodium Carbonate). Stacked:\n  Green = in use (What chemicals are use for water treatment on the day of Inspection ? contains chemical) AND risks=No.\n  Red   = in use AND risks=Yes.\nPlants not using the chemical excluded from the bar.",
               "chart_type": "stack_bar",
               "compute": "grouped_stack",
               "orientation": "horizontal",
@@ -885,6 +910,7 @@
             },
             {
               "id": "chart_sedimentation_floc_tank_count",
+              "info": "Histogram of plants by How many Floc Tanks are there at the Plant? (only counting plants where Are there any Floc Tanks used in the Plant? = Yes).",
               "chart_type": "bar",
               "order": 2,
               "col_span": 12,
@@ -926,6 +952,7 @@
             },
             {
               "id": "chart_sedimentation_tank_type",
+              "info": "Bar of # tanks per type from Types of Clarifiers/Sedimentation Tanks at the Plant (multi-select: Horizontal Flow / Up Flow Vertical / Rectangle Lamella Plates / Lamella Tubes).\nSum How many Clarifiers/Sedimentation Tanks are there? across plants reporting each type.",
               "chart_type": "bar",
               "order": 3,
               "col_span": 12,
@@ -956,6 +983,7 @@
             },
             {
               "id": "chart_sedimentation_active_risks",
+              "info": "Horizontal bar across risk options:\n  COUNT plants where each option appears in What are these risks? OR What are these risks associated with the Clarifiers/Sedimentation Tanks?.\n  Options: Overloading / High turbidity / Low retention time / Carried over flocs / Mechanical / Electrical / Desludging / Other.",
               "chart_type": "bar",
               "orientation": "horizontal",
               "order": 4,
@@ -986,6 +1014,7 @@
             },
             {
               "id": "chart_disinfection_technique",
+              "info": "Donut of plants per option of What Disinfection Techniques are used at the Plant? (Chlorine gas / HTH Powder / Sodium Hypochlorite / DPD Tablets). Plus side note: % with disinfection SOP (Do you have Standard Operating Procedures for Disinfection? = Yes).",
               "chart_type": "half_doughnut",
               "order": 5,
               "col_span": 12,
@@ -1001,6 +1030,7 @@
             },
             {
               "id": "chart_disinfection_active_risks",
+              "info": "Horizontal bar across risk categories aggregated from all four techniques:\n  Storage / Dosage / Handling / Leakage / Other.\n  Each option counted across What are these risks associated with Chlorine Gas dosing?, What are these risks associated with HTH Powder Dosing System?, What are these risks associated with the Sodium Hypochlorite Dosing System?, What are these risks associated with the DPD Tablets Dosing Method?.",
               "chart_type": "bar",
               "orientation": "horizontal",
               "order": 6,
@@ -1026,6 +1056,7 @@
             },
             {
               "id": "chart_magnetic_flow_meters",
+              "info": "Bar with categories: No meter (count of Are there Plant Mag Flow Meters in place?=No) / Inflow / Outflow / Both.\n  Inflow / Outflow / Both derived from What are type of Flow Meters? (multi-select).",
               "chart_type": "bar",
               "compute": "bucket_bar",
               "order": 7,
@@ -1099,6 +1130,7 @@
             },
             {
               "id": "chart_flow_meter_risks",
+              "info": "Horizontal bar across risk options of What are these risks associated with the flow meters?: Flooded flow meter / No Flow Meter / Uncalibrated Meter / Incorrect reading / Buried meters / Defunct Meters / Other.",
               "chart_type": "bar",
               "orientation": "horizontal",
               "order": 8,
@@ -1123,6 +1155,7 @@
             },
             {
               "id": "chart_reservoirs_highlift_pumps",
+              "info": "Histogram of plants by Number of High Lift Pumps? (0 = plants with Are there any High Lift Pumps at the Plant?=No).",
               "chart_type": "bar",
               "order": 9,
               "col_span": 12,
@@ -1164,6 +1197,7 @@
             },
             {
               "id": "chart_backup_power_supply",
+              "info": "Stacked bar with three segments:\n  Green = Do you have a backup generator at this Facility=Yes AND Is the backup generator well maintained and functional?=Yes\n  Amber = Do you have a backup generator at this Facility=Yes AND Is the backup generator well maintained and functional?=No\n  Red   = Do you have a backup generator at this Facility=No (no back-up at all)",
               "chart_type": "stack_bar",
               "compute": "grouped_stack",
               "orientation": "horizontal",

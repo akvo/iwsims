@@ -272,6 +272,7 @@
     },
     {
       "id": "kpi_total_rws",
+      "info": "Count number of unique Project name",
       "chart_type": "card",
       "order": 4,
       "col_span": 6,
@@ -284,6 +285,7 @@
     },
     {
       "id": "kpi_under_construction",
+      "info": "Count number of RWS where Status of Infrastructure for this project? == \"Non-Operational\" (latest monitoring)",
       "chart_type": "card",
       "order": 5,
       "col_span": 6,
@@ -298,6 +300,7 @@
     },
     {
       "id": "kpi_operational_rws",
+      "info": "Count number of unique Status of Infrastructure for this project? == \"Operational\"",
       "chart_type": "card",
       "order": 6,
       "col_span": 6,
@@ -312,6 +315,7 @@
     },
     {
       "id": "kpi_critical_issues",
+      "info": "Count number of RWP where Is there any improvement action to be taken by the implementing agency from the last inspection? == Yes or 174931041156 == Yes",
       "chart_type": "card",
       "order": 7,
       "col_span": 6,
@@ -341,6 +345,7 @@
     },
     {
       "id": "kpi_drinking_water_compliance",
+      "info": "Count yes if all statements true:\nWhat is the E- Coli count from Lab Test? <= 0 (e-coli)\nTurbidity in NTU <= 5 (turbidity)\nTotal Coliform in 1cfu/ 100ml <= 0 (total coliform)\nFecal Coliform in 1cfu/ 100ml <= 0 (fecal coliform)\nTemperature in °C <= 30 (temperature)\n6.5 <= pH <= 8.5 (pH)\nConductivity in µS/ cm <= 1000  (conductivity)\nSalinity PPT <= 1 ppt (salinity)",
       "chart_type": "card",
       "order": 11,
       "col_span": 6,
@@ -364,6 +369,7 @@
     },
     {
       "id": "kpi_active_water_committees",
+      "info": "Do you have Water Committee and Is it active? == Yes",
       "chart_type": "metric_card",
       "order": 12,
       "col_span": 6,
@@ -379,6 +385,7 @@
     },
     {
       "id": "kpi_accessibility_no_issues",
+      "info": "Check most recent form QM / M\n\nIf m: Are you able to take the sample? == Yes or no --> follow logic and Is there any improvement action to be taken by the implementing agency from the last inspection? == \"No\"\n\nif QM: Are you able to collect water sample? == Yes or no --> follow logic and Are there any major issues that need to be discussed with the Implementer? == \"No\"",
       "chart_type": "card",
       "order": 13,
       "col_span": 6,
@@ -459,6 +466,7 @@
     },
     {
       "id": "chart_implementation_at_scale",
+      "info": "Count of RWS grouped by Type of Project? and stacked by Who is the project Implementing agency/agencies?\n\nEach RWS contributes to its project-type bar, split by each implementing agency selected.",
       "chart_type": "stack_bar",
       "order": 14,
       "col_span": 24,
@@ -488,6 +496,7 @@
     },
     {
       "id": "chart_test_method_half",
+      "info": "Water Quality Test Conducted/Method of water testing used?",
       "chart_type": "half_doughnut",
       "order": 15,
       "col_span": 12,
@@ -507,6 +516,7 @@
     },
     {
       "id": "chart_beneficiaries",
+      "info": "Count for each category if The project is meant for? contains the string",
       "chart_type": "bar",
       "order": 16,
       "col_span": 12,
@@ -532,6 +542,7 @@
     },
     {
       "id": "chart_operational_status_stack",
+      "info": "Status of Infrastructure for this project?",
       "chart_type": "stack_bar",
       "order": 17,
       "col_span": 8,
@@ -548,6 +559,7 @@
     },
     {
       "id": "chart_accessibility_bucket",
+      "info": "Check most recent form QM / M\n\nIf m: Are you able to take the sample? == Yes or no --> follow logic and Is there any improvement action to be taken by the implementing agency from the last inspection? == \"No\"\n\nif QM: Are you able to collect water sample? == Yes or no --> follow logic and Are there any major issues that need to be discussed with the Implementer? == \"No\"",
       "chart_type": "stack_bar",
       "order": 18,
       "col_span": 8,
@@ -577,6 +589,7 @@
     },
     {
       "id": "chart_drinking_water_compliance",
+      "info": "Count yes if all statements true:\nWhat is the E- Coli count from Lab Test? <= 0 (e-coli)\nTurbidity in NTU <= 5 (turbidity)\nTotal Coliform in 1cfu/ 100ml <= 0 (total coliform)\nFecal Coliform in 1cfu/ 100ml <= 0 (fecal coliform)\nTemperature in °C <= 30 (temperature)\n6.5 <= pH <= 8.5 (pH)\nConductivity in µS/ cm <= 1000  (conductivity)\nSalinity PPT <= 1 ppt (salinity)",
       "chart_type": "stack_bar",
       "order": 19,
       "col_span": 8,
@@ -622,6 +635,7 @@
           "items": [
             {
               "id": "kpi_rws_monitored_last_12_months",
+              "info": "Inspection Date within last 12 months",
               "chart_type": "card",
               "order": 1,
               "col_span": 8,
@@ -638,6 +652,7 @@
             },
             {
               "id": "kpi_critical_issues_tab",
+              "info": "Count number of RWP where Is there any improvement action to be taken by the implementing agency from the last inspection? == Yes or 174931041156 == Yes",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
@@ -652,6 +667,7 @@
             },
             {
               "id": "kpi_no_water_sample",
+              "info": "Count number of RWS where Are you able to collect water sample? == \"No\" (latest monitoring)",
               "chart_type": "card",
               "order": 3,
               "col_span": 8,
@@ -799,6 +815,7 @@
             },
             {
               "id": "chart_inspections_per_month",
+              "info": "Count of inspections per month over the last year by Inspection Date (all monitoring submissions)",
               "chart_type": "bar",
               "order": 16,
               "col_span": 24,
@@ -823,6 +840,7 @@
           "items": [
             {
               "id": "kpi_water_sample_last_12_months",
+              "info": "Are you able to take the sample? == \"Yes\" and Inspection Date > Today - 12 months",
               "chart_type": "card",
               "order": 1,
               "col_span": 8,
@@ -840,6 +858,7 @@
             },
             {
               "id": "kpi_lab_tested",
+              "info": "Water Quality Test Conducted == \"Lab\"",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
@@ -853,6 +872,7 @@
             },
             {
               "id": "kpi_cbt_tested",
+              "info": "Water Quality Test Conducted == \"CBT test\"",
               "chart_type": "card",
               "order": 3,
               "col_span": 8,
@@ -873,6 +893,7 @@
             },
             {
               "id": "param_e_coli",
+              "info": "If Water Quality Test Conducted == \"Lab test\" then: E.coli Level using Lab Test? if else Water Quality Test Conducted == \"CBT test\" then: E.coli Level using CBT? else NA",
               "chart_type": "dot_strip",
               "order": 11,
               "col_span": 12,
@@ -896,6 +917,7 @@
             },
             {
               "id": "param_total_coliform",
+              "info": "What is the Total Coliform count? <= 0\n\n",
               "chart_type": "dot_strip",
               "order": 12,
               "col_span": 12,
@@ -950,6 +972,7 @@
             },
             {
               "id": "param_turbidity",
+              "info": "What is the Turbidity in NTU? <= 5",
               "chart_type": "dot_strip",
               "order": 21,
               "col_span": 12,
@@ -973,6 +996,7 @@
             },
             {
               "id": "param_temperature",
+              "info": "Temperature °C - 2550B (APHA Method Code) <= 30\n\n",
               "chart_type": "dot_strip",
               "order": 22,
               "col_span": 12,
@@ -1003,6 +1027,7 @@
             },
             {
               "id": "param_ph",
+              "info": "6.5 <= pH - 4500-H+B (APHA Method Code) <= 8.5\n\n",
               "chart_type": "dot_strip",
               "order": 31,
               "col_span": 8,
@@ -1050,6 +1075,7 @@
             },
             {
               "id": "param_salinity",
+              "info": "Salinity PPT 2520B 0.2 (APHA Method Code) <= 1\n\n",
               "chart_type": "dot_strip",
               "order": 33,
               "col_span": 8,
@@ -1079,6 +1105,7 @@
           "items": [
             {
               "id": "kpi_under_construction_pct",
+              "info": "Share of registered RWS where Status of Infrastructure for this project? == \"Non-Operational\" (latest monitoring)\n\n% = under construction / total RWS",
               "chart_type": "card",
               "order": 1,
               "col_span": 12,
@@ -1095,6 +1122,7 @@
             },
             {
               "id": "kpi_construction_past_due",
+              "info": "if What percentage of project is complete? != 100 then:\n\nTRUE if (Construction Start Date >= Today) else past_due_completion_date = FALSE",
               "chart_type": "card",
               "order": 2,
               "col_span": 12,
@@ -1111,6 +1139,7 @@
             },
             {
               "id": "chart_construction_progression",
+              "info": "Project is under construction if What percentage of project is complete? != 100",
               "chart_type": "bar",
               "order": 10,
               "col_span": 12,
@@ -1129,6 +1158,7 @@
             },
             {
               "id": "chart_proposed_completion_timeline",
+              "info": "Proposed Completion Date?",
               "chart_type": "bar",
               "order": 11,
               "col_span": 12,
@@ -1161,6 +1191,7 @@
             },
             {
               "id": "esc_construction",
+              "info": "RWS where construction is overdue: Status of Infrastructure for this project? != \"Operational\" AND Proposed Completion Date? < Today",
               "chart_type": "table",
               "order": 20,
               "col_span": 24,
