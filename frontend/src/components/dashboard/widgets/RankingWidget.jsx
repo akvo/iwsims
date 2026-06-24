@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Alert, Card, Empty, Skeleton, Typography } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
 import { DETAIL_URL_TEMPLATE } from "../constants";
+import FormulaInfo from "./FormulaInfo";
 
 const { Text } = Typography;
 
@@ -129,7 +130,12 @@ const RankingWidget = ({
 
   return (
     <Card
-      title={item.label}
+      title={
+        <>
+          {item.label}
+          <FormulaInfo info={item.info} title={item.label} />
+        </>
+      }
       size="small"
       style={{ marginBottom: 0 }}
       data-testid={`ranking-widget-${item.id}`}

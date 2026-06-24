@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Alert, Card, Col, Row, Skeleton, Typography } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
 import { computeConditionField } from "../compute/conditionMatrix";
+import FormulaInfo from "../widgets/FormulaInfo";
 
 const { Text } = Typography;
 
@@ -177,7 +178,10 @@ const ConditionMatrixWidget = ({
   return (
     <Card className="chart-card condition-matrix">
       <div className="condition-matrix-head">
-        <h4 className="condition-matrix-title">{title}</h4>
+        <h4 className="condition-matrix-title">
+          {title}
+          <FormulaInfo info={item.info} title={title} />
+        </h4>
         {item.subtitle && (
           <Text type="secondary" className="condition-matrix-subtitle">
             {item.subtitle}

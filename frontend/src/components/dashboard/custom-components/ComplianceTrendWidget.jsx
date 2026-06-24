@@ -4,6 +4,7 @@ import ReactECharts from "echarts-for-react";
 import { Alert, Card, Skeleton, Typography } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
 import { computeComplianceTrend } from "../compute/complianceTrend";
+import FormulaInfo from "../widgets/FormulaInfo";
 
 const { Text } = Typography;
 
@@ -205,7 +206,10 @@ const ComplianceTrendWidget = ({
   return (
     <Card className="chart-card compliance-trend">
       <div className="condition-matrix-head">
-        <h4 className="condition-matrix-title">{title}</h4>
+        <h4 className="condition-matrix-title">
+          {title}
+          <FormulaInfo info={item.info} title={title} />
+        </h4>
         {item.subtitle && (
           <Text type="secondary" className="condition-matrix-subtitle">
             {item.subtitle}

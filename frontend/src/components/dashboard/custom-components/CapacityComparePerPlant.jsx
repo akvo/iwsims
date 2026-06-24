@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import ReactECharts from "echarts-for-react";
 import { Alert, Card, Skeleton } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
+import FormulaInfo from "../widgets/FormulaInfo";
 
 // Per-plant Production-vs-Design comparison. Each plant is one category on a
 // horizontal grouped bar; the canvas grows with the plant count and lives in a
@@ -201,7 +202,15 @@ const CapacityComparePerPlant = ({
   );
 
   return (
-    <Card title={title} className="chart-card">
+    <Card
+      title={
+        <>
+          {title}
+          <FormulaInfo info={item.info} title={title} />
+        </>
+      }
+      className="chart-card"
+    >
       {(item.measures || []).map((measure) => (
         <MeasureFetcher
           key={measure.key}

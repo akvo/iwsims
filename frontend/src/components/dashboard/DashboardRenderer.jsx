@@ -11,6 +11,7 @@ import SectionTitleWidget from "./widgets/SectionTitleWidget";
 import FilterBarWidget from "./widgets/FilterBarWidget";
 import TabsWidget from "./widgets/TabsWidget";
 import CustomComponentWidget from "./widgets/CustomComponentWidget";
+import FormulaInfo from "./widgets/FormulaInfo";
 
 const { Paragraph } = Typography;
 
@@ -175,7 +176,12 @@ const DashboardRenderer = ({
       const itemForChart = { ...item, config: restConfig };
       return (
         <Card
-          title={cardTitle}
+          title={
+            <>
+              {cardTitle}
+              <FormulaInfo info={item.info} title={cardTitle} />
+            </>
+          }
           style={{ marginBottom: 0 }}
           className="chart-card"
         >
@@ -200,7 +206,15 @@ const DashboardRenderer = ({
     if (type === "table") {
       return (
         <Card
-          title={item.label || "Escalation list"}
+          title={
+            <>
+              {item.label || "Escalation list"}
+              <FormulaInfo
+                info={item.info}
+                title={item.label || "Escalation list"}
+              />
+            </>
+          }
           size="small"
           style={{ marginBottom: 0 }}
           className="escalation-table-card"

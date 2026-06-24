@@ -4,6 +4,7 @@ import ReactECharts from "echarts-for-react";
 import { Alert, Card, Skeleton, Typography } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
 import { computeStageFlow } from "../compute/stageFlow";
+import FormulaInfo from "../widgets/FormulaInfo";
 
 const { Text } = Typography;
 
@@ -185,7 +186,15 @@ const StageFlowWidget = ({
   const branches = failedBranches(flow);
 
   return (
-    <Card title={title} className="chart-card">
+    <Card
+      title={
+        <>
+          {title}
+          <FormulaInfo info={item.info} title={title} />
+        </>
+      }
+      className="chart-card"
+    >
       {(item.stages || []).map((stage) => (
         <StageFetcher
           key={stage.key}

@@ -7,6 +7,7 @@ import {
   computeProcessBars,
   distinctParentCount,
 } from "../compute/processStatus";
+import FormulaInfo from "../widgets/FormulaInfo";
 
 const { Text } = Typography;
 
@@ -159,7 +160,10 @@ const ProcessStatusWidget = ({
   return (
     <Card className="chart-card process-status">
       <div className="condition-matrix-head">
-        <h4 className="condition-matrix-title">{title}</h4>
+        <h4 className="condition-matrix-title">
+          {title}
+          <FormulaInfo info={item.info} title={title} />
+        </h4>
         {item.subtitle && (
           <Text type="secondary" className="condition-matrix-subtitle">
             {item.subtitle}

@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
+import FormulaInfo from "./FormulaInfo";
 
 /**
  * Generic metric tile with single-fetch share/scalar support — a slimmer
@@ -120,7 +121,12 @@ const MetricCard = ({
         <Skeleton active paragraph={{ rows: 1 }} />
       ) : (
         <Statistic
-          title={item.label}
+          title={
+            <>
+              {item.label}
+              <FormulaInfo info={item.info} title={item.label} />
+            </>
+          }
           value={displayValue}
           {...(item.color ? { valueStyle: { color: item.color } } : {})}
         />

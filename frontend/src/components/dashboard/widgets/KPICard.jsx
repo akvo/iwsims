@@ -6,6 +6,7 @@ import { getCompliantCount } from "../compute/compliance";
 import { computeAccessibilityBucket } from "../compute/accessibility";
 import { getCriticalCount } from "../compute/critical";
 import { getRulesMatchCount } from "../compute/rulesKpi";
+import FormulaInfo from "./FormulaInfo";
 
 /**
  * Single KPI tile. Owns its own fetch(es) so each tile resolves
@@ -260,7 +261,12 @@ const KPICard = ({
         <Skeleton active paragraph={{ rows: 1 }} />
       ) : (
         <Statistic
-          title={item.label}
+          title={
+            <>
+              {item.label}
+              <FormulaInfo info={item.info} title={item.label} />
+            </>
+          }
           value={displayValue}
           {...(item.color ? { valueStyle: { color: item.color } } : {})}
         />
