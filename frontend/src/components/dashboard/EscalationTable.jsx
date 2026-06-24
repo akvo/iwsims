@@ -77,6 +77,27 @@ const EscalationTable = ({
       : visibleColumns.slice(0, MAX_COLUMNS);
   }, [visibleColumns]);
 
+  // Resolve a cell to its human display: option answers (e.g.
+  // type_of_project) render the option label, not the stored value. Shared
+  // by the summary table and the expanded detail so both stay consistent.
+  const resolveDisplay = useCallback(
+    (c, row) => {
+      const display = renderValue(c, row, cellComputers);
+      if (display === null) {
+        return null;
+      }
+      const question = allQuestions?.find((q) => q?.name === c?.question_name);
+      if (question?.option?.length) {
+        const optionAnswer = question.option.find(
+          (qo) => qo?.value === display
+        );
+        return optionAnswer?.label || display;
+      }
+      return display;
+    },
+    [cellComputers, allQuestions]
+  );
+
   const columns = useMemo(
     () => [
       ...summaryColumns.map((c) => ({
@@ -84,25 +105,16 @@ const EscalationTable = ({
         dataIndex: c.key,
         key: c.key,
         render: (_value, row) => {
-          const display = renderValue(c, row, cellComputers);
-          const question = allQuestions?.find(
-            (q) => q?.name === c?.question_name
-          );
+          const display = resolveDisplay(c, row);
           if (display === null) {
             return <span style={{ color: "#bbb" }}>—</span>;
-          }
-          if (question?.option?.length) {
-            const optionAnswer = question.option.find(
-              (qo) => qo?.value === display
-            );
-            return <span>{optionAnswer?.label || display}</span>;
           }
           return <span>{display}</span>;
         },
       })),
       Table.EXPAND_COLUMN,
     ],
-    [summaryColumns, cellComputers, allQuestions]
+    [summaryColumns, resolveDisplay]
   );
 
   const renderExpandedRow = useCallback(
@@ -110,7 +122,7 @@ const EscalationTable = ({
       const rows = visibleColumns.map((c) => ({
         key: c.key,
         label: c.label,
-        display: renderValue(c, row, cellComputers),
+        display: resolveDisplay(c, row),
       }));
       return (
         <div>
@@ -166,7 +178,7 @@ const EscalationTable = ({
         </div>
       );
     },
-    [visibleColumns, cellComputers, parentFormId]
+    [visibleColumns, resolveDisplay, parentFormId]
   );
 
   if (error) {
