@@ -682,6 +682,7 @@
             },
             {
               "id": "esc_monitoring",
+              "info": "List RWS flagged by ANY of these on the latest monitoring:\n  • Are you able to collect water sample? = No\n  • Are there any major issues to discuss with the Implementer? = Yes\n  • E.coli > 0 /100mL (lab)\n  • Total Coliform > 0 cfu/100ml\n  • Feacal Coliform > 0 cfu/100ml\n  • Turbidity > 5 NTU\n  • Temperature > 30 °C\n  • pH outside 6.5–8.5\n  • Conductivity > 1000 µS/cm\n  • Salinity > 1 ppt",
               "chart_type": "table",
               "order": 15,
               "col_span": 24,
@@ -1051,6 +1052,7 @@
             },
             {
               "id": "param_conductivity",
+              "info": "Conductivity µS/cm - 2510B (APHA Method Code) <= 1000",
               "chart_type": "dot_strip",
               "order": 32,
               "col_span": 8,

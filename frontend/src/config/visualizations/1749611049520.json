@@ -241,6 +241,7 @@
     },
     {
       "id": "condition_matrix_structural_site",
+      "info": "Per-field option breakdown (e.g. Good / Satisfactory / Maintenance in progress / Poor) on the latest monitoring, for: Ground conditions, Facility condition, Security gate & fencing, Non-return valve, Sluice valve, Ventilation, Electrical panel, Pump station lid, Gantry, Hour run meter, Amp meter, Volt meter, Guardrails, Power backup system, Odour, Fats / grease balls, Lights, Water supply, OHS equipment.",
       "chart_type": "custom_component",
       "component": "ConditionMatrixWidget",
       "order": 7,

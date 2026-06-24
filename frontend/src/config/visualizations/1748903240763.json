@@ -448,6 +448,7 @@
           "items": [
             {
               "id": "param_bod",
+              "info": "Per-plant BOD on the latest monitoring (mg/L). Acceptance threshold < 40 mg/L.",
               "chart_type": "dot_strip",
               "order": 1,
               "col_span": 12,
@@ -469,6 +470,7 @@
             },
             {
               "id": "param_cod",
+              "info": "Per-plant COD on the latest monitoring (mg/L). Acceptance threshold < 100 mg/L.",
               "chart_type": "dot_strip",
               "order": 2,
               "col_span": 12,
@@ -490,6 +492,7 @@
             },
             {
               "id": "param_tds",
+              "info": "Per-plant TDS on the latest monitoring (mg/L). Acceptance threshold < 1000 mg/L.",
               "chart_type": "dot_strip",
               "order": 3,
               "col_span": 12,
