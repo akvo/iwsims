@@ -11,15 +11,22 @@ from api.v1.v1_visualization.constants import (
     VALID_PROGRESS_FORMULAS,
     SUPPORTED_QUESTION_TYPES,
 )
-from api.v1.v1_visualization.functions import parse_criteria_string
+from api.v1.v1_visualization.functions import (
+    parse_criteria_string,
+    validate_qname,
+)
 from api.v1.v1_forms.models import Forms, Questions
+
+__all__ = ["validate_qname"]
 
 
 class ValuesFilterSerializer(serializers.Serializer):
     """Validates query parameters for /visualization/values endpoint."""
 
-    form_id = serializers.IntegerField(required=True)
+    form_id = serializers.IntegerField(required=False)
     question_id = serializers.IntegerField(required=False)
+    question_name = serializers.CharField(required=False, max_length=255)
+    parent_form_id = serializers.IntegerField(required=False)
     monitoring = serializers.ChoiceField(
         choices=list(VALID_MONITORING),
         default="latest",
@@ -47,9 +54,12 @@ class ValuesFilterSerializer(serializers.Serializer):
         choices=list(VALID_REPEAT_AGG),
         default="average",
     )
+    rolling_months = serializers.IntegerField(
+        required=False, min_value=1,
+    )
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
-    date_question_id = serializers.IntegerField(required=False)
+    date_question_name = serializers.CharField(required=False)
     administration_id = serializers.IntegerField(required=False)
     option_value = serializers.CharField(required=False)
     criteria = serializers.CharField(required=False)
@@ -78,13 +88,58 @@ class ValuesFilterSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
+        question_name = data.get("question_name")
         form_id = data.get("form_id")
+        parent_form_id = data.get("parent_form_id")
+
+        # Dashboard requests always carry their registration-family scope as
+        # parent_form_id. For count-only requests (notably denominator_api),
+        # that registration form is the natural form_id fallback.
+        if not question_name and not form_id and parent_form_id:
+            if not Forms.objects.filter(
+                pk=parent_form_id,
+                parent__isnull=True,
+            ).exists():
+                raise serializers.ValidationError({
+                    "parent_form_id": (
+                        f"Registration form {parent_form_id} not found."
+                    ),
+                })
+            data["form_id"] = parent_form_id
+            form_id = parent_form_id
+
+        if not question_name and not form_id:
+            raise serializers.ValidationError(
+                "Either question_name, form_id, or parent_form_id is required."
+            )
+
+        # Global cross-form path: question_name without form_id.
+        if question_name and not form_id:
+            validate_qname(question_name)  # numeric id -> 400
+            return data
+
         question_id = data.get("question_id")
         stack_by = data.get("stack_by")
         group_by = data.get("group_by")
 
-        # Validate question belongs to form and is supported type
-        if question_id:
+        # Resolve the target question — by name (form-scoped name path)
+        # or by id (legacy rich path). Both must belong to the form and
+        # be a supported type.
+        question = None
+        if question_name:
+            validate_qname(question_name)  # numeric id -> 400
+            question = Questions.objects.filter(
+                name=question_name,
+                form_id=form_id,
+            ).first()
+            if not question:
+                raise serializers.ValidationError({
+                    "question_name": (
+                        f"Question '{question_name}' not found"
+                        f" on form {form_id}."
+                    ),
+                })
+        elif question_id:
             question = Questions.objects.filter(
                 pk=question_id,
                 form_id=form_id,
@@ -96,9 +151,10 @@ class ValuesFilterSerializer(serializers.Serializer):
                         f" on form {form_id}."
                     ),
                 })
+        if question:
             if question.type not in SUPPORTED_QUESTION_TYPES:
                 raise serializers.ValidationError({
-                    "question_id": (
+                    "question": (
                         f"Question type {question.type}"
                         " is not supported."
                     ),
@@ -106,16 +162,16 @@ class ValuesFilterSerializer(serializers.Serializer):
             data["question"] = question
 
         # Split criteria into same-form and parent-form buckets.
-        # qids on form_id → criteria; qids on parent form → parent_criteria.
+        # names on form_id → criteria; names on parent form → parent_criteria.
         criteria = data.get("criteria") or []
         if criteria:
-            qids = {c["parts"][0] for c in criteria}
+            qnames = {c["parts"][0] for c in criteria}
             on_form = set(
                 Questions.objects.filter(
-                    pk__in=qids, form_id=form_id,
-                ).values_list("pk", flat=True)
+                    name__in=qnames, form_id=form_id,
+                ).values_list("name", flat=True)
             )
-            remaining = qids - on_form
+            remaining = qnames - on_form
             parent_form = Forms.objects.filter(
                 pk=form_id,
             ).values_list("parent_id", flat=True).first()
@@ -123,15 +179,15 @@ class ValuesFilterSerializer(serializers.Serializer):
             if remaining and parent_form:
                 on_parent = set(
                     Questions.objects.filter(
-                        pk__in=remaining,
+                        name__in=remaining,
                         form_id=parent_form,
-                    ).values_list("pk", flat=True)
+                    ).values_list("name", flat=True)
                 )
             unknown = remaining - on_parent
             if unknown:
                 raise serializers.ValidationError({
                     "criteria": (
-                        "question_id(s) not on form "
+                        "question_name(s) not on form "
                         f"{form_id} or its parent: "
                         f"{sorted(unknown)}"
                     ),
@@ -145,15 +201,15 @@ class ValuesFilterSerializer(serializers.Serializer):
                 if c["parts"][0] in on_parent
             ] or None
 
-        # stack_by requires group_by and question_id
+        # stack_by requires group_by and a resolved question (id or name)
         if stack_by:
             if not group_by:
                 raise serializers.ValidationError({
                     "stack_by": "stack_by requires group_by.",
                 })
-            if not question_id:
+            if not data.get("question"):
                 raise serializers.ValidationError({
-                    "stack_by": "stack_by requires question_id.",
+                    "stack_by": "stack_by requires a question.",
                 })
 
         return data
@@ -166,7 +222,7 @@ class EscalationFilterSerializer(serializers.Serializer):
       option_equals:{qid}:{value}
       threshold_gt:{qid}:{value}
       threshold_lt:{qid}:{value}
-      overdue:{completion_qid}:{deadline_qid}
+      overdue:{completion_qid}:{deadline_qid}[:{incomplete_value}[:{mode}]]
 
     Columns format: comma-separated, colon-delimited.
       {key}:parent_name
@@ -175,7 +231,7 @@ class EscalationFilterSerializer(serializers.Serializer):
       {key}:latest_date:{date_qid}
     """
 
-    monitoring_form_id = serializers.IntegerField(required=True)
+    monitoring_form_id = serializers.IntegerField(required=False)
     criteria = serializers.CharField(required=True)
     columns = serializers.CharField(required=True)
     page = serializers.IntegerField(default=1, min_value=1)
@@ -184,7 +240,7 @@ class EscalationFilterSerializer(serializers.Serializer):
     )
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
-    date_question_id = serializers.IntegerField(required=False)
+    date_question_name = serializers.CharField(required=False)
     administration_id = serializers.IntegerField(required=False)
     filter_criteria = serializers.CharField(required=False)
 
@@ -215,16 +271,27 @@ class EscalationFilterSerializer(serializers.Serializer):
 
             try:
                 if ctype == "option_equals":
-                    qid = int(parts[1])
-                    normalized = [qid, parts[2]]
+                    qname = validate_qname(parts[1])
+                    normalized = [qname, parts[2]]
                 elif ctype in ("threshold_gt", "threshold_lt"):
-                    qid = int(parts[1])
+                    qname = validate_qname(parts[1])
                     threshold = float(parts[2])
-                    normalized = [qid, threshold]
+                    normalized = [qname, threshold]
                 elif ctype == "overdue":
-                    completion_qid = int(parts[1])
-                    deadline_qid = int(parts[2])
-                    normalized = [completion_qid, deadline_qid]
+                    completion_qname = validate_qname(parts[1])
+                    deadline_qname = validate_qname(parts[2])
+                    # Optional 4th/5th parts: the value marking a project
+                    # incomplete (default "no") and the comparison mode
+                    # ("option" default, or "lt" for a numeric threshold
+                    # such as project_completion_percentage < 100).
+                    incomplete_value = parts[3] if len(parts) > 3 else "no"
+                    mode = parts[4] if len(parts) > 4 else "option"
+                    if mode == "lt":
+                        float(incomplete_value)
+                    normalized = [
+                        completion_qname, deadline_qname,
+                        incomplete_value, mode,
+                    ]
             except ValueError:
                 raise serializers.ValidationError(
                     f"Invalid numeric value in criteria: '{item}'."
@@ -260,15 +327,10 @@ class EscalationFilterSerializer(serializers.Serializer):
             if source in qid_required_sources and len(parts) < 3:
                 raise serializers.ValidationError(
                     f"Column source '{source}' requires a"
-                    f" question_id: '{item}'"
+                    f" question_name: '{item}'"
                 )
             if len(parts) > 2:
-                try:
-                    col["question_id"] = int(parts[2])
-                except ValueError:
-                    raise serializers.ValidationError(
-                        f"Invalid question_id in column: '{item}'."
-                    )
+                col["question_name"] = validate_qname(parts[2])
             parsed.append(col)
         return parsed
 
@@ -288,18 +350,18 @@ class ProgressFilterSerializer(serializers.Serializer):
         required=True
     )
     components = serializers.CharField(required=True)
-    filter_question_id = serializers.IntegerField(
+    filter_question_name = serializers.CharField(
         required=False
     )
     filter_option_value = serializers.CharField(
         required=False
     )
-    scope_question_id = serializers.IntegerField(
+    scope_question_name = serializers.CharField(
         required=False
     )
     from_date = serializers.DateField(required=False)
     to_date = serializers.DateField(required=False)
-    date_question_id = serializers.IntegerField(
+    date_question_name = serializers.CharField(
         required=False
     )
     administration_id = serializers.IntegerField(
@@ -357,8 +419,8 @@ class ProgressFilterSerializer(serializers.Serializer):
                         f"{formula} requires total_items:"
                         f" '{item}'"
                     )
-                comp["question_ids"] = [
-                    int(q) for q in parts[2:-1]
+                comp["question_names"] = [
+                    validate_qname(q) for q in parts[2:-1]
                 ]
                 try:
                     total_items = int(parts[-1])
@@ -380,12 +442,12 @@ class ProgressFilterSerializer(serializers.Serializer):
                         " (implemented:planned):"
                         f" '{item}'"
                     )
-                comp["question_ids"] = [
-                    int(parts[2]), int(parts[3]),
+                comp["question_names"] = [
+                    validate_qname(parts[2]), validate_qname(parts[3]),
                 ]
             else:
-                comp["question_ids"] = [
-                    int(q) for q in parts[2:]
+                comp["question_names"] = [
+                    validate_qname(q) for q in parts[2:]
                 ]
 
             if applicable_types:

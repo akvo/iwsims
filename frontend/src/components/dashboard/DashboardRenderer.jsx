@@ -6,10 +6,12 @@ import DashboardMap from "./DashboardMap";
 import EscalationTable from "./EscalationTable";
 import KPICard from "./widgets/KPICard";
 import MetricCard from "./widgets/MetricCard";
+import RankingWidget from "./widgets/RankingWidget";
 import SectionTitleWidget from "./widgets/SectionTitleWidget";
 import FilterBarWidget from "./widgets/FilterBarWidget";
 import TabsWidget from "./widgets/TabsWidget";
 import CustomComponentWidget from "./widgets/CustomComponentWidget";
+import FormulaInfo from "./widgets/FormulaInfo";
 
 const { Paragraph } = Typography;
 
@@ -75,6 +77,7 @@ const DashboardRenderer = ({
   complianceResponses,
   computeResponses,
   cellComputersById,
+  parentFormId,
 }) => {
   // Back-compat: fold legacy `complianceResponses` into the unified map under
   // `compliance`. New consumers should read `computeResponses.compliance`.
@@ -107,6 +110,7 @@ const DashboardRenderer = ({
         today={today}
         computeResponses={resolvedComputeResponses}
         cellComputersById={cellComputersById}
+        parentFormId={parentFormId}
       />
     ),
     [
@@ -119,6 +123,7 @@ const DashboardRenderer = ({
       today,
       resolvedComputeResponses,
       cellComputersById,
+      parentFormId,
     ]
   );
 
@@ -135,6 +140,7 @@ const DashboardRenderer = ({
           today={today}
           definitionsById={definitionsById}
           computeResponses={resolvedComputeResponses}
+          parentFormId={parentFormId}
         />
       );
     }
@@ -147,6 +153,20 @@ const DashboardRenderer = ({
           fiscalYearStartMonth={fiscalYearStartMonth}
           customFilterDefs={customFilterDefs}
           today={today}
+          parentFormId={parentFormId}
+        />
+      );
+    }
+
+    if (type === "ranking") {
+      return (
+        <RankingWidget
+          item={item}
+          filterState={filterState}
+          fiscalYearStartMonth={fiscalYearStartMonth}
+          customFilterDefs={customFilterDefs}
+          today={today}
+          parentFormId={parentFormId}
         />
       );
     }
@@ -156,7 +176,12 @@ const DashboardRenderer = ({
       const itemForChart = { ...item, config: restConfig };
       return (
         <Card
-          title={cardTitle}
+          title={
+            <>
+              {cardTitle}
+              <FormulaInfo info={item.info} title={cardTitle} />
+            </>
+          }
           style={{ marginBottom: 0 }}
           className="chart-card"
         >
@@ -172,6 +197,7 @@ const DashboardRenderer = ({
             definitionsById={definitionsById}
             complianceResponses={resolvedComputeResponses?.compliance}
             computeResponses={resolvedComputeResponses}
+            parentFormId={parentFormId}
           />
         </Card>
       );
@@ -180,7 +206,15 @@ const DashboardRenderer = ({
     if (type === "table") {
       return (
         <Card
-          title={item.label || "Escalation list"}
+          title={
+            <>
+              {item.label || "Escalation list"}
+              <FormulaInfo
+                info={item.info}
+                title={item.label || "Escalation list"}
+              />
+            </>
+          }
           size="small"
           style={{ marginBottom: 0 }}
           className="escalation-table-card"
@@ -193,6 +227,7 @@ const DashboardRenderer = ({
             filterState={filterState}
             customFilterDefs={customFilterDefs}
             cellComputers={cellComputersById?.[item.id] || {}}
+            parentFormId={parentFormId}
           />
         </Card>
       );
@@ -204,6 +239,8 @@ const DashboardRenderer = ({
           item={item}
           filterState={filterState}
           customFilterDefs={customFilterDefs}
+          definitionsById={definitionsById}
+          parentFormId={parentFormId}
           height={item.height || 400}
         />
       );
@@ -219,6 +256,7 @@ const DashboardRenderer = ({
           item={item}
           filters={filters}
           onChange={filterActions}
+          parentFormId={parentFormId}
         />
       );
     }
@@ -228,7 +266,16 @@ const DashboardRenderer = ({
     }
 
     if (type === "custom_component") {
-      return <CustomComponentWidget item={item} />;
+      return (
+        <CustomComponentWidget
+          item={item}
+          filterState={filterState}
+          fiscalYearStartMonth={fiscalYearStartMonth}
+          customFilterDefs={customFilterDefs}
+          today={today}
+          parentFormId={parentFormId}
+        />
+      );
     }
 
     // Unknown type — silently skip in production.
@@ -278,6 +325,7 @@ DashboardRenderer.propTypes = {
   complianceResponses: PropTypes.object,
   computeResponses: PropTypes.object,
   cellComputersById: PropTypes.object,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default DashboardRenderer;

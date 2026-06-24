@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
+import FormulaInfo from "./FormulaInfo";
 
 /**
  * Generic metric tile with single-fetch share/scalar support — a slimmer
@@ -63,6 +64,7 @@ const MetricCard = ({
   today,
   fiscalYearStartMonth,
   customFilterDefs,
+  parentFormId,
 }) => {
   const target = item?.target_group;
   const showPercentage = Boolean(item.show_percentage);
@@ -79,6 +81,7 @@ const MetricCard = ({
       today,
       fiscalYearStartMonth,
       customFilterDefs,
+      parentFormId,
       enabled: Boolean(apiForFetch),
     }
   );
@@ -87,7 +90,12 @@ const MetricCard = ({
 
   let displayValue = "—";
   if (target) {
-    const targetRow = rows.find((r) => r.group === target);
+    // Match target_group against the row's option value (group) OR its
+    // label, so configs may reference either the option value ("no") or
+    // its display label ("No").
+    const targetRow = rows.find(
+      (r) => r.group === target || r.label === target
+    );
     if (targetRow) {
       const numerator = targetRow.value ?? 0;
       const denominator = rows.reduce((acc, r) => acc + (r.value || 0), 0);
@@ -113,7 +121,12 @@ const MetricCard = ({
         <Skeleton active paragraph={{ rows: 1 }} />
       ) : (
         <Statistic
-          title={item.label}
+          title={
+            <>
+              {item.label}
+              <FormulaInfo info={item.info} title={item.label} />
+            </>
+          }
           value={displayValue}
           {...(item.color ? { valueStyle: { color: item.color } } : {})}
         />
@@ -133,6 +146,7 @@ MetricCard.propTypes = {
   today: PropTypes.instanceOf(Date),
   fiscalYearStartMonth: PropTypes.number,
   customFilterDefs: PropTypes.array,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default MetricCard;

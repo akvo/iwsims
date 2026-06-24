@@ -452,7 +452,7 @@ class FormDataAddListView(APIView):
         data.updated_by = user
         data.save()
         # Refresh materialized view via async task
-        async_task("api.v1.v1_data.tasks.seed_approved_data", data)
+        async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
         return Response(
             {"message": "direct update success"}, status=status.HTTP_200_OK
         )
@@ -574,6 +574,9 @@ class DataDetailDeleteView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         instance.delete()
+        # Refresh materialized views so the deleted datapoint drops out
+        # of the visualization aggregates.
+        async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -1159,7 +1162,10 @@ class PublishDraftFormDataView(APIView):
 
         # Save to file if it's published and not pending
         if direct_to_data:
-            async_task("api.v1.v1_data.tasks.seed_approved_data", draft_data)
+            async_task("api.v1.v1_data.tasks.refresh_mv_concurrency")
+            async_task(
+                "api.v1.v1_data.tasks.generate_data_as_json", draft_data
+            )
 
         return Response(
             {"message": "Draft published successfully"},

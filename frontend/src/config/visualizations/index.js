@@ -1,5 +1,8 @@
 import epsOverview from "./1749623934933.json";
 import rwsOverview from "./1749621221728.json";
+import wtpOverview from "./1749634736797.json";
+import wwtpOverview from "./1748903240763.json";
+import pumpOverview from "./1749611049520.json";
 
 /**
  * Registry of dashboard configs keyed by `slug`.
@@ -13,7 +16,13 @@ import rwsOverview from "./1749621221728.json";
  * the app still boots. Navigation to an unresolved slug redirects to
  * `/control-center`.
  */
-const RAW_CONFIGS = [epsOverview, rwsOverview];
+const RAW_CONFIGS = [
+  epsOverview,
+  rwsOverview,
+  wtpOverview,
+  wwtpOverview,
+  pumpOverview,
+];
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 

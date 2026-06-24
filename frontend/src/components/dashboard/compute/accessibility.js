@@ -8,11 +8,20 @@
  * Pure function — no fetching. Caller fans out sample_api + issues_api
  * calls upstream and passes both responses in.
  *
- * Expected response shape (per akvo-mis-bvt backend patch):
+ * Supported response shapes:
  *
  *   {
  *     data: [
  *       { label: parent_name, group: parent_id, Yes: 0|1, No: 0|1 },
+ *       ...
+ *     ]
+ *   }
+ *
+ * or the cross-form question-name response:
+ *
+ *   {
+ *     data: [
+ *       { label: parent_name, group: parent_id, value: ["yes"|"no"] },
  *       ...
  *     ]
  *   }
@@ -36,15 +45,28 @@ const BUCKETS = [
 ];
 
 /**
- * Return "yes" / "no" / null for a per-parent row by inspecting which
- * option column has count > 0. Column label match is case-insensitive.
+ * Return "yes" / "no" / null for a per-parent row. Cross-form queries
+ * expose selected options in `value`; form-specific queries can expose one
+ * count column per option. Matches are case-insensitive in both shapes.
  */
 const rowAnswer = (row) => {
   if (!row) {
     return null;
   }
+
+  const values = Array.isArray(row.value) ? row.value : [row.value];
+  const valueAnswer = values
+    .filter((value) => value !== null && typeof value !== "undefined")
+    .map((value) => String(value).trim().toLowerCase())
+    .find((value) => value === "yes" || value === "no");
+  if (valueAnswer) {
+    return valueAnswer;
+  }
+
   const keys = Object.keys(row);
-  const hit = keys.find((k) => k !== "label" && k !== "group" && row[k] > 0);
+  const hit = keys.find(
+    (k) => k !== "label" && k !== "group" && k !== "value" && row[k] > 0
+  );
   if (!hit) {
     return null;
   }

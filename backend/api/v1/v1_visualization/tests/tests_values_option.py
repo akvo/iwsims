@@ -1,7 +1,15 @@
 from django.test.utils import override_settings
 from rest_framework.test import APITestCase
+
+from api.v1.v1_data.models import Answers
+from api.v1.v1_forms.models import (
+    Questions,
+    QuestionOptions,
+    QuestionTypes,
+)
 from api.v1.v1_visualization.tests.mixins import (
     VisualizationValuesTestMixin,
+    refresh_all_mvs,
 )
 
 
@@ -40,6 +48,25 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(values_by_group["inactive"]["color"], "#e41a1c")
         self.assertEqual(values_by_group["pending"]["value"], 1)
         self.assertEqual(values_by_group["pending"]["color"], "#ff7f00")
+
+    def test_option_group_by_parent_latest(self):
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=parent_id&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        rows = {
+            row["group"]: row["value"]
+            for row in response.json()["data"]
+        }
+        self.assertEqual(
+            rows[str(self.reg1.id)], ["feature_y", "feature_z"]
+        )
+        self.assertEqual(
+            rows[str(self.reg2.id)],
+            ["feature_x", "feature_y", "feature_z"],
+        )
 
     def test_option_group_by_option_latest(self):
         """Option question group_by=option, monitoring=latest.
@@ -199,6 +226,141 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(values_by_group["feature_y"]["value"], 3)
         self.assertEqual(values_by_group["feature_z"]["value"], 3)
 
+    def test_multiple_option_group_by_option_combo_all(self):
+        """Multiple option question group_by=option_combo, monitoring=all.
+
+        Combo buckets are mutually exclusive per answer:
+        - mon1a: feature_x|feature_y
+        - mon1b: feature_y|feature_z
+        - mon2a: feature_x|feature_z
+        - mon2b: feature_x|feature_y|feature_z
+        """
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=option_combo&monitoring=all"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d for d in data["data"]}
+        self.assertEqual(by_group["feature_x"]["value"], 0)
+        self.assertEqual(by_group["feature_y"]["value"], 0)
+        self.assertEqual(by_group["feature_z"]["value"], 0)
+        self.assertEqual(by_group["feature_x|feature_y"]["value"], 1)
+        self.assertEqual(by_group["feature_x|feature_z"]["value"], 1)
+        self.assertEqual(by_group["feature_y|feature_z"]["value"], 1)
+        self.assertEqual(
+            by_group["feature_x|feature_y|feature_z"]["value"], 1
+        )
+
+    def test_multiple_option_group_by_option_combo_latest(self):
+        """Latest combo mode counts one exclusive combo per parent."""
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=option_combo&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d for d in data["data"]}
+        self.assertEqual(by_group["feature_x"]["value"], 0)
+        self.assertEqual(by_group["feature_y"]["value"], 0)
+        self.assertEqual(by_group["feature_z"]["value"], 0)
+        self.assertEqual(by_group["feature_y|feature_z"]["value"], 1)
+        self.assertEqual(
+            by_group["feature_x|feature_y|feature_z"]["value"], 1
+        )
+
+    def test_two_option_combo_includes_mixed_bucket(self):
+        """Two-option combo mode exposes a stable Mixed bucket."""
+        question = Questions.objects.create(
+            form=self.monitoring,
+            question_group=self.q_multi.question_group,
+            name="sample_method",
+            label="Sample Method",
+            type=QuestionTypes.multiple_option,
+            order=99,
+        )
+        QuestionOptions.objects.create(
+            question=question,
+            value="lab_test",
+            label="Lab Test",
+            order=1,
+        )
+        QuestionOptions.objects.create(
+            question=question,
+            value="cbt_bag_test",
+            label="CBT Bag Test",
+            order=2,
+        )
+        Answers.objects.create(
+            data=self.mon1b,
+            question=question,
+            options=["lab_test", "cbt_bag_test"],
+            created_by=self.user,
+        )
+        Answers.objects.create(
+            data=self.mon2b,
+            question=question,
+            options=["lab_test"],
+            created_by=self.user,
+        )
+        refresh_all_mvs()
+
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={question.id}"
+            "&group_by=option_combo&monitoring=latest"
+        )
+        self.assertEqual(response.status_code, 200)
+        by_group = {
+            d["group"]: d
+            for d in response.json()["data"]
+        }
+        self.assertEqual(by_group["lab_test|cbt_bag_test"]["label"], "Mixed")
+        self.assertEqual(by_group["lab_test|cbt_bag_test"]["value"], 1)
+
+    def test_multiple_option_group_by_option_combo_percentage(self):
+        """Combo percentage denominator is answers/parents, not selections."""
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=option_combo&monitoring=latest"
+            "&value_type=percentage"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d["value"] for d in data["data"]}
+        self.assertEqual(by_group["feature_x"], 0.0)
+        self.assertEqual(by_group["feature_y"], 0.0)
+        self.assertEqual(by_group["feature_z"], 0.0)
+        self.assertEqual(by_group["feature_y|feature_z"], 50.0)
+        self.assertEqual(
+            by_group["feature_x|feature_y|feature_z"], 50.0
+        )
+
+    def test_multiple_option_group_by_option_combo_include_unanswered(self):
+        """Combo mode _no_info uses distinct parent denominator."""
+        self._create_registration(
+            name="Unmonitored Combo",
+            administration=self.adm_parent,
+        )
+        response = self.client.get(
+            f"{self.BASE_URL}?form_id={self.monitoring.id}"
+            f"&question_id={self.q_multi.id}"
+            "&group_by=option_combo&monitoring=latest"
+            "&include_unanswered=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        by_group = {d["group"]: d for d in data["data"]}
+        self.assertEqual(by_group["feature_y|feature_z"]["value"], 1)
+        self.assertEqual(
+            by_group["feature_x|feature_y|feature_z"]["value"], 1
+        )
+        self.assertIn("_no_info", by_group)
+        self.assertEqual(by_group["_no_info"]["value"], 1)
+
     def test_option_value_count(self):
         """Filter by option_value with sum_by=parent_id.
 
@@ -227,7 +389,7 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.q_option.id}"
             "&option_value=active&monitoring=latest"
-            f"&group_by=month&date_question_id={self.q_date.id}"
+            f"&group_by=month&date_question_name={self.q_date.name}"
             "&sum_by=parent_id"
         )
         self.assertEqual(response.status_code, 200)
@@ -247,7 +409,7 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.q_option.id}"
             "&option_value=active&monitoring=latest"
-            f"&group_by=month&date_question_id={self.q_date.id}"
+            f"&group_by=month&date_question_name={self.q_date.name}"
             "&sum_by=parent_id"
             "&from_date=2025-01-01&to_date=2025-04-30"
         )
@@ -270,7 +432,7 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.q_option.id}"
             "&option_value=does_not_exist&monitoring=latest"
-            f"&group_by=month&date_question_id={self.q_date.id}"
+            f"&group_by=month&date_question_name={self.q_date.name}"
             "&sum_by=parent_id"
         )
         self.assertEqual(response.status_code, 200)
@@ -599,6 +761,7 @@ class ValuesOptionTestCases(VisualizationValuesTestMixin, APITestCase):
             options=["urban"],
             created_by=self.user,
         )
+        refresh_all_mvs()
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.registration.id}"
             f"&question_id={self.q_reg_option.id}"

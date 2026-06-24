@@ -12,13 +12,13 @@
       "order": 1,
       "key": "construction",
       "label": "Construction progress",
-      "start_date_question_id": 1749624452910,
-      "deadline_question_id": 1749630516825,
-      "scope_question_id": 1749624505915,
+      "start_date_question_name": "construction_start_date",
+      "deadline_question_name": "proposed_completion_date",
+      "scope_question_name": "project_scope",
       "api": {
         "form_id": 1749623934933,
         "monitoring_form_id": 1749624452908,
-        "filter_question_id": 1749630516826,
+        "filter_question_name": "is_project_completed",
         "filter_option_value": "no"
       },
       "components": [
@@ -27,49 +27,56 @@
           "label": "Concrete Base Construction",
           "formula": "any_yes",
           "hide": false,
-          "question_ids": [1849633499999, 1849633498888, 1849633497777]
+          "question_names": [
+            "concrete_base_construction_2m_x_2m_square_base",
+            "concrete_base_construction_300mm_vertical_offset_between_urf_and_eps",
+            "concrete_base_construction_300mm_vertical_offset_between_eps_and_storage"
+          ]
         },
         {
           "key": "urf_tank",
           "label": "URF Tank",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1849633720001]
+          "question_names": ["urf_tank_current_status"]
         },
         {
           "key": "eps_tank",
           "label": "EPS Tank Installation",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1849633900003]
+          "question_names": ["eps_tank_current_status"]
         },
         {
           "key": "balance_tank",
           "label": "Balance Tank",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1849634300002]
+          "question_names": ["balance_tank_current_status"]
         },
         {
           "key": "storage_tank",
           "label": "Storage Tank",
           "formula": "completed_binary",
           "hide": false,
-          "question_ids": [1849634690001]
+          "question_names": ["storage_tank_current_status"]
         },
         {
           "key": "standpipes",
           "label": "Standpipes",
           "formula": "ratio",
           "hide": false,
-          "question_ids": [1849635200001, 1849634950001]
+          "question_names": [
+            "existing_number_of_implemented_standpipes",
+            "number_of_standpipes_to_be_implemented"
+          ]
         },
         {
           "key": "drainage",
           "label": "Drainage",
           "formula": "completed_binary",
           "hide": true,
-          "question_ids": [],
+          "question_names": [],
           "note": "Formula pending definition"
         },
         {
@@ -78,7 +85,7 @@
           "formula": "multi_select_proportion",
           "total_items": 3,
           "hide": false,
-          "question_ids": [1849635500001]
+          "question_names": ["site_security_and_perimeter_details"]
         }
       ]
     },
@@ -87,9 +94,139 @@
       "chart_type": "water_quality_globals",
       "hide": true,
       "order": 2,
-      "sample_question_id": 1749632647507,
-      "test_method_question_id": 1749633001462,
-      "monitoring_form_id": 1749632545233
+      "sample_question_name": "can_collect_water_sample",
+      "test_method_question_name": "water_testing_method",
+      "monitoring_form_id": 1749632545233,
+      "compliance_formula": {
+        "buckets": [
+          {
+            "value": "not_applicable",
+            "label": "N/A",
+            "all_of": [
+              {
+                "question_name": "water_testing_method",
+                "op": "option_not_contains",
+                "value": "lab_test"
+              }
+            ]
+          },
+          {
+            "value": "non_compliant",
+            "label": "No",
+            "any_of": [
+              {
+                "question_name": "e_coli_lab_count",
+                "op": ">",
+                "value": 0,
+                "label": "E-coli presence"
+              },
+              {
+                "question_name": "turbidity_ntu",
+                "op": ">",
+                "value": 5,
+                "label": "Turbidity"
+              },
+              {
+                "question_name": "total_coliform_cfu_100ml",
+                "op": ">",
+                "value": 0,
+                "label": "Total coliform presence"
+              },
+              {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "op": ">",
+                "value": 0,
+                "label": "Fecal coliform presence"
+              },
+              {
+                "question_name": "temperature_c",
+                "op": ">",
+                "value": 30,
+                "label": "Water Temperature"
+              },
+              { "question_name": "ph", "op": "<", "value": 6.5, "label": "pH" },
+              { "question_name": "ph", "op": ">", "value": 8.5, "label": "pH" },
+              {
+                "question_name": "conductivity",
+                "op": ">",
+                "value": 1000,
+                "label": "Conductivity"
+              },
+              {
+                "question_name": "salinity",
+                "op": ">",
+                "value": 1,
+                "label": "Salinity"
+              },
+              {
+                "label": "E-coli CBT",
+                "all_of": [
+                  {
+                    "question_name": "water_testing_method",
+                    "op": "option_not_contains",
+                    "value": "cbt_test"
+                  },
+                  { "question_name": "e_coli_count_cbt", "op": ">", "value": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "value": "_no_info",
+            "label": "No information available",
+            "any_of": [
+              { "question_name": "e_coli_lab_count", "op": "is_empty" },
+              { "question_name": "turbidity_ntu", "op": "is_empty" },
+              { "question_name": "total_coliform_cfu_100ml", "op": "is_empty" },
+              { "question_name": "fecal_coliform_cfu_100ml", "op": "is_empty" },
+              { "question_name": "temperature_c", "op": "is_empty" },
+              { "question_name": "ph", "op": "is_empty" },
+              { "question_name": "conductivity", "op": "is_empty" },
+              { "question_name": "salinity", "op": "is_empty" },
+              {
+                "all_of": [
+                  {
+                    "question_name": "water_testing_method",
+                    "op": "option_not_contains",
+                    "value": "cbt_test"
+                  },
+                  { "question_name": "e_coli_count_cbt", "op": "is_empty" }
+                ]
+              }
+            ]
+          }
+        ],
+        "default": {
+          "value": "compliant",
+          "label": "Yes"
+        }
+      }
+    },
+    {
+      "id": "compliance_test_method",
+      "chart_type": "dot_strip",
+      "hide": true,
+      "order": 2.1,
+      "label": "Water testing method",
+      "api": {
+        "question_name": "water_testing_method",
+        "group_by": "parent_id",
+        "monitoring": "latest"
+      }
+    },
+    {
+      "id": "param_e_coli_cbt",
+      "chart_type": "dot_strip",
+      "hide": true,
+      "order": 2.2,
+      "label": "E-coli CBT",
+      "api": {
+        "form_id": 1749632545233,
+        "question_name": "e_coli_count_cbt",
+        "group_by": "parent_id",
+        "monitoring": "latest",
+        "repeat_agg": "average"
+      }
     },
     {
       "id": "filters_main",
@@ -102,9 +239,9 @@
           "chart_type": "filter_date",
           "order": 1,
           "label": "Monitoring Period",
-          "date_question_ids": {
-            "water_quality": 1749632545235,
-            "construction": 1749624452911
+          "date_question_names": {
+            "water_quality": "inspection_date",
+            "construction": "inspection_date"
           }
         },
         {
@@ -118,7 +255,7 @@
           "chart_type": "filter_multi_option",
           "order": 3,
           "key": "implementing_agency",
-          "question_id": 1749624452993,
+          "question_name": "implementing_agency",
           "form_id": 1749623934933,
           "label": "Implementing Agency"
         },
@@ -127,7 +264,7 @@
           "chart_type": "filter_option",
           "order": 4,
           "key": "water_committee",
-          "question_id": 1749624452105,
+          "question_name": "water_committee",
           "form_id": 1749623934933,
           "label": "Water Committee"
         }
@@ -135,6 +272,7 @@
     },
     {
       "id": "kpi_total_registered",
+      "info": "count n_unique EPS Name",
       "chart_type": "card",
       "order": 4,
       "col_span": 6,
@@ -146,6 +284,7 @@
     },
     {
       "id": "kpi_under_construction",
+      "info": "If Is the project completed? == \"Yes\" -- assign NO\nelsif: Is the project completed? == \"No\" -- asign YES\n\nelse: assign: \"No information available\"",
       "chart_type": "card",
       "order": 5,
       "col_span": 6,
@@ -153,7 +292,7 @@
       "color": "#fa8c16",
       "api": {
         "form_id": 1749624452908,
-        "question_id": 1749630516826,
+        "question_name": "is_project_completed",
         "option_value": "no",
         "monitoring": "latest",
         "sum_by": "parent_id",
@@ -162,6 +301,7 @@
     },
     {
       "id": "kpi_operational",
+      "info": "if EPS_id_registry in EPS_id_WQM:\n     if The current status of this system? == \" Operational\" --> operational\n     ifelse The current status of this system? == \"Issue with system\" --> issue with system\n     else: \"No information available\"\n\nElse: no information available",
       "chart_type": "card",
       "order": 6,
       "col_span": 6,
@@ -169,7 +309,7 @@
       "color": "#64A73B",
       "api": {
         "form_id": 1749632545233,
-        "question_id": 1749633373968,
+        "question_name": "system_status",
         "option_value": "operational",
         "monitoring": "latest",
         "sum_by": "parent_id"
@@ -177,6 +317,7 @@
     },
     {
       "id": "kpi_critical_issues",
+      "info": "If The current status of this system? == \"Issue with system\"",
       "chart_type": "card",
       "order": 7,
       "col_span": 6,
@@ -184,7 +325,7 @@
       "color": "#e41a1c",
       "api": {
         "form_id": 1749632545233,
-        "question_id": 1749633373968,
+        "question_name": "system_status",
         "option_value": "issue_with_system",
         "monitoring": "latest",
         "sum_by": "parent_id"
@@ -203,11 +344,8 @@
           "type": "select",
           "key": "operational_status",
           "label": "Operational status",
-          "form_id": 1749632545233,
-          "question_id": 1749633373968,
+          "question_name": "system_status",
           "color_map": {
-            "operational": "#64A73B",
-            "issue_with_system": "#e41a1c",
             "_no_info": "#999999"
           }
         },
@@ -216,46 +354,21 @@
           "key": "drinking_water_compliance",
           "label": "Drinking water compliance",
           "form_id": 1749632545233,
-          "formula": {
-            "buckets": [
-              {
-                "value": "compliant",
-                "label": "Yes",
-                "all_of": [
-                  { "question_id": 1749633220746, "op": "<=", "value": 0 },
-                  { "question_id": 1749633220745, "op": "<=", "value": 5 },
-                  { "question_id": 1749633259392, "op": "<=", "value": 0 },
-                  { "question_id": 1749633295165, "op": "<=", "value": 0 },
-                  { "question_id": 1797307852531, "op": "<=", "value": 30 },
-                  {
-                    "question_id": 1797307852532,
-                    "op": "between",
-                    "min": 6.5,
-                    "max": 8.5
-                  },
-                  { "question_id": 1797307852533, "op": "<=", "value": 1000 },
-                  { "question_id": 1797307852534, "op": "<=", "value": 1 }
-                ]
-              }
-            ],
-            "default": { "value": "non_compliant", "label": "No" }
-          },
+          "formula_ref": "wq_globals",
           "color_map": {
-            "compliant": "#64A73B",
-            "non_compliant": "#e41a1c",
-            "_no_info": "#999999"
+            "compliant": "#2e7d32",
+            "non_compliant": "#c62828",
+            "not_applicable": "#263238",
+            "_no_info": "#90a4ae"
           }
         },
         {
           "type": "select",
           "key": "presence_water_committee",
           "label": "Presence of active water committee",
-          "form_id": 1749623934933,
-          "question_id": 1749624452105,
+          "question_name": "water_committee",
           "color_map": {
-            "yes": "#64A73B",
             "not_active": "#999999",
-            "no": "#e41a1c",
             "_no_info": "#377eb8"
           }
         },
@@ -279,6 +392,7 @@
     },
     {
       "id": "chart_operational_status",
+      "info": "if EPS_id_registry in EPS_id_WQM:\n     if The current status of this system? == \" Operational\" --> operational\n     ifelse The current status of this system? == \"Issue with system\" --> issue with system\n     else: \"No information available\"\n\nElse: no information available",
       "chart_type": "doughnut",
       "order": 10,
       "col_span": 12,
@@ -290,8 +404,7 @@
         }
       },
       "api": {
-        "form_id": 1749632545233,
-        "question_id": 1749633373968,
+        "question_name": "system_status",
         "group_by": "option",
         "monitoring": "latest",
         "include_unanswered": true
@@ -299,32 +412,37 @@
     },
     {
       "id": "chart_drinking_water_compliance",
+      "info": "[Construction monitoring]\nif all true: Compliant\nIf one of false: Non_compliant\nIf one of empty: No_information available\n\n=IF([@Water test conducted?]<>\"Lab-tested\", \"N/A\",\n  IF(OR(\n    [@Number of E-coli for the Lab]>0,\n    [@What is the Turbidity in NTU?]>5,\n    [@What is the Total Coliform Level?]>0,\n    [@What is the Fecal Coliform Level?]>0,\n    [@Temperature °C - 2550B (APHA Method Code)]>30,\n    [@pH - 4500-H+B (APHA Method Code)]<6.5, [@pH - 4500-H+B (APHA Method Code)]>8.5,\n    [@Conductivity µS/cm - 2510B (APHA Method Code)]>1000,\n    [@Salinity PPT 2520B 0.2 (APHA Method Code)]>1,\n    AND([@Water test conducted?]<>\"CBT-bag\", [@Level of Contamination using CBT bags?]>0)\n  ), \"Non-Compliant\",\n  IF(OR(\n    ISBLANK([@Number of E-coli for the Lab]),\n    ISBLANK([@What is the Turbidity in NTU?]),\n    ISBLANK([@What is the Total Coliform Level?]),\n    ISBLANK([@What is the Fecal Coliform Level?]),\n    ISBLANK([@Temperature °C - 2550B (APHA Method Code)]),\n    ISBLANK([@pH - 4500-H+B (APHA Method Code)]),\n    ISBLANK([@Conductivity µS/cm - 2510B (APHA Method Code)]),\n    ISBLANK([@Salinity PPT 2520B 0.2 (APHA Method Code)]),\n    AND([@Water test conducted?]<>\"CBT-bag\", ISBLANK([@Level of Contamination using CBT bags?]))\n  ), \"No Information Available\",\n  \"Compliant\")))\n\n[Water quality monitoring]\nif all true: Compliant\nIf one of false: Non_compliant\nIf one of empty: No_information available\n\n=IF([@Method of Water Testing Used?]<>\"Lab-tested\", \"N/A\",\n  IF(OR(\n    [@Number of E. coli for the Lab Test]>0,\n    [@What is the Turbidity in NTU?]>5,\n    [@What is the Total Coliform count in 1cfu/100ml?]>0,\n    [@What is the Fecal Coliform count in 1cfu/100ml?]>0,\n    [@Temperature °C - 2550B (APHA Method Code)]>30,\n    [@pH - 4500-H+B (APHA Method Code)]<6.5, [@pH - 4500-H+B (APHA Method Code)]>8.5,\n    [@Conductivity µS/cm - 2510B (APHA Method Code)]>1000,\n    [@Salinity PPT 2520B 0.2 (APHA Method Code)]>1,\n    AND([@174963301462]<>\"CBT-bag\", [@What is the E. coli Count using CBT Bags?]>0)\n  ), \"Non-Compliant\",\n  IF(OR(\n    ISBLANK([@Number of E. coli for the Lab Test]),\n    ISBLANK([@What is the Turbidity in NTU?]),\n    ISBLANK([@What is the Total Coliform count in 1cfu/100ml?]),\n    ISBLANK([@What is the Fecal Coliform count in 1cfu/100ml?]),\n    ISBLANK([@Temperature °C - 2550B (APHA Method Code)]),\n    ISBLANK([@pH - 4500-H+B (APHA Method Code)]),\n    ISBLANK([@Conductivity µS/cm - 2510B (APHA Method Code)]),\n    ISBLANK([@Salinity PPT 2520B 0.2 (APHA Method Code)]),\n    AND([@174963301462]<>\"CBT-bag\", ISBLANK([@What is the E. coli Count using CBT Bags?]))\n  ), \"No Information Available\",\n  \"Compliant\")))",
       "chart_type": "stack_bar",
       "order": 11,
       "col_span": 12,
       "config": {
         "title": "Drinking Water Compliance",
         "xAxisLabel": "Compliant",
-        "yAxisLabel": "EPS count",
-        "color": [
-          "#64A73B",
-          "#e41a1c",
-          "#ff7f00",
-          "#984ea3",
-          "#377eb8",
-          "#a65628",
-          "#f781bf",
-          "#999999",
-          "#cccccc",
-          "#bfbfbf"
-        ]
+        "yAxisLabel": "EPS count"
+      },
+      "color_map": {
+        "Compliant": "#2e7d32",
+        "E-coli presence": "#c62828",
+        "Turbidity": "#ef6c00",
+        "Total coliform presence": "#6a1b9a",
+        "Fecal coliform presence": "#1565c0",
+        "Water Temperature": "#8d4e24",
+        "pH": "#d81b60",
+        "Conductivity": "#00838f",
+        "Salinity": "#9e7c00",
+        "E-coli CBT": "#7c4dff",
+        "No information available": "#90a4ae",
+        "N/A": "#263238"
       },
       "compute": "compliance",
       "include_unanswered": true,
       "params_ref": [
+        "compliance_test_method",
         "param_e_coli",
         "param_total_coliform",
         "param_fecal_coliform",
+        "param_e_coli_cbt",
         "param_turbidity",
         "param_temperature",
         "param_ph",
@@ -335,6 +453,7 @@
     },
     {
       "id": "chart_water_committee",
+      "info": "Do you have Water Committee and Is it active?",
       "chart_type": "doughnut",
       "order": 12,
       "col_span": 8,
@@ -347,13 +466,14 @@
       },
       "api": {
         "form_id": 1749623934933,
-        "question_id": 1749624452105,
+        "question_name": "water_committee",
         "group_by": "option",
         "include_unanswered": true
       }
     },
     {
       "id": "chart_implementing_authority",
+      "info": "Who is the implementing agency/agencies?",
       "chart_type": "dots",
       "order": 13,
       "col_span": 8,
@@ -362,13 +482,14 @@
       },
       "api": {
         "form_id": 1749623934933,
-        "question_id": 1749624452993,
+        "question_name": "implementing_agency",
         "group_by": "option",
         "include_unanswered": true
       }
     },
     {
       "id": "chart_test_method",
+      "info": "Method of Water Testing Used?",
       "chart_type": "half_doughnut",
       "order": 14,
       "col_span": 8,
@@ -381,8 +502,8 @@
       },
       "api": {
         "form_id": 1749632545233,
-        "question_id": 1749633001462,
-        "group_by": "option",
+        "question_name": "water_testing_method",
+        "group_by": "option_combo",
         "monitoring": "latest",
         "include_unanswered": true
       }
@@ -399,6 +520,7 @@
           "items": [
             {
               "id": "kpi_monitored_last_12_months",
+              "info": "TODAY - Last_monitored < 12 months",
               "chart_type": "card",
               "order": 3,
               "col_span": 8,
@@ -409,12 +531,13 @@
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "value_type": "percentage",
-                "date_question_id": 1749632545235,
+                "date_question_name": "inspection_date",
                 "rolling_months": 12
               }
             },
             {
               "id": "kpi_critical_issues_2",
+              "info": "if EPS_id_registry in EPS_id_WQM:\n     if The current status of this system? == \" Operational\" --> no_noissue\n     ifelse The current status of this system? == \"Issue with system\" --> Yes_issue\n     else: \"No information available\"\n\nElse: no information available",
               "chart_type": "card",
               "order": 1,
               "col_span": 8,
@@ -422,7 +545,7 @@
               "color": "#e41a1c",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633373968,
+                "question_name": "system_status",
                 "option_value": "issue_with_system",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -430,13 +553,14 @@
             },
             {
               "id": "kpi_no_water_sample",
+              "info": "Count \"No\" in Are you able to collect the water sample?",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
               "label": "EPS where water sample collection was not possible",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749632647507,
+                "question_name": "can_collect_water_sample",
                 "option_value": "no",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
@@ -456,77 +580,77 @@
                 "criteria": [
                   {
                     "type": "option_equals",
-                    "question_id": 1749632647507,
+                    "question_name": "can_collect_water_sample",
                     "value": "no",
                     "label": "No water sample",
                     "hide": false
                   },
                   {
                     "type": "option_equals",
-                    "question_id": 1749633373968,
+                    "question_name": "system_status",
                     "value": "issue_with_system",
                     "label": "System issue",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749633220746,
+                    "question_name": "e_coli_lab_count",
                     "value": 0,
                     "label": "E.coli above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749633259392,
+                    "question_name": "total_coliform_cfu_100ml",
                     "value": 0,
                     "label": "Total coliform above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749633295165,
+                    "question_name": "fecal_coliform_cfu_100ml",
                     "value": 0,
                     "label": "Fecal coliform above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1749633220745,
+                    "question_name": "turbidity_ntu",
                     "value": 5,
                     "label": "Turbidity above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1797307852531,
+                    "question_name": "temperature_c",
                     "value": 30,
                     "label": "Temperature above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_lt",
-                    "question_id": 1797307852532,
+                    "question_name": "ph",
                     "value": 6.5,
                     "label": "pH below acceptable range",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1797307852532,
+                    "question_name": "ph",
                     "value": 8.5,
                     "label": "pH above acceptable range",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1797307852533,
+                    "question_name": "conductivity",
                     "value": 1000,
                     "label": "Conductivity above threshold",
                     "hide": false
                   },
                   {
                     "type": "threshold_gt",
-                    "question_id": 1797307852534,
+                    "question_name": "salinity",
                     "value": 1,
                     "label": "Salinity above threshold",
                     "hide": false
@@ -538,35 +662,35 @@
                   "key": "eps_name",
                   "label": "EPS name",
                   "source": "parent_answer",
-                  "question_id": 1749624452994,
+                  "question_name": "eps_name",
                   "hide": false
                 },
                 {
                   "key": "village_name",
                   "label": "Village Name",
                   "source": "parent_answer",
-                  "question_id": 1749624452991,
+                  "question_name": "village_name",
                   "hide": false
                 },
                 {
                   "key": "last_monitoring",
                   "label": "Last Monitoring",
                   "source": "latest_date",
-                  "question_id": 1749632545235,
+                  "question_name": "inspection_date",
                   "hide": false
                 },
                 {
                   "key": "operational_status",
                   "label": "Operational Status",
                   "source": "answer",
-                  "question_id": 1749633373968,
+                  "question_name": "system_status",
                   "hide": false
                 },
                 {
                   "key": "water_collection",
                   "label": "Not able to collect the water sample",
                   "source": "answer",
-                  "question_id": 1749632647507,
+                  "question_name": "can_collect_water_sample",
                   "hide": false
                 },
                 {
@@ -590,7 +714,7 @@
               "api": {
                 "form_id": 1749632545233,
                 "group_by": "month",
-                "date_question_id": 1749632545235,
+                "date_question_name": "inspection_date",
                 "monitoring": "all",
                 "fiscal_year": true
               }
@@ -603,6 +727,7 @@
           "items": [
             {
               "id": "kpi_water_sample_last_12_months",
+              "info": "Count \"Yes\" in Are you able to collect the water sample? (latest monitoring) where TODAY - Last_monitored < 12 months\n\n% = EPS with sample taken / total EPS",
               "chart_type": "card",
               "order": 1,
               "col_span": 8,
@@ -610,25 +735,26 @@
               "description": "Same rolling 12-month window as monitored_last_12_months; numerator is EPS whose latest water-sample answer is yes.",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749632647507,
+                "question_name": "can_collect_water_sample",
                 "option_value": "yes",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "value_type": "percentage",
-                "date_question_id": 1749632545235,
+                "date_question_name": "inspection_date",
                 "rolling_months": 12,
                 "include_unanswered": true
               }
             },
             {
               "id": "kpi_lab_tested",
+              "info": "[Construction monitoring]\nWater test conducted? = Lab --> Lab \nWater test conducted? = CBT -- > CBT\nWater test conducted? = empty --> No information available\n\n[Water quality monitoring]\nMethod of Water Testing Used? = Lab --> Lab \nMethod of Water Testing Used? = CBT -- > CBT\nMethod of Water Testing Used? = empty --> No information available",
               "chart_type": "card",
               "order": 2,
               "col_span": 8,
               "label": "Lab tested EPS",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633001462,
+                "question_name": "water_testing_method",
                 "option_value": "lab_test",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -636,13 +762,14 @@
             },
             {
               "id": "kpi_cbt_tested",
+              "info": "Count EPS where Method of Water Testing used? = CBT test (latest monitoring).",
               "chart_type": "card",
               "order": 3,
               "col_span": 8,
               "label": "CBT tested EPS",
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633001462,
+                "question_name": "water_testing_method",
                 "option_value": "cbt_test",
                 "monitoring": "latest",
                 "sum_by": "parent_id"
@@ -650,6 +777,7 @@
             },
             {
               "id": "title_microbial",
+              "info": "Microbial water-quality parameters (E.coli, total & fecal coliform) from the latest monitoring.",
               "chart_type": "section_title",
               "order": 10,
               "col_span": 24,
@@ -657,6 +785,7 @@
             },
             {
               "id": "param_e_coli",
+              "info": "Per-EPS E.coli count on the latest monitoring (CFU/100mL). Acceptance threshold 0.",
               "chart_type": "dot_strip",
               "order": 11,
               "col_span": 12,
@@ -673,7 +802,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633220746,
+                "question_name": "e_coli_lab_count",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -681,6 +810,7 @@
             },
             {
               "id": "param_total_coliform",
+              "info": "Per-EPS Total Coliform on the latest monitoring (CFU/100mL). Acceptance threshold 0.",
               "chart_type": "dot_strip",
               "order": 12,
               "col_span": 12,
@@ -697,7 +827,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633259392,
+                "question_name": "total_coliform_cfu_100ml",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -705,6 +835,7 @@
             },
             {
               "id": "param_fecal_coliform",
+              "info": "Per-EPS Feacal Coliform on the latest monitoring (CFU/100mL). Acceptance threshold 0.",
               "chart_type": "dot_strip",
               "order": 13,
               "col_span": 12,
@@ -722,7 +853,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633295165,
+                "question_name": "fecal_coliform_cfu_100ml",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -730,6 +861,7 @@
             },
             {
               "id": "title_physical",
+              "info": "Physical water-quality parameters (turbidity, temperature) from the latest monitoring.",
               "chart_type": "section_title",
               "order": 20,
               "col_span": 24,
@@ -737,6 +869,7 @@
             },
             {
               "id": "param_turbidity",
+              "info": "Per-EPS Turbidity on the latest monitoring (NTU). Acceptance threshold < 5 NTU.",
               "chart_type": "dot_strip",
               "order": 21,
               "col_span": 12,
@@ -753,7 +886,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1749633220745,
+                "question_name": "turbidity_ntu",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -761,15 +894,16 @@
             },
             {
               "id": "param_temperature",
+              "info": "Per-EPS Water Temperature on the latest monitoring (°C). Acceptance threshold < 30 °C.",
               "chart_type": "dot_strip",
               "order": 22,
               "col_span": 12,
               "group": "physical",
               "label": "Water Temperature",
-              "description": "Acceptance threshold < 30 °C",
+              "description": "Acceptance threshold < 30 \u00b0C",
               "config": {
                 "title": "Water Temperature",
-                "xAxisLabel": "°C",
+                "xAxisLabel": "\u00b0C",
                 "entity_label": "EPS"
               },
               "threshold": {
@@ -777,7 +911,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1797307852531,
+                "question_name": "temperature_c",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -785,6 +919,7 @@
             },
             {
               "id": "title_chemical",
+              "info": "Chemical water-quality parameters (pH, conductivity, salinity) from the latest monitoring.",
               "chart_type": "section_title",
               "order": 30,
               "col_span": 24,
@@ -792,6 +927,7 @@
             },
             {
               "id": "param_ph",
+              "info": "Per-EPS pH on the latest monitoring. Acceptance range 6.5 – 8.5.",
               "chart_type": "dot_strip",
               "order": 31,
               "col_span": 8,
@@ -809,7 +945,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1797307852532,
+                "question_name": "ph",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -817,15 +953,16 @@
             },
             {
               "id": "param_conductivity",
+              "info": "Per-EPS Conductivity on the latest monitoring (µS/cm). Acceptance threshold < 1000 µS/cm.",
               "chart_type": "dot_strip",
               "order": 32,
               "col_span": 8,
               "group": "chemical",
               "label": "Conductivity",
-              "description": "Acceptance threshold < 1000 µS/cm",
+              "description": "Acceptance threshold < 1000 \u00b5S/cm",
               "config": {
                 "title": "Conductivity",
-                "xAxisLabel": "µS/cm",
+                "xAxisLabel": "\u00b5S/cm",
                 "entity_label": "EPS"
               },
               "threshold": {
@@ -833,7 +970,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1797307852533,
+                "question_name": "conductivity",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -841,6 +978,7 @@
             },
             {
               "id": "param_salinity",
+              "info": "Per-EPS Salinity on the latest monitoring (ppt). Acceptance threshold < 1 ppt.",
               "chart_type": "dot_strip",
               "order": 33,
               "col_span": 8,
@@ -857,7 +995,7 @@
               },
               "api": {
                 "form_id": 1749632545233,
-                "question_id": 1797307852534,
+                "question_name": "salinity",
                 "group_by": "parent_id",
                 "monitoring": "latest",
                 "repeat_agg": "average"
@@ -871,6 +1009,7 @@
           "items": [
             {
               "id": "kpi_under_construction_pct",
+              "info": "If Is the project completed? == \"Yes\" -- assign NO\nelsif: Is the project completed? == \"No\" -- asign YES\n\nelse: assign: \"No information available\"",
               "chart_type": "card",
               "order": 1,
               "col_span": 12,
@@ -879,7 +1018,7 @@
               "color": "#fa8c16",
               "api": {
                 "form_id": 1749624452908,
-                "question_id": 1749630516826,
+                "question_name": "is_project_completed",
                 "option_value": "no",
                 "monitoring": "latest",
                 "sum_by": "parent_id",
@@ -889,6 +1028,7 @@
             },
             {
               "id": "kpi_construction_past_due",
+              "info": "if Proposed Completion Date? > Today --> completion date is due\nifelse Proposed Completion Date? < - Today --> completion date is not due\nelse: no information available",
               "chart_type": "card",
               "order": 2,
               "col_span": 12,
@@ -898,12 +1038,13 @@
                 "monitoring": "latest",
                 "sum_by": "parent_id",
                 "past_due": true,
-                "completion_question_id": 1749630516826,
-                "deadline_question_id": 1749630516825
+                "completion_question_name": "is_project_completed",
+                "deadline_question_name": "proposed_completion_date"
               }
             },
             {
               "id": "chart_construction_progression",
+              "info": "IFERROR(\n  SUMPRODUCT(\n    -- Concrete Base Construction\n    IF(ISNUMBER(SEARCH(\"Concrete Base\", [@Project Scope])),\n      IF(OR([@2m x 2m square base]=\"YES\", [@Constructed within a 300mm vertical offset between URF and EPS]=\"YES\", [@Constructed within a 300mm vertical offset between EPS and Storage]=\"YES\"), 1, 0),\n      0),\n\n    -- URF Tank\n    IF(ISNUMBER(SEARCH(\"URF Tank\", [@Project Scope])),\n      IF([@What is the current status of the tank implementation for this URF?]=\"Completed\", 1, 0),\n      0),\n\n    -- EPS Tank\n    IF(ISNUMBER(SEARCH(\"EPS Tank\", [@Project Scope])),\n      IF([@What is the current status of the tank implementation for this EPS tank?]=\"Completed\", 1, 0),\n      0),\n\n    -- Balance Tank\n    IF(ISNUMBER(SEARCH(\"Balance Tank\", [@Project Scope])),\n      IF([@What is the current status of the tank implementation for this balance tank?]=\"Completed\", 1, 0),\n      0),\n\n    -- Storage Tank\n    IF(ISNUMBER(SEARCH(\"Storage Tank\", [@Project Scope])),\n      IF([@What is the current status of the tank implementation for the storage tank?]=\"Completed\", 1, 0),\n      0),\n\n    -- Standpipes\n    IF(ISNUMBER(SEARCH(\"Standpipes\", [@Project Scope])),\n      IFERROR([@1849634900001_implemented]/[@1849634900001_tobeimplemented], 0),\n      0),\n\n    -- Drainage (placeholder)\n    IF(ISNUMBER(SEARCH(\"Drainage\", [@Project Scope])),\n      0, -- replace with actual logic once defined\n      0),\n\n    -- Site Security\n    IF(ISNUMBER(SEARCH(\"Site Security\", [@Project Scope])),\n      (IF([@1849635500001_a]=\"Selected\", 1/3, 0) +\n       IF([@1849635500001_b]=\"Selected\", 1/3, 0) +\n       IF([@1849635500001_c]=\"Selected\", 1/3, 0)),\n      0)\n  )\n  /\n  -- Denominator: count of components in scope\n  SUMPRODUCT(\n    (ISNUMBER(SEARCH(\"Concrete Base\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"URF Tank\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"EPS Tank\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Balance Tank\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Storage Tank\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Standpipes\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Drainage\", [@Project Scope])))*1,\n    (ISNUMBER(SEARCH(\"Site Security\", [@Project Scope])))*1\n  ),\n\"\")",
               "chart_type": "bar",
               "order": 10,
               "col_span": 12,
@@ -912,7 +1053,9 @@
                 "description": "Distribution of EPS across overall-progress buckets (0-10%, 11-20%, ..., 91-100%).",
                 "xAxisLabel": "Progress bucket",
                 "yAxisLabel": "Number of EPS",
-                "yAxis": { "minInterval": 1 }
+                "yAxis": {
+                  "minInterval": 1
+                }
               },
               "source": "progress",
               "progress_ref": "progress_construction",
@@ -920,6 +1063,7 @@
             },
             {
               "id": "chart_proposed_completion_timeline",
+              "info": "EPS counted by month of Proposed Completion Date, incomplete projects only (Is the project completed? = No). The red line marks TODAY.",
               "chart_type": "bar",
               "order": 11,
               "col_span": 12,
@@ -928,15 +1072,17 @@
                 "description": "EPS counted by month of their planned completion date. Incomplete projects only; TODAY reference line drawn on x-axis.",
                 "xAxisLabel": "Month",
                 "yAxisLabel": "Number of EPS",
-                "yAxis": { "minInterval": 1 }
+                "yAxis": {
+                  "minInterval": 1
+                }
               },
               "api": {
                 "form_id": 1749624452908,
-                "question_id": 1749630516826,
+                "question_name": "is_project_completed",
                 "option_value": "no",
                 "sum_by": "parent_id",
                 "group_by": "month",
-                "date_question_id": 1749630516825,
+                "date_question_name": "proposed_completion_date",
                 "monitoring": "latest",
                 "fiscal_year": true
               },
@@ -953,6 +1099,7 @@
             },
             {
               "id": "esc_construction",
+              "info": "List EPS still under construction with an overdue deadline: Is the project completed? = No AND Proposed Completion Date? < Today.",
               "chart_type": "table",
               "order": 20,
               "col_span": 24,
@@ -964,8 +1111,8 @@
                 "criteria": [
                   {
                     "type": "overdue",
-                    "completion_qid": 1749630516826,
-                    "deadline_qid": 1749630516825,
+                    "completion_qname": "is_project_completed",
+                    "deadline_qname": "proposed_completion_date",
                     "hide": false
                   }
                 ]
@@ -975,14 +1122,14 @@
                   "key": "eps_name",
                   "label": "EPS name",
                   "source": "parent_answer",
-                  "question_id": 1749624452994,
+                  "question_name": "eps_name",
                   "hide": false
                 },
                 {
                   "key": "last_monitoring",
                   "label": "Last Monitoring",
                   "source": "latest_date",
-                  "question_id": 1749624452911,
+                  "question_name": "inspection_date",
                   "hide": false
                 },
                 {
@@ -1067,14 +1214,14 @@
                   "key": "_start_date",
                   "label": "Start date",
                   "source": "parent_answer",
-                  "question_id": 1749624452910,
+                  "question_name": "construction_start_date",
                   "hide": true
                 },
                 {
                   "key": "deadline",
                   "label": "Deadline",
                   "source": "latest_date",
-                  "question_id": 1749630516825,
+                  "question_name": "proposed_completion_date",
                   "hide": false
                 }
               ]

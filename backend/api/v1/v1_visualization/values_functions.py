@@ -1,11 +1,16 @@
 from collections import defaultdict
 
 from django.db.models import Count, Avg, F, OuterRef, Subquery
-from django.db.models.functions import TruncMonth, Substr
+from django.db.models.functions import TruncDate, TruncMonth, Substr
 
-from api.v1.v1_data.models import FormData, Answers
-from api.v1.v1_forms.models import QuestionOptions
+from api.v1.v1_data.models import FormData
+from api.v1.v1_forms.models import QuestionOptions, QuestionTypes
 from api.v1.v1_visualization.constants import AGG_FUNCS
+from api.v1.v1_visualization.models import (
+    MVAnswerDenormalized,
+    MVLatestMonitoring,
+    MVParentAggregates,
+)
 from api.v1.v1_visualization.functions import (
     get_base_monitoring_qs,
     get_monitoring_data_ids,
@@ -24,6 +29,37 @@ def _should_fill_gaps(params):
     return bool(
         params.get("from_date") and params.get("to_date")
     )
+
+
+def _date_answer_sq(date_qname):
+    """Subquery: the date-question answer_name for the same data_id.
+
+    Used to bucket value/option rows by the month of a separate date
+    question (rather than the submission's own created timestamp).
+    """
+    return MVAnswerDenormalized.objects.filter(
+        data_id=OuterRef("data_id"),
+        question_name=date_qname,
+        answer_name__isnull=False,
+    ).values("answer_name")[:1]
+
+
+def _finalize_month(data, params):
+    """Apply month gap-fill (when bounded) and return (data, labels)."""
+    if _should_fill_gaps(params):
+        data = fill_month_gaps(
+            data, params["from_date"], params["to_date"]
+        )
+    return data, [d["label"] for d in data]
+
+
+def _finalize_date(data, params):
+    """Apply day gap-fill (when bounded) and return (data, labels)."""
+    if _should_fill_gaps(params):
+        data = fill_date_gaps(
+            data, params["from_date"], params["to_date"]
+        )
+    return data, [d["label"] for d in data]
 
 
 def _total_parents_in_scope(form, params):
@@ -133,18 +169,18 @@ def handle_count_mode(form, params):
 
 def _count_group_by_month(qs, is_latest, params):
     """Count grouped by month."""
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
     if is_latest:
         data_ids = get_monitoring_data_ids(qs, is_latest)
-        if date_qid:
-            answer_qs = Answers.objects.filter(
+        if date_qname:
+            answer_qs = MVAnswerDenormalized.objects.filter(
                 data_id__in=data_ids,
-                question_id=date_qid,
-                name__isnull=False,
+                question_name=date_qname,
+                answer_name__isnull=False,
             )
             results = answer_qs.annotate(
-                year_month=Substr("name", 1, 7),
+                year_month=Substr("answer_name", 1, 7),
             ).values("year_month").annotate(
                 count=Count("data_id", distinct=True),
             ).order_by("year_month")
@@ -159,12 +195,12 @@ def _count_group_by_month(qs, is_latest, params):
                 for r in results
             ]
         else:
-            results = FormData.objects.filter(
-                id__in=data_ids,
+            results = MVAnswerDenormalized.objects.filter(
+                data_id__in=data_ids,
             ).annotate(
-                month=TruncMonth("created"),
+                month=TruncMonth("data_created"),
             ).values("month").annotate(
-                count=Count("id"),
+                count=Count("data_id", distinct=True),
             ).order_by("month")
             data = [
                 {
@@ -175,14 +211,14 @@ def _count_group_by_month(qs, is_latest, params):
                 for r in results
             ]
     else:
-        if date_qid:
-            answer_qs = Answers.objects.filter(
-                data__in=qs,
-                question_id=date_qid,
-                name__isnull=False,
+        if date_qname:
+            answer_qs = MVAnswerDenormalized.objects.filter(
+                data_id__in=qs.values("id"),
+                question_name=date_qname,
+                answer_name__isnull=False,
             )
             results = answer_qs.annotate(
-                year_month=Substr("name", 1, 7),
+                year_month=Substr("answer_name", 1, 7),
             ).values("year_month").annotate(
                 count=Count("data_id", distinct=True),
             ).order_by("year_month")
@@ -211,12 +247,7 @@ def _count_group_by_month(qs, is_latest, params):
                 for r in results
             ]
 
-    if _should_fill_gaps(params):
-        data = fill_month_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_month(data, params)
 
 
 def _count_group_by_parent(qs, is_latest):
@@ -277,16 +308,16 @@ def _count_group_by_id(qs, is_latest):
 
 def _count_group_by_date(qs, is_latest, params):
     """Count grouped by individual date (not month bucket)."""
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
     data_ids = get_monitoring_data_ids(qs, is_latest)
 
-    if date_qid:
-        results = Answers.objects.filter(
+    if date_qname:
+        results = MVAnswerDenormalized.objects.filter(
             data_id__in=data_ids,
-            question_id=date_qid,
-            name__isnull=False,
+            question_name=date_qname,
+            answer_name__isnull=False,
         ).annotate(
-            day=Substr("name", 1, 10),
+            day=Substr("answer_name", 1, 10),
         ).values("day").annotate(
             count=Count("data_id", distinct=True),
         ).order_by("day")
@@ -299,12 +330,12 @@ def _count_group_by_date(qs, is_latest, params):
             for r in results
         ]
     else:
-        results = FormData.objects.filter(
-            id__in=data_ids,
-        ).values(
-            day=F("created__date"),
+        results = MVAnswerDenormalized.objects.filter(
+            data_id__in=data_ids,
         ).annotate(
-            count=Count("id"),
+            day=TruncDate("data_created"),
+        ).values("day").annotate(
+            count=Count("data_id", distinct=True),
         ).order_by("day")
         data = [
             {
@@ -314,12 +345,7 @@ def _count_group_by_date(qs, is_latest, params):
             }
             for r in results
         ]
-    if _should_fill_gaps(params):
-        data = fill_date_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_date(data, params)
 
 
 # -- Option question handler --
@@ -365,9 +391,26 @@ def handle_option_question(form, question, params):
             qs, is_latest, params
         )
 
-    if group_by == "option":
+    if group_by == "parent_id":
+        return _option_group_by_parent(question, data_ids)
+
+    if group_by == "option_combo" and \
+            question.type == QuestionTypes.multiple_option:
         restricted = _extract_criteria_option_values(
-            params, question.id
+            params, question.name
+        )
+        return _option_group_by_combo(
+            question, options, data_ids, value_type, restricted,
+            include_unanswered=params.get(
+                "include_unanswered", False
+            ),
+            form=form,
+            params=params,
+        )
+
+    if group_by in ("option", "option_combo"):
+        restricted = _extract_criteria_option_values(
+            params, question.name
         )
         return _option_group_by_option(
             question, options, data_ids, qs,
@@ -380,6 +423,41 @@ def handle_option_question(form, question, params):
         )
 
     return [], []
+
+
+def _option_group_by_parent(question, data_ids):
+    """Return the union of selected options per parent.
+
+    Multiple answers can exist when the question is inside a repeatable
+    group. Combining their option arrays mirrors numeric repeat_agg=average:
+    both describe all repeats from the latest monitoring submission.
+    """
+    grouped = defaultdict(set)
+    labels = {}
+    rows = MVAnswerDenormalized.objects.filter(
+        data_id__in=data_ids,
+        question_name=question.name,
+        answer_options__isnull=False,
+    ).values_list("parent_id", "answer_options")
+    for parent_id, answer_options in rows:
+        if parent_id is None:
+            continue
+        grouped[parent_id].update(answer_options or [])
+
+    parent_ids = list(grouped.keys())
+    labels.update(
+        FormData.objects.filter(id__in=parent_ids)
+        .values_list("id", "name")
+    )
+    data = [
+        {
+            "value": sorted(grouped[parent_id]),
+            "label": labels.get(parent_id, str(parent_id)),
+            "group": str(parent_id),
+        }
+        for parent_id in sorted(parent_ids)
+    ]
+    return data, [row["label"] for row in data]
 
 
 def _option_value_filter(
@@ -398,14 +476,14 @@ def _option_value_filter(
     include_unanswered when both are set, as the coverage-gap count
     already subsumes the answer-gap count.
     """
-    count = Answers.objects.filter(
+    count = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
-        options__contains=[option_value],
+        question_name=question.name,
+        answer_options__contains=[option_value],
     )
     if sum_by == "parent_id":
         count = count.values(
-            "data__parent_id"
+            "parent_id"
         ).distinct().count()
     else:
         count = count.count()
@@ -424,11 +502,11 @@ def _option_value_filter(
         )
     elif include_unanswered and is_monitoring:
         all_answered_ids = set(
-            Answers.objects.filter(
+            MVAnswerDenormalized.objects.filter(
                 data_id__in=data_ids,
-                question_id=question.id,
-                options__isnull=False,
-            ).values_list("data__parent_id", flat=True).distinct()
+                question_name=question.name,
+                answer_options__isnull=False,
+            ).values_list("parent_id", flat=True).distinct()
         )
         extra = _count_no_info_parents(
             form, params or {}, all_answered_ids
@@ -463,33 +541,31 @@ def _option_value_group_by_month(
     by a date question (e.g. project deadline). When `sum_by` is
     `parent_id`, counts distinct parents per month.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
-    matching_ids = list(Answers.objects.filter(
+    matching_ids = list(MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
-        options__contains=[option_value],
+        question_name=question.name,
+        answer_options__contains=[option_value],
     ).values_list("data_id", flat=True))
 
     if not matching_ids:
         data = []
-    elif date_qid:
-        answer_qs = Answers.objects.filter(
+    elif date_qname:
+        answer_qs = MVAnswerDenormalized.objects.filter(
             data_id__in=matching_ids,
-            question_id=date_qid,
-            name__isnull=False,
+            question_name=date_qname,
+            answer_name__isnull=False,
         )
         if sum_by == "parent_id":
             answer_qs = answer_qs.annotate(
-                year_month=Substr("name", 1, 7),
+                year_month=Substr("answer_name", 1, 7),
             ).values("year_month").annotate(
-                count=Count(
-                    "data__parent_id", distinct=True
-                ),
+                count=Count("parent_id", distinct=True),
             ).order_by("year_month")
         else:
             answer_qs = answer_qs.annotate(
-                year_month=Substr("name", 1, 7),
+                year_month=Substr("answer_name", 1, 7),
             ).values("year_month").annotate(
                 count=Count("data_id", distinct=True),
             ).order_by("year_month")
@@ -504,18 +580,18 @@ def _option_value_group_by_month(
             for r in answer_qs
         ]
     else:
-        fd_qs = FormData.objects.filter(
-            id__in=matching_ids,
+        mv_qs = MVAnswerDenormalized.objects.filter(
+            data_id__in=matching_ids,
         ).annotate(
-            month=TruncMonth("created"),
+            month=TruncMonth("data_created"),
         ).values("month")
         if sum_by == "parent_id":
-            fd_qs = fd_qs.annotate(
+            mv_qs = mv_qs.annotate(
                 count=Count("parent_id", distinct=True),
             ).order_by("month")
         else:
-            fd_qs = fd_qs.annotate(
-                count=Count("id"),
+            mv_qs = mv_qs.annotate(
+                count=Count("data_id", distinct=True),
             ).order_by("month")
         data = [
             {
@@ -523,18 +599,13 @@ def _option_value_group_by_month(
                 "label": format_month_label(r["month"]),
                 "group": format_month_group(r["month"]),
             }
-            for r in fd_qs
+            for r in mv_qs
         ]
 
-    if _should_fill_gaps(params):
-        data = fill_month_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_month(data, params)
 
 
-def _extract_criteria_option_values(params, question_id):
+def _extract_criteria_option_values(params, question_name):
     """Extract option values that criteria restricts for a given qid.
 
     When criteria includes option_equals/option_contains/option_in
@@ -548,7 +619,7 @@ def _extract_criteria_option_values(params, question_id):
     for c in all_criteria:
         ctype = c["type"]
         parts = c["parts"]
-        if parts[0] != question_id:
+        if parts[0] != question_name:
             continue
         if ctype in ("option_equals", "option_contains"):
             values.add(parts[1])
@@ -589,13 +660,13 @@ def _option_group_by_option(
     # Monitoring forms track data__parent_id (the registration ID).
     is_registration = form is not None and form.parent is None
     tracking_field = (
-        "data_id" if is_registration else "data__parent_id"
+        "data_id" if is_registration else "parent_id"
     )
-    for tracking_id, opts in Answers.objects.filter(
+    for tracking_id, opts in MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
-        options__isnull=False,
-    ).values_list(tracking_field, "options"):
+        question_name=question.name,
+        answer_options__isnull=False,
+    ).values_list(tracking_field, "answer_options"):
         matched = False
         for v in (opts or []):
             if v in tally_values:
@@ -630,6 +701,131 @@ def _option_group_by_option(
             "label": opt.label,
             "group": opt.value,
             "color": opt.color,
+        })
+
+    if include_unanswered and bucket_count > 0:
+        bucket_val = (
+            round((bucket_count / denom * 100), 2)
+            if value_type == "percentage" and denom else bucket_count
+        )
+        data.append({
+            "value": bucket_val,
+            "label": "No information available",
+            "group": "_no_info",
+            "color": "#bfbfbf",
+        })
+
+    labels = [d["label"] for d in data]
+    return data, labels
+
+
+def _combo_label(combo_values, option_labels):
+    """Human label for a sorted option-value combo."""
+    if len(combo_values) > 1:
+        return "Mixed"
+    return " + ".join(
+        option_labels.get(value, value) for value in combo_values
+    )
+
+
+def _option_group_by_combo(
+    question, options, data_ids, value_type,
+    restricted_values=None,
+    include_unanswered=False, form=None, params=None,
+):
+    """Group multiple_option answers by mutually exclusive combos.
+
+    Example:
+    - ["lab_test"] -> group "lab_test"
+    - ["cbt_bag_test"] -> group "cbt_bag_test"
+    - ["lab_test", "cbt_bag_test"] -> group "lab_test|cbt_bag_test"
+
+    This is intentionally distinct from group_by=option, which counts
+    each selected option independently and is still useful for FLAT
+    multi-select breakdowns.
+    """
+    option_values = {o.value for o in options}
+    option_labels = {o.value: o.label for o in options}
+    option_colors = {o.value: o.color for o in options}
+    option_order = {o.value: i for i, o in enumerate(options)}
+    tally_values = (
+        option_values & restricted_values
+        if restricted_values else option_values
+    )
+    tallies = defaultdict(int)
+    qualifying_parents = set()
+    is_registration = form is not None and form.parent is None
+    tracking_field = (
+        "data_id" if is_registration else "parent_id"
+    )
+
+    for tracking_id, opts in MVAnswerDenormalized.objects.filter(
+        data_id__in=data_ids,
+        question_name=question.name,
+        answer_options__isnull=False,
+    ).values_list(tracking_field, "answer_options"):
+        combo_values = sorted(
+            (value for value in (opts or []) if value in tally_values),
+            key=lambda value: option_order.get(value, len(option_order)),
+        )
+        if not combo_values:
+            continue
+        combo_key = "|".join(combo_values)
+        tallies[combo_key] += 1
+        qualifying_parents.add(tracking_id)
+
+    bucket_count = (
+        _count_no_info_parents(form, params, qualifying_parents)
+        if include_unanswered else 0
+    )
+
+    if value_type == "percentage":
+        denom = sum(tallies.values()) + bucket_count
+    else:
+        denom = None
+
+    data = []
+
+    # Stable legend: single-option buckets first in form option order,
+    # then observed multi-option combo buckets by combo key.
+    ordered_keys = []
+    for opt in options:
+        if not restricted_values or opt.value in tally_values:
+            ordered_keys.append(opt.value)
+    full_combo_values = [
+        opt.value for opt in options
+        if not restricted_values or opt.value in tally_values
+    ]
+    fallback_combo_keys = []
+    if len(full_combo_values) == 2:
+        fallback_combo_keys.append("|".join(full_combo_values))
+    observed_combo_keys = sorted(
+        (
+            key for key in set(tallies.keys()) | set(fallback_combo_keys)
+            if "|" in key
+        ),
+        key=lambda key: [
+            option_order.get(value, len(option_order))
+            for value in key.split("|")
+        ],
+    )
+    ordered_keys.extend(observed_combo_keys)
+
+    for key in ordered_keys:
+        count = tallies.get(key, 0)
+        combo_values = key.split("|")
+        value = (
+            round((count / denom * 100), 2)
+            if value_type == "percentage" and denom else count
+        )
+        data.append({
+            "value": value,
+            "label": _combo_label(combo_values, option_labels),
+            "group": key,
+            "color": (
+                option_colors.get(key)
+                if "|" not in key else None
+            ),
         })
 
     if include_unanswered and bucket_count > 0:
@@ -685,11 +881,11 @@ def handle_number_question(form, question, params):
             question, data_ids, agg_func, value_type, params
         )
 
-    result = Answers.objects.filter(
+    result = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
-        value__isnull=False,
-    ).aggregate(agg_value=agg_func("value"))
+        question_name=question.name,
+        answer_value__isnull=False,
+    ).aggregate(agg_value=agg_func("answer_value"))
 
     value = (
         round(result["agg_value"], 2)
@@ -702,25 +898,37 @@ def _number_group_by_parent(
     question, data_ids, agg_func, value_type
 ):
     """Number question grouped by parent_id."""
-    results = Answers.objects.filter(
-        data_id__in=data_ids,
-        question_id=question.id,
-        value__isnull=False,
-    ).values(
-        parent_name=F("data__parent__name"),
-        parent_id=F("data__parent_id"),
-    ).annotate(
-        agg_value=agg_func("value"),
-    ).order_by("parent_name")
+    agg_rows = list(
+        MVAnswerDenormalized.objects.filter(
+            data_id__in=data_ids,
+            question_name=question.name,
+            answer_value__isnull=False,
+        ).values("parent_id").annotate(
+            agg_value=agg_func("answer_value"),
+        )
+    )
 
-    data = [
-        {
-            "value": round(r["agg_value"], 2),
-            "label": r["parent_name"],
-            "group": str(r["parent_id"]),
-        }
-        for r in results
-    ]
+    # Fetch parent names from mv_latest_monitoring (parent_name is
+    # pre-joined from the registration FormData)
+    parent_ids = [r["parent_id"] for r in agg_rows if r["parent_id"]]
+    name_map = dict(
+        MVLatestMonitoring.objects.filter(parent_id__in=parent_ids)
+        .values_list("parent_id", "parent_name")
+        .distinct()
+    )
+
+    data = sorted(
+        [
+            {
+                "value": round(r["agg_value"], 2),
+                "label": name_map.get(r["parent_id"], ""),
+                "group": str(r["parent_id"]),
+            }
+            for r in agg_rows
+            if r["parent_id"]
+        ],
+        key=lambda x: x["label"],
+    )
 
     if value_type == "percentage":
         total = sum(d["value"] for d in data)
@@ -738,25 +946,25 @@ def _number_group_by_date(question, data_ids, params):
     """Number question grouped by date."""
     repeat_agg = params.get("repeat_agg", "average")
     agg_func = AGG_FUNCS.get(repeat_agg, Avg)
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
-    if date_qid:
+    if date_qname:
         data = []
         for data_id in data_ids:
-            date_answer = Answers.objects.filter(
+            date_answer = MVAnswerDenormalized.objects.filter(
                 data_id=data_id,
-                question_id=date_qid,
+                question_name=date_qname,
             ).first()
-            if not date_answer or not date_answer.name:
+            if not date_answer or not date_answer.answer_name:
                 continue
-            val_result = Answers.objects.filter(
+            val_result = MVAnswerDenormalized.objects.filter(
                 data_id=data_id,
-                question_id=question.id,
-                value__isnull=False,
-            ).aggregate(agg_value=agg_func("value"))
+                question_name=question.name,
+                answer_value__isnull=False,
+            ).aggregate(agg_value=agg_func("answer_value"))
             if val_result["agg_value"] is not None:
                 date_str = format_date_group(
-                    date_answer.name
+                    date_answer.answer_name
                 )
                 data.append({
                     "value": round(
@@ -766,14 +974,14 @@ def _number_group_by_date(question, data_ids, params):
                     "group": date_str,
                 })
     else:
-        results = Answers.objects.filter(
+        results = MVAnswerDenormalized.objects.filter(
             data_id__in=data_ids,
-            question_id=question.id,
-            value__isnull=False,
-        ).values(
-            date=F("data__created__date"),
+            question_name=question.name,
+            answer_value__isnull=False,
         ).annotate(
-            agg_value=agg_func("value"),
+            date=TruncDate("data_created"),
+        ).values("date").annotate(
+            agg_value=agg_func("answer_value"),
         ).order_by("date")
         data = [
             {
@@ -785,12 +993,7 @@ def _number_group_by_date(question, data_ids, params):
         ]
 
     data.sort(key=lambda x: x["group"])
-    if _should_fill_gaps(params):
-        data = fill_date_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_date(data, params)
 
 
 def _number_group_by_month(
@@ -802,20 +1005,16 @@ def _number_group_by_month(
     date answer (via a Subquery) instead of FormData.created so the
     x-axis aligns with the filter's date dimension.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
-    base = Answers.objects.filter(
+    base = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
-        value__isnull=False,
+        question_name=question.name,
+        answer_value__isnull=False,
     )
 
-    if date_qid:
-        date_sq = Answers.objects.filter(
-            data_id=OuterRef("data_id"),
-            question_id=date_qid,
-            name__isnull=False,
-        ).values("name")[:1]
+    if date_qname:
+        date_sq = _date_answer_sq(date_qname)
         results = base.annotate(
             date_name=Subquery(date_sq),
         ).filter(
@@ -823,7 +1022,7 @@ def _number_group_by_month(
         ).annotate(
             month_key=Substr("date_name", 1, 7),
         ).values("month_key").annotate(
-            agg_value=agg_func("value"),
+            agg_value=agg_func("answer_value"),
         ).order_by("month_key")
         data = [
             {
@@ -835,9 +1034,9 @@ def _number_group_by_month(
         ]
     else:
         results = base.annotate(
-            month=TruncMonth("data__created"),
+            month=TruncMonth("data_created"),
         ).values("month").annotate(
-            agg_value=agg_func("value"),
+            agg_value=agg_func("answer_value"),
         ).order_by("month")
         data = [
             {
@@ -856,13 +1055,7 @@ def _number_group_by_month(
                     d["value"] / total * 100, 2
                 )
 
-    if _should_fill_gaps(params):
-        data = fill_month_gaps(
-            data, params["from_date"], params["to_date"]
-        )
-
-    labels = [d["label"] for d in data]
-    return data, labels
+    return _finalize_month(data, params)
 
 
 # -- Stack handlers --
@@ -906,33 +1099,29 @@ def _stack_option_by_month(
     O(months × options) queries. Honors date_question_id when
     provided so the month bucket aligns with the filter dimension.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
     option_values = {o.value for o in options}
 
-    base = Answers.objects.filter(
+    base = MVAnswerDenormalized.objects.filter(
         data_id__in=data_ids,
-        question_id=question.id,
+        question_name=question.name,
     )
 
-    if date_qid:
-        date_sq = Answers.objects.filter(
-            data_id=OuterRef("data_id"),
-            question_id=date_qid,
-            name__isnull=False,
-        ).values("name")[:1]
+    if date_qname:
+        date_sq = _date_answer_sq(date_qname)
         rows = base.annotate(
             date_name=Subquery(date_sq),
         ).filter(
             date_name__isnull=False,
         ).annotate(
             month_key=Substr("date_name", 1, 7),
-        ).values("month_key", "options")
+        ).values("month_key", "answer_options")
         get_key = lambda r: r["month_key"]  # noqa: E731
         get_label = lambda k: format_month_label(k)  # noqa: E731
     else:
         rows = base.annotate(
-            month=TruncMonth("data__created"),
-        ).values("month", "options")
+            month=TruncMonth("data_created"),
+        ).values("month", "answer_options")
         get_key = lambda r: format_month_group(r["month"])  # noqa: E731
         get_label = lambda k: format_month_label(k)  # noqa: E731
 
@@ -941,7 +1130,7 @@ def _stack_option_by_month(
         key = get_key(r)
         if not key:
             continue
-        for v in (r["options"] or []):
+        for v in (r["answer_options"] or []):
             if v in option_values:
                 buckets[key][v] += 1
 
@@ -969,11 +1158,42 @@ def _stack_option_by_month(
     }
 
 
-def _stack_option_by_parent(
+def _stack_option_by_parent_from_mv(
+    agg_data, parent_ids, qs, options, opt_labels, opt_colors
+):
+    """Build stack data from mv_parent_aggregates.
+
+    Single query — O(1) instead of O(P × M) queries.
+    """
+    parent_options = {
+        row['parent_id']: row['option_values'] or []
+        for row in agg_data
+    }
+    parent_names = {p.id: p.name for p in qs.only('id', 'name')}
+
+    data = []
+    for parent_id in parent_ids:
+        opts = parent_options.get(parent_id, [])
+        row = {"label": parent_names.get(parent_id, ""), "group": parent_id}
+        for opt in options:
+            row[opt.label] = opts.count(opt.value)
+        data.append(row)
+
+    return {
+        "data": data,
+        "labels": [d["label"] for d in data],
+        "stack_labels": opt_labels,
+        "colors": opt_colors,
+    }
+
+
+def _stack_option_by_parent_legacy(
     question, options, data_ids,
     qs, is_latest, opt_labels, opt_colors
 ):
-    """Stack by option, grouped by parent_id.
+    """Original _stack_option_by_parent implementation.
+
+    Used as fallback when MV is not available or empty.
 
     Handles three data shapes:
       - is_latest=True: qs rows are parent FormData with a `latest_id`
@@ -986,20 +1206,28 @@ def _stack_option_by_parent(
         ARE registration submissions themselves (parent__isnull=True).
         Parents = qs directly; p_data_ids = [parent.id].
     """
-    # Distinguish monitoring vs registration by probing for a parent_id.
     is_registration_form = False
     if is_latest:
-        parents = qs
+        parents = qs  # FormData qs with .latest_id and .name
     else:
-        parent_ids = list(FormData.objects.filter(
-            id__in=data_ids,
-            parent__isnull=False,
-        ).values_list("parent_id", flat=True).distinct())
+        parent_ids = list(
+            MVAnswerDenormalized.objects.filter(
+                data_id__in=data_ids,
+                parent_id__isnull=False,
+            ).values_list("parent_id", flat=True).distinct()
+        )
         if parent_ids:
-            parents = FormData.objects.filter(id__in=parent_ids)
+            name_map = dict(
+                MVLatestMonitoring.objects.filter(
+                    parent_id__in=parent_ids
+                ).values_list("parent_id", "parent_name").distinct()
+            )
+            parents = [
+                {"id": pid, "name": name_map.get(pid, "")}
+                for pid in parent_ids
+            ]
         else:
-            # Registration-form path: qs IS the list of registrations.
-            parents = qs
+            parents = qs  # registration-form path
             is_registration_form = True
 
     data = []
@@ -1007,22 +1235,28 @@ def _stack_option_by_parent(
         if is_latest:
             p_data_ids = [parent.latest_id]
             p_name = parent.name
+            parent_id_val = parent.id
         elif is_registration_form:
             p_data_ids = [parent.id]
             p_name = parent.name
+            parent_id_val = parent.id
         else:
-            p_data_ids = list(FormData.objects.filter(
-                id__in=data_ids,
-                parent_id=parent.id,
-            ).values_list("id", flat=True))
-            p_name = parent.name
+            # parent is a dict {"id": ..., "name": ...}
+            p_data_ids = list(
+                MVAnswerDenormalized.objects.filter(
+                    data_id__in=data_ids,
+                    parent_id=parent["id"],
+                ).values_list("data_id", flat=True).distinct()
+            )
+            p_name = parent["name"]
+            parent_id_val = parent["id"]
 
-        row = {"label": p_name, "group": parent.id}
+        row = {"label": p_name, "group": parent_id_val}
         for opt in options:
-            count = Answers.objects.filter(
+            count = MVAnswerDenormalized.objects.filter(
                 data_id__in=p_data_ids,
-                question_id=question.id,
-                options__contains=[opt.value],
+                question_name=question.name,
+                answer_options__contains=[opt.value],
             ).count()
             row[opt.label] = count
         data.append(row)
@@ -1034,6 +1268,44 @@ def _stack_option_by_parent(
         "stack_labels": opt_labels,
         "colors": opt_colors,
     }
+
+
+def _stack_option_by_parent(
+    question, options, data_ids,
+    qs, is_latest, opt_labels, opt_colors
+):
+    """Stack by option, grouped by parent_id.
+
+    OPTIMIZED: Uses mv_parent_aggregates when is_latest=True to replace
+    the N+1 query pattern (P parents × M options) with a single MV lookup.
+    Falls back to _stack_option_by_parent_legacy when MV has no data or
+    when is_latest=False (all-submissions path, not covered by the MV).
+    """
+    if is_latest and data_ids:
+        first_data = (
+            MVAnswerDenormalized.objects
+            .filter(data_id__in=data_ids[:1])
+            .values('form_id')
+            .first()
+        )
+        if first_data:
+            form_id = first_data['form_id']
+            parent_ids = list(qs.values_list('id', flat=True))
+            agg_data = list(
+                MVParentAggregates.objects.filter(
+                    form_id=form_id,
+                    question_name=question.name,
+                    parent_id__in=parent_ids,
+                ).values('parent_id', 'option_values')
+            )
+            if agg_data:
+                return _stack_option_by_parent_from_mv(
+                    agg_data, parent_ids, qs, options, opt_labels, opt_colors
+                )
+
+    return _stack_option_by_parent_legacy(
+        question, options, data_ids, qs, is_latest, opt_labels, opt_colors
+    )
 
 
 def handle_stack_by_parent(
@@ -1049,27 +1321,29 @@ def handle_stack_by_parent(
             qs.values("id", "name", "latest_id")
         )
     else:
-        parent_ids = FormData.objects.filter(
-            id__in=data_ids,
-            parent__isnull=False,
-        ).values_list(
-            "parent_id", flat=True
-        ).distinct()
-        parent_data = FormData.objects.filter(
-            id__in=parent_ids,
-        ).values("id", "name")
+        parent_id_list = list(
+            MVAnswerDenormalized.objects.filter(
+                data_id__in=data_ids,
+                parent_id__isnull=False,
+            ).values_list("parent_id", flat=True).distinct()
+        )
+        name_map = dict(
+            MVLatestMonitoring.objects.filter(
+                parent_id__in=parent_id_list
+            ).values_list("parent_id", "parent_name").distinct()
+        )
         parents = [
             {
-                "id": p["id"],
-                "name": p["name"],
+                "id": pid,
+                "name": name_map.get(pid, ""),
                 "data_ids": list(
-                    FormData.objects.filter(
-                        id__in=data_ids,
-                        parent_id=p["id"],
-                    ).values_list("id", flat=True)
+                    MVAnswerDenormalized.objects.filter(
+                        data_id__in=data_ids,
+                        parent_id=pid,
+                    ).values_list("data_id", flat=True).distinct()
                 ),
             }
-            for p in parent_data
+            for pid in parent_id_list
         ]
 
     parent_names = [p["name"] for p in parents]
@@ -1098,7 +1372,7 @@ def _stack_parent_by_date(
     Prefetches date keys and aggregated values per data_id in two
     bulk queries instead of N+1 per-point queries.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
 
     all_data_ids = []
     for p in parents:
@@ -1107,31 +1381,31 @@ def _stack_parent_by_date(
         else:
             all_data_ids.extend(p["data_ids"])
 
-    if date_qid:
-        date_rows = Answers.objects.filter(
+    if date_qname:
+        date_rows = MVAnswerDenormalized.objects.filter(
             data_id__in=all_data_ids,
-            question_id=date_qid,
-            name__isnull=False,
-        ).values("data_id", "name")
+            question_name=date_qname,
+            answer_name__isnull=False,
+        ).values("data_id", "answer_name")
         date_map = {
-            r["data_id"]: format_date_group(r["name"])
+            r["data_id"]: format_date_group(r["answer_name"])
             for r in date_rows
         }
     else:
-        fd_rows = FormData.objects.filter(
-            id__in=all_data_ids,
-        ).values("id", "created")
+        mv_rows = MVAnswerDenormalized.objects.filter(
+            data_id__in=all_data_ids,
+        ).values("data_id", "data_created").distinct()
         date_map = {
-            r["id"]: format_date_group(r["created"])
-            for r in fd_rows
+            r["data_id"]: format_date_group(r["data_created"])
+            for r in mv_rows
         }
 
-    val_rows = Answers.objects.filter(
+    val_rows = MVAnswerDenormalized.objects.filter(
         data_id__in=all_data_ids,
-        question_id=question.id,
-        value__isnull=False,
+        question_name=question.name,
+        answer_value__isnull=False,
     ).values("data_id").annotate(
-        agg_value=agg_func("value"),
+        agg_value=agg_func("answer_value"),
     )
     val_map = {
         r["data_id"]: r["agg_value"]
@@ -1172,7 +1446,7 @@ def _stack_parent_by_month(
     When date_question_id is provided, buckets by the month of that
     date answer (via Subquery) instead of FormData.created.
     """
-    date_qid = params.get("date_question_id")
+    date_qname = params.get("date_question_name")
     all_rows = {}
 
     for p in parents:
@@ -1181,18 +1455,14 @@ def _stack_parent_by_month(
             else p["data_ids"]
         )
 
-        base = Answers.objects.filter(
+        base = MVAnswerDenormalized.objects.filter(
             data_id__in=p_ids,
-            question_id=question.id,
-            value__isnull=False,
+            question_name=question.name,
+            answer_value__isnull=False,
         )
 
-        if date_qid:
-            date_sq = Answers.objects.filter(
-                data_id=OuterRef("data_id"),
-                question_id=date_qid,
-                name__isnull=False,
-            ).values("name")[:1]
+        if date_qname:
+            date_sq = _date_answer_sq(date_qname)
             results = base.annotate(
                 date_name=Subquery(date_sq),
             ).filter(
@@ -1200,7 +1470,7 @@ def _stack_parent_by_month(
             ).annotate(
                 month_key=Substr("date_name", 1, 7),
             ).values("month_key").annotate(
-                agg_value=agg_func("value"),
+                agg_value=agg_func("answer_value"),
             ).order_by("month_key")
             for r in results:
                 if r["agg_value"] is None:
@@ -1215,9 +1485,9 @@ def _stack_parent_by_month(
                 )
         else:
             results = base.annotate(
-                month=TruncMonth("data__created"),
+                month=TruncMonth("data_created"),
             ).values("month").annotate(
-                agg_value=agg_func("value"),
+                agg_value=agg_func("answer_value"),
             ).order_by("month")
             for r in results:
                 month_key = format_month_group(r["month"])

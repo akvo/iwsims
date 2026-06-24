@@ -1,0 +1,126 @@
+#,Group,Indicator,Feasible?,Used questionnaire(s),Used questions,Guidance,Logic,Calculation Comprehensive monitoring,Remarks,
+1,Total Overview (Cards),Total WWTPs,Yes,Registration,"1748903442166 (Name)
+1748904785806 (GPS)
+1748903240794 (Division)",,Count unique WWTP registration records.,COUNT DISTINCT Registration records by 1748903442166 (fall back to 1748904785806 if name duplicated).,,
+2,,Inspected (12 mo),Yes,Monitoring,1748905754732 (Inspection date),,IF (inspection_date < 12 months) -> Inspected, count of Inspected.,COUNT DISTINCT plant_id WHERE 1748905754732 < 12 months,
+3,,% Operational,,Monitoring -> Derived,"DERIVED — multiple fields:
+1748906571911
+1748906604803
+1748915642008
+1748907057799
+1748907201859
+1748910860630",,Operational checklist passes when effluent compliant AND no critical structural / operational issues.,"WWTP form has NO 'Pump-Station-Status'-equivalent field. Define operational via derived rule, like:
+Plant is OPERATIONAL if ALL:
+  • 1748906571911 ∈ {Normal} (no critical preliminary issues)
+  • 1748907201859 ∈ {Effluent Clear} OR effluent parameters pass thresholds
+  • No critical per-process fault selected
+  • 1748910860630 = No outstanding urgent issues blocking operation","MAJOR GAP / DOUBLE-CHECK: WWTP form has no single 'overall status' question. Either (a) add an 'Overall plant status' field with options {Operational / Issues / Not operational} to the form, or (b) use the derived-rule logic ",
+4,,Effluent Compliance,Yes,Monitoring,"1754995400901 (BOD)
+1754995400701 (COD)
+1754995400301 (TDS)",,"Per DWS: BOD < 40, COD < 100, TDS < 1000 mg/L must pass.",Per DWS: plant compliant when 1754995400901 < 40 AND 1754995400701 < 100 AND 1754995400301 < 1000 mg/L. % compliant = compliant / total.,Use the monitroing sample across both forms per plant. ,
+5,,% Critical Alerts,,Derived,Composite — operational status + effluent compliance,,Stations at RED - effluent fail OR critical operational issues. % = red / total.,"Plant RED when ANY:
+  • Effluent not compliant (rule above)
+  • Op/Non-op process = Not Operational
+% = red / total.",align the RED rule with the operational definition in row 4 so the two KPIs are consistent.,
+6,WWTP Operational Map,Operationality,Yes,Monitoring,"1748904785806
+(derived operational status)",,Pin colour: Operational vs Issues with system.,"For each plant with 1748904785806 present, pin colour from derived operational rule (see row 4).",Stations without GPS can't be placed on the map.,
+7,,Effluent compliance,Yes,Monitoring,"1754995400901, 1754995400701, 1754995400301",,"Pin colour: BOD < 40, COD < 100, TDS < 1000 mg/L must pass.","Pin colour: green if BOD<40 AND COD<100 AND TDS<1000, red otherwise.",,
+8,,Influent pump station presence (Y/N),Yes,Monitoring,1748906592858 (M-Influent pump station Y/N),,Pin colour by presence of influent pump station at the plant.,Pin colour by 1748906592858.,,
+9,,Final recommendations,Yes,Monitoring,"1748918485299 (Y/N gate)
+1748918550536 (multi)",,Pin highlighted if >=1 final recommendation recorded.,"Pin highlighted based on chosen options in 1748918550536 (Capacity Building, Upgrading Works, Technical Assistance, Training, Plant Rehabilitation, Plant Augmentation, Other)",,
+10,,OHS compliance,,Monitoring,"1748910184998, 1748910219997, 1748910278981, 1748910823255",,"Pin colour by OHS checklist score: >=3 green, 2 amber, <1 red.","OHS score = count of YES across 4 fields (1748910184998, 1748910219997, 1748910278981, 1748910823255). Range 0–4.
+Pin: ≥3 green, 2 amber, ≤1 red.","GAP: dashboard currently shows '0–8' OHS histogram. Form only provides 4 yes/no fields. Either (a) re-scale dashboard to 0–4, or (b) extend the form with an OHS PPE / signage / first-aid checklist.",
+11,WWTP at a glance,Effluent Compliance by Parameter,,Monitoring,"1754995400901 (BOD)
+1754995400302 (TSS)
+1754995400501 (NH₃)
+1754995400503 (NO₃)
+1754995400505 (PO₄/P-total)
+1754995400705 (O&G)
+1754995400102 (pH)
+1754995400301 (TDS)
+1754995400701 (COD — also reported)",,"Stacked bar of pass/fail per parameter: BOD, TSS, Ammonia, Nitrate, Phosphate, Oil & Grease, pH, TDS.","Stacked-bar per parameter:
+  BOD: COUNT(value < 40 mg/L) PASS  · else FAIL
+  TSS: COUNT(value < 60 mg/L)
+  NH₃: COUNT(value < 10 mg/L)
+  NO₃: COUNT(value < 20 mg/L)  no DWS standard — working value
+  P-total: COUNT(value < 5 mg/L)  no DWS standard
+  O&G: COUNT(value < 5 mg/L)  (DWS doc said <5; form has 10)
+  pH: COUNT(7.6 ≤ value ≤ 9.0)
+  TDS: COUNT(value < 1000 mg/L)
+Each parameter's bar reads pass/fail across the fleet.",,
+12,,Sample Method,,Monitoring,"1748917751258 (Lab Test / Testing Kits)
+1748919506489 (Lab Test / Testing Kits / Other)",,Donut over Composite / Grab / Lab tested / Field tested / Not sampled.,Count per option of 1748917751258 across plants with 1748917751257 = Yes.,The dashboard's current 'Composite / Grab / Lab tested / Field tested / Not sampled' categories don't match the form. Form only offers Lab Test / Testing Kits. Re-align dashboard to form options OR extend the form with Composite/Grab distinction.,
+13,,OHS Compliance Score Distribution,,Monitoring,"1748910184998, 1748910219997, 1748910278981, 1748910823255",,Histogram of WWTPs by # OHS items compliant out of 4.,Histogram: # plants by # YES across the 4 OHS yes/no fields (range 0–4).,,
+14,,Influent & Effluent Observations,,Monitoring,"1748911325583 (Inflow at inlet)
+1748907201859 (Plant effluent comment)",,Two donut diagrams - Influent comment + Effluent comment categories.,"Two donut charts:
+  INFLUENT: count of plants per option of 1748911325583 (Normal / Surcharging / Overflow weirs / Hydraulically overloaded / Bypass / Unknown source / Other).
+  EFFLUENT: count of plants per option of 1748907201859 (Effluent Clear / Bad odor / Low DO / Excessive SS/turbidity/foam/grease/scum/colour / Other).","FORM ISSUES:
+  (1) Form typo — 'Overflow wiers' should be 'Overflow weirs' in 1748911325583.
+  (2) 1748919315351 is labelled 'Comment on the plant influent' but its option list includes BOTH influent AND effluent options (Effluent Clear is in there). Verify with DWS whether this question should be split into two.",
+15,,Compliance Trend,Yes,Monitoring,"1748905754732 + all effluent params + OHS fields
+1748905754740",,% WWTPs passing each domain over last 12 months.,Group inspections by month. Per month: % WWTPs passing each domain (effluent / OHS / derived operational).,"Accumulates over time. For the first months after rollout, label series 'partial data'.",
+16,Monitoring Status,Monitored (12 mo),Yes,Monitoring,1748905754732 + 1748905754740,,% of WWTPs with >=1 inspection in last 12 months.,COUNT DISTINCT plants with latest 1748905754732 ≥ TODAY()−365.,Same as row 3.,
+17,,Critical issues,Yes,Derived,Composite — see row 6,,Count of WWTPs currently RED.,Count of WWTPs with risk = red (per row 6 rule).,,
+18,,No sample taken,Yes,Monitoring,1748917751257,,Count of WWTPs where latest inspection did not collect a sample.,COUNT plants where latest 1748917751257 = No.,Take the latest of either form per plant.,
+19,,Most recently monitored,Yes,Monitoring,1748905754732 + 1748905754740,,Top 8 WWTPs sorted by most recent inspection date.,Top 8 plants ORDER BY latest 1748905754732 DESC.,,
+20,,Needs monitoring,Yes,Monitoring,1748905754732 + 1748905754740,,Top 8 WWTPs sorted by oldest inspection date.,Top 8 plants ORDER BY latest inspection date ASC.,,
+21,Treatment Units Functionality - Plant Condition,Building condition,Yes,Monitoring,1748910573525,,Options: Good / Satisfactory / Maintenance in progress / Poor.,COUNT per option of 1748910573525: Good / Satisfactory / Maintenance in progress / Poor.,,
+22,,Fence condition,Yes,Monitoring,1748910613027,,Options: Good / Satisfactory / Maintenance in progress / Poor.,COUNT per option of 1748910613027: Good / Satisfactory / Maintenance in progress / Poor.,,
+23,,Security lights,,Monitoring,1748910637040,,Options: Good / Satisfactory / Maintenance in progress / Poor.,COUNT per option of 1748910637040: Good / Satisfactory / Maintenance in progress / Poor / NO SECURITY LIGHTS.,Form has a 5th option 'No Security Lights' that the dashboard's 4-option bar doesn't yet show. Add this as a 5th segment (probably mapped as 'red').,
+24,,Transport availability,,Monitoring,1748910727099,,Options: Good / Satisfactory / Maintenance in progress / Poor.,COUNT per option of 1748910727099: Good / Satisfactory / Intermittent / Not Available.,Form uses different option labels (Intermittent / Not Available) vs the dashboard's standard 4-option scale (Maintenance in progress / Poor). Re-map the dashboard to match form options exactly.,
+25,"Treatment Units Functionality - Tools, OHS & Maintenance",Working tools available,Yes,Monitoring,1748910770584,,Yes / No.,COUNT(Yes) of 1748910770584 vs total.,,
+26,,OHS equipment present,Yes,Monitoring,1748910823255,,Yes / No.,COUNT(Yes) of 1748910823255 vs total.,,
+27,,Effluent pumping at the plant,Yes,Monitoring,1748907188132,,Yes / No.,COUNT(Yes) of 1748907188132 vs total.,,
+28,,Urgent maintenance programs,Yes,Monitoring,"1748910860630
+1748910928304 (details)",,Yes / No.,COUNT(Yes) of 1748910860630.,,
+29,,Preventative maintenance programs,Yes,Monitoring,"1748910968346
+1748911015414 (details)",,Yes / No.,COUNT(Yes) of 1748910968346.,,
+30,,Upgrading programs,Yes,Monitoring,"1748911109721
+1748911146330 (details)",,Yes / No.,COUNT(Yes) of 1748911109721.,,
+31,Treatment Units Functionality - Inflow,Inflow,,Monitoring,"1748906535935
+1748911325583
+1748911325349",,Meter Y/N, inlet conditions multi-select (Normal / Surcharging / Overflow weirs / Hydraulically overloaded / Bypass / Unknown source / Other), average inflow rate (m3/day).,"remove type from form,"
+32,,Influent Pumping,Yes,Monitoring,"1748906592858
+1748914793745",,Presence Y/N + multi-select status (Normal / Inadequate wet-weather pumping / Screens overloaded / Poor ventilation / Pumps not operational / Pump house bad / good / No pump station).,"• Presence: COUNT(Yes) of 1748906592858.
+• Status bar: count per option of 1748914793745 (Normal operation / Inadequate pumping during wet weather flows / Screens overloaded / Poor ventilation / Pumps not operational / Pump house in bad condition / Pump house in good condition / No influent Pump Station in the plant).",,
+33,Treatment Units Functionality - Per-process,Preliminary treatment,,Monitoring,"1748906571911 (Screening)
+1748914436150 (Grit removal)",,Multi-select per WAF form (Normal / Excessive screen clogging / Debris buildup / Oil & grease buildup / Improper disposal of screenings / Excessive odors / Other).,"Count per option of BOTH:
+  1748906571911: Normal / Excessive screen clogging / Debris buildup / Oil & grease buildup / Improper disposal / Excessive odors / Other.
+  1748914436150: Normal / Grit chamber clogged / Less than normal grit accumulation / Oil & grease buildup / Excessive organic content of grit / Wear and tear / Excessive odor / Other.",FORM has a SEPARATE 'Grit removal' question that the dashboard's 'Preliminary treatment' panel currently bundles. Recommend showing them as 2 sub-panels OR merging counts.,
+34,,Primary clarifier,Yes,Monitoring,1748906604803,,Multi-select per WAF form.,Count per option of 1748906604803 (multi-select).,,
+35,,Trickling filters,Yes,Monitoring,1748906632114,,Multi-select per WAF form.,Count per option of 1748906632114 (multi-select).,,
+36,,Activated sludge system,Yes,Monitoring,1748915642008,,Multi-select per WAF form.,Count per option of 1748915642008 (multi-select).,,
+37,,Stabilization lagoons,Yes,Monitoring,1748906806971,,Multi-select per WAF form.,Count per option of 1748906806971 (multi-select).,,
+38,,Anaerobic lagoons,,Monitoring,1748906938999,,Multi-select per WAF form.,Count per option of 1748906938999 (multi-select).,Form has placeholder option 'New Option' in this field's list. Verify with DWS that this should be removed or replaced with a real label.,
+39,,Secondary clarifier,Yes,Monitoring,1748907057799,,Multi-select per WAF form.,Count per option of 1748907057799 (multi-select).,,
+40,,Oxidation ponds,Yes,Monitoring,1754995400903,,Operational / Non operational.,Count per option of 1754995400903: Operational / Not Operational.,,
+41,,Pasveer ditches,Yes,Monitoring,1754995400913,,Operational / Non operational.,Count per option of 1754995400913.,,
+42,,IDEA lagoons,Yes,Monitoring,1754995400923,,Operational / Non operational.,Count per option of 1754995400923.,,
+43,,Polishing ponds,Yes,Monitoring,1754995400933,,Operational / Non operational.,Count per option of 1754995400933.,,
+44,,Aerobic lagoons,Yes,Monitoring,1754995400943,,Operational / Non operational.,Count per option of 1754995400943.,,
+45,,Sludge digester,Yes,Monitoring,1754995400953,,Operational / Non operational.,Count per option of 1754995400953.,,
+46,,Imhoff tanks,Yes,Monitoring,1754995400963,,Operational / Non operational.,Count per option of 1754995400963.,,
+47,,Sludge aerobic digestion,Yes,Monitoring,1748907110680,,Multi-select: Normal / Excessive foaming / Bad odor / Insufficient DO / Digester overloaded / Mechanical aerator failure / Inadequate supernatant removal / Other.,Count per option of 1748907110680 (multi).,,
+48,,Sludge handling,Yes,Monitoring,1748907110308,,Multi-select per WAF form.,Count per option of 1748907110308 (multi).,,
+49,,Drying beds,Yes,Monitoring,1748907173282,,Multi-select per WAF form.,Count per option of 1748907173282 (multi).,,
+50,,Plant Effluent observations,Yes,Monitoring,1748907201859,,Multi-select: Effluent Clear / Bad odor / Low DO / Excessive SS-turbidity-foam-grease-scum-colour / Other. Always-applicable.,Count per option of 1748907201859: Effluent Clear / Bad odor / Low DO / Excessive SS-turbidity-foam-grease-scum-colour / Other.,Always-applicable (every plant has effluent). Form lacks a parallel for influent — the at-a-glance dashboard donut uses 1748911325583 for influent.,
+51,Individual Plant Overview,Search & inline plant card,,Registration + Monitoring,ALL Registration + Monitoring + Quick Monitoring questions,,Selectable picker. Renders mini site-hero plus grouped tables that mirror the WAF WWTP monitoring form.,"Display the latest Monitoring submission per plant, structured as:
+  • Registration: 1748903442166, 1748903240794, 1748903539202, 1748905778961, 1748903613622, 1748904785806
+  • General: 1748905754732, 1748906474270, 1748910159332
+  • Processes: 1748913763000
+  • OHS: 1748910184998, 1748910219997, 1748910278981, 1748910823255
+  • Plant conditions: 1748910573525, 1748910613027, 1748910637040, 1748910727099
+  • Yes/No: 1748910770584, 1748910860630, 1748910968346, 1748911109721
+  • Inflow: 1748906535935, 1748911325583, 1748911325349
+  • Influent pumping: 1748906592858, 1748914793745
+  • Effluent sample params: 1754995400901, 1754995400302, 1754995400501, 1754995400503, 1754995400505, 1754995400705, 1754995400102, 1754995400301, 1754995400701
+  • Treatment statuses: one per in-use process (see rows 34–51)
+  • Constraints + recommendations: 1748918417541, 1748907223535, 1748918485299, 1748918550536, 1748918679466",Show both forms' history in chronological order per plant. Verify with DWS how to merge them in the timeline view.,
+52,All WWTP Sites,All WWTP Sites,,Registration + Monitoring,"1748903442166, 1748903240794, 1748905778961, 1748905754732, 1754995400901, 1754995400701, 1754995400301, 1748910184998",,Click-through table - Plant / Division / District / Pop. Connected / Last Inspected / Effluent / OHS / Status.,"One row per registered plant. Columns:
+  • Plant — 1748903442166
+  • Division — 1748903240794
+  • Pop. Connected — 1748905778961
+  • Last Inspected — latest of 1748905754732 / 1748905754740
+  • Effluent — pass/fail by BOD/COD/TDS thresholds
+  • OHS — derived count of YES across 1748910184998, 1748910219997, 1748910278981, 1748910823255
+  • Status — derived (see row 4).","Form does NOT capture District separately from Division. Add District field to Registration, OR derive from GPS lookup.",

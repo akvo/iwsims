@@ -37,7 +37,7 @@ class ValuesFilterTestCases(VisualizationValuesTestMixin, APITestCase):
         """
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
-            f"&date_question_id={self.q_date.id}"
+            f"&date_question_name={self.q_date.name}"
             "&from_date=2025-01-01&to_date=2025-01-31"
         )
         self.assertEqual(response.status_code, 200)

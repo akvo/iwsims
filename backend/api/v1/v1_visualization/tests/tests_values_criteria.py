@@ -2,6 +2,7 @@ from django.test.utils import override_settings
 from rest_framework.test import APITestCase
 from api.v1.v1_visualization.tests.mixins import (
     VisualizationValuesTestMixin,
+    refresh_all_mvs,
 )
 
 
@@ -26,7 +27,7 @@ class ValuesCriteriaTestCases(
 
     def test_single_option_criterion_narrows_count(self):
         response = self.client.get(self._url(
-            f"&criteria=option_equals:{self.q_option.id}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
         ))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -35,7 +36,7 @@ class ValuesCriteriaTestCases(
 
     def test_multiple_option_contains_match(self):
         response = self.client.get(self._url(
-            f"&criteria=option_contains:{self.q_multi.id}"
+            f"&criteria=option_contains:{self.q_multi.name}"
             ":feature_x"
         ))
         self.assertEqual(response.status_code, 200)
@@ -46,7 +47,7 @@ class ValuesCriteriaTestCases(
     def test_option_equals_on_multiple_option_also_works(self):
         """option_equals on multiple_option uses array containment."""
         response = self.client.get(self._url(
-            f"&criteria=option_equals:{self.q_multi.id}"
+            f"&criteria=option_equals:{self.q_multi.name}"
             ":feature_x"
         ))
         self.assertEqual(response.status_code, 200)
@@ -57,8 +58,8 @@ class ValuesCriteriaTestCases(
     def test_two_criteria_and(self):
         """AND across questions: active AND has feature_x."""
         response = self.client.get(self._url(
-            f"&criteria=option_equals:{self.q_option.id}:active,"
-            f"option_contains:{self.q_multi.id}:feature_x"
+            f"&criteria=option_equals:{self.q_option.name}:active,"
+            f"option_contains:{self.q_multi.name}:feature_x"
         ))
         self.assertEqual(response.status_code, 200)
         # mon1a matches both; mon1b active but no feature_x
@@ -69,7 +70,7 @@ class ValuesCriteriaTestCases(
     def test_option_in_multiple_values(self):
         """OR within a question via option_in."""
         response = self.client.get(self._url(
-            f"&criteria=option_in:{self.q_option.id}"
+            f"&criteria=option_in:{self.q_option.name}"
             ":active|inactive"
         ))
         self.assertEqual(response.status_code, 200)
@@ -81,7 +82,7 @@ class ValuesCriteriaTestCases(
     def test_threshold_gt(self):
         """Numeric threshold criterion."""
         response = self.client.get(self._url(
-            f"&criteria=threshold_gt:{self.q_number.id}:20"
+            f"&criteria=threshold_gt:{self.q_number.name}:20"
         ))
         self.assertEqual(response.status_code, 200)
         # mon2a=30, mon2b=40 → 2
@@ -92,7 +93,7 @@ class ValuesCriteriaTestCases(
     def test_criteria_and_date_and_admin_stack(self):
         """criteria composes with from_date/to_date and admin."""
         response = self.client.get(self._url(
-            f"&criteria=option_equals:{self.q_option.id}:active"
+            f"&criteria=option_equals:{self.q_option.name}:active"
             "&from_date=2025-03-01"
         ))
         self.assertEqual(response.status_code, 200)
@@ -121,7 +122,7 @@ class ValuesCriteriaTestCases(
 
     def test_threshold_non_numeric_returns_400(self):
         response = self.client.get(self._url(
-            f"&criteria=threshold_gt:{self.q_number.id}:abc"
+            f"&criteria=threshold_gt:{self.q_number.name}:abc"
         ))
         self.assertEqual(response.status_code, 400)
 
@@ -131,8 +132,8 @@ class ValuesCriteriaTestCases(
         # contain. mon1b has y+z too but option=active.
         response = self.client.get(self._url(
             f"&question_id={self.q_option.id}&group_by=option"
-            f"&criteria=option_contains:{self.q_multi.id}:feature_y"
-            f",option_contains:{self.q_multi.id}:feature_z"
+            f"&criteria=option_contains:{self.q_multi.name}:feature_y"
+            f",option_contains:{self.q_multi.name}:feature_z"
         ))
         self.assertEqual(response.status_code, 200)
         data = response.json()["data"]
@@ -175,10 +176,11 @@ class ValuesCriteriaTestCases(
             options=["type_b"],
             created_by=self.user,
         )
+        refresh_all_mvs()
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             "&monitoring=all"
-            f"&criteria=option_equals:{self.q_reg_option.id}:type_a"
+            f"&criteria=option_equals:{self.q_reg_option.name}:type_a"
         )
         self.assertEqual(response.status_code, 200)
         # Only reg1's 2 monitoring records
@@ -201,9 +203,10 @@ class ValuesCriteriaTestCases(
             options=["type_b"],
             created_by=self.user,
         )
+        refresh_all_mvs()
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
-            f"&criteria=option_equals:{self.q_reg_option.id}:type_a"
+            f"&criteria=option_equals:{self.q_reg_option.name}:type_a"
         )
         self.assertEqual(response.status_code, 200)
         # Latest mode: 1 parent → 1 latest monitoring

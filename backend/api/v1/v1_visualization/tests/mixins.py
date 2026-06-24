@@ -1,10 +1,56 @@
-from django.core.management import call_command
-from django.utils.timezone import make_aware
 from datetime import datetime
+
+from django.core.management import call_command
+from django.db import connection
+from django.utils.timezone import make_aware
+
+from api.v1.v1_data.models import Answers, FormData
+from api.v1.v1_forms.models import (
+    Forms,
+    Questions,
+    QuestionGroup,
+    QuestionOptions,
+    QuestionTypes,
+)
 from api.v1.v1_profile.models import Administration
-from api.v1.v1_forms.models import Forms, Questions
-from api.v1.v1_data.models import FormData, Answers
 from api.v1.v1_profile.tests.mixins import ProfileTestHelperMixin
+
+
+def refresh_all_mvs():
+    """Refresh all visualization materialized views.
+
+    Call in test setUp() after creating FormData/Answers so MV-based
+    queries see the test data. Works inside TestCase transactions
+    (regular REFRESH, not CONCURRENTLY).
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "REFRESH MATERIALIZED VIEW mv_latest_monitoring"
+        )
+        cursor.execute(
+            "REFRESH MATERIALIZED VIEW mv_answer_denormalized"
+        )
+        cursor.execute(
+            "REFRESH MATERIALIZED VIEW mv_cross_form_latest"
+        )
+        cursor.execute(
+            "REFRESH MATERIALIZED VIEW mv_parent_aggregates"
+        )
+
+
+class MVRefreshMixin:
+    """Mixin that refreshes all materialized views after setUp.
+
+    Include before TestCase/APITestCase in the MRO for test classes
+    whose assertions rely on MV-backed queries:
+
+        class MyTest(MVRefreshMixin, VisualizationValuesTestMixin, TestCase):
+            ...
+    """
+
+    def setUp(self):
+        super().setUp()
+        refresh_all_mvs()
 
 
 class VisualizationValuesTestMixin(ProfileTestHelperMixin):
@@ -177,6 +223,8 @@ class VisualizationValuesTestMixin(ProfileTestHelperMixin):
             date_val="2025-03-15T00:00:00.000Z",
         )
 
+        refresh_all_mvs()
+
     def _create_monitoring(
         self,
         parent,
@@ -262,3 +310,101 @@ class VisualizationValuesTestMixin(ProfileTestHelperMixin):
             )
 
         return mon
+
+
+class CrossFormTestBase(ProfileTestHelperMixin):
+    """Base for cross-form question_name tests.
+
+    These tests need fixture topologies the fixed example-vis-6 dataset
+    (VisualizationValuesTestMixin) cannot express: multiple monitoring
+    forms under one registration, or multiple registration families that
+    share a question name. This base provides the admin/user boilerplate
+    plus small builders so each test only declares the topology it needs.
+
+    All shared monitoring questions are option-type named "shared_status".
+    """
+
+    BASE_URL = "/api/v1/visualization/values"
+
+    def init_admin_user(self, email):
+        """Seed administrations + create a super-admin user."""
+        call_command("administration_seeder", "--test")
+        self.adm = Administration.objects.filter(level__level=0).first()
+        self.user = self.create_user(
+            email=email,
+            role_level=self.IS_SUPER_ADMIN,
+        )
+
+    def make_reg_form(self, form_id, name):
+        return Forms.objects.create(
+            id=form_id, name=name, type=1, version=1,
+        )
+
+    def make_monitoring_form(self, form_id, name, parent):
+        return Forms.objects.create(
+            id=form_id, name=name, type=2, version=1, parent=parent,
+        )
+
+    def add_shared_status_question(
+        self, form, group_id, q_id, opt_value, label="Shared Status",
+    ):
+        """Add an option question named "shared_status" with one option."""
+        grp = QuestionGroup.objects.create(
+            id=group_id, form=form, name=f"grp_{form.id}", order=1,
+        )
+        question = Questions.objects.create(
+            id=q_id, form=form, question_group=grp,
+            name="shared_status", label=label,
+            type=QuestionTypes.option, order=1,
+        )
+        QuestionOptions.objects.create(
+            question=question, value=opt_value, label=opt_value, order=1,
+        )
+        return question
+
+    def make_registration(self, data_id, name, reg_form):
+        return FormData.objects.create(
+            id=data_id, name=name, form=reg_form,
+            administration=self.adm, created_by=self.user,
+        )
+
+    def make_monitoring(
+        self, data_id, name, mon_form, parent_reg, question,
+        opt_value, created,
+    ):
+        """Create a monitoring datapoint + its shared_status answer."""
+        mon = FormData.objects.create(
+            id=data_id, name=name, form=mon_form, parent=parent_reg,
+            administration=self.adm, created_by=self.user,
+        )
+        FormData.objects.filter(id=mon.id).update(
+            created=make_aware(created)
+        )
+        Answers.objects.create(
+            data=mon, question=question, options=[opt_value],
+            created_by=self.user,
+        )
+        return mon
+
+    def create_family(
+        self, *, reg_form_id, mon_form_id, q_id, grp_id,
+        reg_data_id, mon_data_id, reg_name, opt_value,
+        created=datetime(2025, 6, 10),
+    ):
+        """Build a one-registration / one-monitoring family sharing
+        the "shared_status" question. Returns the registration FormData."""
+        reg_form = self.make_reg_form(
+            reg_form_id, f"{reg_name} Registration",
+        )
+        mon_form = self.make_monitoring_form(
+            mon_form_id, f"{reg_name} Monitor", reg_form,
+        )
+        question = self.add_shared_status_question(
+            mon_form, grp_id, q_id, opt_value,
+        )
+        reg = self.make_registration(reg_data_id, reg_name, reg_form)
+        self.make_monitoring(
+            mon_data_id, f"{reg_name} Mon", mon_form, reg, question,
+            opt_value, created,
+        )
+        return reg

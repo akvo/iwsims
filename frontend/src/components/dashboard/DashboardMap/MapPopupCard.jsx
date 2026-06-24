@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { api, uiText } from "../../../lib";
-import getQuestionOptions from "./getQuestionOptions";
+import getCrossFormQuestionOptions from "./getCrossFormQuestionOptions";
 
 const LOADING = "…";
 
@@ -10,31 +10,35 @@ const resolveDynamic = (activeFilter, byParent, pointId, sourceFormId) => {
     return null;
   }
   const raw = byParent?.[pointId];
-  if (raw === null || typeof raw === "undefined") {
-    const isRegistrationFilter =
-      Number(activeFilter.form_id) === Number(sourceFormId);
-    return isRegistrationFilter ? "Not answered" : "No monitoring data";
-  }
+  // byParent[id] is an array of selected values; no row / empty array
+  // means the datapoint has no answer → "_no_info".
+  const values = Array.isArray(raw) && raw.length > 0 ? raw : ["_no_info"];
   if (activeFilter.formula) {
+    const value = values[0];
     const buckets = activeFilter.formula.buckets || [];
-    const found = buckets.find((b) => b.value === raw);
+    const found = buckets.find((b) => b.value === value);
     if (found) {
       return found.label;
     }
-    if (activeFilter.formula.default?.value === raw) {
+    if (activeFilter.formula.default?.value === value) {
       return activeFilter.formula.default.label;
     }
-    return raw;
+    return value;
   }
-  if (activeFilter.question_id) {
-    const opts = getQuestionOptions(
-      activeFilter.form_id,
-      activeFilter.question_id
+  if (activeFilter.question_name) {
+    const opts = getCrossFormQuestionOptions(
+      sourceFormId,
+      activeFilter.question_name
     );
-    const found = opts.find((o) => String(o.value) === String(raw));
-    return found ? found.label : raw;
+    const labels = values
+      .filter((v) => v !== "_no_info")
+      .map((v) => {
+        const found = opts.find((o) => String(o.value) === String(v));
+        return found ? found.label : v;
+      });
+    return labels.length > 0 ? labels.join(", ") : "_no_info";
   }
-  return raw;
+  return values[0];
 };
 
 const formatUpdated = (iso) => {

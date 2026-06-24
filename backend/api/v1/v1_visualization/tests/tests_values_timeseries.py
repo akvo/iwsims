@@ -53,7 +53,7 @@ class ValuesTimeseriesTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.Q_NUMBER_ID}"
-            f"&date_question_id={self.Q_DATE_ID}"
+            f"&date_question_name={self.q_date.name}"
             "&group_by=date&monitoring=all"
         )
         self.assertEqual(response.status_code, 200)
@@ -76,7 +76,7 @@ class ValuesTimeseriesTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.Q_NUMBER_ID}"
-            f"&date_question_id={self.Q_DATE_ID}"
+            f"&date_question_name={self.q_date.name}"
             "&group_by=date&monitoring=all"
             "&from_date=2025-01-15&to_date=2025-01-20"
         )
@@ -108,7 +108,7 @@ class ValuesTimeseriesTestCases(VisualizationValuesTestMixin, APITestCase):
         response = self.client.get(
             f"{self.BASE_URL}?form_id={self.monitoring.id}"
             f"&question_id={self.Q_NUMBER_ID}"
-            f"&date_question_id={self.Q_DATE_ID}"
+            f"&date_question_name={self.q_date.name}"
             "&group_by=date&monitoring=all"
             "&from_date=2025-03-01"
         )

@@ -118,3 +118,20 @@
 .dashboard-map-wrapper {
   background-color: $white;
 }
+
+// Segmented divIcon marker (single colour, or conic-gradient pie when a
+// datapoint selected several options). Mirrors the manage-data MapView.
+.dashboard-map-marker {
+  background: transparent;
+  border: none;
+
+  .dashboard-map-marker-dot {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid #ffffff;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.45);
+    box-sizing: border-box;
+  }
+}

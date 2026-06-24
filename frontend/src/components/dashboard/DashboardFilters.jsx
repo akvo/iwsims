@@ -12,11 +12,11 @@ const { RangePicker } = DatePicker;
  * startup) for the matching form_id, then walking its question groups.
  * Returns an empty array if the form, question, or its options aren't found.
  */
-const extractOptionsFromWindow = (formId, questionId) => {
+const extractOptionsFromWindow = (formId, questionName) => {
   const form = (window.forms || []).find((f) => f.id === Number(formId));
   const groups = form?.content?.question_group || [];
   for (let i = 0; i < groups.length; i += 1) {
-    const q = (groups[i].question || []).find((x) => x.id === questionId);
+    const q = (groups[i].question || []).find((x) => x.name === questionName);
     if (q) {
       return (q.option || []).map((o) => ({
         label: o.label,
@@ -46,7 +46,7 @@ const extractOptionsFromWindow = (formId, questionId) => {
  * @param {object} filters       Return value of useDashboardFilters
  * @param {object} onChange      { setDateRange, setAdministrationId, setCustomFilter }
  */
-const DashboardFilters = ({ filterItems, filters, onChange }) => {
+const DashboardFilters = ({ filterItems, filters, onChange, parentFormId }) => {
   const dateCfg = useMemo(
     () => filterItems.find((i) => i.chart_type === "filter_date"),
     [filterItems]
@@ -73,10 +73,13 @@ const DashboardFilters = ({ filterItems, filters, onChange }) => {
   const customOptions = useMemo(() => {
     const out = {};
     customDefs.forEach((d) => {
-      out[d.key] = extractOptionsFromWindow(d.form_id, d.question_id);
+      out[d.key] = extractOptionsFromWindow(
+        d.form_id || parentFormId,
+        d.question_name
+      );
     });
     return out;
-  }, [customDefs]);
+  }, [customDefs, parentFormId]);
 
   // AdministrationDropdown is the source of truth via `store.administration`
   // (an array of levels). It does NOT fire onChange on clear, so we subscribe
@@ -268,6 +271,7 @@ DashboardFilters.propTypes = {
     setAdministrationId: PropTypes.func.isRequired,
     setCustomFilter: PropTypes.func.isRequired,
   }).isRequired,
+  parentFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default DashboardFilters;

@@ -11,6 +11,11 @@ import { toValueHistogramBins } from "./compute/valueHistogramBins";
 import { computeCrossTab } from "./compute/crossTab";
 import { computeAccessibilityBucket } from "./compute/accessibility";
 import { computeKpiStack } from "./compute/kpiStack";
+import { computeProcessCounts } from "./compute/processCounts";
+import { computeGroupedStack } from "./compute/groupedStack";
+import { computeBucketBar } from "./compute/bucketBar";
+import { computeDateHistogram } from "./compute/dateHistogram";
+import { computeValueBuckets } from "./compute/valueBuckets";
 import DotsChart from "./DotsChart";
 import DotStripChart from "./DotStripChart";
 
@@ -24,6 +29,8 @@ const COMPONENT_BY_TYPE = {
 };
 
 const NO_INFO_COLOR = "#bfbfbf";
+const NOT_APPLICABLE_LABEL = "N/A";
+const NOT_APPLICABLE_COLOR = "#546e7a";
 
 /**
  * akvo-charts' `transformConfig` hardcodes its default tooltip and does NOT
@@ -360,20 +367,38 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       ...(commonProps.config?.yAxis && !horizontal
         ? { yAxis: commonProps.config.yAxis }
         : {}),
+      ...(commonProps.config?.grid ? { grid: commonProps.config.grid } : {}),
       ...tooltipPatch(commonProps.config),
     };
 
-    // Color the "No information available" entry gray regardless of palette.
+    // Color semantic neutral entries gray regardless of palette. This is
+    // especially important for compliance charts: once the number of failure
+    // reasons exceeds config.color's length, ECharts cycles back to the first
+    // colour and would otherwise render N/A with the Compliant green.
     // Two shapes of data arrive here:
     //  • Simple bar  [{label, value}, ...] — one series, per-item color via
     //    series.data + xAxis.data (switching away from dataset+encode).
     //  • kpi_stack   [{category, SeriesA: N, "No information available": M}]
     //    — one series per stack key; target by series name via chart.getOption().
     const noInfoLabel = uiText.en.noInformationAvailable;
+    const noInfoColor = commonProps.config?.noInfoColor || NO_INFO_COLOR;
+    const notApplicableColor =
+      commonProps.config?.notApplicableColor || NOT_APPLICABLE_COLOR;
+    const seriesColorMap = {
+      ...(commonProps.config?.seriesColorMap || {}),
+      [noInfoLabel]:
+        commonProps.config?.seriesColorMap?.[noInfoLabel] || noInfoColor,
+      [NOT_APPLICABLE_LABEL]:
+        commonProps.config?.seriesColorMap?.[NOT_APPLICABLE_LABEL] ||
+        notApplicableColor,
+    };
     const chartData = commonProps.data || [];
     if (chartData.length > 0 && "label" in chartData[0]) {
       // Simple bar chart path.
-      if (chartData.some((r) => r.label === noInfoLabel)) {
+      const hasPerRowStyle = chartData.some(
+        (r) => r.color || r.label === noInfoLabel
+      );
+      if (hasPerRowStyle) {
         const categoryLabels = chartData.map((r) => r.label);
         const axisWithData = {
           ...categoryAxisOverride,
@@ -383,8 +408,12 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
           {
             data: chartData.map((r) => ({
               value: r.value,
-              ...(r.label === noInfoLabel
-                ? { itemStyle: { color: NO_INFO_COLOR } }
+              ...(r.color || r.label === noInfoLabel
+                ? {
+                    itemStyle: {
+                      color: r.color || noInfoColor,
+                    },
+                  }
                 : {}),
             })),
           },
@@ -395,15 +424,34 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
           overrides.xAxis = axisWithData;
         }
       }
-    } else if (chartData.length > 0 && noInfoLabel in chartData[0]) {
-      // kpi_stack path: find the series by name and set its itemStyle.
+    } else if (
+      chartData.length > 0 &&
+      chartData.some((row) =>
+        Object.keys(seriesColorMap).some((label) => label in row)
+      )
+    ) {
+      // Stack path: bind colours by series name rather than array position.
+      // Formula buckets can appear or disappear, which shifts series indexes
+      // and makes a positional palette unreliable.
       const existingSeries = chart.getOption()?.series || [];
-      const noInfoIdx = existingSeries.findIndex((s) => s.name === noInfoLabel);
-      if (noInfoIdx !== -1) {
-        overrides.series = existingSeries.map((_, i) =>
-          i === noInfoIdx ? { itemStyle: { color: NO_INFO_COLOR } } : {}
-        );
-      }
+      overrides.series = existingSeries.map((series) => {
+        const color = seriesColorMap[series.name];
+        if (color) {
+          return { itemStyle: { color } };
+        }
+        return {};
+      });
+    }
+
+    // Value-axis minInterval (e.g. integer-only ticks for counts). For a
+    // horizontal chart the value axis is the x-axis — config places it under
+    // config.xAxis; for a vertical chart it is the y-axis, already merged
+    // from config.yAxis above.
+    if (horizontal && typeof xAxisOverride.minInterval !== "undefined") {
+      overrides.xAxis = {
+        ...(overrides.xAxis || {}),
+        minInterval: xAxisOverride.minInterval,
+      };
     }
 
     chart.setOption(overrides, false);
@@ -470,6 +518,7 @@ const ChartRenderer = ({
   definitionsById,
   complianceResponses,
   computeResponses,
+  parentFormId,
 }) => {
   const chartType = item.chart_type === "histogram" ? "bar" : item.chart_type;
   const Component = COMPONENT_BY_TYPE[chartType];
@@ -479,7 +528,9 @@ const ChartRenderer = ({
   const isApiDriven =
     (Boolean(Component) || isDots || isDotStrip) &&
     Boolean(item.api) &&
-    (!item.compute || (item.compute === "kpi_stack" && !item.segments)) &&
+    (!item.compute ||
+      (item.compute === "kpi_stack" && !item.segments) ||
+      item.compute === "date_histogram") &&
     !item.source;
 
   const {
@@ -490,6 +541,7 @@ const ChartRenderer = ({
     today,
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
     enabled: isApiDriven,
   });
 
@@ -507,6 +559,7 @@ const ChartRenderer = ({
     {
       enabled: Boolean(progressDef),
       customFilterDefs,
+      parentFormId,
     }
   );
 
@@ -517,6 +570,13 @@ const ChartRenderer = ({
     }
     const paramsRef = item.params_ref || [];
     return paramsRef.map((id) => definitionsById?.get(id)).filter(Boolean);
+  }, [item, definitionsById]);
+
+  const complianceFormula = useMemo(() => {
+    if (item.compute !== "compliance" || !item.globals_ref) {
+      return null;
+    }
+    return definitionsById?.get(item.globals_ref)?.compliance_formula || null;
   }, [item, definitionsById]);
 
   const data = useMemo(() => {
@@ -555,6 +615,27 @@ const ChartRenderer = ({
       return [row];
     }
 
+    if (item.compute === "process_counts") {
+      const responses = computeResponses?.process_counts?.[item.id];
+      return computeProcessCounts(item.segments, responses, {
+        sort: item.sort,
+      });
+    }
+
+    if (item.compute === "grouped_stack") {
+      const responses = computeResponses?.grouped_stack?.[item.id];
+      return computeGroupedStack(item.segments, item.stacks, responses);
+    }
+
+    if (item.compute === "bucket_bar") {
+      const responses = computeResponses?.bucket_bar?.[item.id];
+      return computeBucketBar(item.buckets, responses);
+    }
+
+    if (item.compute === "date_histogram") {
+      return computeDateHistogram(apiData?.data || [], today, item.display);
+    }
+
     if (item.compute === "compliance") {
       // complianceResponses is keyed by item id (not param.key).
       // We pass params with their ids as keys into computeComplianceStackData
@@ -583,6 +664,7 @@ const ChartRenderer = ({
       // be appended. Spec: doc/claude/compliance-chart-no-info/.
       const complianceOptions = {
         noInfoLabel: uiText.en.noInformationAvailable,
+        formula: complianceFormula,
       };
       if (item.include_unanswered === true) {
         const total = computeResponses?.compliance_totals?.[item.id];
@@ -591,7 +673,9 @@ const ChartRenderer = ({
           // response. If totalRegistered arrives before the param fetches the
           // gap formula (totalRegistered - 0 - 0) would render the entire
           // registered universe as "No information available".
-          const activeNormalised = normalised.filter((p) => !p.hide);
+          const activeNormalised = complianceFormula
+            ? normalised
+            : normalised.filter((p) => !p.hide);
           const allParamsLoaded =
             activeNormalised.length > 0 &&
             activeNormalised.every((p) => p.key in responsesByKey);
@@ -638,6 +722,9 @@ const ChartRenderer = ({
           extendTo,
         });
       }
+      if (item.display?.mode === "value_buckets") {
+        return computeValueBuckets(rows, item.display.buckets);
+      }
       return rows.map((r) => ({
         label:
           r.group === "_no_info" ? uiText.en.noInformationAvailable : r.label,
@@ -652,8 +739,10 @@ const ChartRenderer = ({
     progressData,
     complianceResponses,
     complianceParams,
+    complianceFormula,
     computeResponses,
     fiscalYearStartMonth,
+    today,
   ]);
 
   if (!Component && !isDots && !isDotStrip) {
@@ -728,6 +817,22 @@ const ChartRenderer = ({
     config: {
       ...(item.config || {}),
       ...(horizontal ? { horizontal: true } : {}),
+      // Keep the public visualization schema consistent: chart authors use
+      // top-level `color_map`, while the renderer derives both the initial
+      // palette and the name-bound lookup needed by stacked series.
+      ...(item.color_map
+        ? {
+            color: Object.values(item.color_map),
+            seriesColorMap: item.color_map,
+          }
+        : {}),
+      // Optional override for the "No information available" bucket colour,
+      // taken from the item's color_map._no_info (falls back to the neutral
+      // NO_INFO_COLOR grey when absent). Lets a config recolour the no-info
+      // series away from the cycling palette (which otherwise lands on red).
+      ...(item.color_map?._no_info
+        ? { noInfoColor: item.color_map._no_info }
+        : {}),
     },
     data,
     rawConfig: item.raw_config,

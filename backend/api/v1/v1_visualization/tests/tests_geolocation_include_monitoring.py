@@ -132,6 +132,30 @@ class DatapointDetailTestCases(VisualizationValuesTestMixin, APITestCase):
         self.assertEqual(data["name"], self.reg1.name)
         self.assertIsInstance(data["administration_full_name"], str)
 
+    def test_updated_reflects_latest_monitoring(self):
+        """``updated`` is the latest monitoring submission for the site,
+        not the registration's own (null) ``updated`` field."""
+        # reg1's latest monitoring is mon1b (created 2025-03-10).
+        response = self.client.get(f"{self.BASE_URL}/{self.reg1.id}")
+        self.assertEqual(response.status_code, 200)
+        updated = response.json()["updated"]
+        self.assertIsNotNone(updated)
+        self.assertTrue(updated.startswith("2025-03-10"))
+
+    def test_updated_falls_back_without_monitoring(self):
+        """With no monitoring children, ``updated`` falls back to the
+        registration datapoint's own created timestamp."""
+        from api.v1.v1_data.models import FormData
+        FormData.objects.filter(parent=self.reg1).delete(hard=True)
+        response = self.client.get(f"{self.BASE_URL}/{self.reg1.id}")
+        self.assertEqual(response.status_code, 200)
+        updated = response.json()["updated"]
+        self.assertIsNotNone(updated)
+        self.reg1.refresh_from_db()
+        self.assertTrue(
+            updated.startswith(self.reg1.created.strftime("%Y-%m-%d"))
+        )
+
     def test_404_for_monitoring_child(self):
         """A monitoring child (parent != NULL) returns 404."""
         response = self.client.get(f"{self.BASE_URL}/{self.mon1a.id}")

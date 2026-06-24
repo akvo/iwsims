@@ -1,0 +1,770 @@
+{
+  "parent_form_id": 1749611049520,
+  "slug": "pump-overview",
+  "name": "Wastewater Pump Station",
+  "description": "Overview dashboard for Wastewater Pump Station.",
+  "fiscal_year_start_month": 1,
+  "items": [
+    {
+      "id": "filters_main",
+      "chart_type": "filter_bar",
+      "order": 1,
+      "col_span": 24,
+      "items": [
+        {
+          "id": "filter_date",
+          "chart_type": "filter_date",
+          "order": 1,
+          "label": "Monitoring Period",
+          "date_question_names": {
+            "monitoring": "inspection_date"
+          }
+        },
+        {
+          "id": "filter_administration",
+          "chart_type": "filter_administration",
+          "order": 2,
+          "label": "Location"
+        }
+      ]
+    },
+    {
+      "id": "kpi_total_pump_stations",
+      "info": "Count registration records.",
+      "chart_type": "card",
+      "order": 2,
+      "col_span": 6,
+      "label": "Total Pump Stations",
+      "api": {
+        "monitoring": "latest",
+        "ignore_date_filter": true
+      }
+    },
+    {
+      "id": "kpi_inspected_12_mo",
+      "info": "count of Inspected.",
+      "chart_type": "card",
+      "order": 3,
+      "col_span": 6,
+      "label": "Inspected (12 mo)",
+      "color": "#1890ff",
+      "api": {
+        "question_name": "inspection_date",
+        "sum_by": "parent_id",
+        "rolling_months": 12
+      }
+    },
+    {
+      "id": "kpi_operational",
+      "info": "Station is Operational IF ANY:\n  • Pump Station Status =Operational} OR (\n  • Electrical Panel=Satisfactory AND\n  • Pump Station Lid = Covered AND\n  • Non return Valve = Operational AND\n  • Sluice valve = Operational AND\n  • Guardrails for Pump Station = Secured)\nCount = number of stations meeting any condition / total stations × 100.",
+      "chart_type": "card",
+      "order": 4,
+      "col_span": 6,
+      "label": "% Operational",
+      "color": "#64A73B",
+      "compute": "rules_kpi",
+      "denominator_api": {
+        "ignore_date_filter": true
+      },
+      "rules": [
+        {
+          "all_of": [
+            {
+              "question_name": "station_status",
+              "op": "option_equals",
+              "value": "operational"
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "electrical_panel",
+              "op": "option_equals",
+              "value": "satisfactory"
+            },
+            {
+              "question_name": "pump_station_lid",
+              "op": "option_equals",
+              "value": "covered"
+            },
+            {
+              "question_name": "non_return_valve",
+              "op": "option_equals",
+              "value": "operational"
+            },
+            {
+              "question_name": "sluice_valve",
+              "op": "option_equals",
+              "value": "operational"
+            },
+            {
+              "question_name": "guardrails_pump_station",
+              "op": "option_equals",
+              "value": "secured"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kpi_critical_issues",
+      "info": "Station is CRITICAL (red) IF ANY:\n  • Pump Station Status ∈ {Not Operational, Overflowing, Blocked} OR (\n  • Electrical Panel ∈ {Broken, Electrical hazard} AND\n  • Pump Station Lid = Missing AND\n  • Non return Valve = Faulty AND\n  • Sluice valve = Faulty AND\n  • Guardrails for Pump Station = Missing AND  \n• OHS equipment = Not available)\nCount = number of stations meeting any condition.",
+      "chart_type": "card",
+      "order": 5,
+      "col_span": 6,
+      "label": "Critical issues",
+      "color": "#e41a1c",
+      "compute": "rules_kpi",
+      "rules": [
+        {
+          "all_of": [
+            {
+              "question_name": "station_status",
+              "op": "option_in",
+              "values": ["not_operational", "overflowing", "blocked"]
+            }
+          ]
+        },
+        {
+          "all_of": [
+            {
+              "question_name": "electrical_panel",
+              "op": "option_in",
+              "values": ["broken", "electrical_hazard"]
+            },
+            {
+              "question_name": "pump_station_lid",
+              "op": "option_equals",
+              "value": "missing"
+            },
+            {
+              "question_name": "non_return_valve",
+              "op": "option_equals",
+              "value": "faulty"
+            },
+            {
+              "question_name": "sluice_valve",
+              "op": "option_equals",
+              "value": "faulty"
+            },
+            {
+              "question_name": "guardrails_pump_station",
+              "op": "option_equals",
+              "value": "missing"
+            },
+            {
+              "question_name": "ohs_equipment",
+              "op": "option_equals",
+              "value": "not_available"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "map_main",
+      "chart_type": "map",
+      "title": "Monitored Pump Station Sites",
+      "order": 6,
+      "col_span": 24,
+      "height": 400,
+      "filters": [
+        {
+          "type": "select",
+          "key": "station_status",
+          "label": "Operationality",
+          "question_name": "station_status",
+          "color_map": {
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "select",
+          "key": "electrical_panel",
+          "label": "Electrical issues",
+          "question_name": "electrical_panel",
+          "color_map": {
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "select",
+          "key": "standby_facility",
+          "label": "Standby facility",
+          "formula": {
+            "buckets": [
+              {
+                "value": "standby_available",
+                "label": "Standby available",
+                "all_of": [
+                  {
+                    "question_name": "num_pumps_standby",
+                    "op": ">",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "value": "no_standby",
+                "label": "No standby",
+                "all_of": [
+                  {
+                    "question_name": "num_pumps_standby",
+                    "op": "<=",
+                    "value": 0
+                  }
+                ]
+              }
+            ],
+            "default": {
+              "value": "_no_info",
+              "label": "No information available"
+            }
+          },
+          "color_map": {
+            "standby_available": "#64A73B",
+            "no_standby": "#e41a1c",
+            "_no_info": "#999999"
+          }
+        },
+        {
+          "type": "toggle",
+          "key": "monitored_last_year",
+          "label": "Monitored last year",
+          "default": true,
+          "rolling_months": 12
+        }
+      ],
+      "click_action": "popup",
+      "click_url_template": "/control-center/data/1749611049520/monitoring/{data_id}"
+    },
+    {
+      "id": "condition_matrix_structural_site",
+      "info": "Per-field option breakdown (e.g. Good / Satisfactory / Maintenance in progress / Poor) on the latest monitoring, for: Ground conditions, Facility condition, Security gate & fencing, Non-return valve, Sluice valve, Ventilation, Electrical panel, Pump station lid, Gantry, Hour run meter, Amp meter, Volt meter, Guardrails, Power backup system, Odour, Fats / grease balls, Lights, Water supply, OHS equipment.",
+      "chart_type": "custom_component",
+      "component": "ConditionMatrixWidget",
+      "order": 7,
+      "col_span": 24,
+      "title": "Structural & Site Condition",
+      "subtitle": "per-field option breakdown from the WAF monitoring form",
+      "columns": 2,
+      "fields": [
+        {
+          "key": "ground_conditions",
+          "label": "Ground conditions",
+          "api": {
+            "question_name": "ground_conditions",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "good",
+              "label": "Good",
+              "tone": "good"
+            },
+            {
+              "value": "satisfactory",
+              "label": "Satisfactory",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "poor",
+              "label": "Poor",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "facility_condition",
+          "label": "Facility condition",
+          "api": {
+            "question_name": "facility_condition",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "good",
+              "label": "Good",
+              "tone": "good"
+            },
+            {
+              "value": "satisfactory",
+              "label": "Satisfactory",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "poor",
+              "label": "Poor",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "security_gate_fencing",
+          "label": "Security gate & fencing",
+          "api": {
+            "question_name": "security_gate_fencing",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "good",
+              "label": "Good",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "poor",
+              "label": "Poor",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "non_return_valve",
+          "label": "Non-return valve",
+          "api": {
+            "question_name": "non_return_valve",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "operational",
+              "label": "Operational",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "faulty",
+              "label": "Faulty",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "sluice_valve",
+          "label": "Sluice valve",
+          "api": {
+            "question_name": "sluice_valve",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "operational",
+              "label": "Operational",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "faulty",
+              "label": "Faulty",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "ventilation",
+          "label": "Ventilation",
+          "api": {
+            "question_name": "ventilation",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "exhaust_fan_in_operation",
+              "label": "Exhaust fan in operation",
+              "tone": "good"
+            },
+            {
+              "value": "poor",
+              "label": "Poor",
+              "tone": "mid"
+            },
+            {
+              "value": "not_available",
+              "label": "Not available",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "electrical_panel",
+          "label": "Electrical panel",
+          "api": {
+            "question_name": "electrical_panel",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "satisfactory",
+              "label": "Satisfactory",
+              "tone": "good"
+            },
+            {
+              "value": "need_maintenance",
+              "label": "Need maintenance",
+              "tone": "mid"
+            },
+            {
+              "value": "broken",
+              "label": "Broken",
+              "tone": "bad"
+            },
+            {
+              "value": "electrical_hazard",
+              "label": "Electrical hazard",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "pump_station_lid",
+          "label": "Pump station lid",
+          "api": {
+            "question_name": "pump_station_lid",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "covered",
+              "label": "Covered",
+              "tone": "good"
+            },
+            {
+              "value": "broken",
+              "label": "Broken",
+              "tone": "mid"
+            },
+            {
+              "value": "missing",
+              "label": "Missing",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "gantry",
+          "label": "Gantry",
+          "api": {
+            "question_name": "gantry",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "electrical_hoist",
+              "label": "Electrical Hoist",
+              "tone": "good"
+            },
+            {
+              "value": "mechanical_hoist",
+              "label": "Mechanical Hoist",
+              "tone": "good"
+            },
+            {
+              "value": "portable_hoist",
+              "label": "Portable Hoist",
+              "tone": "mid"
+            },
+            {
+              "value": "not_available",
+              "label": "Not available",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "hour_run_meter",
+          "label": "Hour run meter",
+          "api": {
+            "question_name": "hour_run_meter",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "oprational",
+              "label": "Operational",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "faulty",
+              "label": "Faulty",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "amp_meter",
+          "label": "Amp meter",
+          "api": {
+            "question_name": "amp_meter",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "operational",
+              "label": "Operational",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "faulty",
+              "label": "Faulty",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "volt_meter",
+          "label": "Volt meter",
+          "api": {
+            "question_name": "volt_meter",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "operational",
+              "label": "Operational",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "faulty",
+              "label": "Faulty",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "guardrails_pump_station",
+          "label": "Guardrails",
+          "api": {
+            "question_name": "guardrails_pump_station",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "secured",
+              "label": "Secured",
+              "tone": "good"
+            },
+            {
+              "value": "maintenance_in_progress",
+              "label": "Maintenance in progress",
+              "tone": "mid"
+            },
+            {
+              "value": "needs_upgrade",
+              "label": "Needs upgrade",
+              "tone": "mid"
+            },
+            {
+              "value": "missing",
+              "label": "Missing",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "power_backup_system",
+          "label": "Power backup system",
+          "api": {
+            "question_name": "power_backup_system",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "generator",
+              "label": "Generator",
+              "tone": "good"
+            },
+            {
+              "value": "none",
+              "label": "None",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "odour",
+          "label": "Odour",
+          "api": {
+            "question_name": "odour",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "none",
+              "label": "None",
+              "tone": "good"
+            },
+            {
+              "value": "mild",
+              "label": "Mild",
+              "tone": "mid"
+            },
+            {
+              "value": "strong",
+              "label": "Strong",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "fats_grease_balls",
+          "label": "Fats / grease balls",
+          "api": {
+            "question_name": "fats_grease_balls",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "none",
+              "label": "None",
+              "tone": "good"
+            },
+            {
+              "value": "some",
+              "label": "Some",
+              "tone": "mid"
+            },
+            {
+              "value": "plenty",
+              "label": "Plenty",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "lights",
+          "label": "Lights",
+          "api": {
+            "question_name": "lights",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "operational",
+              "label": "Operational",
+              "tone": "good"
+            },
+            {
+              "value": "faulty",
+              "label": "Faulty",
+              "tone": "mid"
+            },
+            {
+              "value": "not_available",
+              "label": "Not available",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "water_supply",
+          "label": "Water supply",
+          "api": {
+            "question_name": "water_supply",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "available",
+              "label": "Available",
+              "tone": "good"
+            },
+            {
+              "value": "intermittent_supply",
+              "label": "Intermittent supply",
+              "tone": "mid"
+            },
+            {
+              "value": "not_available",
+              "label": "Not available",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "key": "ohs_equipment",
+          "label": "OHS equipment",
+          "api": {
+            "question_name": "ohs_equipment",
+            "group_by": "option",
+            "monitoring": "latest"
+          },
+          "options": [
+            {
+              "value": "available",
+              "label": "Available",
+              "tone": "good"
+            },
+            {
+              "value": "not_used",
+              "label": "Not used",
+              "tone": "mid"
+            },
+            {
+              "value": "not_available",
+              "label": "Not available",
+              "tone": "bad"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

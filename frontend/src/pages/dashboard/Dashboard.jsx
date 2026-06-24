@@ -9,6 +9,8 @@ import {
 } from "../../util/hooks";
 import DashboardRenderer from "../../components/dashboard/DashboardRenderer";
 import { fails } from "../../components/dashboard/compute/compliance";
+import { collectRuleQuestionNames } from "../../components/dashboard/compute/rulesKpi";
+import { COMPLIANCE_PARAM_COMPUTES } from "../../components/dashboard/constants";
 import "./style.scss";
 
 const { Title, Paragraph } = Typography;
@@ -26,6 +28,7 @@ const { Title, Paragraph } = Typography;
 const WqParamFetcher = ({
   paramItem,
   filterState,
+  parentFormId,
   fiscalYearStartMonth,
   customFilterDefs,
   onData,
@@ -33,6 +36,7 @@ const WqParamFetcher = ({
   const { data } = useDashboardValues(paramItem.api, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
   });
   useEffect(() => {
     if (data) {
@@ -59,7 +63,14 @@ const ComplianceTotalsFetcher = ({
   customFilterDefs,
   onData,
 }) => {
-  const totalsApi = useMemo(() => ({ form_id: parentFormId }), [parentFormId]);
+  // Whole-fleet universe: the "No information available" gap is measured
+  // against every registered plant, so the monitoring-period date range
+  // must not shrink this count (see ignore_date_filter in
+  // applyDashboardFilters).
+  const totalsApi = useMemo(
+    () => ({ form_id: parentFormId, ignore_date_filter: true }),
+    [parentFormId]
+  );
   const { data, loading, error } = useDashboardValues(totalsApi, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,
@@ -91,10 +102,12 @@ const ProgressFetcher = ({
   progressItem,
   filterState,
   customFilterDefs,
+  parentFormId,
   onData,
 }) => {
   const { data, error } = useDashboardProgress(progressItem, filterState, {
     customFilterDefs,
+    parentFormId,
   });
   useEffect(() => {
     if (data || error) {
@@ -114,11 +127,12 @@ const ProgressFetcher = ({
 const CrossTabFetcher = ({
   item,
   filterState,
+  parentFormId,
   fiscalYearStartMonth,
   customFilterDefs,
   onData,
 }) => {
-  const opts = { fiscalYearStartMonth, customFilterDefs };
+  const opts = { fiscalYearStartMonth, customFilterDefs, parentFormId };
   const { data: category } = useDashboardValues(
     item.category_api,
     filterState,
@@ -146,11 +160,12 @@ const CrossTabFetcher = ({
 const SampleIssuesFetcher = ({
   item,
   filterState,
+  parentFormId,
   fiscalYearStartMonth,
   customFilterDefs,
   onData,
 }) => {
-  const opts = { fiscalYearStartMonth, customFilterDefs };
+  const opts = { fiscalYearStartMonth, customFilterDefs, parentFormId };
   const { data: sample } = useDashboardValues(
     item.sample_api,
     filterState,
@@ -170,14 +185,15 @@ const SampleIssuesFetcher = ({
 };
 
 /**
- * Invisible fetcher for a single kpi_stack segment. Parent renders one
+ * Invisible fetcher for a single derived-compute segment. Parent renders one
  * instance per item × segment so the hook count per instance stays at 1.
  * Reports (itemId, segmentKey, data) via onSegmentData.
  */
-const KpiSegmentFetcher = ({
+const SegmentFetcher = ({
   itemId,
   segment,
   filterState,
+  parentFormId,
   fiscalYearStartMonth,
   customFilterDefs,
   onSegmentData,
@@ -185,6 +201,7 @@ const KpiSegmentFetcher = ({
   const { data } = useDashboardValues(segment.api, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,
+    parentFormId,
   });
   useEffect(() => {
     if (data) {
@@ -246,7 +263,10 @@ const collectByCompute = (items = [], computeMode) => {
 
 /**
  * Walk items and collect all ids listed in any `params_ref[]` arrays found
- * on compliance charts (`compute: "compliance"`).
+ * on compliance items — both the stacked-bar chart (`compute: "compliance"`)
+ * and the KPI card (`compute: "compliance_kpi"`). The KPI reuses these
+ * pre-fetched param responses, so its params must be fetched even on a
+ * dashboard that has no compliance stacked-bar chart.
  *
  * @param {Array} items
  * @returns {Set<string>}
@@ -258,7 +278,10 @@ const collectComplianceParamIds = (items = []) => {
       collectComplianceParamIds(item.items).forEach((id) => ids.add(id));
       return;
     }
-    if (item.compute === "compliance" && Array.isArray(item.params_ref)) {
+    if (
+      COMPLIANCE_PARAM_COMPUTES.includes(item.compute) &&
+      Array.isArray(item.params_ref)
+    ) {
       item.params_ref.forEach((id) => ids.add(id));
     }
     if (Array.isArray(item.items)) {
@@ -368,6 +391,7 @@ const Dashboard = () => {
 
   // ── Cross-form & derived-compute fan-out ──────────────────────────────────
   // Items with compute=cross_tab / accessibility_bucket / kpi_stack /
+  // process_counts /
   // accessibility_no_issues_kpi each need pre-fetched /values responses
   // combined into a single `computeResponses` tree keyed by
   // {[mode]: {[itemId]: payload}}. This mirrors the compliance fan-out but
@@ -385,11 +409,31 @@ const Dashboard = () => {
     () => (config ? collectByCompute(config.items, "kpi_stack") : []),
     [config]
   );
+  const processCountItems = useMemo(
+    () => (config ? collectByCompute(config.items, "process_counts") : []),
+    [config]
+  );
+  const groupedStackItems = useMemo(
+    () => (config ? collectByCompute(config.items, "grouped_stack") : []),
+    [config]
+  );
+  const bucketBarItems = useMemo(
+    () => (config ? collectByCompute(config.items, "bucket_bar") : []),
+    [config]
+  );
   const accessibilityNoIssuesKpiItems = useMemo(
     () =>
       config
         ? collectByCompute(config.items, "accessibility_no_issues_kpi")
         : [],
+    [config]
+  );
+  const criticalKpiItems = useMemo(
+    () => (config ? collectByCompute(config.items, "critical_kpi") : []),
+    [config]
+  );
+  const rulesKpiItems = useMemo(
+    () => (config ? collectByCompute(config.items, "rules_kpi") : []),
     [config]
   );
 
@@ -398,8 +442,13 @@ const Dashboard = () => {
     {}
   );
   const [kpiStackByItem, setKpiStackByItem] = useState({});
+  const [processCountsByItem, setProcessCountsByItem] = useState({});
+  const [groupedStackByItem, setGroupedStackByItem] = useState({});
+  const [bucketBarByItem, setBucketBarByItem] = useState({});
   const [accessibilityNoIssuesKpiByItem, setAccessibilityNoIssuesKpiByItem] =
     useState({});
+  const [criticalByItem, setCriticalByItem] = useState({});
+  const [rulesByItem, setRulesByItem] = useState({});
 
   const onCrossTabData = useCallback((id, payload) => {
     setCrossTabByItem((prev) =>
@@ -425,6 +474,51 @@ const Dashboard = () => {
       return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
     });
   }, []);
+  const onProcessCountSegmentData = useCallback((itemId, segmentKey, data) => {
+    setProcessCountsByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+  const onGroupedStackSegmentData = useCallback((itemId, segmentKey, data) => {
+    setGroupedStackByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+  const onBucketBarSegmentData = useCallback((itemId, segmentKey, data) => {
+    setBucketBarByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+  const onCriticalSegmentData = useCallback((itemId, segmentKey, data) => {
+    setCriticalByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+  const onRulesSegmentData = useCallback((itemId, segmentKey, data) => {
+    setRulesByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
 
   // Merge into one tree, with legacy complianceResponses under `compliance`.
   const computeResponses = useMemo(
@@ -434,7 +528,12 @@ const Dashboard = () => {
       cross_tab: crossTabByItem,
       accessibility_bucket: accessibilityBucketByItem,
       kpi_stack: kpiStackByItem,
+      process_counts: processCountsByItem,
+      grouped_stack: groupedStackByItem,
+      bucket_bar: bucketBarByItem,
       accessibility_no_issues_kpi: accessibilityNoIssuesKpiByItem,
+      critical: criticalByItem,
+      rules: rulesByItem,
     }),
     [
       complianceResponses,
@@ -442,7 +541,12 @@ const Dashboard = () => {
       crossTabByItem,
       accessibilityBucketByItem,
       kpiStackByItem,
+      processCountsByItem,
+      groupedStackByItem,
+      bucketBarByItem,
       accessibilityNoIssuesKpiByItem,
+      criticalByItem,
+      rulesByItem,
     ]
   );
 
@@ -631,6 +735,7 @@ const Dashboard = () => {
           key={paramItem.id}
           paramItem={paramItem}
           filterState={filters.queryParams}
+          parentFormId={config.parent_form_id}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onParamData}
@@ -657,6 +762,7 @@ const Dashboard = () => {
           progressItem={progressItem}
           filterState={filters.queryParams}
           customFilterDefs={customFilterDefs}
+          parentFormId={config.parent_form_id}
           onData={onProgressData}
         />
       ))}
@@ -667,6 +773,7 @@ const Dashboard = () => {
           key={item.id}
           item={item}
           filterState={filters.queryParams}
+          parentFormId={config.parent_form_id}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onCrossTabData}
@@ -679,6 +786,7 @@ const Dashboard = () => {
           key={item.id}
           item={item}
           filterState={filters.queryParams}
+          parentFormId={config.parent_form_id}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onAccessibilityBucketData}
@@ -691,6 +799,7 @@ const Dashboard = () => {
           key={item.id}
           item={item}
           filterState={filters.queryParams}
+          parentFormId={config.parent_form_id}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
           onData={onAccessibilityNoIssuesKpiData}
@@ -700,14 +809,106 @@ const Dashboard = () => {
       {/* Invisible kpi_stack segment fetchers — one per (item, segment) pair */}
       {kpiStackItems.flatMap((item) =>
         (item.segments || []).map((segment) => (
-          <KpiSegmentFetcher
+          <SegmentFetcher
             key={`${item.id}::${segment.key}`}
             itemId={item.id}
             segment={segment}
             filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
             fiscalYearStartMonth={fyStart}
             customFilterDefs={customFilterDefs}
             onSegmentData={onKpiStackSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible process_counts segment fetchers — one per (item, segment) pair */}
+      {processCountItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onProcessCountSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible grouped_stack segment fetchers — one per (item, segment) pair */}
+      {groupedStackItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onGroupedStackSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible bucket_bar segment fetchers — one per (item, segment) pair */}
+      {bucketBarItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onBucketBarSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible critical_kpi operational-segment fetchers — one per
+          (item, operational_segment) pair. Compliance params are fetched
+          by the compliance fan-out above (COMPLIANCE_PARAM_COMPUTES). */}
+      {criticalKpiItems.flatMap((item) =>
+        (item.operational_segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onCriticalSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible rules_kpi fetchers — one per (item, referenced
+          question_name). Each rule condition's question is fetched per
+          parent (group_by=parent_id) and joined client-side. */}
+      {rulesKpiItems.flatMap((item) =>
+        collectRuleQuestionNames(item.rules).map((qname) => (
+          <SegmentFetcher
+            key={`${item.id}::${qname}`}
+            itemId={item.id}
+            segment={{
+              key: qname,
+              api: {
+                question_name: qname,
+                group_by: "parent_id",
+                monitoring: "latest",
+              },
+            }}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onRulesSegmentData}
           />
         ))
       )}
@@ -748,6 +949,7 @@ const Dashboard = () => {
         computeResponses={computeResponses}
         cellComputersById={cellComputersById}
         today={today}
+        parentFormId={config.parent_form_id}
       />
     </div>
   );

@@ -83,8 +83,10 @@ export const expandApiHints = (apiBlock, ctx = {}) => {
     rolling_months,
     fiscal_year,
     past_due,
-    completion_question_id,
-    deadline_question_id,
+    completion_question_name,
+    completion_incomplete_value,
+    completion_incomplete_op,
+    deadline_question_name,
     ...rest
   } = apiBlock || {};
 
@@ -102,12 +104,19 @@ export const expandApiHints = (apiBlock, ctx = {}) => {
   }
 
   if (past_due === true) {
-    if (completion_question_id) {
-      out.question_id = completion_question_id;
-      out.option_value = "no";
+    if (completion_question_name) {
+      if (completion_incomplete_op === "lt") {
+        // Numeric completion (e.g. project_completion_percentage < 100):
+        // express the "still incomplete" test as a threshold criterion so
+        // the count keys on the deadline question instead of an option.
+        out.criteria = `threshold_lt:${completion_question_name}:${completion_incomplete_value}`;
+      } else {
+        out.question_name = completion_question_name;
+        out.option_value = completion_incomplete_value || "no";
+      }
     }
-    if (deadline_question_id) {
-      out.date_question_id = deadline_question_id;
+    if (deadline_question_name) {
+      out.date_question_name = deadline_question_name;
     }
     out.to_date = toIsoDate(subtractOneDay(today));
   }
@@ -135,13 +144,23 @@ export const applyDashboardFilters = (
 ) => {
   const out = { ...params };
 
+  // Fleet-scope queries (e.g. "Total WTPs" or a ratio's denominator over
+  // the whole registration universe) opt out of the monitoring-period date
+  // range with `ignore_date_filter: true`. A monitoring-period range must
+  // not prune the plant universe by registration `created` — that would
+  // shrink the denominator and skew ratios (e.g. Critical 42/15 = 280%).
+  // The flag strips dates only; administration scope still applies. Remove
+  // it from the outgoing params so it never reaches the backend.
+  const ignoreDateFilter = out.ignore_date_filter === true;
+  delete out.ignore_date_filter;
+
   // Date range: dashboard filter always wins when provided. Widget
   // hints (fiscal_year, rolling_months) act as defaults for the
   // unfiltered state — once the user picks a range, it overrides.
-  if (filterState?.from_date) {
+  if (!ignoreDateFilter && filterState?.from_date) {
     out.from_date = filterState.from_date;
   }
-  if (filterState?.to_date) {
+  if (!ignoreDateFilter && filterState?.to_date) {
     out.to_date = filterState.to_date;
   }
 
@@ -154,10 +173,18 @@ export const applyDashboardFilters = (
   // narrows every widget on the dashboard, not just those whose own
   // api.question_id happens to match. Criteria AND across questions
   // server-side; option_in handles OR within a multiple_option.
-  const criteria = [];
+  //
+  // A widget may carry its own pre-serialized `criteria` string (e.g. a
+  // grouped-stack segment counting "chemical in use AND risk=no"). Seed
+  // the list with it so dashboard custom filters AND on top instead of
+  // overwriting it.
+  const criteria =
+    typeof out.criteria === "string" && out.criteria.length > 0
+      ? out.criteria.split(",")
+      : [];
   (filterState?.custom || []).forEach((entry) => {
     const def = customFilterDefs.find((d) => d.key === entry.key);
-    if (!def || !def.question_id) {
+    if (!def || !def.question_name) {
       return;
     }
     const raw = Array.isArray(entry.value) ? entry.value : [entry.value];
@@ -170,14 +197,14 @@ export const applyDashboardFilters = (
     const isMulti = def.chart_type === "filter_multi_option";
     if (isMulti) {
       if (values.length === 1) {
-        criteria.push(`option_contains:${def.question_id}:${values[0]}`);
+        criteria.push(`option_contains:${def.question_name}:${values[0]}`);
       } else {
-        criteria.push(`option_in:${def.question_id}:${values.join("|")}`);
+        criteria.push(`option_in:${def.question_name}:${values.join("|")}`);
       }
     } else if (values.length === 1) {
-      criteria.push(`option_equals:${def.question_id}:${values[0]}`);
+      criteria.push(`option_equals:${def.question_name}:${values[0]}`);
     } else {
-      criteria.push(`option_in:${def.question_id}:${values.join("|")}`);
+      criteria.push(`option_in:${def.question_name}:${values.join("|")}`);
     }
   });
   if (criteria.length > 0) {

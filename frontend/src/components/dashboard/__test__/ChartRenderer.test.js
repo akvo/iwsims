@@ -26,10 +26,19 @@ jest.mock("akvo-charts", () => {
       const [opt, setOpt] = ReactMock.useState(null);
       ReactMock.useImperativeHandle(ref, () => ({
         setOption: (o) => setOpt(o),
+        getOption: () => {
+          const dimensions = Array.from(
+            new Set((props.data || []).flatMap((row) => Object.keys(row)))
+          );
+          return {
+            series: dimensions.slice(1).map((name) => ({ name })),
+          };
+        },
       }));
       return ReactMock.createElement("div", {
         "data-testid": testid,
         "data-rows": props.data?.length ?? 0,
+        "data-payload": JSON.stringify(props.data || []),
         "data-has-raw": String(Boolean(props.rawConfig)),
         "data-option": opt ? JSON.stringify(opt) : "",
       });
@@ -97,6 +106,7 @@ describe("ChartRenderer", () => {
         }}
         filterState={emptyFilters}
         today={today}
+        parentFormId={1748903240763}
       />
     );
 
@@ -106,6 +116,7 @@ describe("ChartRenderer", () => {
         "2"
       )
     );
+    expect(axios.mock.calls[0][0].params.parent_form_id).toBe(1748903240763);
   });
 
   test("donut with all-zero values renders No data (not equal slices)", async () => {
@@ -335,6 +346,239 @@ describe("ChartRenderer", () => {
     );
     expect(screen.getByTestId("chart-stack")).toHaveAttribute("data-rows", "1");
     expect(axios).not.toHaveBeenCalled();
+  });
+
+  test("binds unique compliance colors by series name", () => {
+    const computeResponses = {
+      kpi_stack: {
+        chart_compliance: {
+          compliant: { data: [{ value: 10 }] },
+          salinity: { data: [{ value: 2 }] },
+          e_coli_cbt: { data: [{ value: 1 }] },
+          no_info: { data: [{ value: 3 }] },
+          not_applicable: { data: [{ value: 4 }] },
+        },
+      },
+    };
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_compliance",
+          chart_type: "stack_bar",
+          compute: "kpi_stack",
+          segments: [
+            { key: "compliant", label: "Compliant" },
+            { key: "salinity", label: "Salinity" },
+            { key: "e_coli_cbt", label: "E-coli CBT" },
+            { key: "no_info", label: "No information available" },
+            { key: "not_applicable", label: "N/A" },
+          ],
+          config: {
+            title: "Compliance",
+          },
+          color_map: {
+            Compliant: "#2e7d32",
+            Salinity: "#9e7c00",
+            "E-coli CBT": "#7c4dff",
+            "No information available": "#90a4ae",
+            "N/A": "#263238",
+          },
+        }}
+        filterState={emptyFilters}
+        today={today}
+        computeResponses={computeResponses}
+      />
+    );
+
+    const opt = JSON.parse(
+      screen.getByTestId("chart-stack").getAttribute("data-option")
+    );
+    const colors = opt.series.map((series) => series.itemStyle.color);
+    expect(colors).toEqual([
+      "#2e7d32",
+      "#9e7c00",
+      "#7c4dff",
+      "#90a4ae",
+      "#263238",
+    ]);
+    expect(new Set(colors).size).toBe(colors.length);
+  });
+
+  test("compute=process_counts assembles horizontal bar rows from segment responses", () => {
+    const computeResponses = {
+      process_counts: {
+        chart_processes: {
+          flocculation: { data: [{ value: 18 }] },
+          sedimentation: { data: [{ value: 7 }] },
+          filtration: { data: [{ value: 9 }] },
+        },
+      },
+    };
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_processes",
+          chart_type: "bar",
+          compute: "process_counts",
+          orientation: "horizontal",
+          sort: "desc",
+          segments: [
+            { key: "flocculation", label: "Coagulation/Flocculation" },
+            { key: "sedimentation", label: "Sedimentation/Clarification" },
+            { key: "filtration", label: "Filtration" },
+          ],
+          config: {
+            title: "Treatment Processes in Use",
+            grid: { left: 160, right: 32 },
+          },
+        }}
+        filterState={emptyFilters}
+        today={today}
+        computeResponses={computeResponses}
+      />
+    );
+    expect(screen.getByTestId("chart-bar")).toHaveAttribute("data-rows", "3");
+    const opt = JSON.parse(
+      screen.getByTestId("chart-bar").getAttribute("data-option")
+    );
+    expect(opt.grid).toEqual({ left: 160, right: 32 });
+    expect(axios).not.toHaveBeenCalled();
+  });
+
+  test("horizontal chart applies config.xAxis.minInterval to the value axis", () => {
+    const computeResponses = {
+      process_counts: {
+        chart_processes: {
+          flocculation: { data: [{ value: 2 }] },
+          filtration: { data: [{ value: 1 }] },
+        },
+      },
+    };
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_processes",
+          chart_type: "bar",
+          compute: "process_counts",
+          orientation: "horizontal",
+          segments: [
+            { key: "flocculation", label: "Floc" },
+            { key: "filtration", label: "Filtration" },
+          ],
+          config: {
+            title: "Implementation at Scale",
+            xAxis: { nameGap: 164, minInterval: 1 },
+          },
+        }}
+        filterState={emptyFilters}
+        today={today}
+        computeResponses={computeResponses}
+      />
+    );
+    const opt = JSON.parse(
+      screen.getByTestId("chart-bar").getAttribute("data-option")
+    );
+    // Value axis is the x-axis when horizontal → integer-only ticks.
+    expect(opt.xAxis.minInterval).toBe(1);
+    expect(axios).not.toHaveBeenCalled();
+  });
+
+  test("compute=date_histogram buckets latest dates and applies row colors", async () => {
+    axios.mockResolvedValue({
+      data: {
+        data: [
+          { value: "2026-04-01", label: "A", group: "1" },
+          { value: "2026-03-01", label: "B", group: "2" },
+          { value: "2025-12-01", label: "C", group: "3" },
+          { value: "2024-11-01", label: "D", group: "4" },
+        ],
+      },
+    });
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_inspectiondate_histogram",
+          chart_type: "bar",
+          compute: "date_histogram",
+          config: { title: "Inspection-date histogram" },
+          api: {
+            question_name: "date_of_inspection",
+            group_by: "parent_id",
+            monitoring: "latest",
+          },
+          display: { mode: "date_histogram", months: 3 },
+        }}
+        filterState={emptyFilters}
+        today={today}
+      />
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("chart-bar")).toHaveAttribute("data-rows", "4")
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("chart-bar").getAttribute("data-option")
+      ).toBeTruthy()
+    );
+    const opt = JSON.parse(
+      screen.getByTestId("chart-bar").getAttribute("data-option")
+    );
+    expect(opt.xAxis.data).toEqual(["> 3 mo", "Feb '26", "Mar '26", "Apr '26"]);
+    expect(opt.series[0].data[0].value).toBe(2);
+    expect(opt.series[0].data[0].itemStyle.color).toBe("#d93c35");
+  });
+
+  test("display=value_buckets buckets parent-level numeric rows", async () => {
+    axios.mockResolvedValue({
+      data: {
+        data: [
+          { value: 0, label: "Plant A", group: "1" },
+          { value: 1, label: "Plant B", group: "2" },
+          { value: 2, label: "Plant C", group: "3" },
+          { value: 2, label: "Plant D", group: "4" },
+          { value: 4, label: "Plant E", group: "5" },
+          { value: 6, label: "Plant F", group: "6" },
+        ],
+      },
+    });
+    render(
+      <ChartRenderer
+        item={{
+          id: "chart_floc_tank_count",
+          chart_type: "bar",
+          config: { title: "Sedimentation — Floc Tank Count" },
+          api: {
+            question_name: "floc_tanks_are_there_at_the_plant",
+            group_by: "parent_id",
+            monitoring: "latest",
+          },
+          display: {
+            mode: "value_buckets",
+            buckets: [
+              { label: "0", value: 0 },
+              { label: "1", value: 1 },
+              { label: "2", value: 2 },
+              { label: "3", value: 3 },
+              { label: "4+", min: 4 },
+            ],
+          },
+        }}
+        filterState={emptyFilters}
+        today={today}
+      />
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("chart-bar")).toHaveAttribute("data-rows", "5")
+    );
+    expect(
+      JSON.parse(screen.getByTestId("chart-bar").getAttribute("data-payload"))
+    ).toEqual([
+      { label: "0", value: 1 },
+      { label: "1", value: 1 },
+      { label: "2", value: 2 },
+      { label: "3", value: 0 },
+      { label: "4+", value: 2 },
+    ]);
   });
 
   test("histogram threshold auto-renders a red xAxis markLine", async () => {
