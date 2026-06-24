@@ -91,12 +91,16 @@ export const useDashboardEscalation = (
     const { monitoring_form_id, criteria = [] } = escalationBlock.api || {};
 
     const out = {
-      monitoring_form_id,
       criteria: serializeCriteria(criteria),
       columns: serializeColumns(escalationBlock.columns || []),
       page,
       page_size: pageSize,
     };
+    // Optional: when omitted, the backend resolves the latest answer per
+    // question across every monitoring form (cross-form escalation).
+    if (monitoring_form_id) {
+      out.monitoring_form_id = monitoring_form_id;
+    }
 
     if (filterState?.from_date) {
       out.from_date = filterState.from_date;
