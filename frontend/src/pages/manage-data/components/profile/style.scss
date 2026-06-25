@@ -1,0 +1,31 @@
+.site-profile-header {
+  margin-bottom: 16px;
+}
+
+.site-profile-header-layout {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.site-profile-header-layout h2 {
+  margin-top: 0;
+}
+
+.site-profile-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.site-profile-photo-grid .ant-image-img {
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .site-profile-header-layout {
+    flex-direction: column;
+  }
+}

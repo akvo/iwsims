@@ -1,0 +1,10 @@
+export { default as AssessmentWidget } from "./AssessmentWidget";
+export { default as ComplianceWidget } from "./ComplianceWidget";
+export { default as FieldListWidget } from "./FieldListWidget";
+export { default as MetricWidget } from "./MetricWidget";
+export { default as PhotoWidget } from "./PhotoWidget";
+export { default as RecordTableWidget } from "./RecordTableWidget";
+export { default as RisksWidget } from "./RisksWidget";
+export { default as RiskScoreTrend } from "./RiskScoreTrend";
+export { default as TagsWidget } from "./TagsWidget";
+export { default as TrendWidget } from "./TrendWidget";

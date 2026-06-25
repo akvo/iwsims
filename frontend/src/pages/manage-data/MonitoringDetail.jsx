@@ -24,6 +24,7 @@ import {
   Tooltip,
   Spin,
   Input,
+  Alert,
 } from "antd";
 import {
   LeftCircleOutlined,
@@ -41,6 +42,11 @@ import { Breadcrumbs, DescriptionPanel } from "../../components";
 import { useNotification } from "../../util/hooks";
 import { AbilityContext } from "../../components/can";
 import MonitoringOverview from "./MonitoringOverview";
+import {
+  getSiteProfileConfig,
+  getSiteProfileKey,
+} from "../../config/site-profiles";
+import { ProfileRenderer, useSiteProfile } from "./components/profile";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -66,6 +72,14 @@ const MonitoringDetail = () => {
   const defaultFormId = formIdFromUrl
     ? parseInt(formIdFromUrl, 10)
     : childrenForms[0]?.id;
+  const profileFormId = useMemo(
+    () => getSiteProfileKey(form, selectedFormData?.form),
+    [form, selectedFormData?.form]
+  );
+  const profileConfig = useMemo(
+    () => getSiteProfileConfig(profileFormId),
+    [profileFormId]
+  );
 
   const { notify } = useNotification();
   const [loading, setLoading] = useState(false);
@@ -79,7 +93,11 @@ const MonitoringDetail = () => {
   const [deleting, setDeleting] = useState(false);
   const [editedRecord, setEditedRecord] = useState({});
   const [dataTab, setDataTab] = useState(
-    formIdFromUrl ? "monitoring-data" : "registration-data"
+    formIdFromUrl
+      ? "monitoring-data"
+      : profileConfig
+      ? "site-profile"
+      : "registration-data"
   );
   const [selectedForm, setSelectedForm] = useState(defaultFormId);
   const [selectedOverviewQuestion, setSelectedOverviewQuestion] =
@@ -94,6 +112,12 @@ const MonitoringDetail = () => {
   const text = useMemo(() => {
     return uiText[activeLang];
   }, [activeLang]);
+  const siteProfile = useSiteProfile({
+    parentId,
+    parentFormId: profileFormId,
+    config: profileConfig,
+    enabled: Boolean(profileConfig) && dataTab === "site-profile",
+  });
 
   const pagePath = [
     {
@@ -326,6 +350,32 @@ const MonitoringDetail = () => {
                 setDataTab(activeKey);
               }}
             >
+              {profileConfig ? (
+                <TabPane tab={text.siteProfileTab} key="site-profile">
+                  {siteProfile.error ? (
+                    <Alert
+                      type="error"
+                      showIcon
+                      message={text.siteProfileLoadFailed}
+                    />
+                  ) : (
+                    <Spin
+                      spinning={siteProfile.loading}
+                      tip={text.siteProfileLoading}
+                    >
+                      <ProfileRenderer
+                        header={profileConfig.header}
+                        items={profileConfig.items}
+                        recordContext={{
+                          payload: siteProfile.data,
+                          parentFormId: profileFormId,
+                          text,
+                        }}
+                      />
+                    </Spin>
+                  )}
+                </TabPane>
+              ) : null}
               <TabPane tab={text.manageDataTab1} key="registration-data">
                 <div className="registration-data-wrapper">
                   <DataDetail
