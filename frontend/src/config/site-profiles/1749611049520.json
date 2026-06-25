@@ -1,0 +1,176 @@
+{
+  "parent_form_id": 1749611049520,
+  "name": "Pump Station Site Profile",
+  "description": "Pump station site profile",
+  "items": [
+    {
+      "id": "pump_profile_tabs",
+      "chart_type": "tabs",
+      "order": 1,
+      "items": [
+        {
+          "id": "pump_tab_pumps_electrical",
+          "label_key": "siteProfilePumpsElectrical",
+          "items": [
+            {
+              "id": "pump_electrical_fields",
+              "chart_type": "field_list",
+              "order": 1,
+              "label_key": "siteProfilePumpsPower",
+              "questions": [
+                "num_pumps_operational",
+                "num_pumps_standby",
+                "power_backup_system"
+              ]
+            },
+            {
+              "id": "pump_trend_operational",
+              "chart_type": "trend",
+              "order": 2,
+              "col_span": 12,
+              "question": "num_pumps_operational",
+              "unit": "pumps"
+            },
+            {
+              "id": "pump_electrical_risks",
+              "chart_type": "risks",
+              "order": 3,
+              "label_key": "siteProfileElectricalRisks",
+              "questions": [
+                "electrical_panel",
+                "hour_run_meter",
+                "amp_meter",
+                "volt_meter",
+                "pump_status",
+                "power_backup_system"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pump_tab_infrastructure",
+          "label_key": "siteProfileInfrastructure",
+          "items": [
+            {
+              "id": "pump_infra_fields",
+              "chart_type": "field_list",
+              "order": 1,
+              "label_key": "siteProfileStationComponents",
+              "questions": [
+                "non_return_valve",
+                "sluice_valve",
+                "ventilation",
+                "pump_station_lid",
+                "gantry"
+              ]
+            },
+            {
+              "id": "pump_infra_risks",
+              "chart_type": "risks",
+              "order": 2,
+              "label_key": "siteProfileInfrastructureRisks",
+              "questions": [
+                "non_return_valve",
+                "sluice_valve",
+                "ventilation",
+                "pump_station_lid",
+                "gantry",
+                "facility_condition",
+                "ground_conditions",
+                "security_gate_fencing",
+                "water_supply",
+                "lights"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pump_tab_ohs",
+          "label_key": "siteProfileOhsSafety",
+          "items": [
+            {
+              "id": "pump_ohs_fields",
+              "chart_type": "field_list",
+              "order": 1,
+              "label_key": "siteProfileOhsEquipment",
+              "questions": ["ohs_equipment", "guardrails_pump_station"]
+            },
+            {
+              "id": "pump_ohs_risks",
+              "chart_type": "risks",
+              "order": 2,
+              "label_key": "siteProfileSafetyRisks",
+              "questions": [
+                "ohs_equipment",
+                "guardrails_pump_station",
+                "security_gate_fencing",
+                "odour",
+                "fats_grease_balls"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pump_tab_operations",
+          "label_key": "siteProfileOperations",
+          "items": [
+            {
+              "id": "pump_latest_status",
+              "chart_type": "metric",
+              "order": 1,
+              "col_span": 8,
+              "label_key": "siteProfileStationStatus",
+              "question": "station_status"
+            },
+            {
+              "id": "pump_ops_fields",
+              "chart_type": "field_list",
+              "order": 2,
+              "label_key": "siteProfilePumpsInService",
+              "questions": ["num_pumps_operational", "num_pumps_standby"]
+            },
+            {
+              "id": "pump_ops_risks",
+              "chart_type": "risks",
+              "order": 3,
+              "label_key": "siteProfileOperationalFlags",
+              "questions": [
+                "station_status",
+                "log_book_updated",
+                "odour",
+                "fats_grease_balls"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pump_tab_inspection",
+          "label_key": "siteProfileInspectionHistory",
+          "items": [
+            {
+              "id": "pump_inspection_history",
+              "chart_type": "record_table",
+              "order": 1,
+              "label_key": "siteProfileInspectionHistory",
+              "columns": [
+                { "source": "date", "title_key": "siteProfileDateCol" },
+                {
+                  "question": "dws_staff_name",
+                  "title_key": "siteProfileInspectorCol"
+                },
+                {
+                  "question": "station_status",
+                  "title_key": "siteProfileStatusCol"
+                },
+                {
+                  "question": "supervisor_name",
+                  "title_key": "siteProfileSupervisorCol"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "parent_form_id": 1749623934933,
+  "name": "EPS Site Profile",
+  "description": "EPS site profile",
+  "items": [
+    {
+      "id": "eps_profile_tabs",
+      "chart_type": "tabs",
+      "order": 1,
+      "items": [
+        {
+          "id": "eps_tab_constructions",
+          "label_key": "siteProfileConstructions",
+          "items": [
+            {
+              "id": "eps_construction_fields",
+              "chart_type": "field_list",
+              "order": 1,
+              "label_key": "siteProfileConstructionDetails",
+              "questions": [
+                "urf_tank_size",
+                "urf_tank_thickness",
+                "urf_tank_inflow_pipe_size",
+                "urf_tank_outlet_pipe_size",
+                "urf_tank_media_size",
+                "eps_tank_size",
+                "eps_tank_thickness",
+                "eps_tank_inflow_pipe_size",
+                "eps_tank_overflow_pipe_size",
+                "eps_tank_siphon_pipe_size",
+                "eps_tank_media_size",
+                "balance_tank_size",
+                "balance_tank_thickness",
+                "storage_tank_size",
+                "storage_tank_thickness",
+                "number_of_standpipes_to_be_implemented",
+                "existing_number_of_implemented_standpipes",
+                "concrete_base_construction_details",
+                "project_scope"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "eps_tab_water_quality",
+          "label_key": "siteProfileWaterQuality",
+          "items": [
+            {
+              "id": "eps_trend_ph",
+              "chart_type": "trend",
+              "order": 1,
+              "col_span": 12,
+              "question": "ph",
+              "unit": "pH",
+              "threshold": { "min": 6.5, "max": 8.5 }
+            },
+            {
+              "id": "eps_trend_turbidity",
+              "chart_type": "trend",
+              "order": 2,
+              "col_span": 12,
+              "question": "turbidity_ntu",
+              "unit": "NTU",
+              "threshold": { "max": 5 }
+            },
+            {
+              "id": "eps_trend_ecoli",
+              "chart_type": "trend",
+              "order": 3,
+              "col_span": 12,
+              "question": "e_coli_level",
+              "unit": "cfu/100ml",
+              "threshold": { "max": 0 }
+            },
+            {
+              "id": "eps_trend_total_coliform",
+              "chart_type": "trend",
+              "order": 4,
+              "col_span": 12,
+              "question": "total_coliform_level",
+              "unit": "cfu/100ml",
+              "threshold": { "max": 0 }
+            },
+            {
+              "id": "eps_trend_fecal_coliform",
+              "chart_type": "trend",
+              "order": 5,
+              "col_span": 12,
+              "question": "fecal_coliform_level",
+              "unit": "cfu/100ml",
+              "threshold": { "max": 0 }
+            },
+            {
+              "id": "eps_trend_temperature",
+              "chart_type": "trend",
+              "order": 6,
+              "col_span": 12,
+              "question": "temperature_c",
+              "unit": "°C"
+            },
+            {
+              "id": "eps_trend_conductivity",
+              "chart_type": "trend",
+              "order": 7,
+              "col_span": 12,
+              "question": "conductivity",
+              "unit": "µS/cm"
+            },
+            {
+              "id": "eps_trend_salinity",
+              "chart_type": "trend",
+              "order": 8,
+              "col_span": 12,
+              "question": "salinity",
+              "unit": "PPT"
+            },
+            {
+              "id": "eps_trend_cbt",
+              "chart_type": "trend",
+              "order": 9,
+              "col_span": 12,
+              "question": "cbt_bag_contamination_level",
+              "unit": "level"
+            }
+          ]
+        },
+        {
+          "id": "eps_tab_inspection",
+          "label_key": "siteProfileInspectionHistory",
+          "items": [
+            {
+              "id": "eps_inspection_history",
+              "chart_type": "record_table",
+              "order": 1,
+              "label_key": "siteProfileInspectionHistory",
+              "columns": [
+                { "source": "date", "title_key": "siteProfileDateCol" },
+                {
+                  "question": "officer_name",
+                  "title_key": "siteProfileInspectorCol"
+                },
+                {
+                  "question": "system_status",
+                  "title_key": "siteProfileStatusCol"
+                },
+                {
+                  "question": "is_project_completed",
+                  "title_key": "siteProfileResolvedCol"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

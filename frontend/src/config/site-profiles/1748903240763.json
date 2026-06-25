@@ -1,0 +1,312 @@
+{
+  "parent_form_id": 1748903240763,
+  "name": "WWTP Site Profile",
+  "description": "Wastewater treatment plant site profile",
+  "items": [
+    {
+      "id": "wwtp_profile_tabs",
+      "chart_type": "tabs",
+      "order": 1,
+      "items": [
+        {
+          "id": "wwtp_tab_infrastructure",
+          "label_key": "siteProfileInfrastructureAssessment",
+          "items": [
+            {
+              "id": "wwtp_infra_conditions",
+              "chart_type": "assessment",
+              "order": 1,
+              "col_span": 12,
+              "label_key": "siteProfileInfrastructureAssessment",
+              "caption_key": "siteProfileAutoMappedFromMonitoringForm",
+              "rows": [
+                {
+                  "question": "ground_conditions",
+                  "photo": "photo_of_ground_conditions"
+                },
+                {
+                  "question": "building_conditions",
+                  "photo": "photo_of_building_conditions"
+                },
+                {
+                  "question": "condition_of_fence_for_security_purpose",
+                  "photo": "photo_for_security_purpose"
+                },
+                { "question": "security_lights" },
+                { "question": "transport_availability" }
+              ]
+            },
+            {
+              "id": "wwtp_processes",
+              "chart_type": "tags",
+              "order": 2,
+              "col_span": 12,
+              "label_key": "siteProfileTreatmentProcessesInUse",
+              "question": "treatment_processes"
+            },
+            {
+              "id": "wwtp_staff_ohs",
+              "chart_type": "field_list",
+              "order": 3,
+              "col_span": 12,
+              "label_key": "siteProfileStaffOhs",
+              "questions": [
+                "num_staff_at_plant",
+                "plant_supervisor_name",
+                "has_ohs_policy",
+                "staff_use_ohs_equipment_at_workplace",
+                "ohs_equipment_available",
+                "working_tools"
+              ]
+            },
+            {
+              "id": "wwtp_maintenance",
+              "chart_type": "field_list",
+              "order": 4,
+              "col_span": 12,
+              "label_key": "siteProfileMaintenancePrograms",
+              "questions": [
+                "urgent_maintenance_programs",
+                "provide_details_of_these_urgent",
+                "provide_details_of_these_preventative",
+                "provide_details_of_these_upgrading"
+              ]
+            },
+            {
+              "id": "wwtp_plant_characteristics",
+              "chart_type": "field_list",
+              "order": 5,
+              "col_span": 24,
+              "label_key": "siteProfilePlantCharacteristics",
+              "_note": "registration-form fields — see backend parent_id caveat (D-4 note)",
+              "questions": [
+                "plant_name",
+                "division",
+                "commissioned_year",
+                "design_capacity_m3_day",
+                "total_population_connected_to_this_plant",
+                "has_pump_station",
+                "num_pump_stations",
+                "pump_station_types"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "wwtp_tab_effluent",
+          "label_key": "siteProfileEffluentQuality",
+          "items": [
+            {
+              "id": "wwtp_effluent_test",
+              "chart_type": "compliance",
+              "order": 0,
+              "col_span": 24,
+              "label_key": "siteProfileLatestEffluentTest",
+              "compliance_rule": [
+                "bod",
+                "chemical_oxygen_demand",
+                "total_dissolved_solids"
+              ],
+              "compliance_text": "BOD, COD, TDS all within standard.",
+              "rows": [
+                {
+                  "question": "bod",
+                  "unit": "mg/L",
+                  "threshold": { "max": 40 }
+                },
+                {
+                  "question": "chemical_oxygen_demand",
+                  "unit": "mg/L",
+                  "threshold": { "max": 100 }
+                },
+                {
+                  "question": "total_dissolved_solids",
+                  "unit": "mg/L",
+                  "threshold": { "max": 1000 }
+                },
+                {
+                  "question": "total_suspended_solids",
+                  "unit": "mg/L",
+                  "threshold": { "max": 60 }
+                },
+                {
+                  "question": "ammonia",
+                  "unit": "mg/L",
+                  "threshold": { "max": 10 }
+                },
+                {
+                  "question": "total_phosphorus",
+                  "unit": "mg/L",
+                  "threshold": { "max": 5 }
+                },
+                {
+                  "question": "oil_and_grease",
+                  "unit": "mg/L",
+                  "threshold": { "max": 5 }
+                },
+                { "question": "ph", "threshold": { "min": 7.6, "max": 9.0 } }
+              ]
+            },
+            {
+              "id": "wwtp_latest_bod",
+              "chart_type": "metric",
+              "order": 1,
+              "col_span": 6,
+              "label_key": "siteProfileLatestBod",
+              "question": "bod",
+              "unit": "mg/L"
+            },
+            {
+              "id": "wwtp_trend_bod",
+              "chart_type": "trend",
+              "order": 2,
+              "col_span": 12,
+              "question": "bod",
+              "unit": "mg/L"
+            },
+            {
+              "id": "wwtp_trend_cod",
+              "chart_type": "trend",
+              "order": 3,
+              "col_span": 12,
+              "question": "chemical_oxygen_demand",
+              "unit": "mg/L"
+            },
+            {
+              "id": "wwtp_trend_tds",
+              "chart_type": "trend",
+              "order": 4,
+              "col_span": 12,
+              "question": "total_dissolved_solids",
+              "unit": "mg/L"
+            },
+            {
+              "id": "wwtp_trend_tss",
+              "chart_type": "trend",
+              "order": 5,
+              "col_span": 12,
+              "question": "total_suspended_solids",
+              "unit": "mg/L"
+            },
+            {
+              "id": "wwtp_trend_ph",
+              "chart_type": "trend",
+              "order": 6,
+              "col_span": 12,
+              "question": "ph",
+              "unit": "pH",
+              "threshold": { "min": 6.5, "max": 8.5 }
+            },
+            {
+              "id": "wwtp_trend_do",
+              "chart_type": "trend",
+              "order": 7,
+              "col_span": 12,
+              "question": "dissolved_oxygen",
+              "unit": "mg/L"
+            },
+            {
+              "id": "wwtp_trend_ammonia",
+              "chart_type": "trend",
+              "order": 8,
+              "col_span": 12,
+              "question": "ammonia",
+              "unit": "mg/L"
+            },
+            {
+              "id": "wwtp_trend_phosphorus",
+              "chart_type": "trend",
+              "order": 9,
+              "col_span": 12,
+              "question": "total_phosphorus",
+              "unit": "mg/L"
+            },
+            {
+              "id": "wwtp_trend_conductivity",
+              "chart_type": "trend",
+              "order": 10,
+              "col_span": 12,
+              "question": "conductivity",
+              "unit": "µS/cm"
+            },
+            {
+              "id": "wwtp_trend_inflow",
+              "chart_type": "trend",
+              "order": 11,
+              "col_span": 12,
+              "question": "inflow_rate_in_cubic_meters_per_day",
+              "unit": "m³/day"
+            }
+          ]
+        },
+        {
+          "id": "wwtp_tab_risks",
+          "label_key": "siteProfileOperationalRisks",
+          "items": [
+            {
+              "id": "wwtp_risks",
+              "chart_type": "risks",
+              "order": 1,
+              "label_key": "siteProfileFlaggedOperationalRisks",
+              "questions": [
+                "ground_conditions",
+                "building_conditions",
+                "condition_of_fence_for_security_purpose",
+                "security_lights",
+                "transport_availability",
+                "working_tools",
+                "ohs_equipment_available",
+                "has_ohs_policy",
+                "staff_use_ohs_equipment_at_workplace",
+                "urgent_maintenance_programs",
+                "comment_on_operation_of_oxidation_ponds",
+                "comment_on_operation_of_pasveer_ditches",
+                "comment_on_operation_of_sludge_digester",
+                "comment_on_operation_of_imhoff",
+                "any_work_related_constraints"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "wwtp_tab_inspection",
+          "label_key": "siteProfileInspectionHistory",
+          "items": [
+            {
+              "id": "wwtp_inspection_history",
+              "chart_type": "record_table",
+              "order": 1,
+              "col_span": 12,
+              "label_key": "siteProfileInspectionHistory",
+              "columns": [
+                { "source": "date", "title_key": "siteProfileDateCol" },
+                {
+                  "question": "dws_staff_name",
+                  "title_key": "siteProfileInspectorCol"
+                },
+                {
+                  "question": "has_final_recommendation",
+                  "title_key": "siteProfileStatusCol"
+                },
+                {
+                  "question": "plant_supervisor_name",
+                  "title_key": "siteProfileSupervisorCol"
+                }
+              ]
+            },
+            {
+              "id": "wwtp_compliance_trend",
+              "chart_type": "custom",
+              "order": 2,
+              "col_span": 12,
+              "label_key": "siteProfileComplianceTrend",
+              "component": "RiskScoreTrend",
+              "_note": "reuses the dashboard 'critical' rules — single source of truth (D-11)",
+              "rules_ref": "kpi_critical_issues"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

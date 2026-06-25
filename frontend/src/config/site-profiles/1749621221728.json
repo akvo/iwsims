@@ -1,0 +1,163 @@
+{
+  "parent_form_id": 1749621221728,
+  "name": "RWP Site Profile",
+  "description": "Rural water supply site profile",
+  "items": [
+    {
+      "id": "rwp_profile_tabs",
+      "chart_type": "tabs",
+      "order": 1,
+      "items": [
+        {
+          "id": "rwp_tab_constructions",
+          "label_key": "siteProfileConstructions",
+          "items": [
+            {
+              "id": "rwp_construction_fields",
+              "chart_type": "field_list",
+              "order": 1,
+              "label_key": "siteProfileConstructionDetails",
+              "questions": [
+                "reservoir_type",
+                "reservoir_size_concrete",
+                "reservoir_size_roto",
+                "number_of_reservoirs",
+                "raw_water_main_type_of_pipe",
+                "raw_water_main_size_pvc",
+                "raw_water_main_size_pe",
+                "distribution_main_type_of_pipe",
+                "distribution_main_size_pvc",
+                "distribution_main_size_polyethelene",
+                "distribution_main_length",
+                "reticulation_type_of_pipe",
+                "reticulation_connection_type",
+                "number_of_household_connections",
+                "number_of_shared_connections",
+                "tanks_size",
+                "tanks_used_for",
+                "pumps_name",
+                "pumps_power_supply",
+                "rainwater_intended_tank_type",
+                "size_of_communal_rwh_tanks",
+                "size_of_household_rwh_tanks",
+                "water_source_type",
+                "type_of_project"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rwp_tab_water_quality",
+          "label_key": "siteProfileWaterQuality",
+          "items": [
+            {
+              "id": "rwp_trend_ph",
+              "chart_type": "trend",
+              "order": 1,
+              "col_span": 12,
+              "question": "ph",
+              "unit": "pH",
+              "threshold": { "min": 6.5, "max": 8.5 }
+            },
+            {
+              "id": "rwp_trend_turbidity",
+              "chart_type": "trend",
+              "order": 2,
+              "col_span": 12,
+              "question": "turbidity_ntu",
+              "unit": "NTU",
+              "threshold": { "max": 5 }
+            },
+            {
+              "id": "rwp_trend_ecoli",
+              "chart_type": "trend",
+              "order": 3,
+              "col_span": 12,
+              "question": "lab_ecoli",
+              "unit": "cfu/100ml",
+              "threshold": { "max": 0 }
+            },
+            {
+              "id": "rwp_trend_total_coliform",
+              "chart_type": "trend",
+              "order": 4,
+              "col_span": 12,
+              "question": "total_coliform_count",
+              "unit": "cfu/100ml",
+              "threshold": { "max": 0 }
+            },
+            {
+              "id": "rwp_trend_fecal_coliform",
+              "chart_type": "trend",
+              "order": 5,
+              "col_span": 12,
+              "question": "fecal_coliform_count",
+              "unit": "cfu/100ml",
+              "threshold": { "max": 0 }
+            },
+            {
+              "id": "rwp_trend_temperature",
+              "chart_type": "trend",
+              "order": 6,
+              "col_span": 12,
+              "question": "temperature_c",
+              "unit": "°C"
+            },
+            {
+              "id": "rwp_trend_conductivity",
+              "chart_type": "trend",
+              "order": 7,
+              "col_span": 12,
+              "question": "conductivity",
+              "unit": "µS/cm"
+            },
+            {
+              "id": "rwp_trend_salinity",
+              "chart_type": "trend",
+              "order": 8,
+              "col_span": 12,
+              "question": "salinity",
+              "unit": "PPT"
+            },
+            {
+              "id": "rwp_trend_cbt_ecoli",
+              "chart_type": "trend",
+              "order": 9,
+              "col_span": 12,
+              "question": "cbt_ecoli",
+              "unit": "cfu/100ml",
+              "threshold": { "max": 0 }
+            }
+          ]
+        },
+        {
+          "id": "rwp_tab_inspection",
+          "label_key": "siteProfileInspectionHistory",
+          "items": [
+            {
+              "id": "rwp_inspection_history",
+              "chart_type": "record_table",
+              "order": 1,
+              "label_key": "siteProfileInspectionHistory",
+              "columns": [
+                { "source": "date", "title_key": "siteProfileDateCol" },
+                {
+                  "question": "dws_officer_name",
+                  "title_key": "siteProfileInspectorCol"
+                },
+                {
+                  "question": "infrastructure_status",
+                  "title_key": "siteProfileStatusCol"
+                },
+                {
+                  "question": "major_issues",
+                  "title_key": "siteProfileIssuesRaisedCol"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
