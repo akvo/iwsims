@@ -2,31 +2,10 @@ import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Alert, Card, Empty, Skeleton, Typography } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
-import { DETAIL_URL_TEMPLATE } from "../constants";
+import { buildSiteDetailHref } from "../constants";
 import FormulaInfo from "./FormulaInfo";
 
 const { Text } = Typography;
-
-/**
- * Build the control-center detail URL for a ranked row. The row's `group`
- * (from group_by:parent_id) is the parent datapoint id used as {data_id};
- * {parent_form_id} comes from the dashboard's parentFormId (or api.form_id).
- * Returns null when either id is missing, so the label stays plain text.
- */
-const buildDetailHref = (item, formId, dataId) => {
-  if (
-    !formId ||
-    dataId === null ||
-    typeof dataId === "undefined" ||
-    dataId === ""
-  ) {
-    return null;
-  }
-  const template = item.click_url_template || DETAIL_URL_TEMPLATE;
-  return template
-    .replace("{parent_form_id}", formId)
-    .replace("{data_id}", dataId);
-};
 
 const stripRankingFields = (api = {}) => {
   const next = { ...api, group_by: "parent_id" };
@@ -155,7 +134,7 @@ const RankingWidget = ({
         <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none" }}>
           {rows.map((row, index) => {
             const label = row.label || row.group;
-            const href = buildDetailHref(item, detailFormId, row.group);
+            const href = buildSiteDetailHref(detailFormId, row.group);
             return (
               <li
                 key={`${row.label}-${index}`}

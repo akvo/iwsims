@@ -102,7 +102,7 @@ Only these six keys at the top level. Everything else is an item.
 | `boxplot` | Dot strip plot — one dot per record, colored by threshold compliance | `threshold`, `config` (`xAxisLabel`, `entity_label`), `api` — see [Dot strip chart](#9-dot-strip-chart-boxplot) |
 | `histogram` | Bar chart with binned numeric data (legacy — prefer `boxplot` for water-quality params) | `group`, `threshold`, `display`, `api` |
 | `table` | Escalation / data table | `api` (with `criteria[]`), `columns[]` |
-| `map` | Leaflet map | optional `source_form_id` (defaults to root `parent_form_id`), `filters`, `click_url_template` |
+| `map` | Leaflet map | optional `source_form_id` (defaults to root `parent_form_id`), `filters` |
 | `section_title` | `<h4>` heading | `text` |
 | `tabs` | Container | `items[]` of pane objects (no `chart_type`) |
 | `filter_bar` | Container | `items[]` of filter items |

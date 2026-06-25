@@ -236,8 +236,7 @@
           "rolling_months": 12
         }
       ],
-      "click_action": "popup",
-      "click_url_template": "/control-center/data/1749611049520/monitoring/{data_id}"
+      "click_action": "popup"
     },
     {
       "id": "condition_matrix_structural_site",

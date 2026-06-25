@@ -20,13 +20,17 @@ export const CONDITION_TONE_COLORS = {
   track: "#e6e9ed",
 };
 
-/**
- * Control-center datapoint detail URL, used by widgets that deep-link a row to
- * its monitoring record (map, ranking). Placeholders {parent_form_id} and
- * {data_id} are filled per row; configs may override via `click_url_template`.
- */
-export const DETAIL_URL_TEMPLATE =
-  "/control-center/data/{parent_form_id}/monitoring/{data_id}";
+export const buildSiteDetailHref = (formId, dataId) => {
+  if (
+    !formId ||
+    dataId === null ||
+    typeof dataId === "undefined" ||
+    dataId === ""
+  ) {
+    return null;
+  }
+  return `/control-center/data/${formId}/monitoring/${dataId}`;
+};
 
 export default CONDITION_TONE_COLORS;
 

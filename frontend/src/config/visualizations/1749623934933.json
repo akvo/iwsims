@@ -380,8 +380,7 @@
           "rolling_months": 12
         }
       ],
-      "click_action": "popup",
-      "click_url_template": "/control-center/data/{parent_form_id}/monitoring/{data_id}"
+      "click_action": "popup"
     },
     {
       "id": "title_status_compliance",

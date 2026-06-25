@@ -210,8 +210,7 @@
           "rolling_months": 12
         }
       ],
-      "click_action": "popup",
-      "click_url_template": "/control-center/data/1748903240763/monitoring/{data_id}"
+      "click_action": "popup"
     },
     {
       "id": "title_wwtp_at_a_glance",

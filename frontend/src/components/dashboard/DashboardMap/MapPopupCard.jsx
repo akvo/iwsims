@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { api, uiText } from "../../../lib";
+import { buildSiteDetailHref } from "../constants";
 import getCrossFormQuestionOptions from "./getCrossFormQuestionOptions";
 
 const LOADING = "…";
@@ -60,7 +61,6 @@ const MapPopupCard = ({
   point,
   activeFilter,
   byParent,
-  urlTemplate,
   sourceFormId,
   cache,
 }) => {
@@ -93,14 +93,10 @@ const MapPopupCard = ({
     };
   }, [point.id, cache]);
 
-  const detailHref = useMemo(() => {
-    if (!urlTemplate) {
-      return null;
-    }
-    return urlTemplate
-      .replace("{parent_form_id}", sourceFormId)
-      .replace("{data_id}", point.id);
-  }, [urlTemplate, sourceFormId, point.id]);
+  const detailHref = useMemo(
+    () => buildSiteDetailHref(sourceFormId, point.id),
+    [sourceFormId, point.id]
+  );
 
   const dynamicValue = useMemo(() => {
     const answerValue = resolveDynamic(
@@ -155,8 +151,7 @@ MapPopupCard.propTypes = {
   point: PropTypes.object.isRequired,
   activeFilter: PropTypes.object,
   byParent: PropTypes.object,
-  urlTemplate: PropTypes.string,
-  sourceFormId: PropTypes.number,
+  sourceFormId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   cache: PropTypes.object.isRequired,
 };
 
