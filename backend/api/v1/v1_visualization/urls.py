@@ -4,6 +4,7 @@ from api.v1.v1_visualization.views import (
     monitoring_stats,
     GeolocationListView,
     DatapointDetailView,
+    SiteProfileDetailView,
     visualization_values_formula,
 )
 from api.v1.v1_visualization.dashboard_views import (
@@ -32,6 +33,11 @@ urlpatterns = [
     re_path(
         r"^(?P<version>(v1))/visualization/values/formula$",
         visualization_values_formula,
+    ),
+    re_path(
+        r"^(?P<version>(v1))/visualization/site-profile/"
+        r"(?P<parent_id>[0-9]+)$",
+        SiteProfileDetailView.as_view(),
     ),
     re_path(
         r"^(?P<version>(v1))/visualization/values",

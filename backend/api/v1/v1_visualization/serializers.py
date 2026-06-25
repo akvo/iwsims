@@ -221,6 +221,24 @@ class FormulaValuesSerializer(serializers.Serializer):
             )
         return attrs
 
+
+class SiteProfileQuerySerializer(serializers.Serializer):
+    parent_form_id = serializers.IntegerField(required=True)
+    questions = serializers.CharField(required=False, allow_blank=True)
+    history = serializers.CharField(required=False, allow_blank=True)
+    records = serializers.CharField(required=False, allow_blank=True)
+
+    def _question_name_list(self, value):
+        if not value:
+            return []
+        return [v.strip() for v in value.split(",") if v.strip()]
+
+    def validate(self, attrs):
+        attrs["questions"] = self._question_name_list(attrs.get("questions"))
+        attrs["history"] = self._question_name_list(attrs.get("history"))
+        attrs["records"] = self._question_name_list(attrs.get("records"))
+        return attrs
+
     class Meta:
         fields = [
             "parent_form_id", "form_id", "group_by", "monitoring", "formula",
