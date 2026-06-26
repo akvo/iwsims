@@ -14,7 +14,8 @@ Build order is bottom-up so each step is testable. All component work lives unde
    name), `lastInspectionDate(payload)` (max `latest[*].created`).
 2. `collectSiteProfileQueries(config)` → `{ questions, history, records }`, walking
    `children[]`:
-   - `line` → `history += child.question`
+   - `line` (trend) → `history += child.question`; `line` + `source: "risk_score"` →
+     `records += child.questions` and `child.date_question`
    - `record` + `source: "submissions"` → `records += cols[].dataIndex`
    - `record` + `source: "rows"` → `questions += rows[].{question,photo,notes}`
    - `field` → `questions += rows[].question`
@@ -49,15 +50,20 @@ Build order is bottom-up so each step is testable. All component work lives unde
 
 1. **RecordTable.jsx** — resolve rows (`rows` or `submissions`) + columns; map each
    `col.render` preset to a cell renderer (`text`, `option_pills`, `threshold`,
-   `threshold_label`, `value`, `question_label`, `photo`, `date`, `severity`). Pure
-   value/format logic comes from `utils.js`; JSX presets live here.
+   `threshold_label`, `value`, `question_label`, `photo`, `date`, `severity`). For
+   `submissions`, a `render: "date"` column formats the answer at its question `dataIndex`
+   (`FormData.created` only when `dataIndex: "date"`); `severity` renders `—` when
+   unanswered. Compliance verdict when `compliance_rule` is set. Pure value/format logic
+   comes from `utils.js`; JSX presets live here.
 2. **FieldList.jsx** — key/value list from `rows`/`questions`; option answers render as pills.
 3. **HistoryChart.jsx** — akvo-charts `<Line>` with a compact `containLabel` grid.
    - Trend: `data = history[question]`; `threshold {min,max}` → green `markArea` band +
      dashed `markLine`s via the ECharts ref + `setOption`.
    - `source: "risk_score"`: score each `submissions[]` inspection (red=2/amber=1 from
-     `option.color`) → bucket OK/Low/Med/High/Critical on a categorical y-axis; render the
-     `RiskLegend` beneath.
+     `option.color`) → bucket OK/Low/Med/High/Critical on a categorical y-axis. X-axis from
+     the `date_question` answer (sorted); dots colored per level (`itemStyle.color`);
+     tooltip formatter maps bucket → level name; render `RiskLegend` + a `RiskFormulaInfo`
+     "(i)" popover (built live from each question's option → points).
 4. **Photo.jsx** — image grid from `latest[question]` or `submissions`.
 5. `widgets/index.js` exports the four. **RecordTable** also renders a compliance
    PASS/FAIL verdict when `compliance_rule` is set; `severity` cells render `—` when
@@ -65,7 +71,9 @@ Build order is bottom-up so each step is testable. All component work lives unde
 
 ## Phase 4 — Header
 
-`profile/ProfileHeader.jsx` — hero block: `header.photo` (registration → monitoring),
+`profile/ProfileHeader.jsx` — hero block: `header.photo` (a question name **or list of
+candidate photo questions**; collect every answered one from registration → monitoring
+`latest`, deduped, shown as a gallery — the collector requests all candidates),
 title (`payload.name`), location subtitle (`header.location` admin answer formatted, with
 `header.village` prepended; falls back to `subtitle_key`), and the `header.meta[]` row.
 Each meta value resolves **registration answer → monitoring `latest` → `last_inspection`
@@ -95,7 +103,8 @@ Each meta value resolves **registration answer → monitoring `latest` → `last
   (Constructions · Water Quality · Inspection History).
 
 Each file: `parent_form_id`, `name`, `subtitle_key`, a `header`
-(`photo` / `location` / optional `village` / `meta[]`), `tabs[]`, `children[]`. Reference
+(`photo` list of site/infrastructure photos / `location` / optional `village` / `meta[]`),
+`tabs[]`, `children[]`. Reference
 real `question_name`s from the registration + monitoring forms in `backend/source/forms/`.
 Designed assets also get a `risk_score` line in their Inspection tab; the default assets
 (EPS/RWP) score from their available status questions.
@@ -125,8 +134,9 @@ Keep `getSiteProfileConfig`/`getSiteProfileKey` and the `dataTab` default logic.
 `lib/ui-text.js` — add the keys used by configs/widgets: per-asset `subtitle_key`, header
 meta labels (`siteProfileType`, `siteProfileCommissioned`, `siteProfileDesignCapacity`,
 `siteProfilePopulation(Connected)`, `siteProfileLastInspection`, `siteProfileSupervisorCol`),
-trend titles (`siteProfile*Trend`), and risk levels + descriptions
-(`siteProfileRisk{Ok,Low,Med,High,Critical}` + `…Desc`).
+trend titles (`siteProfile*Trend`), risk levels + descriptions
+(`siteProfileRisk{Ok,Low,Med,High,Critical}` + `…Desc`), and the risk formula popover
+(`siteProfileRiskFormula{Title,Intro,Scale}`).
 
 ## Phase 9 — Tests
 

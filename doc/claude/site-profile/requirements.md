@@ -24,13 +24,19 @@
 - **FR-9** All five assets render: WWTP, WTP, Pump (designed layouts); EPS, RWP (shared
   default 3-tab layout).
 - **FR-10** The **header** shows a hero photo, the datapoint name, a location subtitle, and
-  a meta row. Each meta value resolves **registration answer → monitoring `latest` →
-  derived `last_inspection` → static value**. The location subtitle reuses the registration
-  administration answer (e.g. `"Fiji|Western"` → "Western"), prepending the village when a
-  `village` question exists.
+  a meta row. `header.photo` is a question name **or a list of candidate photo questions**
+  (e.g. an asset's project-type photos); every answered one is shown as a gallery (first as
+  hero, the rest behind a `+N` preview). Each meta value resolves **registration answer →
+  monitoring `latest` → derived `last_inspection` → static value**. The location subtitle
+  reuses the registration administration answer (e.g. `"Fiji|Western"` → "Western"),
+  prepending the village when a `village` question exists.
 - **FR-11** A `record` table with `compliance_rule` renders a **PASS/FAIL verdict** line.
+  An Inspection-History (`submissions`) Date column shows the **inspection-date question's
+  answer** (via `render: "date"` + a question `dataIndex`), not `FormData.created`.
 - **FR-12** A `line` with `source: "risk_score"` renders a **computed risk-score trend**
-  (per-inspection severity → OK/Low/Med/High/Critical) with an explanatory **level legend**.
+  (per-inspection severity → OK/Low/Med/High/Critical). The x-axis uses the configured
+  `date_question` (chronological); dots are **colored to match the legend**; the **tooltip
+  shows the level name**; a **level legend** and an **"(i)" formula popover** explain it.
 - **FR-13** Registration data for the header is fetched **once** and **shared** with the
   Registration Data tab (no duplicate `/data/{id}` request).
 

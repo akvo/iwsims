@@ -26,7 +26,8 @@ The profile is self-contained under
   "name": "Pump Station Site Profile",     // payload.name overrides this in the header
   "subtitle_key": "siteProfilePumpSubtitle", // fallback when no location resolves
   "header": {                                 // hero; all parts optional
-    "photo": "pump_station_photo",            // photo question (registration or monitoring)
+    "photo": ["pump_station_photo", "inspection_photo"], // string or list of candidate
+                                              // photo questions; all answered ones show
     "location": "division",                   // administration question → subtitle
     "village": "village_name",                // optional text question, prepended to subtitle
     "meta": [
@@ -57,6 +58,7 @@ The profile is self-contained under
       "questions": [ "num_pumps_operational" ] },
     { "id": 4, "tab": "inspection", "position": "right", "order": 2,
       "chart_type": "line", "source": "risk_score", "label_key": "siteProfileRiskScoreTrend",
+      "date_question": "inspection_date",   // x-axis from this answer, not FormData.created
       "questions": [ "station_status", "pump_status", "electrical_panel" ] }
   ]
 }
@@ -87,7 +89,9 @@ The profile is self-contained under
   `field` from the row config (`question`, `photo`, `notes`, …), resolves the answer from
   `payload.latest[name]`, and renders via its `render` preset.
 - **`source: "submissions"`** — one table row per inspection (`payload.submissions[]`);
-  each `cols[]` `dataIndex` reads `row.answers[dataIndex]` (or `row.date`).
+  each `cols[]` `dataIndex` reads `row.answers[dataIndex]`. A `render: "date"` column
+  formats that answer (e.g. `dataIndex: "inspection_date"`), or `FormData.created` when
+  `dataIndex: "date"` — so the Inspection History Date column shows the surveyed date.
 - **Compliance verdict** — when `compliance_rule` is present, the widget evaluates each
   listed question against its row `threshold` and renders
   "Compliance verdict: PASS/FAIL — {compliance_text}".
@@ -106,9 +110,13 @@ renders `—` when unanswered).
   (`setOption`, the same ref pattern as the dashboard's `HistoricalLineChart`). Short title
   from `label_key`; compact grid with `containLabel`.
 - **Risk-score** (`source: "risk_score"`): for each `submissions[]` inspection, score the
-  configured `questions[]` (red severity = 2, amber = 1, from `option.color`), bucket the
-  sum into **OK · Low · Med · High · Critical** on a categorical y-axis, and render a
-  **level legend** beneath the chart.
+  configured `questions[]` (red severity = 2, amber = 1, from `option.color`) and bucket the
+  sum into **OK · Low · Med · High · Critical** on a categorical y-axis. The x-axis uses the
+  `date_question` answer (e.g. `inspection_date`), sorted chronologically, not
+  `FormData.created`. Each **dot is colored by its level** (matching the legend), the
+  **tooltip shows the level name** (not the bucket number), a **level legend** is rendered
+  beneath, and an **"(i)" popover** on the title explains the formula — built live from each
+  scoring question's option → points.
 
 ## Data flow
 
@@ -143,10 +151,10 @@ Site-profile payload shape:
 |------|------|
 | `profile/ProfilePage.jsx` | Entry: provider + header + tabs + Main layout + widget dispatch |
 | `profile/ProfileContext.jsx` | `ProfileContext` / `useProfile` / `ProfileProvider` (owns both fetches) |
-| `profile/ProfileHeader.jsx` | Hero: photo · name · location subtitle · meta row |
+| `profile/ProfileHeader.jsx` | Hero: photo gallery (all answered `header.photo` candidates) · name · location subtitle · meta row |
 | `profile/widgets/RecordTable.jsx` | `record` widget + cell-render presets + compliance verdict |
 | `profile/widgets/FieldList.jsx` | `field` widget |
-| `profile/widgets/HistoryChart.jsx` | `line` widget: trend + threshold band + risk-score + legend |
+| `profile/widgets/HistoryChart.jsx` | `line` widget: trend + threshold band + risk-score (inspection-date axis, level-name tooltip, legend-colored dots, formula popover + legend) |
 | `profile/widgets/Photo.jsx` | `photo` widget |
 | `profile/widgets/index.js` | Barrel for the four widgets |
 | `profile/utils.js` | Pure helpers + query-collector + `registrationAnswer` / `lastInspectionDate` (no JSX) |
