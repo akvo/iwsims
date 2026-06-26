@@ -72,6 +72,7 @@
   }
 
   .site-profile-hero-photo {
+    position: relative;
     flex: 0 0 220px;
     min-height: 140px;
     display: flex;
@@ -84,6 +85,17 @@
   .site-profile-hero-photo .ant-image-img {
     width: 220px;
     object-fit: cover;
+  }
+  .site-profile-hero-photo-count {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 11px;
+    pointer-events: none;
   }
 
   .site-profile-hero-info {

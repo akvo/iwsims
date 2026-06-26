@@ -3,7 +3,18 @@
   "name": "EPS Site Profile",
   "subtitle_key": "siteProfileEpsSubtitle",
   "header": {
-    "photo": "concrete_base_construction_photo",
+    "photo": [
+      "eps_photo",
+      "concrete_base_construction_photo",
+      "inspection_photo",
+      "balance_tank_photo",
+      "drainage_photo",
+      "eps_tank_photo",
+      "site_security_photo",
+      "standpipes_photo",
+      "storage_tank_photo",
+      "urf_tank_photo"
+    ],
     "location": "division_province_tikina",
     "village": "village_name",
     "meta": [

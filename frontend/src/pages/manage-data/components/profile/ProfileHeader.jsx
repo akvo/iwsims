@@ -64,19 +64,22 @@ const metaValue = (meta, recordContext, text) => {
   return emptyMark;
 };
 
+// `header.photo` is a question name or a list of candidate photo questions
+// (e.g. project-type photos). Collect every answered one (registration +
+// monitoring latest), deduped — the form/project type decides which exist.
 const headerPhotos = (header, recordContext) => {
-  if (!header.photo) {
-    return [];
-  }
-  const fromRegistration = imageUrlsFromValue(
-    registrationRawValue(recordContext?.registration, header.photo)
-  );
-  if (fromRegistration.length) {
-    return fromRegistration;
-  }
-  return imageUrlsFromValue(
-    answerValue(latestEntry(recordContext, header.photo))
-  );
+  const names = Array.isArray(header.photo)
+    ? header.photo
+    : header.photo
+    ? [header.photo]
+    : [];
+  const urls = names.flatMap((name) => [
+    ...imageUrlsFromValue(
+      registrationRawValue(recordContext?.registration, name)
+    ),
+    ...imageUrlsFromValue(answerValue(latestEntry(recordContext, name))),
+  ]);
+  return [...new Set(urls)];
 };
 
 const ProfileHeader = ({ config, recordContext }) => {
@@ -99,7 +102,17 @@ const ProfileHeader = ({ config, recordContext }) => {
       <div className="site-profile-hero">
         <div className="site-profile-hero-photo">
           {photos.length ? (
-            <Image src={photos[0]} alt={title} />
+            <Image.PreviewGroup>
+              <Image src={photos[0]} alt={title} />
+              {photos.slice(1).map((url) => (
+                <Image key={url} src={url} style={{ display: "none" }} />
+              ))}
+              {photos.length > 1 ? (
+                <span className="site-profile-hero-photo-count">
+                  +{photos.length - 1}
+                </span>
+              ) : null}
+            </Image.PreviewGroup>
           ) : (
             <Empty description={text.siteProfileNoPhoto} />
           )}

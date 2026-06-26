@@ -3,7 +3,14 @@
   "name": "WTP Site Profile",
   "subtitle_key": "siteProfileWtpSubtitle",
   "header": {
-    "photo": "inspection_photo",
+    "photo": [
+      "inspection_photo",
+      "a_picture_of_the_generator",
+      "photo_of_the_storage_reservoir",
+      "photo_of_the_distribution_reservoir",
+      "photo_of_ground_water_source",
+      "photo_of_surface_water_source"
+    ],
     "location": "division",
     "meta": [
       {

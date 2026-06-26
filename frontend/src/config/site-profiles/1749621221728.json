@@ -3,7 +3,21 @@
   "name": "RWP Site Profile",
   "subtitle_key": "siteProfileRwpSubtitle",
   "header": {
-    "photo": "dam_photo",
+    "photo": [
+      "dam_photo",
+      "reservoir_photo",
+      "borehole_photo",
+      "infrastructure_photo",
+      "base_construction_photo",
+      "desalination_photo",
+      "distribution_main_photo",
+      "gutters_photo",
+      "pumps_photo",
+      "rainwater_harvesting_tank_photo",
+      "raw_water_main_photo",
+      "reticulation_photo",
+      "tanks_photo"
+    ],
     "location": "division_province_tikina",
     "village": "village_name",
     "meta": [

@@ -3,7 +3,7 @@
   "name": "Pump Station Site Profile",
   "subtitle_key": "siteProfilePumpSubtitle",
   "header": {
-    "photo": "pump_station_photo",
+    "photo": ["pump_station_photo", "inspection_photo"],
     "location": "division",
     "meta": [
       {

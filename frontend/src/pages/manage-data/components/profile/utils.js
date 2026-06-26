@@ -292,7 +292,8 @@ export const collectSiteProfileQueries = (config) => {
   const query = { questions: [], history: [], records: [] };
   const header = config?.header;
   if (header) {
-    pushUnique(query.questions, header.photo);
+    const photos = Array.isArray(header.photo) ? header.photo : [header.photo];
+    photos.forEach((photo) => pushUnique(query.questions, photo));
     pushUnique(query.questions, header.location);
     pushUnique(query.questions, header.village);
     (header.meta || []).forEach((meta) =>
