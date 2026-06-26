@@ -24,7 +24,6 @@ import {
   Tooltip,
   Spin,
   Input,
-  Alert,
 } from "antd";
 import {
   LeftCircleOutlined,
@@ -46,7 +45,7 @@ import {
   getSiteProfileConfig,
   getSiteProfileKey,
 } from "../../config/site-profiles";
-import { ProfileRenderer, useSiteProfile } from "./components/profile";
+import { ProfilePage } from "./components/profile";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -112,12 +111,6 @@ const MonitoringDetail = () => {
   const text = useMemo(() => {
     return uiText[activeLang];
   }, [activeLang]);
-  const siteProfile = useSiteProfile({
-    parentId,
-    parentFormId: profileFormId,
-    config: profileConfig,
-    enabled: Boolean(profileConfig) && dataTab === "site-profile",
-  });
 
   const pagePath = [
     {
@@ -352,28 +345,13 @@ const MonitoringDetail = () => {
             >
               {profileConfig ? (
                 <TabPane tab={text.siteProfileTab} key="site-profile">
-                  {siteProfile.error ? (
-                    <Alert
-                      type="error"
-                      showIcon
-                      message={text.siteProfileLoadFailed}
-                    />
-                  ) : (
-                    <Spin
-                      spinning={siteProfile.loading}
-                      tip={text.siteProfileLoading}
-                    >
-                      <ProfileRenderer
-                        header={profileConfig.header}
-                        items={profileConfig.items}
-                        recordContext={{
-                          payload: siteProfile.data,
-                          parentFormId: profileFormId,
-                          text,
-                        }}
-                      />
-                    </Spin>
-                  )}
+                  <ProfilePage
+                    parentId={parentId}
+                    parentFormId={profileFormId}
+                    config={profileConfig}
+                    text={text}
+                    enabled={dataTab === "site-profile"}
+                  />
                 </TabPane>
               ) : null}
               <TabPane tab={text.manageDataTab1} key="registration-data">

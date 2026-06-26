@@ -1,62 +1,139 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Card, Descriptions, Empty, Image } from "antd";
+import { Card, Empty, Image } from "antd";
 
 import {
   answerValue,
+  emptyMark,
   formatAnswer,
-  imageUrlsFromValue,
-  latestEntry,
   getText,
-} from "../profile/lib/utils";
+  imageUrlsFromValue,
+  lastInspectionDate,
+  latestEntry,
+  registrationAnswer,
+  registrationRawValue,
+} from "./utils";
 
-const ProfileHeader = ({ header, recordContext }) => {
-  if (!header) {
+// "Village Name · District · Division" from registration answers. The
+// administration answer is a path like "Fiji|Western" — drop the country
+// segment and join with " · ".
+const formatLocation = (header, recordContext) => {
+  const registration = recordContext?.registration;
+  const parts = [];
+  if (header.village) {
+    const village = registrationAnswer(registration, header.village);
+    if (village) {
+      parts.push(village);
+    }
+  }
+  if (header.location) {
+    const raw = registrationRawValue(registration, header.location);
+    if (typeof raw === "string" && raw) {
+      const segments = raw.split("|").filter(Boolean);
+      const trimmed = segments.length > 1 ? segments.slice(1) : segments;
+      if (trimmed.length) {
+        parts.push(trimmed.join(" · "));
+      }
+    }
+  }
+  return parts.join(" · ");
+};
+
+const metaValue = (meta, recordContext, text) => {
+  if (meta.source === "last_inspection") {
+    return lastInspectionDate(recordContext?.payload) || emptyMark;
+  }
+  if (meta.question) {
+    // Registration field first, then monitoring latest.
+    let value = registrationAnswer(recordContext?.registration, meta.question);
+    if (value === null) {
+      const formatted = formatAnswer(
+        latestEntry(recordContext, meta.question),
+        meta.question
+      );
+      value = Array.isArray(formatted) ? formatted.join(", ") : formatted;
+    }
+    if (!value) {
+      return emptyMark;
+    }
+    return meta.unit ? `${value} ${meta.unit}` : value;
+  }
+  if (meta.value_key || meta.value) {
+    return getText(text, meta.value_key, meta.value);
+  }
+  return emptyMark;
+};
+
+const headerPhotos = (header, recordContext) => {
+  if (!header.photo) {
+    return [];
+  }
+  const fromRegistration = imageUrlsFromValue(
+    registrationRawValue(recordContext?.registration, header.photo)
+  );
+  if (fromRegistration.length) {
+    return fromRegistration;
+  }
+  return imageUrlsFromValue(
+    answerValue(latestEntry(recordContext, header.photo))
+  );
+};
+
+const ProfileHeader = ({ config, recordContext }) => {
+  const text = recordContext?.text || {};
+  const payload = recordContext?.payload;
+  const header = config?.header || {};
+  const title = payload?.name || getText(text, config?.name_key, config?.name);
+  const subtitle =
+    formatLocation(header, recordContext) ||
+    getText(text, config?.subtitle_key, config?.subtitle);
+  const photos = headerPhotos(header, recordContext);
+  const meta = header.meta || [];
+
+  if (!title && !meta.length) {
     return null;
   }
-  const text = recordContext?.text || {};
-  const titleEntry = latestEntry(recordContext, header.title_question);
-  const title =
-    getText(text, header.title_key, header.title) ||
-    formatAnswer(titleEntry, header.title_question);
-  const photoEntry = latestEntry(recordContext, header.photo_question);
-  const photos = imageUrlsFromValue(answerValue(photoEntry));
 
   return (
     <Card className="site-profile-header" bordered>
-      <div className="site-profile-header-layout">
-        <div>
+      <div className="site-profile-hero">
+        <div className="site-profile-hero-photo">
+          {photos.length ? (
+            <Image src={photos[0]} alt={title} />
+          ) : (
+            <Empty description={text.siteProfileNoPhoto} />
+          )}
+        </div>
+        <div className="site-profile-hero-info">
           <h2>{title}</h2>
-          {Array.isArray(header.fields) && header.fields.length ? (
-            <Descriptions column={1} size="small">
-              {header.fields.map((field) => (
-                <Descriptions.Item
-                  key={field.question}
-                  label={getText(text, field.label_key, field.label)}
+          {subtitle ? (
+            <div className="site-profile-hero-subtitle">{subtitle}</div>
+          ) : null}
+          {meta.length ? (
+            <div className="site-profile-hero-meta">
+              {meta.map((item, idx) => (
+                <div
+                  key={item.label_key || item.question || idx}
+                  className="site-profile-hero-meta-item"
                 >
-                  {formatAnswer(
-                    latestEntry(recordContext, field.question),
-                    field.question
-                  ) || "—"}
-                </Descriptions.Item>
+                  <span className="k">
+                    {getText(text, item.label_key, item.label)}
+                  </span>
+                  <span className="v">
+                    {metaValue(item, recordContext, text)}
+                  </span>
+                </div>
               ))}
-            </Descriptions>
+            </div>
           ) : null}
         </div>
-        {photos.length ? (
-          <Image.PreviewGroup>
-            <Image src={photos[0]} alt={title} width={220} />
-          </Image.PreviewGroup>
-        ) : (
-          <Empty description={text.siteProfileNoPhoto} />
-        )}
       </div>
     </Card>
   );
 };
 
 ProfileHeader.propTypes = {
-  header: PropTypes.object,
+  config: PropTypes.object,
   recordContext: PropTypes.object,
 };
 
