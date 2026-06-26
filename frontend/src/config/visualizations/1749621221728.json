@@ -272,7 +272,7 @@
     },
     {
       "id": "kpi_total_rws",
-      "info": "Count number of unique Project name",
+      "info": "Count registration records.",
       "chart_type": "card",
       "order": 4,
       "col_span": 6,
@@ -330,6 +330,7 @@
     },
     {
       "id": "kpi_operational_systems",
+      "info": "Percentage of RWS whose latest 'Status of Infrastructure for this project?' = Operational, out of all RWS (including unanswered).",
       "chart_type": "metric_card",
       "order": 10,
       "col_span": 6,

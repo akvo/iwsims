@@ -236,11 +236,11 @@
             },
             {
               "value": "total_coliform_1cfu_100ml",
-              "label": "Total Coliform in 1cfu/ 100ml"
+              "label": "Total Coliform in 1cfu/100ml"
             },
             {
               "value": "fecal_coliform_1cfu_100ml",
-              "label": "Fecal Coliform in 1cfu/ 100ml"
+              "label": "Fecal Coliform in 1cfu/100ml"
             },
             {
               "value": "temperature_c",
@@ -252,7 +252,7 @@
             },
             {
               "value": "conductivity_us_cm",
-              "label": "Conductivity in µS/ cm"
+              "label": "Conductivity in µS/cm"
             },
             {
               "value": "salinity_ppt",
@@ -385,7 +385,7 @@
           "id": 1749631041145,
           "type": "number",
           "name": "lab_total_coliform",
-          "label": "Total Coliform in 1cfu/ 100ml",
+          "label": "Total Coliform in 1cfu/100ml",
           "required": true,
           "order": 12,
           "options": null,
@@ -408,7 +408,7 @@
           "id": 1749631041146,
           "type": "number",
           "name": "lab_fecal_coliform",
-          "label": "Fecal Coliform in 1cfu/ 100ml",
+          "label": "Fecal Coliform in 1cfu/100ml",
           "required": true,
           "order": 13,
           "options": null,
@@ -477,7 +477,7 @@
           "id": 1749631041149,
           "type": "number",
           "name": "lab_conductivity",
-          "label": "Conductivity in µS/ cm",
+          "label": "Conductivity in µS/cm",
           "required": true,
           "order": 16,
           "options": null,

@@ -51,7 +51,7 @@
         {
           "id": 1748919277906,
           "name": "num_staff_at_plant",
-          "label": "Number of staffs at the plant?",
+          "label": "Number of staff at the plant?",
           "order": 4,
           "type": "number",
           "required": true,
@@ -113,7 +113,7 @@
             },
             {
               "value": "excessive_suspended_solids,turbidity,foam,grease,scum_and_colour",
-              "label": "Excessive suspended solids,turbidity,foam,grease,scum and colour",
+              "label": "Excessive suspended solids, turbidity, foam, grease, scum and color",
               "id": 1748919445619,
               "order": 4,
               "color": "#003f5c"
@@ -317,7 +317,7 @@
             },
             {
               "value": "total_kjeldhal_nitrogen",
-              "label": "Total Kjeldhal Nitrogen",
+              "label": "Total Kjeldahl Nitrogen",
               "id": 1789193153544,
               "order": 9,
               "color": "#e41a1c"
@@ -533,7 +533,7 @@
         {
           "id": 1749193153562,
           "name": "total_kjeldhal_nitrogen",
-          "label": "Total Kjeldhal Nitrogen mg/L - 4500-NorgB (APHA Method Code)",
+          "label": "Total Kjeldahl Nitrogen mg/L - 4500-NorgB (APHA Method Code)",
           "order": 16,
           "type": "number",
           "required": true,
@@ -734,7 +734,7 @@
         {
           "id": 1748919341459,
           "name": "has_constraints",
-          "label": "24. Do you have any work related constraints?",
+          "label": "24. Do you have any work-related constraints?",
           "order": 1,
           "type": "option",
           "required": true,
@@ -881,7 +881,7 @@
         {
           "id": 1748920085643,
           "name": "dws_staff_final_recommendations",
-          "label": "What are the final recommendations from the DWS staff  on the overall operations and remedial actions for the plant?",
+          "label": "What are the final recommendations from the DWS staff on the overall operations and remedial actions for the plant?",
           "order": 6,
           "type": "text",
           "required": true,

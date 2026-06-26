@@ -529,7 +529,7 @@
         {
           "id": 1749622726348,
           "name": "accessible_surface_water_construction_site",
-          "label": "Which part of the Surface Water Project construction sites you can visit?",
+          "label": "Which part of the Surface Water Project construction sites can you visit?",
           "order": 24,
           "type": "multiple_option",
           "required": true,
@@ -595,7 +595,7 @@
         {
           "id": 1749622726349,
           "name": "accessible_borehole_construction_site",
-          "label": "Which part of the Borehole construction sites you can visit?",
+          "label": "Which part of the Borehole construction sites can you visit?",
           "order": 25,
           "type": "multiple_option",
           "required": true,
@@ -668,7 +668,7 @@
         {
           "id": 1749622726350,
           "name": "accessible_desalination_construction_site",
-          "label": "Which part of the Desalination construction sites you can visit?",
+          "label": "Which part of the Desalination construction sites can you visit?",
           "order": 26,
           "type": "multiple_option",
           "required": true,
@@ -741,7 +741,7 @@
         {
           "id": 1749622726351,
           "name": "accessible_rainwater_harvesting_construction_site",
-          "label": "Which part of the Rainwater Harvesting construction sites you can visit?",
+          "label": "Which part of the Rainwater Harvesting construction sites can you visit?",
           "order": 27,
           "type": "multiple_option",
           "required": true,
@@ -2079,7 +2079,7 @@
             },
             {
               "value": "polyethelene",
-              "label": "Polyethelene",
+              "label": "Polyethylene",
               "id": 1723459200022,
               "order": 2,
               "color": "#d95f02"
@@ -2137,7 +2137,7 @@
         {
           "id": 1723459222020,
           "name": "raw_water_main_size_pe",
-          "label": "Size of Polyethelene Pipe",
+          "label": "Size of Polyethylene Pipe",
           "order": 5,
           "type": "multiple_option",
           "required": true,
@@ -2700,7 +2700,7 @@
             },
             {
               "value": "polyethelene",
-              "label": "Polyethelene",
+              "label": "Polyethylene",
               "id": 1849622785220,
               "order": 2,
               "color": "#d95f02"
@@ -2768,7 +2768,7 @@
         {
           "id": 1849622785240,
           "name": "reservoir_inlet_pipe_size_polyethelene",
-          "label": "Size of Reservoir Inlet Polyethelene Pipe",
+          "label": "Size of Reservoir Inlet Polyethylene Pipe",
           "order": 12,
           "type": "multiple_option",
           "required": true,
@@ -2835,7 +2835,7 @@
             },
             {
               "value": "polyethelene",
-              "label": "Polyethelene",
+              "label": "Polyethylene",
               "id": 1849622785227,
               "order": 2,
               "color": "#d95f02"
@@ -2903,7 +2903,7 @@
         {
           "id": 1849622785246,
           "name": "reservoir_outlet_pipe_size_polyethelene",
-          "label": "Size of Reservoir Outlet Polyethelene Pipe",
+          "label": "Size of Reservoir Outlet Polyethylene Pipe",
           "order": 15,
           "type": "multiple_option",
           "required": true,
@@ -2970,7 +2970,7 @@
             },
             {
               "value": "polyethelene",
-              "label": "Polyethelene",
+              "label": "Polyethylene",
               "id": 1849622785234,
               "order": 2,
               "color": "#d95f02"
@@ -3038,7 +3038,7 @@
         {
           "id": 1849622785252,
           "name": "reservoir_overflow_pipe_size_polyethelene",
-          "label": "Size of Reservoir Overflow Polyethelene Pipe",
+          "label": "Size of Reservoir Overflow Polyethylene Pipe",
           "order": 18,
           "type": "multiple_option",
           "required": true,
@@ -3309,7 +3309,7 @@
             },
             {
               "value": "polyethelene",
-              "label": "Polyethelene",
+              "label": "Polyethylene",
               "id": 1723459200053,
               "order": 2,
               "color": "#d95f02"
@@ -3377,7 +3377,7 @@
         {
           "id": 1723459240032,
           "name": "distribution_main_size_polyethelene",
-          "label": "Size of Polyethelene Pipe",
+          "label": "Size of Polyethylene Pipe",
           "order": 5,
           "type": "multiple_option",
           "required": true,
@@ -3733,7 +3733,7 @@
             },
             {
               "value": "polyethelene",
-              "label": "Polyethelene",
+              "label": "Polyethylene",
               "id": 1723459200064,
               "order": 2,
               "color": "#d95f02"
@@ -3801,7 +3801,7 @@
         {
           "id": 1723459267039,
           "name": "reticulation_size_polyethelene",
-          "label": "Size of Polyethelene Pipe",
+          "label": "Size of Polyethylene Pipe",
           "order": 5,
           "type": "multiple_option",
           "required": true,
@@ -4196,7 +4196,7 @@
         {
           "id": 1749621973234,
           "name": "sea_water_storage_issues_noted",
-          "label": "Why Sea Water Storage is non-operational?",
+          "label": "Why is the Sea Water Storage non-operational?",
           "order": 4,
           "type": "text",
           "required": true,
@@ -4277,7 +4277,7 @@
         {
           "id": 1749621982234,
           "name": "intake_system_suction_case_issues_noted",
-          "label": "Why Intake System Suction Case is non-operational?",
+          "label": "Why is the Intake System Suction Case non-operational?",
           "order": 7,
           "type": "text",
           "required": true,
@@ -4358,7 +4358,7 @@
         {
           "id": 1749621992234,
           "name": "intake_system_suction_pipe_issues_noted",
-          "label": "Why Intake System Suction Pipe is non-operational?",
+          "label": "Why is the Intake System Suction Pipe non-operational?",
           "order": 10,
           "type": "text",
           "required": true,
@@ -4439,7 +4439,7 @@
         {
           "id": 1749622002234,
           "name": "outfall_system_issues_noted",
-          "label": "Why Outfall System is non-operational?",
+          "label": "Why is the Outfall System non-operational?",
           "order": 13,
           "type": "text",
           "required": true,
@@ -4565,7 +4565,7 @@
         {
           "id": 1749622062234,
           "name": "desalination_power_supply_issues_noted",
-          "label": "Why Power Supply is non-operational?",
+          "label": "Why is the Power Supply non-operational?",
           "order": 17,
           "type": "text",
           "required": true,

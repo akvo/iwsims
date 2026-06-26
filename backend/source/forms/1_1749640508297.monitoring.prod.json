@@ -1405,7 +1405,7 @@
         {
           "id": 1749652009922,
           "name": "final_recommendations",
-          "label": "What are your final recommendation for the plant?(NOT to be shown to the interviewee)",
+          "label": "What are your final recommendations for the plant? (NOT to be shown to the interviewee)",
           "order": 4,
           "type": "multiple_option",
           "required": true,

@@ -77,7 +77,7 @@
         {
           "id": 1748904785806,
           "name": "geolocation",
-          "label": "Take Geolocation of Waste water Treatment Plant",
+          "label": "Take Geolocation of Wastewater Treatment Plant",
           "order": 6,
           "type": "geo",
           "required": true,

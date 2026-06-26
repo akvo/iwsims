@@ -143,7 +143,7 @@
             },
             {
               "value": "bachwash",
-              "label": "Bachwash",
+              "label": "Backwash",
               "id": 1749652648548,
               "order": 6,
               "color": "#66a61e"
@@ -157,7 +157,7 @@
             },
             {
               "value": "pup_operations",
-              "label": "Pup operations",
+              "label": "Pump operations",
               "id": 1749652674348,
               "order": 8,
               "color": "#a6761d"
@@ -171,7 +171,7 @@
             },
             {
               "value": "scada_operations",
-              "label": "Scada  Operations",
+              "label": "Scada Operations",
               "id": 1749652768064,
               "order": 10,
               "color": "#e41a1c"
@@ -233,7 +233,7 @@
         {
           "id": 1749692619340,
           "name": "has_ohs_policy",
-          "label": "Do you have a OHS policy for the Plant?",
+          "label": "Do you have an OHS policy for the Plant?",
           "order": 2,
           "type": "option",
           "required": true,
@@ -258,7 +258,7 @@
         {
           "id": 1749692658734,
           "name": "staff_use_ohs_equipment",
-          "label": "Do your staff use OHS equipment at the work place?",
+          "label": "Do your staff use OHS equipment at the workplace?",
           "order": 3,
           "type": "option",
           "required": true,
@@ -284,7 +284,7 @@
         {
           "id": 1749692692815,
           "name": "staff_comply_ohs_policy",
-          "label": "Do plant staff comply to the requirements of the OHS Policy?",
+          "label": "Do plant staff comply with the requirements of the OHS Policy?",
           "order": 4,
           "type": "option",
           "required": true,
@@ -698,7 +698,7 @@
         {
           "id": 1749693362270,
           "name": "fecal_coliform_cfu_100ml",
-          "label": "What is the Feacal Coliform in cfu/100ml?",
+          "label": "What is the Fecal Coliform in cfu/100ml?",
           "order": 18,
           "type": "number",
           "required": true,
@@ -1733,7 +1733,7 @@
         {
           "id": 1749652997590,
           "name": "chemicals_are_use_for_water_treatment_on_the_day_of_inspection",
-          "label": "What chemicals are use for water treatment on the day of Inspection ?",
+          "label": "What chemicals are used for water treatment on the day of Inspection?",
           "order": 1,
           "type": "multiple_option",
           "required": true,
@@ -2407,7 +2407,7 @@
         {
           "id": 1749696884554,
           "name": "dosing_rate_for_lime_bags_kg_per_day",
-          "label": "What is the dosage rate for Lima (bags/kg per day) on a daily basis?",
+          "label": "What is the dosage rate for Lime (bags/kg per day) on a daily basis?",
           "order": 35,
           "type": "number",
           "required": true,
@@ -2471,7 +2471,7 @@
         {
           "id": 1749696996243,
           "name": "issues_risks_please_provide_details_of_the_issues_issues_for_lime_dosing",
-          "label": "What are the Issues / risks? Please Provide Details of the issues /issues for Lime Dosing:",
+          "label": "What are the Issues / risks? Please Provide Details of the issues / risks for Lime Dosing:",
           "order": 38,
           "type": "multiple_option",
           "required": true,
@@ -2823,7 +2823,7 @@
             },
             {
               "value": "carried_over_flock",
-              "label": "Carried over Flock",
+              "label": "Carried over Flocs",
               "id": 1749697612494,
               "order": 4,
               "color": "#e7298a"
@@ -2999,7 +2999,7 @@
             },
             {
               "value": "leaking_filter_nosal",
-              "label": "Leaking filter nosal",
+              "label": "Leaking filter nozzle",
               "id": 1749697916723,
               "order": 2,
               "color": "#e41a1c"
@@ -3196,7 +3196,7 @@
             },
             {
               "value": "blocking_of_sewerlines",
-              "label": "Blocking of sewerlines",
+              "label": "Blocking of sewer lines",
               "id": 1749698328256,
               "order": 6,
               "color": "#7570b3"
@@ -4261,7 +4261,7 @@
         {
           "id": 1749699101674,
           "name": "type_of_flow_meters",
-          "label": "What are type of Flow Meters?",
+          "label": "What are the types of Flow Meters?",
           "order": 2,
           "type": "multiple_option",
           "required": true,
@@ -4342,7 +4342,7 @@
             },
             {
               "value": "inncorrect_reading",
-              "label": "Inncorrect reading",
+              "label": "Incorrect reading",
               "id": 1749699252715,
               "order": 4,
               "color": "#7570b3"
@@ -4456,7 +4456,7 @@
         {
           "id": 1749699457040,
           "name": "this_risks_associated_with_the_high_lift_pumps",
-          "label": "What are this risks associated with the High Lift Pumps?",
+          "label": "What are these risks associated with the High Lift Pumps?",
           "order": 10,
           "type": "multiple_option",
           "required": true,
@@ -4680,7 +4680,7 @@
         {
           "id": 1749699931981,
           "name": "backup_generator_issues",
-          "label": "Issues with the backup generator ?",
+          "label": "Issues with the backup generator?",
           "order": 3,
           "type": "text",
           "required": false,
@@ -4690,7 +4690,7 @@
         {
           "id": 1749700127090,
           "name": "a_picture_of_the_generator",
-          "label": "Take a picture of the generator ?",
+          "label": "Take a picture of the generator?",
           "order": 4,
           "type": "photo",
           "required": true,
@@ -4806,7 +4806,7 @@
         {
           "id": 1749700326877,
           "name": "final_recommendations",
-          "label": "What are your final recommendation for the plant?(NOT to be shown to the interviewee)",
+          "label": "What are your final recommendations for the plant? (NOT to be shown to the interviewee)",
           "order": 4,
           "type": "multiple_option",
           "required": true,
