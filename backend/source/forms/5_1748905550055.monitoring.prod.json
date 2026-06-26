@@ -1,7 +1,7 @@
 {
   "id": 1748905550055,
   "form": "WAF Wastewater Treatment Plant - Monitoring",
-  "description": "WAF Wastewater Treatment Plant - Comphrehensive Monitoring",
+  "description": "WAF Wastewater Treatment Plant - Comprehensive Monitoring",
   "defaultLanguage": "en",
   "languages": ["en"],
   "version": 1,
@@ -183,7 +183,7 @@
         {
           "id": 1748904054931,
           "name": "has_pump_station",
-          "label": "Are there any pump station at the treatment plant?",
+          "label": "Are there any pump stations at the treatment plant?",
           "order": 3,
           "type": "option",
           "required": true,
@@ -211,19 +211,28 @@
           "id": 1748904102151,
           "name": "num_pump_stations",
           "label": "Total number of pump stations",
-          "order": 4,
-          "type": "number",
+          "order": 24,
+          "type": "autofield",
           "required": true,
           "meta": false,
           "rule": null,
           "options": null,
-          "dependency": [{ "id": 1748904054931, "options": ["yes"] }]
+          "dependency": [
+            {
+              "id": 1748904054931,
+              "options": ["yes"]
+            }
+          ],
+          "fn": {
+            "multiline": false,
+            "fnString": "#num_raw_sewage_pump_stations# + #num_recirculation_pump_stations# + #num_sludge_pump_stations# + #num_supernatant_pump_stations# + #num_influent_pump_stations# + #num_effluent_pump_stations#"
+          }
         },
         {
           "id": 1748904158071,
           "name": "pump_station_types",
           "label": "What are types of pump stations?",
-          "order": 5,
+          "order": 4,
           "type": "multiple_option",
           "required": true,
           "meta": false,
@@ -272,40 +281,90 @@
               "color": "#e6ab02"
             }
           ],
-          "dependency": [{ "id": 1748904054931, "options": ["yes"] }]
+          "dependency": [
+            {
+              "id": 1748904054931,
+              "options": ["yes"]
+            }
+          ]
         },
         {
           "id": 1748904470602,
           "name": "num_raw_sewage_pump_stations",
           "label": "How many raw sewage pump stations?",
-          "order": 6,
+          "order": 5,
           "type": "number",
           "required": true,
           "meta": false,
           "rule": null,
           "options": null,
           "dependency": [
-            { "id": 1748904158071, "options": ["raw_sewage_pump_station"] }
+            {
+              "id": 1748904158071,
+              "options": ["raw_sewage_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000002,
+          "name": "raw_sewage_pump_station_status",
+          "label": "Status of pump station (Raw Sewage Pump Station)",
+          "order": 6,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": [
+            {
+              "value": "standby",
+              "label": "Standby",
+              "id": 1900100000003,
+              "order": 1,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "id": 1900100000004,
+              "order": 2,
+              "color": "#64A73B"
+            },
+            {
+              "value": "non_operational",
+              "label": "Non-operational",
+              "id": 1900100000005,
+              "order": 3,
+              "color": "#e41a1c"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 1748904158071,
+              "options": ["raw_sewage_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000006,
+          "name": "raw_sewage_pump_station_non_operational_reason",
+          "label": "Why is it non-operational? (Raw Sewage Pump Station)",
+          "order": 7,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
+          "dependency": [
+            {
+              "id": 1900100000002,
+              "options": ["non_operational"]
+            }
           ]
         },
         {
           "id": 1748904517975,
           "name": "num_recirculation_pump_stations",
           "label": "How many re-circulation pump stations?",
-          "order": 7,
-          "type": "number",
-          "required": true,
-          "meta": false,
-          "rule": null,
-          "options": null,
-          "dependency": [
-            { "id": 1748904158071, "options": ["re_circulation_pump_station"] }
-          ]
-        },
-        {
-          "id": 1748904551256,
-          "name": "num_sludge_pump_stations",
-          "label": "How many sludge pump stations?",
           "order": 8,
           "type": "number",
           "required": true,
@@ -313,41 +372,72 @@
           "rule": null,
           "options": null,
           "dependency": [
-            { "id": 1748904158071, "options": ["sludge_pump_station"] }
+            {
+              "id": 1748904158071,
+              "options": ["re_circulation_pump_station"]
+            }
           ]
         },
         {
-          "id": 1748904618481,
-          "name": "num_supernatant_pump_stations",
-          "label": "How many supernatant pump stations?",
+          "id": 1900100000008,
+          "name": "re_circulation_pump_station_status",
+          "label": "Status of pump station (Re circulation Pump Station)",
           "order": 9,
-          "type": "number",
+          "type": "option",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": false },
-          "options": null,
+          "rule": null,
+          "options": [
+            {
+              "value": "standby",
+              "label": "Standby",
+              "id": 1900100000009,
+              "order": 1,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "id": 1900100000010,
+              "order": 2,
+              "color": "#64A73B"
+            },
+            {
+              "value": "non_operational",
+              "label": "Non-operational",
+              "id": 1900100000011,
+              "order": 3,
+              "color": "#e41a1c"
+            }
+          ],
           "dependency": [
-            { "id": 1748904158071, "options": ["supernatant_pump_station"] }
+            {
+              "id": 1748904158071,
+              "options": ["re_circulation_pump_station"]
+            }
           ]
         },
         {
-          "id": 1748904692704,
-          "name": "num_influent_pump_stations",
-          "label": "How many influent pump station",
+          "id": 1900100000012,
+          "name": "re_circulation_pump_station_non_operational_reason",
+          "label": "Why is it non-operational? (Re circulation Pump Station)",
           "order": 10,
-          "type": "number",
+          "type": "text",
           "required": true,
           "meta": false,
           "rule": null,
           "options": null,
           "dependency": [
-            { "id": 1748904158071, "options": ["influent_pump_station"] }
+            {
+              "id": 1900100000008,
+              "options": ["non_operational"]
+            }
           ]
         },
         {
-          "id": 1748904732921,
-          "name": "num_effluent_pump_stations",
-          "label": "How many Effluent Pump Stations?",
+          "id": 1748904551256,
+          "name": "num_sludge_pump_stations",
+          "label": "How many sludge pump stations?",
           "order": 11,
           "type": "number",
           "required": true,
@@ -355,14 +445,294 @@
           "rule": null,
           "options": null,
           "dependency": [
-            { "id": 1748904158071, "options": ["effluent_pump_station"] }
+            {
+              "id": 1748904158071,
+              "options": ["sludge_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000014,
+          "name": "sludge_pump_station_status",
+          "label": "Status of pump station (Sludge Pump Station)",
+          "order": 12,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": [
+            {
+              "value": "standby",
+              "label": "Standby",
+              "id": 1900100000015,
+              "order": 1,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "id": 1900100000016,
+              "order": 2,
+              "color": "#64A73B"
+            },
+            {
+              "value": "non_operational",
+              "label": "Non-operational",
+              "id": 1900100000017,
+              "order": 3,
+              "color": "#e41a1c"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 1748904158071,
+              "options": ["sludge_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000018,
+          "name": "sludge_pump_station_non_operational_reason",
+          "label": "Why is it non-operational? (Sludge Pump Station)",
+          "order": 13,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
+          "dependency": [
+            {
+              "id": 1900100000014,
+              "options": ["non_operational"]
+            }
+          ]
+        },
+        {
+          "id": 1748904618481,
+          "name": "num_supernatant_pump_stations",
+          "label": "How many supernatant pump stations?",
+          "order": 14,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "options": null,
+          "dependency": [
+            {
+              "id": 1748904158071,
+              "options": ["supernatant_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000020,
+          "name": "supernatant_pump_station_status",
+          "label": "Status of pump station (Supernatant Pump Station)",
+          "order": 15,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": [
+            {
+              "value": "standby",
+              "label": "Standby",
+              "id": 1900100000021,
+              "order": 1,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "id": 1900100000022,
+              "order": 2,
+              "color": "#64A73B"
+            },
+            {
+              "value": "non_operational",
+              "label": "Non-operational",
+              "id": 1900100000023,
+              "order": 3,
+              "color": "#e41a1c"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 1748904158071,
+              "options": ["supernatant_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000024,
+          "name": "supernatant_pump_station_non_operational_reason",
+          "label": "Why is it non-operational? (Supernatant Pump Station)",
+          "order": 16,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
+          "dependency": [
+            {
+              "id": 1900100000020,
+              "options": ["non_operational"]
+            }
+          ]
+        },
+        {
+          "id": 1748904692704,
+          "name": "num_influent_pump_stations",
+          "label": "How many influent pump station",
+          "order": 17,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
+          "dependency": [
+            {
+              "id": 1748904158071,
+              "options": ["influent_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000026,
+          "name": "influent_pump_station_status",
+          "label": "Status of pump station (Influent Pump Station)",
+          "order": 18,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": [
+            {
+              "value": "standby",
+              "label": "Standby",
+              "id": 1900100000027,
+              "order": 1,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "id": 1900100000028,
+              "order": 2,
+              "color": "#64A73B"
+            },
+            {
+              "value": "non_operational",
+              "label": "Non-operational",
+              "id": 1900100000029,
+              "order": 3,
+              "color": "#e41a1c"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 1748904158071,
+              "options": ["influent_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000030,
+          "name": "influent_pump_station_non_operational_reason",
+          "label": "Why is it non-operational? (Influent Pump Station)",
+          "order": 19,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
+          "dependency": [
+            {
+              "id": 1900100000026,
+              "options": ["non_operational"]
+            }
+          ]
+        },
+        {
+          "id": 1748904732921,
+          "name": "num_effluent_pump_stations",
+          "label": "How many Effluent Pump Stations?",
+          "order": 20,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
+          "dependency": [
+            {
+              "id": 1748904158071,
+              "options": ["effluent_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000032,
+          "name": "effluent_pump_station_status",
+          "label": "Status of pump station (Effluent Pump Station)",
+          "order": 21,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": [
+            {
+              "value": "standby",
+              "label": "Standby",
+              "id": 1900100000033,
+              "order": 1,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "id": 1900100000034,
+              "order": 2,
+              "color": "#64A73B"
+            },
+            {
+              "value": "non_operational",
+              "label": "Non-operational",
+              "id": 1900100000035,
+              "order": 3,
+              "color": "#e41a1c"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 1748904158071,
+              "options": ["effluent_pump_station"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000036,
+          "name": "effluent_pump_station_non_operational_reason",
+          "label": "Why is it non-operational? (Effluent Pump Station)",
+          "order": 22,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
+          "dependency": [
+            {
+              "id": 1900100000032,
+              "options": ["non_operational"]
+            }
           ]
         },
         {
           "id": 1900000000201,
           "name": "total_population_connected",
           "label": "What is the total population connected to this plant?",
-          "order": 12,
+          "order": 23,
           "type": "number",
           "required": true,
           "meta": false,
@@ -404,7 +774,7 @@
         {
           "id": 1748910159332,
           "name": "num_staff_at_plant",
-          "label": "Number of staffs at the plant?",
+          "label": "Number of staff at the plant?",
           "order": 3,
           "type": "number",
           "required": true,
@@ -414,7 +784,7 @@
         {
           "id": 1748910184998,
           "name": "has_ohs_policy",
-          "label": "Do you have a OHS Policy for the Plant?",
+          "label": "Do you have an OHS Policy for the Plant?",
           "order": 4,
           "type": "option",
           "required": true,
@@ -439,7 +809,7 @@
         {
           "id": 1748910219997,
           "name": "staff_use_ohs_equipment_at_workplace",
-          "label": "Do your staff use OHS equipment at workplace?",
+          "label": "Do your staff use OHS equipment at the workplace?",
           "order": 5,
           "type": "option",
           "required": true,
@@ -464,7 +834,7 @@
         {
           "id": 1748910278981,
           "name": "plant_staffs_comply_to_the_requirements_of_the_ohs_policy",
-          "label": "Do plant staffs comply to the requirements  of the OHS Policy?",
+          "label": "Do plant staff comply with the requirements of the OHS Policy?",
           "order": 6,
           "type": "option",
           "required": true,
@@ -828,7 +1198,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748910860630, "options": ["yes"] }]
+          "dependency": [
+            {
+              "id": 1748910860630,
+              "options": ["yes"]
+            }
+          ]
         },
         {
           "id": 1748910968346,
@@ -864,7 +1239,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748910968346, "options": ["yes"] }]
+          "dependency": [
+            {
+              "id": 1748910968346,
+              "options": ["yes"]
+            }
+          ]
         },
         {
           "id": 1748911109721,
@@ -900,7 +1280,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748911109721, "options": ["yes"] }]
+          "dependency": [
+            {
+              "id": 1748911109721,
+              "options": ["yes"]
+            }
+          ]
         }
       ],
       "repeat_text": null
@@ -917,7 +1302,7 @@
         {
           "id": 1748906535935,
           "name": "there_a_inflow_meter",
-          "label": "Is there a inflow meter?",
+          "label": "Is there an inflow meter?",
           "order": 1,
           "type": "option",
           "required": true,
@@ -966,7 +1351,7 @@
             },
             {
               "value": "overflow_wiers",
-              "label": "Overflow wiers",
+              "label": "Overflow weirs",
               "id": 1748911378608,
               "order": 3,
               "color": "#e41a1c"
@@ -1012,7 +1397,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748911325583, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748911325583,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748911325349,
@@ -1023,8 +1413,15 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748906535935, "options": ["yes"] }],
-          "rule": { "allowDecimal": true }
+          "dependency": [
+            {
+              "id": 1748906535935,
+              "options": ["yes"]
+            }
+          ],
+          "rule": {
+            "allowDecimal": true
+          }
         },
         {
           "id": 1748911562813,
@@ -1035,170 +1432,13 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748906535935, "options": ["yes"] }],
+          "dependency": [
+            {
+              "id": 1748906535935,
+              "options": ["yes"]
+            }
+          ],
           "rule": null,
-          "limit": 5.0
-        }
-      ],
-      "repeat_text": null
-    },
-    {
-      "id": 1748906592857,
-      "name": "influent_pumping",
-      "label": "Influent Pumping",
-      "description": null,
-      "order": 5,
-      "repeatable": false,
-      "translations": null,
-      "questions": [
-        {
-          "id": 1748906592858,
-          "name": "influent_pump_station",
-          "label": "Are there any influent pump station?",
-          "order": 1,
-          "type": "option",
-          "required": true,
-          "meta": false,
-          "options": [
-            {
-              "value": "yes",
-              "label": "Yes",
-              "id": 1748914782031,
-              "order": 1,
-              "color": "#64A73B"
-            },
-            {
-              "value": "no",
-              "label": "No",
-              "id": 1748914782032,
-              "order": 2,
-              "color": "#e41a1c"
-            }
-          ],
-          "dependency": null
-        },
-        {
-          "id": 1748914793745,
-          "name": "comment_on_the_influent_pumping_system",
-          "label": "Comment on the influent pumping system",
-          "order": 2,
-          "type": "multiple_option",
-          "required": true,
-          "meta": false,
-          "options": [
-            {
-              "value": "normal_operation",
-              "label": "Normal operation",
-              "id": 1748914813922,
-              "order": 1,
-              "color": "#64A73B"
-            },
-            {
-              "value": "inadequate_pumping_during_wet_weather_flows",
-              "label": "Inadequate pumping during wet weather flows",
-              "id": 1748914813923,
-              "order": 2,
-              "color": "#e41a1c"
-            },
-            {
-              "value": "screens_overloaded",
-              "label": "Screens overloaded",
-              "id": 1748914831627,
-              "order": 3,
-              "color": "#003f5c"
-            },
-            {
-              "value": "poor_ventilation",
-              "label": "Poor ventilation",
-              "id": 1748914843646,
-              "order": 4,
-              "color": "#d95f02"
-            },
-            {
-              "value": "pumps_not_operational",
-              "label": "Pumps not operational",
-              "id": 1748914852318,
-              "order": 5,
-              "color": "#7570b3"
-            },
-            {
-              "value": "pump_house_in_bad_condition",
-              "label": "Pump house in bad condition",
-              "id": 1748914863132,
-              "order": 6,
-              "color": "#e7298a"
-            },
-            {
-              "value": "pump_house_in_good_condition",
-              "label": "Pump house in good condition",
-              "id": 1748914873210,
-              "order": 7,
-              "color": "#a65628"
-            },
-            {
-              "value": "no_influent_pump_station_in_the_plant",
-              "label": "No influent Pump Station in the plant",
-              "id": 1748914881430,
-              "order": 8,
-              "color": "#e6ab02"
-            },
-            {
-              "value": "other",
-              "label": "Other",
-              "id": 1748914890123,
-              "order": 9,
-              "color": "#1f78b4"
-            }
-          ],
-          "dependency": [{ "id": 1748906592858, "options": ["yes"] }]
-        },
-        {
-          "id": 1748914890124,
-          "name": "other_influent_pumping_description",
-          "label": "Please specify other influent pumping description",
-          "order": 3,
-          "type": "text",
-          "required": true,
-          "meta": false,
-          "options": null,
-          "dependency": [{ "id": 1748914793745, "options": ["other"] }]
-        },
-        {
-          "id": 1748914939216,
-          "name": "take_photo_of_the_influent_pump_station",
-          "label": "Are you able to take photo of the Influent Pump Station?",
-          "order": 4,
-          "type": "option",
-          "required": true,
-          "meta": false,
-          "options": [
-            {
-              "value": "yes",
-              "label": "Yes",
-              "id": 1748914945664,
-              "order": 1,
-              "color": "#64A73B"
-            },
-            {
-              "value": "no",
-              "label": "No",
-              "id": 1748914945665,
-              "order": 2,
-              "color": "#e41a1c"
-            }
-          ],
-          "dependency": [{ "id": 1748906592858, "options": ["yes"] }]
-        },
-        {
-          "id": 1748914980064,
-          "name": "photo_of_the_influent_pumping_station",
-          "label": "Take photo of the influent pumping station",
-          "order": 5,
-          "type": "photo",
-          "required": true,
-          "meta": false,
-          "options": null,
-          "dependency": [{ "id": 1748914939216, "options": ["yes"] }],
           "limit": 5.0
         }
       ],
@@ -1209,7 +1449,7 @@
       "name": "preliminary_treatment",
       "label": "Preliminary Treatment",
       "description": null,
-      "order": 6,
+      "order": 5,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -1220,7 +1460,12 @@
           "order": 1,
           "type": "multiple_option",
           "required": true,
-          "dependency": [{ "id": 1748913763000, "options": ["screening"] }],
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["screening"]
+            }
+          ],
           "meta": false,
           "options": [
             {
@@ -1283,7 +1528,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748906571911, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748906571911,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748914126410,
@@ -1292,7 +1542,12 @@
           "order": 3,
           "type": "photo",
           "required": true,
-          "dependency": [{ "id": 1748913763000, "options": ["screening"] }],
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["screening"]
+            }
+          ],
           "meta": false,
           "options": null,
           "limit": 5.0
@@ -1304,7 +1559,12 @@
           "order": 4,
           "type": "multiple_option",
           "required": true,
-          "dependency": [{ "id": 1748913763000, "options": ["grit_removal"] }],
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["grit_removal"]
+            }
+          ],
           "meta": false,
           "options": [
             {
@@ -1374,16 +1634,26 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748914436150, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748914436150,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748914701750,
           "name": "photo_of_the_grit_removal_system",
-          "label": "Take photo of  the grit removal system",
+          "label": "Take photo of the grit removal system",
           "order": 6,
           "type": "photo",
           "required": true,
-          "dependency": [{ "id": 1748913763000, "options": ["grit_removal"] }],
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["grit_removal"]
+            }
+          ],
           "meta": false,
           "options": null,
           "limit": 5.0
@@ -1396,7 +1666,7 @@
       "name": "primary_clarifiers",
       "label": "Primary Clarifiers",
       "description": null,
-      "order": 7,
+      "order": 6,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -1408,7 +1678,10 @@
           "type": "multiple_option",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["primary_clarifier"] }
+            {
+              "id": 1748913763000,
+              "options": ["primary_clarifier"]
+            }
           ],
           "meta": false,
           "options": [
@@ -1521,7 +1794,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748906604803, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748906604803,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748915357111,
@@ -1531,7 +1809,10 @@
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["primary_clarifier"] }
+            {
+              "id": 1748913763000,
+              "options": ["primary_clarifier"]
+            }
           ],
           "meta": false,
           "options": null,
@@ -1545,7 +1826,7 @@
       "name": "trickling_filters",
       "label": "Trickling Filters",
       "description": null,
-      "order": 8,
+      "order": 7,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -1557,7 +1838,10 @@
           "type": "multiple_option",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["trickling_filters"] }
+            {
+              "id": 1748913763000,
+              "options": ["trickling_filters"]
+            }
           ],
           "meta": false,
           "options": [
@@ -1577,7 +1861,7 @@
             },
             {
               "value": "shaft,bearing,drive_gear,or_motor_failure",
-              "label": "Shaft,bearing,drive gear,or motor failure",
+              "label": "Shaft, bearing, drive gear, or motor failure",
               "id": 1748915426204,
               "order": 3,
               "color": "#e41a1c"
@@ -1642,7 +1926,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748906632114, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748906632114,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748915551626,
@@ -1652,7 +1941,10 @@
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["trickling_filters"] }
+            {
+              "id": 1748913763000,
+              "options": ["trickling_filters"]
+            }
           ],
           "meta": false,
           "options": null,
@@ -1666,7 +1958,7 @@
       "name": "activated_sludge_system",
       "label": "Activated Sludge System",
       "description": null,
-      "order": 9,
+      "order": 8,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -1678,7 +1970,10 @@
           "type": "multiple_option",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["activated_sludge_system"] }
+            {
+              "id": 1748913763000,
+              "options": ["activated_sludge_system"]
+            }
           ],
           "meta": false,
           "options": [
@@ -1719,7 +2014,7 @@
             },
             {
               "value": "thick_billows_of_white,sudsy_foam_in_aeration_tank",
-              "label": "Thick billows of white,sudsy foam in aeration tank",
+              "label": "Thick billows of white, sudsy foam in aeration tank",
               "id": 1748915768321,
               "order": 6,
               "color": "#e7298a"
@@ -1763,7 +2058,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748915642008, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748915642008,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748915652986,
@@ -1773,7 +2073,10 @@
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["activated_sludge_system"] }
+            {
+              "id": 1748913763000,
+              "options": ["activated_sludge_system"]
+            }
           ],
           "meta": false,
           "options": null,
@@ -1787,7 +2090,7 @@
       "name": "stabilization_lagoons",
       "label": "Stabilization Lagoons",
       "description": null,
-      "order": 10,
+      "order": 9,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -1799,7 +2102,10 @@
           "type": "multiple_option",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["stabilization_lagoons"] }
+            {
+              "id": 1748913763000,
+              "options": ["stabilization_lagoons"]
+            }
           ],
           "meta": false,
           "options": [
@@ -1877,7 +2183,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748906806971, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748906806971,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748915991888,
@@ -1887,7 +2198,10 @@
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["stabilization_lagoons"] }
+            {
+              "id": 1748913763000,
+              "options": ["stabilization_lagoons"]
+            }
           ],
           "meta": false,
           "options": null,
@@ -1901,7 +2215,7 @@
       "name": "anaerobic_lagoons",
       "label": "Anaerobic Lagoons",
       "description": null,
-      "order": 11,
+      "order": 10,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -1913,7 +2227,10 @@
           "type": "multiple_option",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["anaerobic_lagoons"] }
+            {
+              "id": 1748913763000,
+              "options": ["anaerobic_lagoons"]
+            }
           ],
           "meta": false,
           "options": [
@@ -1926,58 +2243,51 @@
             },
             {
               "value": "damage_to_dikes_around_laggons",
-              "label": "Damage to dikes around laggons",
+              "label": "Damage to dikes around lagoons",
               "id": 1748916081096,
               "order": 2,
               "color": "#003f5c"
             },
             {
-              "value": "new_option",
-              "label": "New Option",
-              "id": 1748916097828,
-              "order": 3,
-              "color": "#d95f02"
-            },
-            {
               "value": "lagoons_overflowing_sludge",
               "label": "Lagoons overflowing sludge",
               "id": 1748916103337,
-              "order": 4,
+              "order": 3,
               "color": "#e41a1c"
             },
             {
               "value": "bad_odor",
               "label": "Bad odor",
               "id": 1748916111145,
-              "order": 5,
+              "order": 4,
               "color": "#7570b3"
             },
             {
               "value": "desludging_of_lagoons_ongoing",
               "label": "Desludging of lagoons ongoing",
               "id": 1748916121268,
-              "order": 6,
+              "order": 5,
               "color": "#e7298a"
             },
             {
               "value": "industrial_waste_visible",
               "label": "Industrial Waste Visible",
               "id": 1748916140594,
-              "order": 7,
+              "order": 6,
               "color": "#a65628"
             },
             {
               "value": "supernatant_removal",
               "label": "Supernatant removal",
               "id": 1748916148974,
-              "order": 8,
+              "order": 7,
               "color": "#e6ab02"
             },
             {
               "value": "other",
               "label": "Other",
               "id": 1748916157342,
-              "order": 9,
+              "order": 8,
               "color": "#1f78b4"
             }
           ]
@@ -1991,7 +2301,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748906938999, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748906938999,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748916203269,
@@ -2001,7 +2316,10 @@
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["anaerobic_lagoons"] }
+            {
+              "id": 1748913763000,
+              "options": ["anaerobic_lagoons"]
+            }
           ],
           "meta": false,
           "options": null,
@@ -2015,7 +2333,7 @@
       "name": "facultative_ponds",
       "label": "Facultative Ponds",
       "description": null,
-      "order": 12,
+      "order": 11,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -2024,22 +2342,129 @@
           "name": "comment_on_the_operation_of_the_facultative_pond",
           "label": "Comment on the operation of the facultative pond",
           "order": 1,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": [
+            {
+              "value": "normal",
+              "label": "Normal",
+              "id": 1900100000077,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "bad_odor",
+              "label": "Bad Odor",
+              "id": 1900100000078,
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "damaged_dikes_visible",
+              "label": "Damaged dikes visible",
+              "id": 1900100000079,
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "embankment_cracking",
+              "label": "Embankment cracking",
+              "id": 1900100000080,
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "pond_appears_grey_or_black",
+              "label": "Pond appears grey or black",
+              "id": 1900100000081,
+              "order": 5,
+              "color": "#003f5c"
+            },
+            {
+              "value": "excessive_suspended_solids",
+              "label": "Excessive Suspended Solids",
+              "id": 1900100000082,
+              "order": 6,
+              "color": "#a65628"
+            },
+            {
+              "value": "overloading",
+              "label": "Overloading",
+              "id": 1900100000083,
+              "order": 7,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "desludging_ongoing",
+              "label": "Desludging Ongoing",
+              "id": 1900100000084,
+              "order": 8,
+              "color": "#1f78b4"
+            },
+            {
+              "value": "algal_bloom",
+              "label": "Algal bloom",
+              "id": 1900100000085,
+              "order": 9,
+              "color": "#66a61e"
+            },
+            {
+              "value": "vegetation_overgrowth",
+              "label": "Vegetation overgrowth",
+              "id": 1900100000086,
+              "order": 10,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "id": 1900100000087,
+              "order": 11,
+              "color": "#999999"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["facultative_ponds"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000088,
+          "name": "facultative_ponds_condition_other",
+          "label": "Please specify other condition",
+          "order": 2,
           "type": "text",
           "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
           "dependency": [
-            { "id": 1748913763000, "options": ["facultative_ponds"] }
-          ],
-          "meta": false
+            {
+              "id": 1748907016509,
+              "options": ["other"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["facultative_ponds"]
+            }
+          ]
         },
         {
           "id": 1748916324372,
           "name": "photo_of_facultative_pond",
           "label": "Take photo of Facultative Pond",
-          "order": 2,
+          "order": 3,
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["facultative_ponds"] }
+            {
+              "id": 1748913763000,
+              "options": ["facultative_ponds"]
+            }
           ],
           "meta": false,
           "limit": 5.0
@@ -2052,7 +2477,7 @@
       "name": "maturation_pond",
       "label": "Maturation Pond",
       "description": null,
-      "order": 13,
+      "order": 12,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -2061,22 +2486,129 @@
           "name": "comment_on_the_operation_of_the_maturation_pond",
           "label": "Comment on the operation of the Maturation Pond",
           "order": 1,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "rule": null,
+          "options": [
+            {
+              "value": "normal",
+              "label": "Normal",
+              "id": 1900100000064,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "bad_odor",
+              "label": "Bad Odor",
+              "id": 1900100000065,
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "damaged_dikes_visible",
+              "label": "Damaged dikes visible",
+              "id": 1900100000066,
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "embankment_cracking",
+              "label": "Embankment cracking",
+              "id": 1900100000067,
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "pond_appears_grey_or_black",
+              "label": "Pond appears grey or black",
+              "id": 1900100000068,
+              "order": 5,
+              "color": "#003f5c"
+            },
+            {
+              "value": "excessive_suspended_solids",
+              "label": "Excessive Suspended Solids",
+              "id": 1900100000069,
+              "order": 6,
+              "color": "#a65628"
+            },
+            {
+              "value": "overloading",
+              "label": "Overloading",
+              "id": 1900100000070,
+              "order": 7,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "desludging_ongoing",
+              "label": "Desludging Ongoing",
+              "id": 1900100000071,
+              "order": 8,
+              "color": "#1f78b4"
+            },
+            {
+              "value": "algal_bloom",
+              "label": "Algal bloom",
+              "id": 1900100000072,
+              "order": 9,
+              "color": "#66a61e"
+            },
+            {
+              "value": "vegetation_overgrowth",
+              "label": "Vegetation overgrowth",
+              "id": 1900100000073,
+              "order": 10,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "id": 1900100000074,
+              "order": 11,
+              "color": "#999999"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["maturation_ponds"]
+            }
+          ]
+        },
+        {
+          "id": 1900100000075,
+          "name": "maturation_ponds_condition_other",
+          "label": "Please specify other condition",
+          "order": 2,
           "type": "text",
           "required": true,
+          "meta": false,
+          "rule": null,
+          "options": null,
           "dependency": [
-            { "id": 1748913763000, "options": ["maturation_ponds"] }
-          ],
-          "meta": false
+            {
+              "id": 1748916372852,
+              "options": ["other"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["maturation_ponds"]
+            }
+          ]
         },
         {
           "id": 1748916377930,
           "name": "photo_of_the_maturation_pond",
           "label": "Take photo of the Maturation Pond",
-          "order": 2,
+          "order": 3,
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["maturation_ponds"] }
+            {
+              "id": 1748913763000,
+              "options": ["maturation_ponds"]
+            }
           ],
           "meta": false,
           "limit": 5.0
@@ -2089,7 +2621,7 @@
       "name": "secondary_clarifiers",
       "label": "Secondary Clarifiers",
       "description": null,
-      "order": 14,
+      "order": 13,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -2101,7 +2633,10 @@
           "type": "multiple_option",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["secondary_clarifiers"] }
+            {
+              "id": 1748913763000,
+              "options": ["secondary_clarifiers"]
+            }
           ],
           "meta": false,
           "options": [
@@ -2207,7 +2742,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748907057799, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748907057799,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748916617834,
@@ -2217,7 +2757,10 @@
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["secondary_clarifiers"] }
+            {
+              "id": 1748913763000,
+              "options": ["secondary_clarifiers"]
+            }
           ],
           "meta": false,
           "options": null,
@@ -2230,39 +2773,122 @@
       "id": 1754995400902,
       "name": "oxidation_ponds",
       "label": "Oxidation Ponds",
-      "order": 15,
+      "order": 14,
       "questions": [
         {
           "id": 1754995400903,
           "name": "comment_on_operation_of_oxidation_ponds",
           "label": "Comment on the operation of Oxidation Ponds",
-          "type": "option",
+          "order": 1,
+          "type": "multiple_option",
           "required": true,
           "meta": false,
-          "order": 1,
+          "rule": null,
           "options": [
-            { "value": "operational", "label": "Operational", "order": 1 },
             {
-              "value": "not_operational",
-              "label": "Not Operational",
-              "order": 2
+              "value": "normal",
+              "label": "Normal",
+              "id": 1900100000038,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "bad_odor",
+              "label": "Bad Odor",
+              "id": 1900100000039,
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "damaged_dikes_visible",
+              "label": "Damaged dikes visible",
+              "id": 1900100000040,
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "embankment_cracking",
+              "label": "Embankment cracking",
+              "id": 1900100000041,
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "pond_appears_grey_or_black",
+              "label": "Pond appears grey or black",
+              "id": 1900100000042,
+              "order": 5,
+              "color": "#003f5c"
+            },
+            {
+              "value": "excessive_suspended_solids",
+              "label": "Excessive Suspended Solids",
+              "id": 1900100000043,
+              "order": 6,
+              "color": "#a65628"
+            },
+            {
+              "value": "overloading",
+              "label": "Overloading",
+              "id": 1900100000044,
+              "order": 7,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "desludging_ongoing",
+              "label": "Desludging Ongoing",
+              "id": 1900100000045,
+              "order": 8,
+              "color": "#1f78b4"
+            },
+            {
+              "value": "algal_bloom",
+              "label": "Algal bloom",
+              "id": 1900100000046,
+              "order": 9,
+              "color": "#66a61e"
+            },
+            {
+              "value": "vegetation_overgrowth",
+              "label": "Vegetation overgrowth",
+              "id": 1900100000047,
+              "order": 10,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "id": 1900100000048,
+              "order": 11,
+              "color": "#999999"
             }
           ],
           "dependency": [
-            { "id": 1748913763000, "options": ["oxidation_ponds"] }
+            {
+              "id": 1748913763000,
+              "options": ["oxidation_ponds"]
+            }
           ]
         },
         {
-          "id": 1754995400904,
-          "name": "reason_oxidation_ponds_not_operational",
-          "label": "If not operational, please specify why",
+          "id": 1900100000049,
+          "name": "oxidation_ponds_condition_other",
+          "label": "Please specify other condition",
+          "order": 2,
           "type": "text",
           "required": true,
-          "order": 2,
           "meta": false,
+          "rule": null,
+          "options": null,
           "dependency": [
-            { "id": 1754995400903, "options": ["not_operational"] },
-            { "id": 1748913763000, "options": ["oxidation_ponds"] }
+            {
+              "id": 1754995400903,
+              "options": ["other"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["oxidation_ponds"]
+            }
           ]
         },
         {
@@ -2274,7 +2900,10 @@
           "order": 3,
           "meta": false,
           "dependency": [
-            { "id": 1748913763000, "options": ["oxidation_ponds"] }
+            {
+              "id": 1748913763000,
+              "options": ["oxidation_ponds"]
+            }
           ]
         }
       ]
@@ -2283,7 +2912,7 @@
       "id": 1754995400912,
       "name": "pasveer_ditches",
       "label": "Pasveer Ditches",
-      "order": 16,
+      "order": 15,
       "questions": [
         {
           "id": 1754995400913,
@@ -2294,7 +2923,11 @@
           "meta": false,
           "order": 1,
           "options": [
-            { "value": "operational", "label": "Operational", "order": 1 },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "order": 1
+            },
             {
               "value": "not_operational",
               "label": "Not Operational",
@@ -2302,7 +2935,10 @@
             }
           ],
           "dependency": [
-            { "id": 1748913763000, "options": ["pasveer_ditches"] }
+            {
+              "id": 1748913763000,
+              "options": ["pasveer_ditches"]
+            }
           ]
         },
         {
@@ -2314,8 +2950,14 @@
           "meta": false,
           "order": 2,
           "dependency": [
-            { "id": 1754995400913, "options": ["not_operational"] },
-            { "id": 1748913763000, "options": ["pasveer_ditches"] }
+            {
+              "id": 1754995400913,
+              "options": ["not_operational"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["pasveer_ditches"]
+            }
           ]
         },
         {
@@ -2327,7 +2969,10 @@
           "meta": false,
           "order": 3,
           "dependency": [
-            { "id": 1748913763000, "options": ["pasveer_ditches"] }
+            {
+              "id": 1748913763000,
+              "options": ["pasveer_ditches"]
+            }
           ]
         }
       ]
@@ -2336,7 +2981,7 @@
       "id": 1754995400922,
       "name": "idea_lagoons",
       "label": "IDEA Lagoons",
-      "order": 17,
+      "order": 16,
       "questions": [
         {
           "id": 1754995400923,
@@ -2347,14 +2992,23 @@
           "meta": false,
           "order": 1,
           "options": [
-            { "value": "operational", "label": "Operational", "order": 1 },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "order": 1
+            },
             {
               "value": "not_operational",
               "label": "Not Operational",
               "order": 2
             }
           ],
-          "dependency": [{ "id": 1748913763000, "options": ["idea_lagoons"] }]
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["idea_lagoons"]
+            }
+          ]
         },
         {
           "id": 1754995400924,
@@ -2365,8 +3019,14 @@
           "meta": false,
           "order": 2,
           "dependency": [
-            { "id": 1754995400923, "options": ["not_operational"] },
-            { "id": 1748913763000, "options": ["idea_lagoons"] }
+            {
+              "id": 1754995400923,
+              "options": ["not_operational"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["idea_lagoons"]
+            }
           ]
         },
         {
@@ -2377,7 +3037,12 @@
           "required": true,
           "order": 3,
           "meta": false,
-          "dependency": [{ "id": 1748913763000, "options": ["idea_lagoons"] }]
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["idea_lagoons"]
+            }
+          ]
         }
       ]
     },
@@ -2385,39 +3050,122 @@
       "id": 1754995400932,
       "name": "polishing_ponds",
       "label": "Polishing Ponds",
-      "order": 18,
+      "order": 17,
       "questions": [
         {
           "id": 1754995400933,
           "name": "comment_on_operation_of_polishing_ponds",
           "label": "Comment on the operation of Polishing Ponds",
-          "type": "option",
+          "order": 1,
+          "type": "multiple_option",
           "required": true,
           "meta": false,
-          "order": 1,
+          "rule": null,
           "options": [
-            { "value": "operational", "label": "Operational", "order": 1 },
             {
-              "value": "not_operational",
-              "label": "Not Operational",
-              "order": 2
+              "value": "normal",
+              "label": "Normal",
+              "id": 1900100000051,
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "bad_odor",
+              "label": "Bad Odor",
+              "id": 1900100000052,
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "damaged_dikes_visible",
+              "label": "Damaged dikes visible",
+              "id": 1900100000053,
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "embankment_cracking",
+              "label": "Embankment cracking",
+              "id": 1900100000054,
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "pond_appears_grey_or_black",
+              "label": "Pond appears grey or black",
+              "id": 1900100000055,
+              "order": 5,
+              "color": "#003f5c"
+            },
+            {
+              "value": "excessive_suspended_solids",
+              "label": "Excessive Suspended Solids",
+              "id": 1900100000056,
+              "order": 6,
+              "color": "#a65628"
+            },
+            {
+              "value": "overloading",
+              "label": "Overloading",
+              "id": 1900100000057,
+              "order": 7,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "desludging_ongoing",
+              "label": "Desludging Ongoing",
+              "id": 1900100000058,
+              "order": 8,
+              "color": "#1f78b4"
+            },
+            {
+              "value": "algal_bloom",
+              "label": "Algal bloom",
+              "id": 1900100000059,
+              "order": 9,
+              "color": "#66a61e"
+            },
+            {
+              "value": "vegetation_overgrowth",
+              "label": "Vegetation overgrowth",
+              "id": 1900100000060,
+              "order": 10,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "id": 1900100000061,
+              "order": 11,
+              "color": "#999999"
             }
           ],
           "dependency": [
-            { "id": 1748913763000, "options": ["polishing_ponds"] }
+            {
+              "id": 1748913763000,
+              "options": ["polishing_ponds"]
+            }
           ]
         },
         {
-          "id": 1754995400934,
-          "name": "reason_polishing_ponds_not_operational",
-          "label": "If not operational, please specify why",
+          "id": 1900100000062,
+          "name": "polishing_ponds_condition_other",
+          "label": "Please specify other condition",
+          "order": 2,
           "type": "text",
           "required": true,
           "meta": false,
-          "order": 2,
+          "rule": null,
+          "options": null,
           "dependency": [
-            { "id": 1754995400933, "options": ["not_operational"] },
-            { "id": 1748913763000, "options": ["polishing_ponds"] }
+            {
+              "id": 1754995400933,
+              "options": ["other"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["polishing_ponds"]
+            }
           ]
         },
         {
@@ -2429,7 +3177,10 @@
           "order": 3,
           "meta": false,
           "dependency": [
-            { "id": 1748913763000, "options": ["polishing_ponds"] }
+            {
+              "id": 1748913763000,
+              "options": ["polishing_ponds"]
+            }
           ]
         }
       ]
@@ -2438,7 +3189,7 @@
       "id": 1754995400942,
       "name": "aerobic_lagoons",
       "label": "Aerobic Lagoons",
-      "order": 19,
+      "order": 18,
       "questions": [
         {
           "id": 1754995400943,
@@ -2449,7 +3200,11 @@
           "meta": false,
           "order": 1,
           "options": [
-            { "value": "operational", "label": "Operational", "order": 1 },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "order": 1
+            },
             {
               "value": "not_operational",
               "label": "Not Operational",
@@ -2457,7 +3212,10 @@
             }
           ],
           "dependency": [
-            { "id": 1748913763000, "options": ["aerobic_lagoons"] }
+            {
+              "id": 1748913763000,
+              "options": ["aerobic_lagoons"]
+            }
           ]
         },
         {
@@ -2469,8 +3227,14 @@
           "meta": false,
           "order": 2,
           "dependency": [
-            { "id": 1754995400943, "options": ["not_operational"] },
-            { "id": 1748913763000, "options": ["aerobic_lagoons"] }
+            {
+              "id": 1754995400943,
+              "options": ["not_operational"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["aerobic_lagoons"]
+            }
           ]
         },
         {
@@ -2482,7 +3246,10 @@
           "meta": false,
           "order": 3,
           "dependency": [
-            { "id": 1748913763000, "options": ["aerobic_lagoons"] }
+            {
+              "id": 1748913763000,
+              "options": ["aerobic_lagoons"]
+            }
           ]
         }
       ]
@@ -2491,7 +3258,7 @@
       "id": 1754995400952,
       "name": "sludge_digester",
       "label": "Sludge Digester",
-      "order": 20,
+      "order": 19,
       "questions": [
         {
           "id": 1754995400953,
@@ -2502,7 +3269,11 @@
           "meta": false,
           "order": 1,
           "options": [
-            { "value": "operational", "label": "Operational", "order": 1 },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "order": 1
+            },
             {
               "value": "not_operational",
               "label": "Not Operational",
@@ -2510,7 +3281,10 @@
             }
           ],
           "dependency": [
-            { "id": 1748913763000, "options": ["sludge_digester"] }
+            {
+              "id": 1748913763000,
+              "options": ["sludge_digester"]
+            }
           ]
         },
         {
@@ -2522,8 +3296,14 @@
           "meta": false,
           "order": 2,
           "dependency": [
-            { "id": 1754995400953, "options": ["not_operational"] },
-            { "id": 1748913763000, "options": ["sludge_digester"] }
+            {
+              "id": 1754995400953,
+              "options": ["not_operational"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["sludge_digester"]
+            }
           ]
         },
         {
@@ -2535,7 +3315,10 @@
           "order": 3,
           "meta": false,
           "dependency": [
-            { "id": 1748913763000, "options": ["sludge_digester"] }
+            {
+              "id": 1748913763000,
+              "options": ["sludge_digester"]
+            }
           ]
         }
       ]
@@ -2544,7 +3327,7 @@
       "id": 1754995400962,
       "name": "imhoff",
       "label": "IMHOFF",
-      "order": 21,
+      "order": 20,
       "questions": [
         {
           "id": 1754995400963,
@@ -2555,14 +3338,23 @@
           "meta": false,
           "order": 1,
           "options": [
-            { "value": "operational", "label": "Operational", "order": 1 },
+            {
+              "value": "operational",
+              "label": "Operational",
+              "order": 1
+            },
             {
               "value": "not_operational",
               "label": "Not Operational",
               "order": 2
             }
           ],
-          "dependency": [{ "id": 1748913763000, "options": ["imhoff"] }]
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["imhoff"]
+            }
+          ]
         },
         {
           "id": 1754995400964,
@@ -2573,8 +3365,14 @@
           "meta": false,
           "order": 2,
           "dependency": [
-            { "id": 1754995400963, "options": ["not_operational"] },
-            { "id": 1748913763000, "options": ["imhoff"] }
+            {
+              "id": 1754995400963,
+              "options": ["not_operational"]
+            },
+            {
+              "id": 1748913763000,
+              "options": ["imhoff"]
+            }
           ]
         },
         {
@@ -2585,7 +3383,12 @@
           "required": true,
           "meta": false,
           "order": 3,
-          "dependency": [{ "id": 1748913763000, "options": ["imhoff"] }]
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["imhoff"]
+            }
+          ]
         }
       ]
     },
@@ -2594,7 +3397,7 @@
       "name": "sludge_aerobic_digestion",
       "label": "Sludge Aerobic Digestion",
       "description": null,
-      "order": 22,
+      "order": 21,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -2606,7 +3409,10 @@
           "type": "multiple_option",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["sludge_aerobic_digestion"] }
+            {
+              "id": 1748913763000,
+              "options": ["sludge_aerobic_digestion"]
+            }
           ],
           "meta": false,
           "options": [
@@ -2677,7 +3483,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748907110680, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748907110680,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748917136204,
@@ -2687,7 +3498,10 @@
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["sludge_aerobic_digestion"] }
+            {
+              "id": 1748913763000,
+              "options": ["sludge_aerobic_digestion"]
+            }
           ],
           "meta": false,
           "options": null,
@@ -2701,7 +3515,7 @@
       "name": "sludge_handling",
       "label": "Sludge Handling",
       "description": null,
-      "order": 23,
+      "order": 22,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -2713,7 +3527,10 @@
           "type": "multiple_option",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["sludge_handling_system"] }
+            {
+              "id": 1748913763000,
+              "options": ["sludge_handling_system"]
+            }
           ],
           "meta": false,
           "options": [
@@ -2791,7 +3608,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748907110308, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748907110308,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748917296607,
@@ -2801,7 +3623,10 @@
           "type": "photo",
           "required": true,
           "dependency": [
-            { "id": 1748913763000, "options": ["sludge_handling_system"] }
+            {
+              "id": 1748913763000,
+              "options": ["sludge_handling_system"]
+            }
           ],
           "meta": false,
           "options": null,
@@ -2815,7 +3640,7 @@
       "name": "drying_beds",
       "label": "Drying Beds",
       "description": null,
-      "order": 24,
+      "order": 23,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -2826,7 +3651,12 @@
           "order": 1,
           "type": "multiple_option",
           "required": true,
-          "dependency": [{ "id": 1748913763000, "options": ["drying_beds"] }],
+          "dependency": [
+            {
+              "id": 1748913763000,
+              "options": ["drying_beds"]
+            }
+          ],
           "meta": false,
           "options": [
             {
@@ -2866,7 +3696,7 @@
             },
             {
               "value": "filtrate_overflowing_to_surrounding_environment",
-              "label": "Filtrate  overflowing to surrounding environment",
+              "label": "Filtrate overflowing to surrounding environment",
               "id": 1748917413480,
               "order": 6,
               "color": "#e7298a"
@@ -2889,7 +3719,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748907173282, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748907173282,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748917423214,
@@ -2898,96 +3733,14 @@
           "order": 3,
           "type": "photo",
           "required": true,
-          "dependency": [{ "id": 1748913763000, "options": ["drying_beds"] }],
-          "meta": false,
-          "options": null,
-          "limit": 5.0
-        }
-      ],
-      "repeat_text": null
-    },
-    {
-      "id": 1748907188131,
-      "name": "effluent_pumping",
-      "label": "Effluent Pumping",
-      "description": null,
-      "order": 25,
-      "repeatable": false,
-      "translations": null,
-      "questions": [
-        {
-          "id": 1748907188132,
-          "name": "effluent_pump_station",
-          "label": "Are there any effluent pump station?",
-          "order": 1,
-          "type": "option",
-          "required": true,
-          "meta": false,
-          "options": [
+          "dependency": [
             {
-              "value": "yes",
-              "label": "Yes",
-              "id": 1748917481483,
-              "order": 1,
-              "color": "#64A73B"
-            },
-            {
-              "value": "no",
-              "label": "No",
-              "id": 1748917481484,
-              "order": 2,
-              "color": "#e41a1c"
+              "id": 1748913763000,
+              "options": ["drying_beds"]
             }
           ],
-          "dependency": null
-        },
-        {
-          "id": 1748917496536,
-          "name": "comment_on_the_effluent_pump_station",
-          "label": "Comment on the effluent pump station?",
-          "order": 2,
-          "type": "text",
-          "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748907188132, "options": ["yes"] }]
-        },
-        {
-          "id": 1748917546718,
-          "name": "take_photo_of_effluent_pump_station",
-          "label": "Are you able to take photo of effluent pump station?",
-          "order": 3,
-          "type": "option",
-          "required": true,
-          "meta": false,
-          "options": [
-            {
-              "value": "yes",
-              "label": "Yes",
-              "id": 1748917556017,
-              "order": 1,
-              "color": "#64A73B"
-            },
-            {
-              "value": "no",
-              "label": "No",
-              "id": 1748917556018,
-              "order": 2,
-              "color": "#e41a1c"
-            }
-          ],
-          "dependency": [{ "id": 1748907188132, "options": ["yes"] }]
-        },
-        {
-          "id": 1748917597057,
-          "name": "photo_of_the_effluent_pump_station",
-          "label": "Take photo of the effluent pump station",
-          "order": 4,
-          "type": "photo",
-          "required": true,
-          "meta": false,
-          "options": null,
-          "dependency": [{ "id": 1748917546718, "options": ["yes"] }],
           "limit": 5.0
         }
       ],
@@ -2998,7 +3751,7 @@
       "name": "plant_effluent",
       "label": "Plant Effluent",
       "description": null,
-      "order": 26,
+      "order": 24,
       "repeatable": false,
       "translations": null,
       "questions": [
@@ -3034,7 +3787,7 @@
             },
             {
               "value": "excessive_suspended_solids,turbidity,foam,grease,scum_and_colour",
-              "label": "Excessive suspended solids,turbidity,foam,grease,scum and colour",
+              "label": "Excessive suspended solids, turbidity, foam, grease, scum and color",
               "id": 1748917726828,
               "order": 4,
               "color": "#e41a1c"
@@ -3059,7 +3812,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748907201859, "options": ["other"] }],
+          "dependency": [
+            {
+              "id": 1748907201859,
+              "options": ["other"]
+            }
+          ],
           "rule": null
         },
         {
@@ -3120,7 +3878,12 @@
               "color": "#1f78b4"
             }
           ],
-          "dependency": [{ "id": 1748917751257, "options": ["yes"] }],
+          "dependency": [
+            {
+              "id": 1748917751257,
+              "options": ["yes"]
+            }
+          ],
           "rule": null
         },
         {
@@ -3132,7 +3895,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748917751257, "options": ["yes"] }],
+          "dependency": [
+            {
+              "id": 1748917751257,
+              "options": ["yes"]
+            }
+          ],
           "limit": 5.0,
           "rule": null
         },
@@ -3203,7 +3971,7 @@
             },
             {
               "value": "total_kjeldhal_nitrogen",
-              "label": "Total Kjeldhal Nitrogen",
+              "label": "Total Kjeldahl Nitrogen",
               "id": 1748917801448,
               "order": 9,
               "color": "#e41a1c"
@@ -3280,22 +4048,36 @@
             }
           ],
           "dependency": [
-            { "id": 1748917751257, "options": ["yes"] },
-            { "id": 1748917751258, "options": ["lab_test", "testing_kits"] }
+            {
+              "id": 1748917751257,
+              "options": ["yes"]
+            },
+            {
+              "id": 1748917751258,
+              "options": ["lab_test", "testing_kits"]
+            }
           ]
         },
         {
           "id": 1754995400101,
           "name": "temperature_c",
-          "label": "Temperature \u00b0C - 2550B (APHA Method Code)",
+          "label": "Temperature °C - 2550B (APHA Method Code)",
           "order": 7,
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["temperature"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["temperature"]
+            }
           ]
         },
         {
@@ -3306,24 +4088,42 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true, "min": 0, "max": 14 },
+          "rule": {
+            "allowDecimal": true,
+            "min": 0,
+            "max": 14
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["ph"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["ph"]
+            }
           ]
         },
         {
           "id": 1754995400103,
           "name": "conductivity",
-          "label": "Conductivity \u00b5S/cm - 2510B (APHA Method Code)",
+          "label": "Conductivity µS/cm - 2510B (APHA Method Code)",
           "order": 9,
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["conductivity"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["conductivity"]
+            }
           ]
         },
         {
@@ -3334,10 +4134,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["salinity"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["salinity"]
+            }
           ]
         },
         {
@@ -3348,10 +4156,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["total_dissolved_solids"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["total_dissolved_solids"]
+            }
           ]
         },
         {
@@ -3362,10 +4178,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["total_suspended_solids"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["total_suspended_solids"]
+            }
           ]
         },
         {
@@ -3376,9 +4200,14 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
             {
               "id": 1748917792041,
               "options": ["total_suspended_solids", "total_dissolved_solids"]
@@ -3393,10 +4222,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["settleable_solids_imhoff"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["settleable_solids_imhoff"]
+            }
           ]
         },
         {
@@ -3407,24 +4244,40 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["ammonia"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["ammonia"]
+            }
           ]
         },
         {
           "id": 1754995400502,
           "name": "total_kjeldhal_nitrogen",
-          "label": "Total Kjeldhal Nitrogen mg/L - 4500-NorgB (APHA Method Code)",
+          "label": "Total Kjeldahl Nitrogen mg/L - 4500-NorgB (APHA Method Code)",
           "order": 16,
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["total_kjeldhal_nitrogen"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["total_kjeldhal_nitrogen"]
+            }
           ]
         },
         {
@@ -3435,10 +4288,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["nitrate"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["nitrate"]
+            }
           ]
         },
         {
@@ -3449,10 +4310,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["nitrite"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["nitrite"]
+            }
           ]
         },
         {
@@ -3463,10 +4332,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["total_phosphate"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["total_phosphate"]
+            }
           ]
         },
         {
@@ -3477,10 +4354,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["chemical_oxygen_demand"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["chemical_oxygen_demand"]
+            }
           ]
         },
         {
@@ -3491,10 +4376,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["dissolved_oxygen"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["dissolved_oxygen"]
+            }
           ]
         },
         {
@@ -3505,10 +4398,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["total_alkalinity"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["total_alkalinity"]
+            }
           ]
         },
         {
@@ -3519,10 +4420,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["chloride"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["chloride"]
+            }
           ]
         },
         {
@@ -3533,10 +4442,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["oil_and_grease"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["oil_and_grease"]
+            }
           ]
         },
         {
@@ -3547,10 +4464,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["total_sulphides"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["total_sulphides"]
+            }
           ]
         },
         {
@@ -3561,10 +4486,18 @@
           "type": "number",
           "required": true,
           "meta": false,
-          "rule": { "allowDecimal": true },
+          "rule": {
+            "allowDecimal": true
+          },
           "dependency": [
-            { "id": 1748917751258, "options": ["lab_test"] },
-            { "id": 1748917792041, "options": ["bod"] }
+            {
+              "id": 1748917751258,
+              "options": ["lab_test"]
+            },
+            {
+              "id": 1748917792041,
+              "options": ["bod"]
+            }
           ]
         },
         {
@@ -3576,7 +4509,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748917751258, "options": ["other"] }],
+          "dependency": [
+            {
+              "id": 1748917751258,
+              "options": ["other"]
+            }
+          ],
           "rule": null
         }
       ],
@@ -3587,7 +4525,7 @@
       "name": "photos_of_inspection",
       "label": "Photos of Inspection",
       "description": null,
-      "order": 27,
+      "order": 25,
       "repeatable": true,
       "translations": null,
       "questions": [
@@ -3622,14 +4560,14 @@
       "name": "constraints_and_recommendations",
       "label": "Constraints and Recommendations",
       "description": null,
-      "order": 28,
+      "order": 26,
       "repeatable": false,
       "translations": null,
       "questions": [
         {
           "id": 1748918417541,
           "name": "any_work_related_constraints",
-          "label": "Do you have any work related constraints?",
+          "label": "Do you have any work-related constraints?",
           "order": 1,
           "type": "option",
           "required": true,
@@ -3662,7 +4600,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748918417541, "options": ["yes"] }],
+          "dependency": [
+            {
+              "id": 1748918417541,
+              "options": ["yes"]
+            }
+          ],
           "short_label": null
         },
         {
@@ -3758,7 +4701,12 @@
               "color": "#1f78b4"
             }
           ],
-          "dependency": [{ "id": 1748918485299, "options": ["yes"] }],
+          "dependency": [
+            {
+              "id": 1748918485299,
+              "options": ["yes"]
+            }
+          ],
           "short_label": null
         },
         {
@@ -3770,7 +4718,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748918550536, "options": ["other"] }]
+          "dependency": [
+            {
+              "id": 1748918550536,
+              "options": ["other"]
+            }
+          ]
         },
         {
           "id": 1748918679466,
@@ -3781,7 +4734,12 @@
           "required": true,
           "meta": false,
           "options": null,
-          "dependency": [{ "id": 1748918485299, "options": ["yes"] }],
+          "dependency": [
+            {
+              "id": 1748918485299,
+              "options": ["yes"]
+            }
+          ],
           "short_label": "Final recommendations from the DWS staff"
         },
         {

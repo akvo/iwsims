@@ -270,6 +270,12 @@
               "order": 2,
               "color": "#e41a1c"
             }
+          ],
+          "dependency": [
+            {
+              "id": 1749622652941,
+              "options": ["yes"]
+            }
           ]
         },
         {

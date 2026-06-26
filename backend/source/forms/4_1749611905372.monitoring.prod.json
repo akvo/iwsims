@@ -28,7 +28,7 @@
         {
           "id": 1749611990753,
           "name": "log_book_updated",
-          "label": "Log Book available and updated?",
+          "label": "Logbook available and updated?",
           "order": 2,
           "type": "option",
           "required": true,
@@ -377,7 +377,7 @@
           "options": [
             {
               "value": "oprational",
-              "label": "Oprational",
+              "label": "Operational",
               "id": 1749613150597,
               "order": 1,
               "color": "#64A73B"
@@ -433,7 +433,7 @@
         {
           "id": 1749613395029,
           "name": "volt_meter",
-          "label": "Volt Meter",
+          "label": "Voltmeter",
           "order": 14,
           "type": "option",
           "required": true,
@@ -547,7 +547,7 @@
         {
           "id": 1749613625174,
           "name": "odour",
-          "label": "Odour",
+          "label": "Odor",
           "order": 19,
           "type": "option",
           "required": true,
