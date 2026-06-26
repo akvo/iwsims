@@ -1,0 +1,513 @@
+{
+  "parent_form_id": 1748903240763,
+  "name": "WWTP Site Profile",
+  "subtitle_key": "siteProfileWwtpSubtitle",
+  "header": {
+    "photo": [
+      "plant_photo",
+      "inspection_photo",
+      "influent_photo",
+      "photo_of_activated_sludge_system",
+      "photo_of_aerobic_lagoons",
+      "photo_of_anaerobic_lagoon",
+      "photo_of_drying_beds",
+      "photo_of_facultative_pond",
+      "photo_of_idea_lagoons",
+      "photo_of_imhoff",
+      "photo_of_oxidation_ponds",
+      "photo_of_pasveer_ditches",
+      "photo_of_polishing_ponds",
+      "photo_of_primary_clarifier",
+      "photo_of_sludge_aerobic_digestion",
+      "photo_of_sludge_digester",
+      "photo_of_sludge_handling_system",
+      "photo_of_the_effluent_pump_station",
+      "photo_of_the_grit_removal_system",
+      "photo_of_the_influent_pumping_station",
+      "photo_of_the_inlet",
+      "photo_of_the_maturation_pond",
+      "photo_of_the_screens",
+      "photo_of_the_secondary_clarifier",
+      "photo_of_the_stabilization_lagoon",
+      "photo_of_trickling_filter"
+    ],
+    "location": "division",
+    "meta": [
+      {
+        "label_key": "siteProfileType",
+        "value": "WWTP"
+      },
+      {
+        "label_key": "siteProfileCommissioned",
+        "question": "commissioned_year"
+      },
+      {
+        "label_key": "siteProfileDesignCapacity",
+        "question": "design_capacity_m3_day",
+        "unit": "m³/day"
+      },
+      {
+        "label_key": "siteProfilePopulationConnected",
+        "question": "total_population_connected_to_this_plant"
+      },
+      {
+        "label_key": "siteProfileLastInspection",
+        "source": "last_inspection"
+      },
+      {
+        "label_key": "siteProfileSupervisorCol",
+        "question": "plant_supervisor_name"
+      }
+    ]
+  },
+  "tabs": [
+    {
+      "key": "infrastructure",
+      "label_key": "siteProfileInfrastructureAssessment"
+    },
+    {
+      "key": "effluent",
+      "label_key": "siteProfileEffluentQuality"
+    },
+    {
+      "key": "risks",
+      "label_key": "siteProfileOperationalRisks"
+    },
+    {
+      "key": "inspection",
+      "label_key": "siteProfileInspectionHistory"
+    }
+  ],
+  "children": [
+    {
+      "id": 1,
+      "tab": "infrastructure",
+      "position": "left",
+      "order": 1,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileInfrastructureAssessment",
+      "caption_key": "siteProfileAutoMappedFromMonitoringForm",
+      "rows": [
+        {
+          "question": "ground_conditions",
+          "photo": "photo_of_ground_conditions"
+        },
+        {
+          "question": "building_conditions",
+          "photo": "photo_of_building_conditions"
+        },
+        {
+          "question": "condition_of_fence_for_security_purpose",
+          "photo": "photo_for_security_purpose"
+        },
+        {
+          "question": "security_lights"
+        },
+        {
+          "question": "transport_availability"
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileComponentCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileConditionCol",
+          "field": "question",
+          "render": "option_pills"
+        },
+        {
+          "title_key": "siteProfilePhotoCol",
+          "field": "photo",
+          "render": "photo"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "tab": "infrastructure",
+      "position": "right",
+      "order": 2,
+      "chart_type": "field",
+      "label_key": "siteProfileTreatmentProcessesInUse",
+      "questions": ["treatment_processes"]
+    },
+    {
+      "id": 3,
+      "tab": "infrastructure",
+      "position": "right",
+      "order": 3,
+      "chart_type": "field",
+      "label_key": "siteProfileStaffOhs",
+      "questions": [
+        "num_staff_at_plant",
+        "plant_supervisor_name",
+        "has_ohs_policy",
+        "staff_use_ohs_equipment_at_workplace",
+        "ohs_equipment_available",
+        "working_tools"
+      ]
+    },
+    {
+      "id": 4,
+      "tab": "infrastructure",
+      "position": "right",
+      "order": 4,
+      "chart_type": "field",
+      "label_key": "siteProfileMaintenancePrograms",
+      "questions": [
+        "urgent_maintenance_programs",
+        "provide_details_of_these_urgent",
+        "provide_details_of_these_preventative",
+        "provide_details_of_these_upgrading"
+      ]
+    },
+    {
+      "id": 5,
+      "tab": "infrastructure",
+      "position": "right",
+      "order": 5,
+      "chart_type": "field",
+      "label_key": "siteProfilePlantCharacteristics",
+      "questions": [
+        "plant_name",
+        "division",
+        "commissioned_year",
+        "design_capacity_m3_day",
+        "total_population_connected_to_this_plant",
+        "has_pump_station",
+        "num_pump_stations",
+        "pump_station_types"
+      ]
+    },
+    {
+      "id": 6,
+      "tab": "effluent",
+      "position": "left",
+      "order": 0,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileLatestEffluentTest",
+      "compliance_rule": [
+        "bod",
+        "chemical_oxygen_demand",
+        "total_dissolved_solids"
+      ],
+      "compliance_text": "BOD, COD, TDS all within standard.",
+      "rows": [
+        {
+          "question": "bod",
+          "unit": "mg/L",
+          "threshold": {
+            "max": 40
+          }
+        },
+        {
+          "question": "chemical_oxygen_demand",
+          "unit": "mg/L",
+          "threshold": {
+            "max": 100
+          }
+        },
+        {
+          "question": "total_dissolved_solids",
+          "unit": "mg/L",
+          "threshold": {
+            "max": 1000
+          }
+        },
+        {
+          "question": "total_suspended_solids",
+          "unit": "mg/L",
+          "threshold": {
+            "max": 60
+          }
+        },
+        {
+          "question": "ammonia",
+          "unit": "mg/L",
+          "threshold": {
+            "max": 10
+          }
+        },
+        {
+          "question": "total_phosphorus",
+          "unit": "mg/L",
+          "threshold": {
+            "max": 5
+          }
+        },
+        {
+          "question": "oil_and_grease",
+          "unit": "mg/L",
+          "threshold": {
+            "max": 5
+          }
+        },
+        {
+          "question": "ph",
+          "threshold": {
+            "min": 7.6,
+            "max": 9.0
+          }
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileParameterCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileResultCol",
+          "field": "question",
+          "render": "value"
+        },
+        {
+          "title_key": "siteProfileThresholdCol",
+          "field": "question",
+          "render": "threshold_label"
+        },
+        {
+          "title_key": "siteProfileStatusCol",
+          "field": "question",
+          "render": "threshold"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "tab": "effluent",
+      "position": "right",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileLatestBod",
+      "questions": ["bod"]
+    },
+    {
+      "id": 8,
+      "tab": "effluent",
+      "position": "right",
+      "order": 2,
+      "chart_type": "line",
+      "question": "bod",
+      "unit": "mg/L",
+      "label_key": "siteProfileBodTrend"
+    },
+    {
+      "id": 9,
+      "tab": "effluent",
+      "position": "right",
+      "order": 3,
+      "chart_type": "line",
+      "question": "chemical_oxygen_demand",
+      "unit": "mg/L",
+      "label_key": "siteProfileCodTrend"
+    },
+    {
+      "id": 10,
+      "tab": "effluent",
+      "position": "right",
+      "order": 4,
+      "chart_type": "line",
+      "question": "total_dissolved_solids",
+      "unit": "mg/L",
+      "label_key": "siteProfileTdsTrend"
+    },
+    {
+      "id": 11,
+      "tab": "effluent",
+      "position": "right",
+      "order": 5,
+      "chart_type": "line",
+      "question": "total_suspended_solids",
+      "unit": "mg/L",
+      "label_key": "siteProfileTssTrend"
+    },
+    {
+      "id": 12,
+      "tab": "effluent",
+      "position": "right",
+      "order": 6,
+      "chart_type": "line",
+      "question": "ph",
+      "unit": "pH",
+      "threshold": {
+        "min": 6.5,
+        "max": 8.5
+      },
+      "label_key": "siteProfilePhTrend"
+    },
+    {
+      "id": 13,
+      "tab": "effluent",
+      "position": "right",
+      "order": 7,
+      "chart_type": "line",
+      "question": "dissolved_oxygen",
+      "unit": "mg/L",
+      "label_key": "siteProfileDissolvedOxygenTrend"
+    },
+    {
+      "id": 14,
+      "tab": "effluent",
+      "position": "right",
+      "order": 8,
+      "chart_type": "line",
+      "question": "ammonia",
+      "unit": "mg/L",
+      "label_key": "siteProfileAmmoniaTrend"
+    },
+    {
+      "id": 15,
+      "tab": "effluent",
+      "position": "right",
+      "order": 9,
+      "chart_type": "line",
+      "question": "total_phosphorus",
+      "unit": "mg/L",
+      "label_key": "siteProfileTotalPhosphorusTrend"
+    },
+    {
+      "id": 16,
+      "tab": "effluent",
+      "position": "right",
+      "order": 10,
+      "chart_type": "line",
+      "question": "conductivity",
+      "unit": "µS/cm",
+      "label_key": "siteProfileConductivityTrend"
+    },
+    {
+      "id": 17,
+      "tab": "effluent",
+      "position": "right",
+      "order": 11,
+      "chart_type": "line",
+      "question": "inflow_rate_in_cubic_meters_per_day",
+      "unit": "m³/day",
+      "label_key": "siteProfileInflowRateTrend"
+    },
+    {
+      "id": 18,
+      "tab": "risks",
+      "position": "left",
+      "order": 1,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileFlaggedOperationalRisks",
+      "rows": [
+        {
+          "question": "ground_conditions"
+        },
+        {
+          "question": "building_conditions"
+        },
+        {
+          "question": "condition_of_fence_for_security_purpose"
+        },
+        {
+          "question": "security_lights"
+        },
+        {
+          "question": "transport_availability"
+        },
+        {
+          "question": "working_tools"
+        },
+        {
+          "question": "ohs_equipment_available"
+        },
+        {
+          "question": "has_ohs_policy"
+        },
+        {
+          "question": "staff_use_ohs_equipment_at_workplace"
+        },
+        {
+          "question": "urgent_maintenance_programs"
+        },
+        {
+          "question": "comment_on_operation_of_oxidation_ponds"
+        },
+        {
+          "question": "comment_on_operation_of_pasveer_ditches"
+        },
+        {
+          "question": "comment_on_operation_of_sludge_digester"
+        },
+        {
+          "question": "comment_on_operation_of_imhoff"
+        },
+        {
+          "question": "any_work_related_constraints"
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileRiskCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileSeverityCol",
+          "field": "question",
+          "render": "severity"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "tab": "inspection",
+      "position": "left",
+      "order": 1,
+      "chart_type": "record",
+      "source": "submissions",
+      "label_key": "siteProfileInspectionHistory",
+      "cols": [
+        {
+          "title_key": "siteProfileDateCol",
+          "dataIndex": "inspection_date",
+          "render": "date"
+        },
+        {
+          "title_key": "siteProfileInspectorCol",
+          "dataIndex": "dws_staff_name"
+        },
+        {
+          "title_key": "siteProfileStatusCol",
+          "dataIndex": "has_final_recommendation"
+        },
+        {
+          "title_key": "siteProfileSupervisorCol",
+          "dataIndex": "plant_supervisor_name"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "tab": "inspection",
+      "position": "right",
+      "order": 2,
+      "chart_type": "line",
+      "label_key": "siteProfileRiskScoreTrend",
+      "source": "risk_score",
+      "questions": [
+        "ground_conditions",
+        "building_conditions",
+        "condition_of_fence_for_security_purpose",
+        "security_lights",
+        "transport_availability",
+        "working_tools",
+        "ohs_equipment_available",
+        "has_ohs_policy",
+        "staff_use_ohs_equipment_at_workplace",
+        "urgent_maintenance_programs"
+      ],
+      "date_question": "inspection_date"
+    }
+  ]
+}

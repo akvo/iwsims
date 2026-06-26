@@ -40,6 +40,10 @@ const defaultUIState = {
   },
   initialValue: [],
   monitoring: null,
+  // Cached GET /data/{id} response (registration answers) for the datapoint
+  // currently open — shared by the Registration Data tab and the Site Profile
+  // header so it is fetched once. Shape: { id, data }.
+  dataPointDetails: null,
 };
 
 const store = new Store(defaultUIState);

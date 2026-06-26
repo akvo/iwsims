@@ -1,0 +1,578 @@
+{
+  "parent_form_id": 1749634736797,
+  "name": "WTP Site Profile",
+  "subtitle_key": "siteProfileWtpSubtitle",
+  "header": {
+    "photo": [
+      "inspection_photo",
+      "a_picture_of_the_generator",
+      "photo_of_the_storage_reservoir",
+      "photo_of_the_distribution_reservoir",
+      "photo_of_ground_water_source",
+      "photo_of_surface_water_source"
+    ],
+    "location": "division",
+    "meta": [
+      {
+        "label_key": "siteProfileType",
+        "question": "plant_type"
+      },
+      {
+        "label_key": "siteProfileCommissioned",
+        "question": "constructed_date"
+      },
+      {
+        "label_key": "siteProfileDesignCapacity",
+        "question": "designed_capacity_megalitres",
+        "unit": "ML/d"
+      },
+      {
+        "label_key": "siteProfileLastInspection",
+        "source": "last_inspection"
+      },
+      {
+        "label_key": "siteProfileSupervisorCol",
+        "question": "contact_person_name"
+      }
+    ]
+  },
+  "tabs": [
+    {
+      "key": "drinkingWaterQuality",
+      "label_key": "siteProfileDrinkingWaterQuality"
+    },
+    {
+      "key": "pumpsDosing",
+      "label_key": "siteProfilePumpsDosing"
+    },
+    {
+      "key": "infrastructure",
+      "label_key": "siteProfileInfrastructure"
+    },
+    {
+      "key": "ohsSafety",
+      "label_key": "siteProfileOhsSafety"
+    },
+    {
+      "key": "operations",
+      "label_key": "siteProfileOperations"
+    },
+    {
+      "key": "inspection",
+      "label_key": "siteProfileInspectionHistory"
+    }
+  ],
+  "children": [
+    {
+      "id": 21,
+      "tab": "drinkingWaterQuality",
+      "position": "left",
+      "order": 0,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileLatestDrinkingWaterTest",
+      "compliance_rule": [
+        "e_coli_cfu_100ml",
+        "total_coliform_cfu_100ml",
+        "turbidity_ntu",
+        "residual_chlorine_mg_l",
+        "ph"
+      ],
+      "compliance_text": "all required parameters compliant.",
+      "rows": [
+        {
+          "question": "e_coli_cfu_100ml",
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "question": "total_coliform_cfu_100ml",
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "question": "turbidity_ntu",
+          "unit": "NTU",
+          "threshold": {
+            "max": 5
+          }
+        },
+        {
+          "question": "residual_chlorine_mg_l",
+          "unit": "mg/L",
+          "threshold": {
+            "min": 0.2,
+            "max": 0.5
+          }
+        },
+        {
+          "question": "ph",
+          "threshold": {
+            "min": 6.5,
+            "max": 8.5
+          }
+        },
+        {
+          "question": "conductivity",
+          "unit": "µS/cm",
+          "threshold": {
+            "max": 1000
+          }
+        },
+        {
+          "question": "salinity",
+          "unit": "PPT",
+          "threshold": {
+            "max": 1
+          }
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileParameterCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileResultCol",
+          "field": "question",
+          "render": "value"
+        },
+        {
+          "title_key": "siteProfileThresholdCol",
+          "field": "question",
+          "render": "threshold_label"
+        },
+        {
+          "title_key": "siteProfileStatusCol",
+          "field": "question",
+          "render": "threshold"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 1,
+      "chart_type": "line",
+      "question": "turbidity_ntu",
+      "unit": "NTU",
+      "threshold": {
+        "max": 5
+      },
+      "label_key": "siteProfileTurbidityTrend"
+    },
+    {
+      "id": 2,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 2,
+      "chart_type": "line",
+      "question": "residual_chlorine_mg_l",
+      "unit": "mg/L",
+      "label_key": "siteProfileResidualChlorineTrend"
+    },
+    {
+      "id": 3,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 3,
+      "chart_type": "line",
+      "question": "ph",
+      "unit": "pH",
+      "threshold": {
+        "min": 6.5,
+        "max": 8.5
+      },
+      "label_key": "siteProfilePhTrend"
+    },
+    {
+      "id": 4,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 4,
+      "chart_type": "line",
+      "question": "e_coli_cfu_100ml",
+      "unit": "cfu/100ml",
+      "threshold": {
+        "max": 0
+      },
+      "label_key": "siteProfileEcoliTrend"
+    },
+    {
+      "id": 5,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 5,
+      "chart_type": "line",
+      "question": "total_coliform_cfu_100ml",
+      "unit": "cfu/100ml",
+      "label_key": "siteProfileTotalColiformTrend"
+    },
+    {
+      "id": 6,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 6,
+      "chart_type": "line",
+      "question": "fecal_coliform_cfu_100ml",
+      "unit": "cfu/100ml",
+      "threshold": {
+        "max": 0
+      },
+      "label_key": "siteProfileFecalColiformTrend"
+    },
+    {
+      "id": 7,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 7,
+      "chart_type": "line",
+      "question": "conductivity",
+      "unit": "µS/cm",
+      "label_key": "siteProfileConductivityTrend"
+    },
+    {
+      "id": 8,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 8,
+      "chart_type": "line",
+      "question": "salinity",
+      "unit": "PPT",
+      "label_key": "siteProfileSalinityTrend"
+    },
+    {
+      "id": 9,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 9,
+      "chart_type": "line",
+      "question": "temperature_c",
+      "unit": "°C",
+      "label_key": "siteProfileTemperatureTrend"
+    },
+    {
+      "id": 10,
+      "tab": "drinkingWaterQuality",
+      "position": "right",
+      "order": 10,
+      "chart_type": "field",
+      "label_key": "siteProfileSamplingMethod",
+      "questions": [
+        "water_quality_checks",
+        "water_testing_method",
+        "parameters_tested",
+        "can_take_water_sample",
+        "e_coli_risk_level_cbt"
+      ]
+    },
+    {
+      "id": 11,
+      "tab": "pumpsDosing",
+      "position": "right",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfilePumpsDosingSetup",
+      "questions": [
+        "pumps_rising_main_count",
+        "pumps_rising_main_standby_count",
+        "borehole_pump_count",
+        "borehole_pump_standby_count",
+        "borehole_gallery_pumps_count",
+        "borehole_gallery_pumps_standby_count",
+        "number_of_high_lift_pumps",
+        "disinfection_technique",
+        "chlorine_dosage_g_m3",
+        "chlorine_gas_dosing_method",
+        "hth_powder_dosage_g_m3",
+        "sodium_hypochlorite_dosage_g_m3",
+        "dpd_tablets_dosage_g_m3"
+      ]
+    },
+    {
+      "id": 12,
+      "tab": "pumpsDosing",
+      "position": "left",
+      "order": 2,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfilePumpDosingRisks",
+      "rows": [
+        {
+          "question": "pumps_rising_main_has_risks"
+        },
+        {
+          "question": "borehole_pump_has_risks"
+        },
+        {
+          "question": "borehole_gallery_pumps_has_risks"
+        },
+        {
+          "question": "risks_associated_with_the_high_lift_pumps"
+        },
+        {
+          "question": "has_chlorine_gas_risks"
+        },
+        {
+          "question": "has_hth_powder_risks"
+        },
+        {
+          "question": "has_sodium_hypochlorite_risks"
+        },
+        {
+          "question": "has_dpd_tablets_risks"
+        },
+        {
+          "question": "has_alum_dosing_risks"
+        },
+        {
+          "question": "has_soda_ash_dosing_risks"
+        },
+        {
+          "question": "issues_risks_associated_with_polymer_dosing"
+        },
+        {
+          "question": "issues_risk_associated_with_lime_dosing"
+        },
+        {
+          "question": "risks_associated_with_prechlorination_system"
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileRiskCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileSeverityCol",
+          "field": "question",
+          "render": "severity"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "tab": "infrastructure",
+      "position": "right",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfilePlantTreatmentTrain",
+      "questions": [
+        "plant_type",
+        "designed_capacity_megalitres",
+        "constructed_date",
+        "raw_water_source",
+        "raw_water_transport_method",
+        "floc_tanks_are_there_at_the_plant",
+        "clarifiers_sedimentation_tanks_are_there",
+        "types_of_clarifiers_sedimentation_tanks_at_the_plant",
+        "types_of_filtration_system",
+        "types_of_backwash_sludge_removal_system",
+        "type_of_flow_meters",
+        "number_of_storage_reservoir_at_the_plant",
+        "number_of_distribution_reservoirs_for_the_plant",
+        "has_backup_generator"
+      ]
+    },
+    {
+      "id": 14,
+      "tab": "infrastructure",
+      "position": "left",
+      "order": 2,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileInfrastructureSourceRisks",
+      "rows": [
+        {
+          "question": "issues_risk_associated_with_surface_water_source"
+        },
+        {
+          "question": "issues_risk_associated_with_ground_water_source"
+        },
+        {
+          "question": "risks_associated_with_the_raw_water_gravity_system"
+        },
+        {
+          "question": "risks_associated_with_the_floc_tanks"
+        },
+        {
+          "question": "risks_associated_with_the_clarifiers_sedimentation_tanks"
+        },
+        {
+          "question": "risks_associated_with_the_filtration_system"
+        },
+        {
+          "question": "risks_associated_with_the_backwash_sludge_removal_system"
+        },
+        {
+          "question": "risks_associated_with_the_flow_meters"
+        },
+        {
+          "question": "backup_generator_condition"
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileRiskCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileSeverityCol",
+          "field": "question",
+          "render": "severity"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "tab": "ohsSafety",
+      "position": "right",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileOhsPolicyPlans",
+      "questions": [
+        "has_ohs_policy",
+        "staff_use_ohs_equipment",
+        "staff_comply_ohs_policy",
+        "has_dwsp",
+        "has_sop",
+        "has_disinfection_sop"
+      ]
+    },
+    {
+      "id": 16,
+      "tab": "ohsSafety",
+      "position": "left",
+      "order": 2,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileOhsNonCompliance",
+      "rows": [
+        {
+          "question": "staff_comply_ohs_policy"
+        },
+        {
+          "question": "staff_use_ohs_equipment"
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileRiskCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileSeverityCol",
+          "field": "question",
+          "render": "severity"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "tab": "operations",
+      "position": "right",
+      "order": 1,
+      "chart_type": "line",
+      "question": "daily_production_megalitres",
+      "unit": "megalitres",
+      "label_key": "siteProfileDailyProductionTrend"
+    },
+    {
+      "id": 18,
+      "tab": "operations",
+      "position": "right",
+      "order": 2,
+      "chart_type": "field",
+      "label_key": "siteProfileStaffingDocuments",
+      "questions": [
+        "staff_count",
+        "sops_available",
+        "contact_person_name",
+        "has_dwsp"
+      ]
+    },
+    {
+      "id": 19,
+      "tab": "operations",
+      "position": "left",
+      "order": 3,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileProductionConstraints",
+      "rows": [
+        {
+          "question": "has_production_constraints"
+        },
+        {
+          "question": "has_final_recommendation"
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileRiskCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileSeverityCol",
+          "field": "question",
+          "render": "severity"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "tab": "inspection",
+      "position": "left",
+      "order": 1,
+      "chart_type": "record",
+      "source": "submissions",
+      "label_key": "siteProfileInspectionHistory",
+      "cols": [
+        {
+          "title_key": "siteProfileDateCol",
+          "dataIndex": "date_of_inspection",
+          "render": "date"
+        },
+        {
+          "title_key": "siteProfileInspectorCol",
+          "dataIndex": "dws_officer_name"
+        },
+        {
+          "title_key": "siteProfileStatusCol",
+          "dataIndex": "has_final_recommendation"
+        },
+        {
+          "title_key": "siteProfileIssuesRaisedCol",
+          "dataIndex": "final_recommendations"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "tab": "inspection",
+      "position": "right",
+      "order": 2,
+      "chart_type": "line",
+      "source": "risk_score",
+      "label_key": "siteProfileRiskScoreTrend",
+      "questions": [
+        "staff_comply_ohs_policy",
+        "staff_use_ohs_equipment",
+        "has_production_constraints",
+        "backup_generator_condition",
+        "has_final_recommendation"
+      ],
+      "date_question": "date_of_inspection"
+    }
+  ]
+}

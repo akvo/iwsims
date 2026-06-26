@@ -14,6 +14,7 @@ from api.v1.v1_visualization.serializers import (
     FormDataStatsFilterSerializer,
     FormulaValuesSerializer,
     DatapointDetailSerializer,
+    SiteProfileQuerySerializer,
 )
 from api.v1.v1_visualization.models import (
     ViewDataOptions,
@@ -676,3 +677,143 @@ def visualization_values_formula(request, version):
     ]
 
     return Response({"data": data}, status=status.HTTP_200_OK)
+
+
+class SiteProfileDetailView(APIView):
+    @extend_schema(
+        tags=["Visualization"],
+        summary="Per-site profile payload (latest + history + submissions)",
+        parameters=[
+            OpenApiParameter(
+                "parent_form_id",
+                OpenApiTypes.NUMBER,
+                OpenApiParameter.QUERY,
+                required=True,
+            ),
+            OpenApiParameter(
+                "questions",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+            ),
+            OpenApiParameter(
+                "history",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+            ),
+            OpenApiParameter(
+                "records",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+            ),
+        ],
+    )
+    def get(self, request, parent_id, version):
+        serializer = SiteProfileQuerySerializer(data=request.GET)
+        if not serializer.is_valid():
+            message = validate_serializers_message(serializer.errors)
+            if "parent_form_id" in serializer.errors:
+                message = f"parent_form_id: {message}"
+            return Response(
+                {"message": message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        params = serializer.validated_data
+
+        parent = get_object_or_404(
+            FormData,
+            pk=parent_id,
+            parent__isnull=True,
+            is_pending=False,
+            is_draft=False,
+        )
+
+        return Response(
+            {
+                "parent_id": parent.id,
+                "name": parent.name,
+                "latest": self._latest(parent_id, params),
+                "history": self._history(parent_id, params),
+                "submissions": self._submissions(parent_id, params),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def _latest(self, parent_id, params):
+        rows = MVCrossFormLatest.objects.filter(
+            parent_id=parent_id,
+            parent_form_id=params["parent_form_id"],
+        )
+        if params["questions"]:
+            rows = rows.filter(question_name__in=params["questions"])
+        return {
+            row.question_name: {
+                "question_name": row.question_name,
+                "type": row.question_type,
+                "name": row.latest_text_value,
+                "value": row.latest_numeric_value,
+                "options": row.latest_option_values,
+                "created": row.latest_created,
+            }
+            for row in rows
+        }
+
+    def _history(self, parent_id, params):
+        if not params["history"]:
+            return {}
+        rows = (
+            MVAnswerDenormalized.objects.filter(
+                parent_id=parent_id,
+                question_name__in=params["history"],
+            )
+            .order_by("data_created", "data_id", "answer_index")
+        )
+        history = {}
+        for row in rows:
+            history.setdefault(row.question_name, []).append(
+                {
+                    "date": row.data_created,
+                    "value": self._answer_value(row),
+                    "data_id": row.data_id,
+                }
+            )
+        return history
+
+    def _submissions(self, parent_id, params):
+        if not params["records"]:
+            return []
+        rows = (
+            MVAnswerDenormalized.objects.filter(
+                parent_id=parent_id,
+                question_name__in=params["records"],
+            )
+            .order_by("-data_created", "-data_id", "answer_index")
+        )
+        grouped = {}
+        for row in rows:
+            entry = grouped.setdefault(
+                row.data_id,
+                {
+                    "data_id": row.data_id,
+                    "date": row.data_created,
+                    "answers": {},
+                },
+            )
+            value = self._answer_value(row)
+            existing = entry["answers"].get(row.question_name)
+            if existing is None:
+                entry["answers"][row.question_name] = value
+            elif isinstance(existing, list):
+                existing.append(value)
+            else:
+                entry["answers"][row.question_name] = [existing, value]
+        return list(grouped.values())
+
+    def _answer_value(self, row):
+        if row.answer_options is not None:
+            return row.answer_options
+        if row.answer_name is not None:
+            return row.answer_name
+        return row.answer_value

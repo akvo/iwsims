@@ -1,0 +1,151 @@
+.site-profile {
+  .site-profile-item {
+    margin-bottom: 16px;
+  }
+  .site-profile-item:last-child {
+    margin-bottom: 0;
+  }
+
+  // Tighter card padding so tables/charts use more horizontal space.
+  .ant-card {
+    padding-bottom: 0 !important;
+    .ant-card-head,
+    .ant-card-body {
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+      padding-top: 8px;
+      padding-bottom: 16px;
+    }
+  }
+
+  .history-chart-card {
+    .ant-card-body {
+      padding-left: 8 !important;
+      padding-right: 8 !important;
+    }
+  }
+
+  // akvo-charts <Line> renders a div[role="figure"] that needs an explicit
+  // width + height to size its ECharts canvas (mirrors the dashboard rule).
+  div[role="figure"] {
+    width: 100%;
+    display: block !important;
+    min-height: 200px;
+  }
+
+  // Risk-score level legend (OK · Low · Med · High · Critical).
+  .site-profile-risk-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 8px;
+    padding: 0 8px;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.65);
+  }
+  .site-profile-risk-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .site-profile-risk-legend-item i {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+  .site-profile-risk-legend-item b {
+    font-weight: 600;
+  }
+}
+
+.site-profile-header {
+  &.ant-card {
+    padding-bottom: 0 !important;
+  }
+  margin-bottom: 16px;
+
+  .site-profile-hero {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .site-profile-hero-photo {
+    position: relative;
+    flex: 0 0 220px;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fafafa;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .site-profile-hero-photo .ant-image-img {
+    width: 220px;
+    object-fit: cover;
+  }
+  .site-profile-hero-photo-count {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 11px;
+    pointer-events: none;
+  }
+
+  .site-profile-hero-info {
+    flex: 1 1 auto;
+  }
+  .site-profile-hero-info h2 {
+    margin: 0 0 4px;
+  }
+
+  .site-profile-hero-subtitle {
+    color: rgba(0, 0, 0, 0.45);
+    margin-bottom: 12px;
+  }
+
+  .site-profile-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+  }
+  .site-profile-hero-meta-item {
+    display: flex;
+    flex-direction: column;
+  }
+  .site-profile-hero-meta-item .k {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.45);
+  }
+  .site-profile-hero-meta-item .v {
+    font-weight: 600;
+  }
+}
+
+.site-profile-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.site-profile-photo-grid .ant-image-img {
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .site-profile-header .site-profile-hero {
+    flex-direction: column;
+  }
+  .site-profile-header .site-profile-hero-photo {
+    flex-basis: auto;
+    width: 100%;
+  }
+}

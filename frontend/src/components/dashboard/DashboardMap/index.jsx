@@ -65,9 +65,6 @@ const DashboardMap = ({
   const datapointCache = useRef({});
 
   const sourceFormId = item?.source_form_id || parentFormId;
-  const urlTemplate =
-    item?.click_url_template ||
-    "/control-center/data/{parent_form_id}/monitoring/{data_id}";
 
   const itemFilters = useMemo(
     () =>
@@ -271,7 +268,6 @@ const DashboardMap = ({
                 point={p}
                 activeFilter={activeFilter}
                 byParent={byParent}
-                urlTemplate={urlTemplate}
                 sourceFormId={sourceFormId}
                 cache={datapointCache}
               />

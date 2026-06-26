@@ -1,0 +1,227 @@
+{
+  "parent_form_id": 1749621221728,
+  "name": "RWP Site Profile",
+  "subtitle_key": "siteProfileRwpSubtitle",
+  "header": {
+    "photo": [
+      "dam_photo",
+      "reservoir_photo",
+      "borehole_photo",
+      "infrastructure_photo",
+      "base_construction_photo",
+      "desalination_photo",
+      "distribution_main_photo",
+      "gutters_photo",
+      "pumps_photo",
+      "rainwater_harvesting_tank_photo",
+      "raw_water_main_photo",
+      "reticulation_photo",
+      "tanks_photo"
+    ],
+    "location": "division_province_tikina",
+    "village": "village_name",
+    "meta": [
+      {
+        "label_key": "siteProfileType",
+        "value": "RWP"
+      },
+      {
+        "label_key": "siteProfilePopulation",
+        "question": "number_of_population"
+      },
+      {
+        "label_key": "siteProfileLastInspection",
+        "source": "last_inspection"
+      }
+    ]
+  },
+  "tabs": [
+    {
+      "key": "constructions",
+      "label_key": "siteProfileConstructions"
+    },
+    {
+      "key": "waterQuality",
+      "label_key": "siteProfileWaterQuality"
+    },
+    {
+      "key": "inspection",
+      "label_key": "siteProfileInspectionHistory"
+    }
+  ],
+  "children": [
+    {
+      "id": 1,
+      "tab": "constructions",
+      "position": "right",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileConstructionDetails",
+      "questions": [
+        "reservoir_type",
+        "reservoir_size_concrete",
+        "reservoir_size_roto",
+        "number_of_reservoirs",
+        "raw_water_main_type_of_pipe",
+        "raw_water_main_size_pvc",
+        "raw_water_main_size_pe",
+        "distribution_main_type_of_pipe",
+        "distribution_main_size_pvc",
+        "distribution_main_size_polyethelene",
+        "distribution_main_length",
+        "reticulation_type_of_pipe",
+        "reticulation_connection_type",
+        "number_of_household_connections",
+        "number_of_shared_connections",
+        "tanks_size",
+        "tanks_used_for",
+        "pumps_name",
+        "pumps_power_supply",
+        "rainwater_intended_tank_type",
+        "size_of_communal_rwh_tanks",
+        "size_of_household_rwh_tanks",
+        "water_source_type",
+        "type_of_project"
+      ]
+    },
+    {
+      "id": 2,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 1,
+      "chart_type": "line",
+      "question": "ph",
+      "unit": "pH",
+      "threshold": {
+        "min": 6.5,
+        "max": 8.5
+      }
+    },
+    {
+      "id": 3,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 2,
+      "chart_type": "line",
+      "question": "turbidity_ntu",
+      "unit": "NTU",
+      "threshold": {
+        "max": 5
+      }
+    },
+    {
+      "id": 4,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 3,
+      "chart_type": "line",
+      "question": "lab_ecoli",
+      "unit": "cfu/100ml",
+      "threshold": {
+        "max": 0
+      }
+    },
+    {
+      "id": 5,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 4,
+      "chart_type": "line",
+      "question": "total_coliform_count",
+      "unit": "cfu/100ml",
+      "threshold": {
+        "max": 0
+      }
+    },
+    {
+      "id": 6,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 5,
+      "chart_type": "line",
+      "question": "fecal_coliform_count",
+      "unit": "cfu/100ml",
+      "threshold": {
+        "max": 0
+      }
+    },
+    {
+      "id": 7,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 6,
+      "chart_type": "line",
+      "question": "temperature_c",
+      "unit": "°C"
+    },
+    {
+      "id": 8,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 7,
+      "chart_type": "line",
+      "question": "conductivity",
+      "unit": "µS/cm"
+    },
+    {
+      "id": 9,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 8,
+      "chart_type": "line",
+      "question": "salinity",
+      "unit": "PPT"
+    },
+    {
+      "id": 10,
+      "tab": "waterQuality",
+      "position": "right",
+      "order": 9,
+      "chart_type": "line",
+      "question": "cbt_ecoli",
+      "unit": "cfu/100ml",
+      "threshold": {
+        "max": 0
+      }
+    },
+    {
+      "id": 11,
+      "tab": "inspection",
+      "position": "left",
+      "order": 1,
+      "chart_type": "record",
+      "source": "submissions",
+      "label_key": "siteProfileInspectionHistory",
+      "cols": [
+        {
+          "title_key": "siteProfileDateCol",
+          "dataIndex": "inspection_date",
+          "render": "date"
+        },
+        {
+          "title_key": "siteProfileInspectorCol",
+          "dataIndex": "dws_officer_name"
+        },
+        {
+          "title_key": "siteProfileStatusCol",
+          "dataIndex": "infrastructure_status"
+        },
+        {
+          "title_key": "siteProfileIssuesRaisedCol",
+          "dataIndex": "major_issues"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "tab": "inspection",
+      "position": "right",
+      "order": 2,
+      "chart_type": "line",
+      "source": "risk_score",
+      "label_key": "siteProfileRiskScoreTrend",
+      "questions": ["infrastructure_status", "major_issues"],
+      "date_question": "inspection_date"
+    }
+  ]
+}

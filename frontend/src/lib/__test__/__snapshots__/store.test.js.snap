@@ -5,6 +5,7 @@ Object {
   "administration": Array [],
   "administrationLevel": null,
   "advancedFilters": Array [],
+  "dataPointDetails": null,
   "dateRange": null,
   "filters": Object {
     "attributeType": null,

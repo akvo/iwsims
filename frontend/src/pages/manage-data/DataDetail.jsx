@@ -14,6 +14,7 @@ import {
   store,
   uiText,
   transformDetailData,
+  getDataPointDetails,
 } from "../../lib";
 import { useNotification } from "../../util/hooks";
 import { flatten, isEqual } from "lodash";
@@ -240,16 +241,18 @@ const DataDetail = ({
   const fetchData = useCallback(
     (id) => {
       setLoading(true);
-      api
-        .get(`data/${id}`)
-        .then((res) => {
-          const transformedData = transformDetailData(
-            res.data,
-            questionGroups,
-            validateDependency,
-            QUESTION_TYPES
+      // Shared, deduped fetch (cached + in-flight guard) so the Site Profile
+      // header and this tab issue a single GET /data/{id}.
+      getDataPointDetails(id)
+        .then((data) => {
+          setDataset(
+            transformDetailData(
+              data,
+              questionGroups,
+              validateDependency,
+              QUESTION_TYPES
+            )
           );
-          setDataset(transformedData);
         })
         .catch((e) => {
           console.error(e);

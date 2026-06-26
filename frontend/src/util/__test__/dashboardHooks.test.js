@@ -44,7 +44,7 @@ describe("serializeCriteria", () => {
       },
     ]);
     expect(out).toBe(
-      "option_equals:ph:no,threshold_gt:bod:5,overdue:is_done:due_date"
+      "option_equals:ph:no,threshold_gt:bod:5,overdue:is_done:due_date:no:option"
     );
   });
 
