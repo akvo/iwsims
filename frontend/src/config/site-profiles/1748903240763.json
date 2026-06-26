@@ -443,7 +443,7 @@
       "cols": [
         {
           "title_key": "siteProfileDateCol",
-          "dataIndex": "date",
+          "dataIndex": "inspection_date",
           "render": "date"
         },
         {
@@ -479,7 +479,8 @@
         "has_ohs_policy",
         "staff_use_ohs_equipment_at_workplace",
         "urgent_maintenance_programs"
-      ]
+      ],
+      "date_question": "inspection_date"
     }
   ]
 }

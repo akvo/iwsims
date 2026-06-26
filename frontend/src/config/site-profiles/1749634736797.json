@@ -533,7 +533,7 @@
       "cols": [
         {
           "title_key": "siteProfileDateCol",
-          "dataIndex": "date",
+          "dataIndex": "date_of_inspection",
           "render": "date"
         },
         {
@@ -564,7 +564,8 @@
         "has_production_constraints",
         "backup_generator_condition",
         "has_final_recommendation"
-      ]
+      ],
+      "date_question": "date_of_inspection"
     }
   ]
 }

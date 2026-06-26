@@ -63,7 +63,8 @@ const renderCell = (col, record, ctx) => {
     : record.__row?.[col.field || "question"];
 
   if (isSubmissions && (render === "date" || name === "date")) {
-    return formatDate(record.date);
+    // dataIndex "date" → FormData.created; a question name → that answer.
+    return formatDate(name === "date" ? record.date : record.answers?.[name]);
   }
 
   let entry;

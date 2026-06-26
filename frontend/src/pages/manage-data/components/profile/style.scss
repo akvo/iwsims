@@ -7,11 +7,21 @@
   }
 
   // Tighter card padding so tables/charts use more horizontal space.
-  .ant-card-body {
-    padding: 16px;
-    &.history-chart-card {
-      padding-left: 0 !important;
-      padding-right: 0 !important;
+  .ant-card {
+    padding-bottom: 0 !important;
+    .ant-card-head,
+    .ant-card-body {
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+      padding-top: 8px;
+      padding-bottom: 16px;
+    }
+  }
+
+  .history-chart-card {
+    .ant-card-body {
+      padding-left: 8 !important;
+      padding-right: 8 !important;
     }
   }
 

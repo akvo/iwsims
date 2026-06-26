@@ -248,6 +248,7 @@ const visitChild = (child, query) => {
       (child.questions || []).forEach((name) =>
         pushUnique(query.records, name)
       );
+      pushUnique(query.records, child.date_question);
     } else {
       pushUnique(query.history, child.question);
     }

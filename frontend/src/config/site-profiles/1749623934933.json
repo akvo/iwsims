@@ -177,7 +177,7 @@
       "cols": [
         {
           "title_key": "siteProfileDateCol",
-          "dataIndex": "date",
+          "dataIndex": "inspection_date",
           "render": "date"
         },
         {
@@ -202,7 +202,8 @@
       "chart_type": "line",
       "source": "risk_score",
       "label_key": "siteProfileRiskScoreTrend",
-      "questions": ["system_status", "is_project_completed"]
+      "questions": ["system_status", "is_project_completed"],
+      "date_question": "inspection_date"
     }
   ]
 }

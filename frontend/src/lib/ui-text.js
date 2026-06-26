@@ -928,6 +928,11 @@ const uiText = {
     siteProfileRiskMed: "Med",
     siteProfileRiskHigh: "High",
     siteProfileRiskCritical: "Critical",
+    siteProfileRiskFormulaTitle: "How this is calculated",
+    siteProfileRiskFormulaIntro:
+      "Score = sum of severity points across these questions:",
+    siteProfileRiskFormulaScale:
+      "Severity: red = 2, amber = 1, green = 0. Levels: OK 0 · Low 1–2 · Med 3–4 · High 5–6 · Critical 7+.",
     siteProfileRiskOkDesc: "No flagged risks",
     siteProfileRiskLowDesc: "Minor issues",
     siteProfileRiskMedDesc: "Moderate issues",
