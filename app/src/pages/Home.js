@@ -323,9 +323,13 @@ const Home = ({ navigation, route }) => {
     const unsubsNetwork = UIState.subscribe(
       (s) => s.networkType,
       (t) => {
-        if (syncWifiOnly && (t !== Network.NetworkStateType.WIFI || t !== 'wifi')) {
-          setSyncDisabled(true);
+        if (!syncWifiOnly) {
+          setSyncDisabled(false);
+          return;
         }
+        // Disable only while wifi-only is on AND not connected to wifi;
+        // re-enable when back on wifi
+        setSyncDisabled(t !== Network.NetworkStateType.WIFI);
       },
     );
 

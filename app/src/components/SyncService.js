@@ -109,7 +109,20 @@ const SyncService = () => {
         await crudJobs.updateJob(db, activeJob.id, {
           status: jobStatus.ON_PROGRESS,
         });
-        await backgroundTask.syncFormSubmission(db, activeJob);
+        try {
+          await backgroundTask.syncFormSubmission(db, activeJob);
+        } catch (error) {
+          // Never leave the status bar stuck on on_progress (disables the
+          // Sync Datapoint button until the next interval ~1h later)
+          UIState.update((s) => {
+            s.statusBar = {
+              type: SYNC_STATUS.failed,
+              bgColor: '#ec003f',
+              icon: 'alert',
+            };
+          });
+          throw error;
+        }
       }
     } finally {
       onSyncLockRef.current = false;
