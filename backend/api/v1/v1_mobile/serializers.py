@@ -224,6 +224,15 @@ class SyncDeviceFormDataSerializer(serializers.Serializer):
     submittedAt = CustomDateTimeField()
     geo = CustomListField(child=serializers.IntegerField())
     uuid = serializers.UUIDField(required=False, allow_null=True)
+    submission_key = serializers.CharField(
+        required=False,
+        allow_null=True,
+        max_length=64,
+        help_text=(
+            "Per-submission idempotency token. Resending the same key stores "
+            "nothing and still returns 200."
+        ),
+    )
     answers = serializers.DictField()
 
     def __init__(self, **kwargs):
@@ -243,6 +252,7 @@ class SyncDeviceFormDataSerializer(serializers.Serializer):
             "submittedAt",
             "geo",
             "uuid",
+            "submission_key",
             "answers",
         ]
 
