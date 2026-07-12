@@ -121,6 +121,7 @@ const uiText = {
     updateRequiredTitle: 'Update Required',
     checkingVersion: 'Checking for update',
     buttonUpdate: 'Update',
+    buttonLater: 'Later',
     noUpdateFound: 'No update found.',
     newVersionAvailable: 'New version available.',
     attachButton: 'Attach File',
@@ -142,6 +143,7 @@ const uiText = {
     emptyDraftMessageInfo: 'No draft data available',
     emptyDraftMessageAction: 'Saved forms will appear here',
     draftText: 'Draft',
+    compressingImage: 'Compressing...',
   },
   fr: {
     latitude: 'Latitude',
@@ -259,6 +261,7 @@ const uiText = {
     updateRequiredTitle: 'Mise à jour requise',
     checkingVersion: 'Vérification des mises à jour',
     buttonUpdate: 'Mise à jour',
+    buttonLater: 'Plus tard',
     noUpdateFound: 'Pas de mise à jour trouvée.',
     newVersionAvailable: 'Une nouvelle version est disponible.',
     attachButton: 'Joindre le fichier',
@@ -281,6 +284,7 @@ const uiText = {
     emptyDraftMessageInfo: 'Aucune donnée de brouillon disponible',
     emptyDraftMessageAction: 'Les formulaires enregistrés apparaîtront ici',
     draftText: 'Brouillon',
+    compressingImage: 'Compression...',
   },
 };
 

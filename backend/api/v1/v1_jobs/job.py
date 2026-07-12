@@ -1,6 +1,8 @@
 import logging
 import os
 import re
+import shutil
+import tempfile
 import zipfile
 from datetime import datetime, time, timedelta
 from dateutil import parser
@@ -585,13 +587,15 @@ def _generate_zip_download(job, **kwargs):
     date_from = kwargs.get("date_from")
     date_to = kwargs.get("date_to")
 
-    tmp_files = []
+    # Unique scratch dir: parallel test workers share ./tmp and can reuse
+    # job ids across their per-process databases, so predictable names
+    # like reg_{job.id}.xlsx collide between processes.
+    scratch_dir = tempfile.mkdtemp(dir="./tmp")
     try:
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
             # Registration Excel
             reg_name = _sanitize_form_name(form.name)
-            reg_path = f"./tmp/reg_{job.id}.xlsx"
-            tmp_files.append(reg_path)
+            reg_path = os.path.join(scratch_dir, f"reg_{job.id}.xlsx")
             with pd.ExcelWriter(reg_path, engine="xlsxwriter") as rw:
                 generate_data_sheet(
                     writer=rw,
@@ -619,10 +623,9 @@ def _generate_zip_download(job, **kwargs):
                 child_name = _sanitize_form_name(
                     child_form.name, form_id=child_form.id
                 )
-                child_path = (
-                    f"./tmp/child_{child_form.id}_{job.id}.xlsx"
+                child_path = os.path.join(
+                    scratch_dir, f"child_{child_form.id}_{job.id}.xlsx"
                 )
-                tmp_files.append(child_path)
                 with pd.ExcelWriter(
                     child_path, engine="xlsxwriter"
                 ) as cw:
@@ -642,9 +645,7 @@ def _generate_zip_download(job, **kwargs):
         url = upload(file=zip_path, folder="download")
         return url
     finally:
-        for f in tmp_files:
-            if os.path.exists(f):
-                os.remove(f)
+        shutil.rmtree(scratch_dir, ignore_errors=True)
 
 
 def job_generate_data_download(job_id, **kwargs):

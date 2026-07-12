@@ -657,6 +657,15 @@ const generateFnBody = (fnMetadata, values, questions = []) => {
 
       return val;
     }
+    /**
+     * A #name# reference whose question is not in questionMap (e.g. hidden by
+     * dependency, so excluded from activeQuestions) counts as unanswered.
+     * Returning defaultVal instead of the bare token prevents a ReferenceError
+     * when the generated function is evaluated.
+     */
+    if (fnMetadata.includes(`#${f}#`)) {
+      return defaultVal;
+    }
     return f;
   });
 

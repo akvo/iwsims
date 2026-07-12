@@ -1,5 +1,13 @@
 import { accuracyLevels } from '../../lib/loc';
 
+// Define quality options inline to avoid importing expo-image-manipulator at module load time
+const imageQualityOptions = [
+  { label: 'Low', value: 'low' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'High', value: 'high' },
+  { label: 'Original', value: 'original' },
+];
+
 export const config = [
   {
     id: 1,
@@ -186,6 +194,51 @@ export const config = [
             name: "Délai d'expiration de la géolocalisation",
           },
         ],
+      },
+    ],
+  },
+  {
+    id: 3,
+    name: 'Image Quality',
+    translations: [
+      {
+        language: 'fr',
+        name: "Qualité de l'image",
+      },
+    ],
+    description: {
+      name: 'Image compression settings for sync',
+      translations: [
+        {
+          language: 'fr',
+          name: "Paramètres de compression d'image pour la synchronisation",
+        },
+      ],
+    },
+    fields: [
+      {
+        id: 51,
+        type: 'dropdown',
+        name: 'imageQuality',
+        label: 'Compression Level',
+        description: {
+          name: 'Higher compression = smaller files, faster sync',
+          translations: [
+            {
+              language: 'fr',
+              name: 'Compression plus élevée = fichiers plus petits, synchronisation plus rapide',
+            },
+          ],
+        },
+        key: 'BuildParamsState.imageQuality',
+        editable: true,
+        translations: [
+          {
+            language: 'fr',
+            name: 'Niveau de compression',
+          },
+        ],
+        options: imageQualityOptions,
       },
     ],
   },
