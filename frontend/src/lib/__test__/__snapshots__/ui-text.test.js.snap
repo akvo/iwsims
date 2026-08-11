@@ -935,6 +935,7 @@ Object {
     "siteProfileConductivityTrend": "Conductivity Trend",
     "siteProfileConstraints": "Constraints",
     "siteProfileConstructionDetails": "Construction details",
+    "siteProfileConstructionProgressTrend": "Construction Progress",
     "siteProfileConstructions": "Constructions",
     "siteProfileDailyProductionTrend": "Daily Production Trend",
     "siteProfileDateCol": "Date",

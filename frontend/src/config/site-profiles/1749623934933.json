@@ -340,6 +340,19 @@
       "chart_type": "field",
       "label_key": "siteProfileFinalRecommendations",
       "questions": ["remarks_and_recommendations", "general_remarks"]
+    },
+    {
+      "id": 15,
+      "tab": "constructions",
+      "position": "left",
+      "order": 0,
+      "chart_type": "line",
+      "label_key": "siteProfileConstructionProgressTrend",
+      "question": "percentage_of_project_completion",
+      "unit": "%",
+      "threshold": {
+        "max": 100
+      }
     }
   ]
 }
