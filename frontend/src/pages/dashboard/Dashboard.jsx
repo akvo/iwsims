@@ -421,6 +421,10 @@ const Dashboard = () => {
     () => (config ? collectByCompute(config.items, "bucket_bar") : []),
     [config]
   );
+  const scoreHistogramItems = useMemo(
+    () => (config ? collectByCompute(config.items, "score_histogram") : []),
+    [config]
+  );
   const accessibilityNoIssuesKpiItems = useMemo(
     () =>
       config
@@ -445,6 +449,7 @@ const Dashboard = () => {
   const [processCountsByItem, setProcessCountsByItem] = useState({});
   const [groupedStackByItem, setGroupedStackByItem] = useState({});
   const [bucketBarByItem, setBucketBarByItem] = useState({});
+  const [scoreHistogramByItem, setScoreHistogramByItem] = useState({});
   const [accessibilityNoIssuesKpiByItem, setAccessibilityNoIssuesKpiByItem] =
     useState({});
   const [criticalByItem, setCriticalByItem] = useState({});
@@ -501,6 +506,18 @@ const Dashboard = () => {
       return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
     });
   }, []);
+  const onScoreHistogramSegmentData = useCallback(
+    (itemId, segmentKey, data) => {
+      setScoreHistogramByItem((prev) => {
+        const inner = prev[itemId] || {};
+        if (inner[segmentKey] === data) {
+          return prev;
+        }
+        return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+      });
+    },
+    []
+  );
   const onCriticalSegmentData = useCallback((itemId, segmentKey, data) => {
     setCriticalByItem((prev) => {
       const inner = prev[itemId] || {};
@@ -531,6 +548,7 @@ const Dashboard = () => {
       process_counts: processCountsByItem,
       grouped_stack: groupedStackByItem,
       bucket_bar: bucketBarByItem,
+      score_histogram: scoreHistogramByItem,
       accessibility_no_issues_kpi: accessibilityNoIssuesKpiByItem,
       critical: criticalByItem,
       rules: rulesByItem,
@@ -544,6 +562,7 @@ const Dashboard = () => {
       processCountsByItem,
       groupedStackByItem,
       bucketBarByItem,
+      scoreHistogramByItem,
       accessibilityNoIssuesKpiByItem,
       criticalByItem,
       rulesByItem,
@@ -866,6 +885,24 @@ const Dashboard = () => {
             fiscalYearStartMonth={fyStart}
             customFilterDefs={customFilterDefs}
             onSegmentData={onBucketBarSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible score_histogram segment fetchers — one per (item, segment)
+          pair. Each segment is one check; the compute joins them by parent to
+          score every entity out of N. */}
+      {scoreHistogramItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onScoreHistogramSegmentData}
           />
         ))
       )}
