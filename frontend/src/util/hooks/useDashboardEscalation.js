@@ -96,11 +96,17 @@ export const useDashboardEscalation = (
     } = escalationBlock.api || {};
 
     const out = {
-      criteria: serializeCriteria(criteria),
       columns: serializeColumns(escalationBlock.columns || []),
       page,
       page_size: pageSize,
     };
+    // Omit `criteria` entirely when a table has none — a whole-fleet listing
+    // has nothing to filter on, and sending a match-all makes the backend
+    // materialise every parent id per request instead of slicing the query.
+    const serializedCriteria = serializeCriteria(criteria);
+    if (serializedCriteria) {
+      out.criteria = serializedCriteria;
+    }
     // Sort by a `latest_date` column instead of insertion order — an
     // inspections feed is only a feed if it is chronological. Names a column
     // key from `columns`; the backend falls back to id ordering for anything

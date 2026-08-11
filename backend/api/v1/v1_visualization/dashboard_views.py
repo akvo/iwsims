@@ -361,9 +361,14 @@ def visualization_values(request, version):
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name="criteria", required=True,
+            name="criteria", required=False,
             type=OpenApiTypes.STR,
             location=OpenApiParameter.QUERY,
+            description=(
+                "OR-combined escalation criteria. Omit for no filter — "
+                "every parent in the family qualifies, which is how a "
+                "whole-fleet listing avoids paying for a match-all filter."
+            ),
         ),
         OpenApiParameter(
             name="columns", required=True,
@@ -450,7 +455,7 @@ def visualization_escalation(request, form_id, version):
     result = handle_escalation(
         parent_form=parent_form,
         monitoring_form_id=validated.get("monitoring_form_id"),
-        criteria=validated["criteria"],
+        criteria=validated.get("criteria") or [],
         columns=validated["columns"],
         params={
             "page": validated.get("page", 1),

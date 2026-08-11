@@ -76,3 +76,60 @@ class EscalationOrderingTestCase(TestCase):
         apply_escalation_ordering(qs, [DATE_COL], "last_inspected", None)
         expression, _ = qs.ordering
         self.assertTrue(expression.descending)
+
+
+class EscalationEmptyCriteriaTestCase(TestCase):
+    """Empty criteria must mean "no filter", not "no rows".
+
+    The two escalation paths diverge here without an explicit guard: the
+    pinned-form filter starts from Q() and matches everything, while the
+    cross-form one accumulates a set and would match nothing. Both are
+    branched on `if criteria:` in the handlers, which also skips materialising
+    every parent id — the reason an unfiltered listing used to cost O(fleet)
+    per page.
+    """
+
+    def test_pinned_filter_from_empty_criteria_matches_everything(self):
+        from django.db.models import Q
+        from api.v1.v1_visualization.escalation_functions import (
+            build_escalation_criteria_filter,
+        )
+
+        self.assertEqual(build_escalation_criteria_filter([], []), Q())
+
+    def test_cross_form_filter_from_empty_criteria_matches_nothing(self):
+        # Documents WHY the handler needs the branch: relying on this
+        # function's empty-criteria result would silently return no rows.
+        from api.v1.v1_visualization.escalation_functions import (
+            build_cross_form_escalation_filter,
+        )
+
+        self.assertEqual(
+            build_cross_form_escalation_filter([], [1, 2, 3], 999), set()
+        )
+
+    def test_serializer_accepts_missing_and_blank_criteria(self):
+        from api.v1.v1_visualization.dashboard_serializers import (
+            EscalationFilterSerializer,
+        )
+
+        for params in (
+            {"columns": "name:parent_name"},
+            {"columns": "name:parent_name", "criteria": ""},
+            {"columns": "name:parent_name", "criteria": "   "},
+        ):
+            serializer = EscalationFilterSerializer(data=params)
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+            self.assertEqual(
+                serializer.validated_data.get("criteria") or [], []
+            )
+
+    def test_serializer_still_rejects_malformed_criteria(self):
+        from api.v1.v1_visualization.dashboard_serializers import (
+            EscalationFilterSerializer,
+        )
+
+        serializer = EscalationFilterSerializer(
+            data={"columns": "name:parent_name", "criteria": "nonsense"}
+        )
+        self.assertFalse(serializer.is_valid())

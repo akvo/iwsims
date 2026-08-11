@@ -354,15 +354,22 @@ def handle_escalation(
             parents, True, parent_criteria,
         )
 
-    latest_ids = list(
-        parents.values_list("latest_id", flat=True)
-    )
+    # The latest-id list exists only to feed the criteria filter, and pulling
+    # every parent into Python is what makes an unfiltered listing cost
+    # O(fleet) per page. With no criteria there is nothing to filter, so skip
+    # both and let Postgres slice the queryset directly.
+    if criteria:
+        latest_ids = list(
+            parents.values_list("latest_id", flat=True)
+        )
+        filtered = parents.filter(
+            build_escalation_criteria_filter(criteria, latest_ids)
+        )
+    else:
+        filtered = parents
 
-    or_condition = build_escalation_criteria_filter(
-        criteria, latest_ids
-    )
     matching = apply_escalation_ordering(
-        parents.filter(or_condition),
+        filtered,
         columns,
         params.get("order_by"),
         params.get("order_dir"),
@@ -639,12 +646,21 @@ def _handle_escalation_cross_form(parent_form, criteria, columns, params):
             )
             parents = parents.filter(id__in=keep)
 
-    parent_ids = list(parents.values_list("id", flat=True))
-    matched = build_cross_form_escalation_filter(
-        criteria, parent_ids, parent_form.id,
-    )
+    # Same short-circuit as the pinned path. Note the two behave differently
+    # on empty criteria without this guard: the pinned filter starts from Q()
+    # and would match everything, while this one builds a set and would match
+    # NOTHING. Both need the explicit branch.
+    if criteria:
+        parent_ids = list(parents.values_list("id", flat=True))
+        matched = build_cross_form_escalation_filter(
+            criteria, parent_ids, parent_form.id,
+        )
+        filtered = parents.filter(id__in=matched)
+    else:
+        filtered = parents
+
     matching = apply_escalation_ordering(
-        parents.filter(id__in=matched),
+        filtered,
         columns,
         params.get("order_by"),
         params.get("order_dir"),
