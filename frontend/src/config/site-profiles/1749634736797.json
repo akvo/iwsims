@@ -70,8 +70,7 @@
     {
       "id": 21,
       "tab": "drinkingWaterQuality",
-      "position": "left",
-      "order": 0,
+      "order": 1,
       "chart_type": "record",
       "source": "rows",
       "label_key": "siteProfileLatestDrinkingWaterTest",
@@ -156,36 +155,36 @@
           "field": "question",
           "render": "threshold"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 1,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "line",
       "question": "turbidity_ntu",
       "unit": "NTU",
       "threshold": {
         "max": 5
       },
-      "label_key": "siteProfileTurbidityTrend"
+      "label_key": "siteProfileTurbidityTrend",
+      "col_span": 8
     },
     {
       "id": 2,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 2,
+      "order": 3,
       "chart_type": "line",
       "question": "residual_chlorine_mg_l",
       "unit": "mg/L",
-      "label_key": "siteProfileResidualChlorineTrend"
+      "label_key": "siteProfileResidualChlorineTrend",
+      "col_span": 8
     },
     {
       "id": 3,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 3,
+      "order": 4,
       "chart_type": "line",
       "question": "ph",
       "unit": "pH",
@@ -193,79 +192,79 @@
         "min": 6.5,
         "max": 8.5
       },
-      "label_key": "siteProfilePhTrend"
+      "label_key": "siteProfilePhTrend",
+      "col_span": 8
     },
     {
       "id": 4,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 4,
+      "order": 5,
       "chart_type": "line",
       "question": "e_coli_cfu_100ml",
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
       },
-      "label_key": "siteProfileEcoliTrend"
+      "label_key": "siteProfileEcoliTrend",
+      "col_span": 8
     },
     {
       "id": 5,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 5,
+      "order": 6,
       "chart_type": "line",
       "question": "total_coliform_cfu_100ml",
       "unit": "cfu/100ml",
-      "label_key": "siteProfileTotalColiformTrend"
+      "label_key": "siteProfileTotalColiformTrend",
+      "col_span": 8
     },
     {
       "id": 6,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 6,
+      "order": 7,
       "chart_type": "line",
       "question": "fecal_coliform_cfu_100ml",
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
       },
-      "label_key": "siteProfileFecalColiformTrend"
+      "label_key": "siteProfileFecalColiformTrend",
+      "col_span": 8
     },
     {
       "id": 7,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 7,
+      "order": 8,
       "chart_type": "line",
       "question": "conductivity",
       "unit": "µS/cm",
-      "label_key": "siteProfileConductivityTrend"
+      "label_key": "siteProfileConductivityTrend",
+      "col_span": 8
     },
     {
       "id": 8,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 8,
+      "order": 9,
       "chart_type": "line",
       "question": "salinity",
       "unit": "PPT",
-      "label_key": "siteProfileSalinityTrend"
+      "label_key": "siteProfileSalinityTrend",
+      "col_span": 8
     },
     {
       "id": 9,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 9,
+      "order": 10,
       "chart_type": "line",
       "question": "temperature_c",
       "unit": "°C",
-      "label_key": "siteProfileTemperatureTrend"
+      "label_key": "siteProfileTemperatureTrend",
+      "col_span": 8
     },
     {
       "id": 10,
       "tab": "drinkingWaterQuality",
-      "position": "right",
-      "order": 10,
+      "order": 11,
       "chart_type": "field",
       "label_key": "siteProfileSamplingMethod",
       "questions": [
@@ -274,13 +273,13 @@
         "parameters_tested",
         "can_take_water_sample",
         "e_coli_risk_level_cbt"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 11,
       "tab": "pumpsDosing",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfilePumpsDosingSetup",
       "questions": [
@@ -297,13 +296,13 @@
         "hth_powder_dosage_g_m3",
         "sodium_hypochlorite_dosage_g_m3",
         "dpd_tablets_dosage_g_m3"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 12,
       "tab": "pumpsDosing",
-      "position": "left",
-      "order": 2,
+      "order": 1,
       "chart_type": "record",
       "source": "rows",
       "label_key": "siteProfilePumpDosingRisks",
@@ -359,13 +358,13 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 13,
       "tab": "infrastructure",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfilePlantTreatmentTrain",
       "questions": [
@@ -383,13 +382,13 @@
         "number_of_storage_reservoir_at_the_plant",
         "number_of_distribution_reservoirs_for_the_plant",
         "has_backup_generator"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 14,
       "tab": "infrastructure",
-      "position": "left",
-      "order": 2,
+      "order": 1,
       "chart_type": "record",
       "source": "rows",
       "label_key": "siteProfileInfrastructureSourceRisks",
@@ -433,13 +432,13 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 15,
       "tab": "ohsSafety",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfileOhsPolicyPlans",
       "questions": [
@@ -449,13 +448,13 @@
         "has_dwsp",
         "has_sop",
         "has_disinfection_sop"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 16,
       "tab": "ohsSafety",
-      "position": "left",
-      "order": 2,
+      "order": 1,
       "chart_type": "record",
       "source": "rows",
       "label_key": "siteProfileOhsNonCompliance",
@@ -478,23 +477,23 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 17,
       "tab": "operations",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "line",
       "question": "daily_production_megalitres",
       "unit": "megalitres",
-      "label_key": "siteProfileDailyProductionTrend"
+      "label_key": "siteProfileDailyProductionTrend",
+      "col_span": 24
     },
     {
       "id": 18,
       "tab": "operations",
-      "position": "right",
-      "order": 2,
+      "order": 3,
       "chart_type": "field",
       "label_key": "siteProfileStaffingDocuments",
       "questions": [
@@ -502,13 +501,13 @@
         "sops_available",
         "contact_person_name",
         "has_dwsp"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 19,
       "tab": "operations",
-      "position": "left",
-      "order": 3,
+      "order": 1,
       "chart_type": "record",
       "source": "rows",
       "label_key": "siteProfileProductionConstraints",
@@ -531,12 +530,12 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 20,
       "tab": "inspection",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "submissions",
@@ -559,12 +558,12 @@
           "title_key": "siteProfileIssuesRaisedCol",
           "dataIndex": "final_recommendations"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 22,
       "tab": "inspection",
-      "position": "right",
       "order": 2,
       "chart_type": "line",
       "source": "risk_score",
@@ -576,12 +575,12 @@
         "backup_generator_condition",
         "has_final_recommendation"
       ],
-      "date_question": "date_of_inspection"
+      "date_question": "date_of_inspection",
+      "col_span": 24
     },
     {
       "id": 23,
       "tab": "recommendations",
-      "position": "left",
       "order": 1,
       "chart_type": "field",
       "label_key": "siteProfileFinalRecommendations",
@@ -590,19 +589,20 @@
         "final_recommendations",
         "other_final_recommendations",
         "dws_officer_name"
-      ]
+      ],
+      "col_span": 12
     },
     {
       "id": 24,
       "tab": "recommendations",
-      "position": "right",
       "order": 2,
       "chart_type": "field",
       "label_key": "siteProfileConstraints",
       "questions": [
         "has_production_constraints",
         "production_constraints_details"
-      ]
+      ],
+      "col_span": 12
     }
   ]
 }

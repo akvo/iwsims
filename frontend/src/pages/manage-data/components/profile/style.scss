@@ -1,9 +1,14 @@
 .site-profile {
+  // Vertical rhythm now comes from the Row gutter, not per-item margins —
+  // these are grid columns rather than stacked divs. Stretch so boxes sharing
+  // a row line up at the bottom instead of ragging.
   .site-profile-item {
-    margin-bottom: 16px;
-  }
-  .site-profile-item:last-child {
-    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+
+    > * {
+      flex: 1 1 auto;
+    }
   }
 
   // Tighter card padding so tables/charts use more horizontal space.
