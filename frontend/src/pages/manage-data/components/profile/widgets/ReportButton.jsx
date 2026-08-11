@@ -68,13 +68,13 @@ const ReportButton = ({ parentId, parentFormId, text }) => {
 
   return (
     <Button
-      size="small"
+      shape="round"
       icon={<FileWordOutlined />}
       onClick={onClick}
       loading={loading}
       className="site-profile-report-button"
     >
-      {getText(text, "siteProfileWordReport", "Word Report")}
+      {getText(text, "downloadReport", "Download Report")}
     </Button>
   );
 };

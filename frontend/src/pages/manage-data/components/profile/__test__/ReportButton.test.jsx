@@ -17,7 +17,7 @@ jest.mock("../../../../../util/hooks", () => ({
 }));
 
 const text = {
-  siteProfileWordReport: "Word Report",
+  downloadReport: "Download Report",
   siteProfileReportQueued: "Report queued",
   downloadReportError: "Unable to download report",
 };
@@ -46,7 +46,7 @@ describe("ReportButton", () => {
         text={text}
       />
     );
-    fireEvent.click(screen.getByRole("button", { name: /word report/i }));
+    fireEvent.click(screen.getByRole("button", { name: /download report/i }));
 
     await waitFor(() => expect(axios).toHaveBeenCalled());
     const url = axios.mock.calls[0][0].url || axios.mock.calls[0][0];
@@ -67,7 +67,7 @@ describe("ReportButton", () => {
     render(
       <ReportButton parentId={1} parentFormId={1748903240763} text={text} />
     );
-    fireEvent.click(screen.getByRole("button", { name: /word report/i }));
+    fireEvent.click(screen.getByRole("button", { name: /download report/i }));
 
     await waitFor(() => expect(mockNotify).toHaveBeenCalled());
     expect(mockNotify).toHaveBeenCalledWith(
@@ -82,7 +82,7 @@ describe("ReportButton", () => {
     render(
       <ReportButton parentId={1} parentFormId={1748903240763} text={text} />
     );
-    fireEvent.click(screen.getByRole("button", { name: /word report/i }));
+    fireEvent.click(screen.getByRole("button", { name: /download report/i }));
 
     await waitFor(() => expect(mockNotify).toHaveBeenCalled());
     expect(mockNotify).toHaveBeenCalledWith(
