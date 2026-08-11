@@ -1860,14 +1860,7 @@
       "config": {
         "title": "OHS Compliance Score Distribution",
         "xAxisLabel": "Items compliant out of 8",
-        "yAxisLabel": "# of plants",
-        "grid": {
-          "bottom": 72,
-          "containLabel": true
-        },
-        "xAxis": {
-          "nameGap": 44
-        }
+        "yAxisLabel": "# of plants"
       },
       "display": {
         "label_suffix": "/8"

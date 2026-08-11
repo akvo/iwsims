@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import axios from "axios";
-import ChartRenderer from "../ChartRenderer";
+import ChartRenderer, { axisNameGridPatch } from "../ChartRenderer";
 import { __clearVisualizationCache } from "../../../util/hooks/useVisualizationRequest";
 
 jest.mock("axios");
@@ -807,5 +807,44 @@ describe("ChartRenderer", () => {
     expect(option.series[0].type).toBe("scatter");
     expect(option.series[0].markLine.data[0].xAxis).toBe(0);
     expect(axios).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("axisNameGridPatch", () => {
+  // akvo-charts pins grid.bottom to 10% and containLabel only accounts for
+  // tick labels, not the axis NAME — which is drawn nameGap below the axis
+  // line and lands off-canvas on a card-height chart. Charts had been working
+  // around it one at a time; the renderer now carries it.
+  it("reserves room for a named category axis", () => {
+    expect(axisNameGridPatch({ xAxisLabel: "Month" })).toEqual({
+      grid: { bottom: 72, containLabel: true },
+    });
+  });
+
+  it("scales the room to a custom nameGap", () => {
+    expect(
+      axisNameGridPatch({ xAxisLabel: "Month", xAxis: { nameGap: 72 } })
+    ).toEqual({ grid: { bottom: 96, containLabel: true } });
+  });
+
+  it("does nothing when the chart names no axis", () => {
+    expect(axisNameGridPatch({})).toEqual({});
+    expect(axisNameGridPatch({ yAxisLabel: "count" })).toEqual({});
+  });
+
+  it("never overrides an explicit grid", () => {
+    const config = { xAxisLabel: "Month", grid: { bottom: 40 } };
+    expect(axisNameGridPatch(config)).toEqual({});
+  });
+
+  it("leaves horizontal charts alone", () => {
+    // Their category name sits on the y-axis and needs left-gutter room,
+    // which depends on how long the category labels are — no single default
+    // fits, so those keep their per-chart grid.
+    expect(axisNameGridPatch({ xAxisLabel: "# of plants" }, true)).toEqual({});
+  });
+
+  it("tolerates a missing config", () => {
+    expect(axisNameGridPatch()).toEqual({});
   });
 });
