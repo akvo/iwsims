@@ -5,6 +5,24 @@
 import "@testing-library/jest-dom";
 import "jest-canvas-mock";
 
+// jsdom implements no matchMedia, but AntD's responsive observer calls it on
+// mount for Table/Row/Col — without this any test rendering one throws
+// "window.matchMedia is not a function". Defined here rather than per test
+// file so it is in place before AntD is imported anywhere.
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }),
+});
+
 window.topojson = { objects: { fiji: { geometries: [{ properties: {} }] } } };
 window.levels = [
   { id: 1, name: "National", level: 0 },
