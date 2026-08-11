@@ -99,6 +99,20 @@
   }
 
   .site-profile-hero-info {
+    // Title and the Word Report action share a row; the button drops below the
+    // title rather than squeezing it on a narrow viewport.
+    .site-profile-hero-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      h2 {
+        margin: 0;
+      }
+    }
+
     flex: 1 1 auto;
   }
   .site-profile-hero-info h2 {
