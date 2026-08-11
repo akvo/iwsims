@@ -8,6 +8,8 @@ import {
   useDashboardValues,
 } from "../../util/hooks";
 import DashboardRenderer from "../../components/dashboard/DashboardRenderer";
+import LastRefreshed from "../../components/dashboard/widgets/LastRefreshed";
+import { __clearVisualizationCache } from "../../util/hooks/useVisualizationRequest";
 import { fails } from "../../components/dashboard/compute/compliance";
 import { collectRuleQuestionNames } from "../../components/dashboard/compute/rulesKpi";
 import { COMPLIANCE_PARAM_COMPUTES } from "../../components/dashboard/constants";
@@ -312,6 +314,18 @@ const Dashboard = () => {
   // Component-scoped "now" anchor; threaded into DashboardRenderer so
   // mark_lines with type="today" can resolve to an axis-matching label.
   const today = useMemo(() => new Date(), []);
+
+  // Refresh support. `refreshToken` is used as the renderer's React key, so
+  // bumping it remounts every widget; clearing the module-level request cache
+  // first means they refetch instead of replaying cached responses. Without
+  // the cache clear the remount would be silent and the stamp would lie.
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [refreshedAt, setRefreshedAt] = useState(() => new Date());
+  const handleRefresh = useCallback(() => {
+    __clearVisualizationCache();
+    setRefreshedAt(new Date());
+    setRefreshToken((n) => n + 1);
+  }, []);
 
   // Build a minimal config shell for the filters hook when config is absent.
   const filtersConfig = useMemo(
@@ -960,6 +974,7 @@ const Dashboard = () => {
               {config.description}
             </Paragraph>
           )}
+          <LastRefreshed refreshedAt={refreshedAt} onRefresh={handleRefresh} />
         </Col>
       </Row>
 
@@ -976,6 +991,7 @@ const Dashboard = () => {
       )}
 
       <DashboardRenderer
+        key={refreshToken}
         items={config.items}
         filterState={filters.queryParams}
         filters={filters}
