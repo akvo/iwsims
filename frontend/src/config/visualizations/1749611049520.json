@@ -1080,6 +1080,61 @@
           ]
         }
       ]
+    },
+    {
+      "id": "table_all_sites",
+      "info": "Every registered site with at least one monitoring submission.\nThe escalation endpoint requires criteria, and its grammar has no match-all, so the criteria below OR together questions that every monitored site answers — the count stops growing as further questions are added, which is how coverage was checked. Sites never monitored do not appear.",
+      "chart_type": "table",
+      "order": 14,
+      "col_span": 24,
+      "label": "All Pump Stations",
+      "description": "Every monitored site in this family. Click a row to open its site profile.",
+      "api": {
+        "criteria": [
+          {
+            "type": "threshold_gt",
+            "question_name": "num_pumps_operational",
+            "value": "-1",
+            "label": "Monitored",
+            "hide": true
+          }
+        ]
+      },
+      "columns": [
+        {
+          "key": "name",
+          "label": "Station",
+          "source": "parent_name",
+          "hide": false
+        },
+        {
+          "key": "administration",
+          "label": "Division",
+          "source": "administration",
+          "hide": false
+        },
+        {
+          "key": "status",
+          "label": "Station status",
+          "source": "answer",
+          "question_name": "station_status",
+          "hide": false
+        },
+        {
+          "key": "ohs",
+          "label": "OHS equipment",
+          "source": "answer",
+          "question_name": "ohs_equipment",
+          "hide": false
+        },
+        {
+          "key": "last_monitoring",
+          "label": "Last inspected",
+          "source": "latest_date",
+          "question_name": "inspection_date",
+          "hide": false
+        }
+      ]
     }
   ]
 }

@@ -1325,6 +1325,68 @@
         "monitoring": "latest",
         "include_unanswered": true
       }
+    },
+    {
+      "id": "table_all_sites",
+      "info": "Every registered site with at least one monitoring submission.\nThe escalation endpoint requires criteria, and its grammar has no match-all, so the criteria below OR together questions that every monitored site answers — the count stops growing as further questions are added, which is how coverage was checked. Sites never monitored do not appear.",
+      "chart_type": "table",
+      "order": 22,
+      "col_span": 24,
+      "label": "All Rural Water Projects",
+      "description": "Every monitored site in this family. Click a row to open its site profile.",
+      "api": {
+        "criteria": [
+          {
+            "type": "option_equals",
+            "question_name": "water_sample_collected",
+            "value": "yes",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "water_sample_collected",
+            "value": "no",
+            "label": "Monitored",
+            "hide": true
+          }
+        ]
+      },
+      "columns": [
+        {
+          "key": "name",
+          "label": "Project",
+          "source": "parent_name",
+          "hide": false
+        },
+        {
+          "key": "administration",
+          "label": "Division",
+          "source": "administration",
+          "hide": false
+        },
+        {
+          "key": "households",
+          "label": "Households",
+          "source": "parent_answer",
+          "question_name": "number_of_households",
+          "hide": false
+        },
+        {
+          "key": "status",
+          "label": "Infrastructure status",
+          "source": "answer",
+          "question_name": "infrastructure_status",
+          "hide": false
+        },
+        {
+          "key": "last_monitoring",
+          "label": "Last inspected",
+          "source": "latest_date",
+          "question_name": "inspection_date",
+          "hide": false
+        }
+      ]
     }
   ]
 }
