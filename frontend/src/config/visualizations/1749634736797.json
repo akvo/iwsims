@@ -421,7 +421,7 @@
     {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 14,
+      "order": 17,
       "col_span": 24,
       "items": [
         {
@@ -1324,6 +1324,290 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "chart_pumps_dosing_functioning",
+      "info": "Per subsystem, plants whose latest monitoring registered no risk against it versus plants that did.\n  • Raw water pumps — Are there risks associated with the rising main pumps?\n  • High-lift pumps — Are there risks associated with the high lift pumps?\n  • Pre-chlorination / Alum / Soda ash / Polymer / Lime — the dosing risk question for each chemical\nDenominators differ per subsystem: a plant is only asked about a chemical it actually doses, so each bar counts only the plants using that subsystem. Borehole and borehole-gallery pumps are omitted — no plant has answered their risk questions yet.",
+      "chart_type": "stack_bar",
+      "compute": "grouped_stack",
+      "orientation": "horizontal",
+      "order": 14,
+      "col_span": 24,
+      "description": "Green = subsystem in use with no risk registered · Red = risk registered. Both pumps and dosing are High-priority DWS indicators.",
+      "config": {
+        "title": "Pumps & Chemical Dosing Functioning",
+        "xAxisLabel": "# of plants",
+        "color": ["#2fb36d", "#d93c35"],
+        "grid": {
+          "left": 210,
+          "right": 32,
+          "top": 32,
+          "bottom": 72,
+          "containLabel": false
+        }
+      },
+      "stacks": [
+        {
+          "key": "functioning",
+          "label": "No risk registered"
+        },
+        {
+          "key": "risk",
+          "label": "Risk registered"
+        }
+      ],
+      "segments": [
+        {
+          "key": "pumps_rising_main_has_risks__ok",
+          "group": "pumps_rising_main_has_risks",
+          "group_label": "Raw water pumps (rising main)",
+          "stack": "functioning",
+          "api": {
+            "question_name": "pumps_rising_main_has_risks",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "pumps_rising_main_has_risks__risk",
+          "group": "pumps_rising_main_has_risks",
+          "group_label": "Raw water pumps (rising main)",
+          "stack": "risk",
+          "api": {
+            "question_name": "pumps_rising_main_has_risks",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "risks_associated_with_the_high_lift_pumps__ok",
+          "group": "risks_associated_with_the_high_lift_pumps",
+          "group_label": "High-lift pumps",
+          "stack": "functioning",
+          "api": {
+            "question_name": "risks_associated_with_the_high_lift_pumps",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "risks_associated_with_the_high_lift_pumps__risk",
+          "group": "risks_associated_with_the_high_lift_pumps",
+          "group_label": "High-lift pumps",
+          "stack": "risk",
+          "api": {
+            "question_name": "risks_associated_with_the_high_lift_pumps",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "risks_associated_with_prechlorination_system__ok",
+          "group": "risks_associated_with_prechlorination_system",
+          "group_label": "Pre-chlorination dosing",
+          "stack": "functioning",
+          "api": {
+            "question_name": "risks_associated_with_prechlorination_system",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "risks_associated_with_prechlorination_system__risk",
+          "group": "risks_associated_with_prechlorination_system",
+          "group_label": "Pre-chlorination dosing",
+          "stack": "risk",
+          "api": {
+            "question_name": "risks_associated_with_prechlorination_system",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "has_alum_dosing_risks__ok",
+          "group": "has_alum_dosing_risks",
+          "group_label": "Alum dosing",
+          "stack": "functioning",
+          "api": {
+            "question_name": "has_alum_dosing_risks",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "has_alum_dosing_risks__risk",
+          "group": "has_alum_dosing_risks",
+          "group_label": "Alum dosing",
+          "stack": "risk",
+          "api": {
+            "question_name": "has_alum_dosing_risks",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "has_soda_ash_dosing_risks__ok",
+          "group": "has_soda_ash_dosing_risks",
+          "group_label": "Soda ash dosing",
+          "stack": "functioning",
+          "api": {
+            "question_name": "has_soda_ash_dosing_risks",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "has_soda_ash_dosing_risks__risk",
+          "group": "has_soda_ash_dosing_risks",
+          "group_label": "Soda ash dosing",
+          "stack": "risk",
+          "api": {
+            "question_name": "has_soda_ash_dosing_risks",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "issues_risks_associated_with_polymer_dosing__ok",
+          "group": "issues_risks_associated_with_polymer_dosing",
+          "group_label": "Polymer dosing",
+          "stack": "functioning",
+          "api": {
+            "question_name": "issues_risks_associated_with_polymer_dosing",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "issues_risks_associated_with_polymer_dosing__risk",
+          "group": "issues_risks_associated_with_polymer_dosing",
+          "group_label": "Polymer dosing",
+          "stack": "risk",
+          "api": {
+            "question_name": "issues_risks_associated_with_polymer_dosing",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "issues_risk_associated_with_lime_dosing__ok",
+          "group": "issues_risk_associated_with_lime_dosing",
+          "group_label": "Lime dosing",
+          "stack": "functioning",
+          "api": {
+            "question_name": "issues_risk_associated_with_lime_dosing",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "issues_risk_associated_with_lime_dosing__risk",
+          "group": "issues_risk_associated_with_lime_dosing",
+          "group_label": "Lime dosing",
+          "stack": "risk",
+          "api": {
+            "question_name": "issues_risk_associated_with_lime_dosing",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chart_raw_water_source",
+      "info": "Count of plants per option of What is the raw water source? (multi-select — a plant drawing from both sources counts in both bars). Comprehensive monitoring form only.\nThe design also splits each source by whether a risk is registered against it, but issues_risk_associated_with_surface_water_source and ...ground_water_source have no submissions yet, so that split is not shown — rendering it would assert \"no risks\" where the truth is \"not yet asked\".",
+      "chart_type": "bar",
+      "order": 15,
+      "col_span": 24,
+      "description": "Surface versus ground water across the fleet. The risk overlay is pending data on the source-risk questions.",
+      "config": {
+        "title": "Raw Water Source",
+        "xAxisLabel": "# of plants",
+        "grid": {
+          "left": 140,
+          "right": 32,
+          "top": 32,
+          "bottom": 72,
+          "containLabel": false
+        }
+      },
+      "api": {
+        "question_name": "raw_water_source",
+        "group_by": "option",
+        "monitoring": "latest"
+      },
+      "orientation": "horizontal"
+    },
+    {
+      "id": "chart_compliance_trend",
+      "info": "Group monitoring submissions by month over the last 12 months. Per month, each line is the % of plants passing that domain:\n  • Drinking water — Turbidity < 5 NTU AND Total coliform = 0 cfu/100ml\n  • Disinfection — Do you have SOPs for disinfection? = Yes\n  • Operational — Do you have SOPs? = Yes\n  • OHS — Do you have an OHS policy? = Yes\nE. coli is not in the drinking-water rule: e_coli_cfu_100ml has no submissions, so including it would drop every plant out of the denominator.",
+      "chart_type": "custom_component",
+      "component": "ComplianceTrendWidget",
+      "order": 16,
+      "col_span": 24,
+      "title": "Compliance Trend",
+      "subtitle": "last 12 months · % plants passing each domain",
+      "description": "Each line is the share of plants that passed that check in the month they were monitored, so a line can move because conditions changed or because a different set of plants was visited.",
+      "months": 12,
+      "height": 353,
+      "domains": [
+        {
+          "key": "drinking_water",
+          "label": "Drinking water",
+          "color": "#1f6fd6",
+          "type": "threshold_all",
+          "params": [
+            {
+              "question_name": "turbidity_ntu",
+              "op": "<",
+              "value": 5
+            },
+            {
+              "question_name": "total_coliform_cfu_100ml",
+              "op": "<=",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "key": "disinfection",
+          "label": "Disinfection",
+          "color": "#17b3a3",
+          "type": "option_share",
+          "question_name": "has_disinfection_sop",
+          "pass_value": "yes"
+        },
+        {
+          "key": "operational",
+          "label": "Operational",
+          "color": "#3cb44b",
+          "type": "option_share",
+          "question_name": "has_sop",
+          "pass_value": "yes"
+        },
+        {
+          "key": "ohs",
+          "label": "OHS",
+          "color": "#f0ad4e",
+          "type": "option_share",
+          "question_name": "has_ohs_policy",
+          "pass_value": "yes"
         }
       ]
     }
