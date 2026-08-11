@@ -74,6 +74,10 @@
       "label_key": "siteProfileOperationalRisks"
     },
     {
+      "key": "recommendations",
+      "label_key": "siteProfileRecommendations"
+    },
+    {
       "key": "inspection",
       "label_key": "siteProfileInspectionHistory"
     }
@@ -508,6 +512,36 @@
         "urgent_maintenance_programs"
       ],
       "date_question": "inspection_date"
+    },
+    {
+      "id": 21,
+      "tab": "recommendations",
+      "position": "left",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileFinalRecommendations",
+      "questions": [
+        "has_final_recommendation",
+        "final_recommendations",
+        "other_final_recommendations",
+        "other_final_recommendation",
+        "final_recommendations_from_dws_staff",
+        "dws_staff_final_recommendations",
+        "dws_staff_name"
+      ]
+    },
+    {
+      "id": 22,
+      "tab": "recommendations",
+      "position": "right",
+      "order": 2,
+      "chart_type": "field",
+      "label_key": "siteProfileConstraints",
+      "questions": [
+        "any_work_related_constraints",
+        "has_constraints",
+        "constraints_details"
+      ]
     }
   ]
 }

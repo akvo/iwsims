@@ -46,6 +46,10 @@
       "label_key": "siteProfileWaterQuality"
     },
     {
+      "key": "recommendations",
+      "label_key": "siteProfileRecommendations"
+    },
+    {
       "key": "inspection",
       "label_key": "siteProfileInspectionHistory"
     }
@@ -327,6 +331,15 @@
           "render": "threshold"
         }
       ]
+    },
+    {
+      "id": 14,
+      "tab": "recommendations",
+      "position": "left",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileFinalRecommendations",
+      "questions": ["remarks_and_recommendations", "general_remarks"]
     }
   ]
 }

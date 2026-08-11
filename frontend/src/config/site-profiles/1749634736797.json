@@ -58,6 +58,10 @@
       "label_key": "siteProfileOperations"
     },
     {
+      "key": "recommendations",
+      "label_key": "siteProfileRecommendations"
+    },
+    {
       "key": "inspection",
       "label_key": "siteProfileInspectionHistory"
     }
@@ -573,6 +577,32 @@
         "has_final_recommendation"
       ],
       "date_question": "date_of_inspection"
+    },
+    {
+      "id": 23,
+      "tab": "recommendations",
+      "position": "left",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileFinalRecommendations",
+      "questions": [
+        "has_final_recommendation",
+        "final_recommendations",
+        "other_final_recommendations",
+        "dws_officer_name"
+      ]
+    },
+    {
+      "id": 24,
+      "tab": "recommendations",
+      "position": "right",
+      "order": 2,
+      "chart_type": "field",
+      "label_key": "siteProfileConstraints",
+      "questions": [
+        "has_production_constraints",
+        "production_constraints_details"
+      ]
     }
   ]
 }
