@@ -903,6 +903,7 @@ const uiText = {
     siteProfileSupervisorCol: "Supervisor",
     siteProfileDrinkingWaterQuality: "Drinking Water Quality",
     siteProfileLatestDrinkingWaterTest: "Latest Drinking Water Test",
+    siteProfileLatestWaterTest: "Latest Water Test",
     siteProfileTurbidityTrend: "Turbidity Trend",
     siteProfileResidualChlorineTrend: "Residual Chlorine Trend",
     siteProfilePhTrend: "pH Trend",

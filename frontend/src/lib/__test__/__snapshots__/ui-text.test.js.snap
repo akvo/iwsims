@@ -959,6 +959,7 @@ Object {
     "siteProfileLatestBod": "Latest BOD",
     "siteProfileLatestDrinkingWaterTest": "Latest Drinking Water Test",
     "siteProfileLatestEffluentTest": "Latest Effluent Test",
+    "siteProfileLatestWaterTest": "Latest Water Test",
     "siteProfileLoadFailed": "Could not load site profile",
     "siteProfileLoading": "Loading site profile",
     "siteProfileMaintenancePrograms": "Maintenance Programs",
