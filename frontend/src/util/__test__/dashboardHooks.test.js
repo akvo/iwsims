@@ -176,6 +176,45 @@ describe("useDashboardValues", () => {
     expect(call.params.parent_form_id).toBe(1748903240763);
   });
 
+  test("an api block's own parent_form_id wins over the dashboard root", async () => {
+    // Cross-asset dashboards (National Overview) have no single root form:
+    // each segment queries a different registration family and names it in its
+    // own api block, so the root must not overwrite it.
+    axios.mockResolvedValue({ data: { data: [{ value: 3 }] } });
+
+    const { latest } = mount(() =>
+      useDashboardValues(
+        {
+          parent_form_id: 1749611049520,
+          question_name: "inspection_date",
+          sum_by: "parent_id",
+        },
+        emptyFilters,
+        { today, parentFormId: 1748903240763 }
+      )
+    );
+
+    await waitFor(() => expect(latest().loading).toBe(false));
+
+    expect(axios.mock.calls[0][0].params.parent_form_id).toBe(1749611049520);
+  });
+
+  test("omits parent_form_id entirely when neither root nor api supplies one", async () => {
+    axios.mockResolvedValue({ data: { data: [] } });
+
+    const { latest } = mount(() =>
+      useDashboardValues(
+        { question_name: "inspection_date", sum_by: "parent_id" },
+        emptyFilters,
+        { today }
+      )
+    );
+
+    await waitFor(() => expect(latest().loading).toBe(false));
+
+    expect(axios.mock.calls[0][0].params.parent_form_id).toBeUndefined();
+  });
+
   test("deduplicates concurrent requests with the same params", async () => {
     axios.mockResolvedValue({ data: { data: [] } });
 

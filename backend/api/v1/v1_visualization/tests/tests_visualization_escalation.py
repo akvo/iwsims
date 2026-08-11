@@ -33,14 +33,41 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    def test_missing_criteria(self):
-        """criteria is required — returns 400."""
+    def test_missing_criteria_lists_every_parent(self):
+        """criteria is optional — omitting it means "no filter".
+
+        A whole-fleet listing has nothing to filter on, and the criteria
+        grammar has no match-all. Requiring it forced callers to fake one,
+        which made the request materialise every parent id instead of letting
+        the database slice the page.
+        """
         response = self.client.get(
             f"{self.BASE_ESC_URL}/{self.registration.id}"
             f"?monitoring_form_id={self.monitoring.id}"
             "&columns=name:parent_name"
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 200)
+        # Every parent qualifies, not zero — the cross-form path would have
+        # returned nothing without an explicit empty-criteria branch.
+        self.assertGreater(response.json()["count"], 0)
+
+    def test_blank_criteria_behaves_as_missing(self):
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            f"?monitoring_form_id={self.monitoring.id}"
+            "&criteria=&columns=name:parent_name"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertGreater(response.json()["count"], 0)
+
+    def test_cross_form_missing_criteria_lists_every_parent(self):
+        """Same, without a pinned monitoring form."""
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            "?columns=name:parent_name"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertGreater(response.json()["count"], 0)
 
     def test_missing_columns(self):
         """columns is required — returns 400."""

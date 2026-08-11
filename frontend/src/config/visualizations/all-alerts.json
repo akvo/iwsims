@@ -1,0 +1,549 @@
+{
+  "slug": "all-alerts",
+  "name": "All Alerts",
+  "cross_asset": true,
+  "description": "Red alerts across every asset type. One tab per asset; each paginates independently.",
+  "fiscal_year_start_month": 1,
+  "items": [
+    {
+      "id": "title_alerts",
+      "chart_type": "section_title",
+      "order": 1,
+      "col_span": 24,
+      "text": "All Alerts — red conditions on the latest monitoring"
+    },
+    {
+      "id": "tabs_alerts",
+      "chart_type": "tabs",
+      "order": 2,
+      "col_span": 24,
+      "items": [
+        {
+          "id": "pane_wwtp",
+          "label": "WWTP",
+          "order": 1,
+          "items": [
+            {
+              "id": "alerts_wwtp",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "WWTP — red alerts",
+              "info": "Sites whose LATEST monitoring trips at least one red condition for that asset. Criteria are OR'd:\none breach is enough to list a site.\nEach tab reuses the definition its own dashboard already uses, so a site listed here is the same site its dashboard counts as critical. Two caveats where the grammars differ: the escalation endpoint has no AND, so the Pump Station and WTP criteria list each red condition separately rather than the compound rules their KPI cards use — those tabs can therefore be slightly broader than the card.\nEach tab paginates server-side; only the visible page is fetched.",
+              "description": "Latest monitoring only. One page is fetched at a time.",
+              "api": {
+                "form_id": 1748903240763,
+                "criteria": [
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "bod",
+                    "value": 40,
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "chemical_oxygen_demand",
+                    "value": 100,
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "total_dissolved_solids",
+                    "value": 1000,
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "comment_on_operation_of_oxidation_ponds",
+                    "value": "not_operational",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "comment_on_operation_of_pasveer_ditches",
+                    "value": "not_operational",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "comment_on_operation_of_idea_lagoons",
+                    "value": "not_operational",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "comment_on_operation_of_polishing_ponds",
+                    "value": "not_operational",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "comment_on_operation_of_aerobic_lagoons",
+                    "value": "not_operational",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "comment_on_operation_of_sludge_digester",
+                    "value": "not_operational",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "comment_on_operation_of_imhoff",
+                    "value": "not_operational",
+                    "label": "Red condition",
+                    "hide": false
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "name",
+                  "label": "WWTP",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                },
+                {
+                  "key": "last_monitoring",
+                  "label": "Last inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_wtp",
+          "label": "WTP",
+          "order": 2,
+          "items": [
+            {
+              "id": "alerts_wtp",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "WTP — red alerts",
+              "info": "Sites whose LATEST monitoring trips at least one red condition for that asset. Criteria are OR'd:\none breach is enough to list a site.\nEach tab reuses the definition its own dashboard already uses, so a site listed here is the same site its dashboard counts as critical. Two caveats where the grammars differ: the escalation endpoint has no AND, so the Pump Station and WTP criteria list each red condition separately rather than the compound rules their KPI cards use — those tabs can therefore be slightly broader than the card.\nEach tab paginates server-side; only the visible page is fetched.",
+              "description": "Latest monitoring only. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749634736797,
+                "criteria": [
+                  {
+                    "type": "option_equals",
+                    "question_name": "has_production_constraints",
+                    "value": "yes",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "pumps_rising_main_has_risks",
+                    "value": "yes",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "risks_associated_with_the_high_lift_pumps",
+                    "value": "yes",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "has_alum_dosing_risks",
+                    "value": "yes",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "has_soda_ash_dosing_risks",
+                    "value": "yes",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "turbidity_ntu",
+                    "value": 5,
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "total_coliform_cfu_100ml",
+                    "value": 0,
+                    "label": "Red condition",
+                    "hide": false
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "name",
+                  "label": "WTP",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                },
+                {
+                  "key": "last_monitoring",
+                  "label": "Last inspected",
+                  "source": "latest_date",
+                  "question_name": "date_of_inspection",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_rws",
+          "label": "RWS",
+          "order": 3,
+          "items": [
+            {
+              "id": "alerts_rws",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "RWS — red alerts",
+              "info": "Sites whose LATEST monitoring trips at least one red condition for that asset. Criteria are OR'd:\none breach is enough to list a site.\nEach tab reuses the definition its own dashboard already uses, so a site listed here is the same site its dashboard counts as critical. Two caveats where the grammars differ: the escalation endpoint has no AND, so the Pump Station and WTP criteria list each red condition separately rather than the compound rules their KPI cards use — those tabs can therefore be slightly broader than the card.\nEach tab paginates server-side; only the visible page is fetched.",
+              "description": "Latest monitoring only. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749621221728,
+                "criteria": [
+                  {
+                    "type": "option_equals",
+                    "question_name": "water_sample_collected",
+                    "value": "no",
+                    "label": "No water sample",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "major_issues",
+                    "value": "yes",
+                    "label": "Major issues",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "lab_ecoli_count",
+                    "value": 0,
+                    "label": "E.coli above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "lab_total_coliform",
+                    "value": 0,
+                    "label": "Total coliform above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "lab_fecal_coliform",
+                    "value": 0,
+                    "label": "Fecal coliform above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "lab_turbidity_ntu",
+                    "value": 5,
+                    "label": "Turbidity above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "lab_temperature_c",
+                    "value": 30,
+                    "label": "Temperature above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_lt",
+                    "question_name": "lab_ph",
+                    "value": 6.5,
+                    "label": "pH below acceptable range",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "lab_ph",
+                    "value": 8.5,
+                    "label": "pH above acceptable range",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "lab_conductivity",
+                    "value": 1000,
+                    "label": "Conductivity above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "lab_salinity_ppt",
+                    "value": 1,
+                    "label": "Salinity above threshold",
+                    "hide": false
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "name",
+                  "label": "RWS",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                },
+                {
+                  "key": "last_monitoring",
+                  "label": "Last inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_eps",
+          "label": "EPS",
+          "order": 4,
+          "items": [
+            {
+              "id": "alerts_eps",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "EPS — red alerts",
+              "info": "Sites whose LATEST monitoring trips at least one red condition for that asset. Criteria are OR'd:\none breach is enough to list a site.\nEach tab reuses the definition its own dashboard already uses, so a site listed here is the same site its dashboard counts as critical. Two caveats where the grammars differ: the escalation endpoint has no AND, so the Pump Station and WTP criteria list each red condition separately rather than the compound rules their KPI cards use — those tabs can therefore be slightly broader than the card.\nEach tab paginates server-side; only the visible page is fetched.",
+              "description": "Latest monitoring only. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749623934933,
+                "criteria": [
+                  {
+                    "type": "option_equals",
+                    "question_name": "can_collect_water_sample",
+                    "value": "no",
+                    "label": "No water sample",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "system_status",
+                    "value": "issue_with_system",
+                    "label": "System issue",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "e_coli_lab_count",
+                    "value": 0,
+                    "label": "E.coli above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "total_coliform_cfu_100ml",
+                    "value": 0,
+                    "label": "Total coliform above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "fecal_coliform_cfu_100ml",
+                    "value": 0,
+                    "label": "Fecal coliform above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "turbidity_ntu",
+                    "value": 5,
+                    "label": "Turbidity above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "temperature_c",
+                    "value": 30,
+                    "label": "Temperature above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_lt",
+                    "question_name": "ph",
+                    "value": 6.5,
+                    "label": "pH below acceptable range",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "ph",
+                    "value": 8.5,
+                    "label": "pH above acceptable range",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "conductivity",
+                    "value": 1000,
+                    "label": "Conductivity above threshold",
+                    "hide": false
+                  },
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "salinity",
+                    "value": 1,
+                    "label": "Salinity above threshold",
+                    "hide": false
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "name",
+                  "label": "EPS",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                },
+                {
+                  "key": "last_monitoring",
+                  "label": "Last inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_pump",
+          "label": "Pump Stations",
+          "order": 5,
+          "items": [
+            {
+              "id": "alerts_pump",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "Pump Stations — red alerts",
+              "info": "Sites whose LATEST monitoring trips at least one red condition for that asset. Criteria are OR'd:\none breach is enough to list a site.\nEach tab reuses the definition its own dashboard already uses, so a site listed here is the same site its dashboard counts as critical. Two caveats where the grammars differ: the escalation endpoint has no AND, so the Pump Station and WTP criteria list each red condition separately rather than the compound rules their KPI cards use — those tabs can therefore be slightly broader than the card.\nEach tab paginates server-side; only the visible page is fetched.",
+              "description": "Latest monitoring only. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749611049520,
+                "criteria": [
+                  {
+                    "type": "option_equals",
+                    "question_name": "station_status",
+                    "value": "not_operational",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "station_status",
+                    "value": "overflowing",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "station_status",
+                    "value": "blocked",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "electrical_panel",
+                    "value": "broken",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "electrical_panel",
+                    "value": "electrical_hazard",
+                    "label": "Red condition",
+                    "hide": false
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "ohs_equipment",
+                    "value": "not_available",
+                    "label": "Red condition",
+                    "hide": false
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "name",
+                  "label": "Pump Station",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                },
+                {
+                  "key": "last_monitoring",
+                  "label": "Last inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -361,9 +361,14 @@ def visualization_values(request, version):
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name="criteria", required=True,
+            name="criteria", required=False,
             type=OpenApiTypes.STR,
             location=OpenApiParameter.QUERY,
+            description=(
+                "OR-combined escalation criteria. Omit for no filter — "
+                "every parent in the family qualifies, which is how a "
+                "whole-fleet listing avoids paying for a match-all filter."
+            ),
         ),
         OpenApiParameter(
             name="columns", required=True,
@@ -379,6 +384,24 @@ def visualization_values(request, version):
             name="page_size", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name="order_by", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "Column key from `columns` to sort by. Only a "
+                "`latest_date` column can be sorted; any other value "
+                "falls back to id ordering. Rows without the answer "
+                "sort last."
+            ),
+        ),
+        OpenApiParameter(
+            name="order_dir", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=["asc", "desc"],
+            description="Defaults to desc (most recent first).",
         ),
         OpenApiParameter(
             name="administration_id", required=False,
@@ -432,11 +455,13 @@ def visualization_escalation(request, form_id, version):
     result = handle_escalation(
         parent_form=parent_form,
         monitoring_form_id=validated.get("monitoring_form_id"),
-        criteria=validated["criteria"],
+        criteria=validated.get("criteria") or [],
         columns=validated["columns"],
         params={
             "page": validated.get("page", 1),
             "page_size": validated.get("page_size", 20),
+            "order_by": validated.get("order_by"),
+            "order_dir": validated.get("order_dir", "desc"),
             "administration_id": resolve_default_administration_id(
                 validated.get("administration_id"),
             ),

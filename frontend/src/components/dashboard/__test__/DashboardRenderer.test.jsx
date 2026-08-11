@@ -34,21 +34,10 @@ const emptyFilters = {
 let DashboardRenderer;
 
 beforeAll(() => {
-  Object.defineProperty(window, "matchMedia", {
-    writable: true,
-    value: jest.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
-    })),
-  });
-  // DashboardRenderer imports AntD Row/Col; require after matchMedia is
-  // available so AntD's responsive observer captures the test stub.
+  // window.matchMedia is stubbed globally in setupTests.js. It must NOT be
+  // re-stubbed here with a jest.fn(): react-scripts enables `resetMocks`, which
+  // clears the implementation before every test and makes matchMedia() return
+  // undefined — AntD's responsive observer then throws on `.addListener`.
   // eslint-disable-next-line global-require
   DashboardRenderer = require("../DashboardRenderer").default;
 });

@@ -74,6 +74,10 @@
       "label_key": "siteProfileOperationalRisks"
     },
     {
+      "key": "recommendations",
+      "label_key": "siteProfileRecommendations"
+    },
+    {
       "key": "inspection",
       "label_key": "siteProfileInspectionHistory"
     }
@@ -82,7 +86,6 @@
     {
       "id": 1,
       "tab": "infrastructure",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "rows",
@@ -124,21 +127,21 @@
           "field": "photo",
           "render": "photo"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 2,
       "tab": "infrastructure",
-      "position": "right",
       "order": 2,
       "chart_type": "field",
       "label_key": "siteProfileTreatmentProcessesInUse",
-      "questions": ["treatment_processes"]
+      "questions": ["treatment_processes"],
+      "col_span": 12
     },
     {
       "id": 3,
       "tab": "infrastructure",
-      "position": "right",
       "order": 3,
       "chart_type": "field",
       "label_key": "siteProfileStaffOhs",
@@ -149,12 +152,12 @@
         "staff_use_ohs_equipment_at_workplace",
         "ohs_equipment_available",
         "working_tools"
-      ]
+      ],
+      "col_span": 12
     },
     {
       "id": 4,
       "tab": "infrastructure",
-      "position": "right",
       "order": 4,
       "chart_type": "field",
       "label_key": "siteProfileMaintenancePrograms",
@@ -163,12 +166,12 @@
         "provide_details_of_these_urgent",
         "provide_details_of_these_preventative",
         "provide_details_of_these_upgrading"
-      ]
+      ],
+      "col_span": 12
     },
     {
       "id": 5,
       "tab": "infrastructure",
-      "position": "right",
       "order": 5,
       "chart_type": "field",
       "label_key": "siteProfilePlantCharacteristics",
@@ -181,13 +184,13 @@
         "has_pump_station",
         "num_pump_stations",
         "pump_station_types"
-      ]
+      ],
+      "col_span": 12
     },
     {
       "id": 6,
       "tab": "effluent",
-      "position": "left",
-      "order": 0,
+      "order": 1,
       "chart_type": "record",
       "source": "rows",
       "label_key": "siteProfileLatestEffluentTest",
@@ -276,62 +279,62 @@
           "field": "question",
           "render": "threshold"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 7,
       "tab": "effluent",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfileLatestBod",
-      "questions": ["bod"]
+      "questions": ["bod"],
+      "col_span": 24
     },
     {
       "id": 8,
       "tab": "effluent",
-      "position": "right",
-      "order": 2,
+      "order": 3,
       "chart_type": "line",
       "question": "bod",
       "unit": "mg/L",
-      "label_key": "siteProfileBodTrend"
+      "label_key": "siteProfileBodTrend",
+      "col_span": 8
     },
     {
       "id": 9,
       "tab": "effluent",
-      "position": "right",
-      "order": 3,
+      "order": 4,
       "chart_type": "line",
       "question": "chemical_oxygen_demand",
       "unit": "mg/L",
-      "label_key": "siteProfileCodTrend"
+      "label_key": "siteProfileCodTrend",
+      "col_span": 8
     },
     {
       "id": 10,
       "tab": "effluent",
-      "position": "right",
-      "order": 4,
+      "order": 5,
       "chart_type": "line",
       "question": "total_dissolved_solids",
       "unit": "mg/L",
-      "label_key": "siteProfileTdsTrend"
+      "label_key": "siteProfileTdsTrend",
+      "col_span": 8
     },
     {
       "id": 11,
       "tab": "effluent",
-      "position": "right",
-      "order": 5,
+      "order": 6,
       "chart_type": "line",
       "question": "total_suspended_solids",
       "unit": "mg/L",
-      "label_key": "siteProfileTssTrend"
+      "label_key": "siteProfileTssTrend",
+      "col_span": 8
     },
     {
       "id": 12,
       "tab": "effluent",
-      "position": "right",
-      "order": 6,
+      "order": 7,
       "chart_type": "line",
       "question": "ph",
       "unit": "pH",
@@ -339,62 +342,62 @@
         "min": 6.5,
         "max": 8.5
       },
-      "label_key": "siteProfilePhTrend"
+      "label_key": "siteProfilePhTrend",
+      "col_span": 8
     },
     {
       "id": 13,
       "tab": "effluent",
-      "position": "right",
-      "order": 7,
+      "order": 8,
       "chart_type": "line",
       "question": "dissolved_oxygen",
       "unit": "mg/L",
-      "label_key": "siteProfileDissolvedOxygenTrend"
+      "label_key": "siteProfileDissolvedOxygenTrend",
+      "col_span": 8
     },
     {
       "id": 14,
       "tab": "effluent",
-      "position": "right",
-      "order": 8,
+      "order": 9,
       "chart_type": "line",
       "question": "ammonia",
       "unit": "mg/L",
-      "label_key": "siteProfileAmmoniaTrend"
+      "label_key": "siteProfileAmmoniaTrend",
+      "col_span": 8
     },
     {
       "id": 15,
       "tab": "effluent",
-      "position": "right",
-      "order": 9,
+      "order": 10,
       "chart_type": "line",
       "question": "total_phosphorus",
       "unit": "mg/L",
-      "label_key": "siteProfileTotalPhosphorusTrend"
+      "label_key": "siteProfileTotalPhosphorusTrend",
+      "col_span": 8
     },
     {
       "id": 16,
       "tab": "effluent",
-      "position": "right",
-      "order": 10,
+      "order": 11,
       "chart_type": "line",
       "question": "conductivity",
       "unit": "µS/cm",
-      "label_key": "siteProfileConductivityTrend"
+      "label_key": "siteProfileConductivityTrend",
+      "col_span": 8
     },
     {
       "id": 17,
       "tab": "effluent",
-      "position": "right",
-      "order": 11,
+      "order": 12,
       "chart_type": "line",
       "question": "inflow_rate_in_cubic_meters_per_day",
       "unit": "m³/day",
-      "label_key": "siteProfileInflowRateTrend"
+      "label_key": "siteProfileInflowRateTrend",
+      "col_span": 8
     },
     {
       "id": 18,
       "tab": "risks",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "rows",
@@ -457,12 +460,12 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 19,
       "tab": "inspection",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "submissions",
@@ -485,12 +488,12 @@
           "title_key": "siteProfileSupervisorCol",
           "dataIndex": "plant_supervisor_name"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 20,
       "tab": "inspection",
-      "position": "right",
       "order": 2,
       "chart_type": "line",
       "label_key": "siteProfileRiskScoreTrend",
@@ -507,7 +510,38 @@
         "staff_use_ohs_equipment_at_workplace",
         "urgent_maintenance_programs"
       ],
-      "date_question": "inspection_date"
+      "date_question": "inspection_date",
+      "col_span": 24
+    },
+    {
+      "id": 21,
+      "tab": "recommendations",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileFinalRecommendations",
+      "questions": [
+        "has_final_recommendation",
+        "final_recommendations",
+        "other_final_recommendations",
+        "other_final_recommendation",
+        "final_recommendations_from_dws_staff",
+        "dws_staff_final_recommendations",
+        "dws_staff_name"
+      ],
+      "col_span": 12
+    },
+    {
+      "id": 22,
+      "tab": "recommendations",
+      "order": 2,
+      "chart_type": "field",
+      "label_key": "siteProfileConstraints",
+      "questions": [
+        "any_work_related_constraints",
+        "has_constraints",
+        "constraints_details"
+      ],
+      "col_span": 12
     }
   ]
 }

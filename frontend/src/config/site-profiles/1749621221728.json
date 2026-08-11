@@ -45,6 +45,10 @@
       "label_key": "siteProfileWaterQuality"
     },
     {
+      "key": "recommendations",
+      "label_key": "siteProfileRecommendations"
+    },
+    {
       "key": "inspection",
       "label_key": "siteProfileInspectionHistory"
     }
@@ -53,8 +57,7 @@
     {
       "id": 1,
       "tab": "constructions",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfileConstructionDetails",
       "questions": [
@@ -82,112 +85,112 @@
         "size_of_household_rwh_tanks",
         "water_source_type",
         "type_of_project"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 2,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "line",
-      "question": "ph",
+      "questions": ["ph", "lab_ph"],
       "unit": "pH",
       "threshold": {
         "min": 6.5,
         "max": 8.5
-      }
+      },
+      "col_span": 8
     },
     {
       "id": 3,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 2,
+      "order": 3,
       "chart_type": "line",
-      "question": "turbidity_ntu",
+      "questions": ["turbidity_ntu", "lab_turbidity_ntu"],
       "unit": "NTU",
       "threshold": {
         "max": 5
-      }
+      },
+      "col_span": 8
     },
     {
       "id": 4,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 3,
+      "order": 4,
       "chart_type": "line",
-      "question": "lab_ecoli",
+      "questions": ["lab_ecoli", "lab_ecoli_count"],
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
-      }
+      },
+      "col_span": 8
     },
     {
       "id": 5,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 4,
+      "order": 5,
       "chart_type": "line",
-      "question": "total_coliform_count",
+      "questions": ["total_coliform_count", "lab_total_coliform"],
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
-      }
+      },
+      "col_span": 8
     },
     {
       "id": 6,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 5,
+      "order": 6,
       "chart_type": "line",
-      "question": "fecal_coliform_count",
+      "questions": ["fecal_coliform_count", "lab_fecal_coliform"],
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
-      }
+      },
+      "col_span": 8
     },
     {
       "id": 7,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 6,
+      "order": 7,
       "chart_type": "line",
-      "question": "temperature_c",
-      "unit": "°C"
+      "questions": ["temperature_c", "lab_temperature_c"],
+      "unit": "°C",
+      "col_span": 8
     },
     {
       "id": 8,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 7,
+      "order": 8,
       "chart_type": "line",
-      "question": "conductivity",
-      "unit": "µS/cm"
+      "questions": ["conductivity", "lab_conductivity"],
+      "unit": "µS/cm",
+      "col_span": 8
     },
     {
       "id": 9,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 8,
+      "order": 9,
       "chart_type": "line",
-      "question": "salinity",
-      "unit": "PPT"
+      "questions": ["salinity", "lab_salinity_ppt"],
+      "unit": "PPT",
+      "col_span": 8
     },
     {
       "id": 10,
       "tab": "waterQuality",
-      "position": "right",
-      "order": 9,
+      "order": 10,
       "chart_type": "line",
-      "question": "cbt_ecoli",
+      "questions": ["cbt_ecoli", "cbt_ecoli_count"],
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
-      }
+      },
+      "col_span": 8
     },
     {
       "id": 11,
       "tab": "inspection",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "submissions",
@@ -210,18 +213,167 @@
           "title_key": "siteProfileIssuesRaisedCol",
           "dataIndex": "major_issues"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 12,
       "tab": "inspection",
-      "position": "right",
       "order": 2,
       "chart_type": "line",
       "source": "risk_score",
       "label_key": "siteProfileRiskScoreTrend",
       "questions": ["infrastructure_status", "major_issues"],
-      "date_question": "inspection_date"
+      "date_question": "inspection_date",
+      "col_span": 24
+    },
+    {
+      "id": 13,
+      "tab": "waterQuality",
+      "order": 1,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileLatestWaterTest",
+      "compliance_rule": [
+        "e_coli",
+        "total_coliform",
+        "fecal_coliform",
+        "turbidity"
+      ],
+      "compliance_text": "microbial parameters and turbidity compliant.",
+      "rows": [
+        {
+          "id": "e_coli",
+          "questions": ["lab_ecoli", "lab_ecoli_count"],
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "id": "total_coliform",
+          "questions": ["total_coliform_count", "lab_total_coliform"],
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "id": "fecal_coliform",
+          "questions": ["fecal_coliform_count", "lab_fecal_coliform"],
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "id": "e_coli_cbt",
+          "questions": ["cbt_ecoli", "cbt_ecoli_count"],
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "id": "turbidity",
+          "questions": ["turbidity_ntu", "lab_turbidity_ntu"],
+          "unit": "NTU",
+          "threshold": {
+            "max": 5
+          }
+        },
+        {
+          "id": "ph",
+          "questions": ["ph", "lab_ph"],
+          "threshold": {
+            "min": 6.5,
+            "max": 8.5
+          }
+        },
+        {
+          "id": "conductivity",
+          "questions": ["conductivity", "lab_conductivity"],
+          "unit": "µS/cm",
+          "threshold": {
+            "max": 1000
+          }
+        },
+        {
+          "id": "salinity",
+          "questions": ["salinity", "lab_salinity_ppt"],
+          "unit": "PPT",
+          "threshold": {
+            "max": 1
+          }
+        },
+        {
+          "id": "temperature",
+          "questions": ["temperature_c", "lab_temperature_c"],
+          "unit": "°C",
+          "threshold": {
+            "max": 30
+          }
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileParameterCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileResultCol",
+          "field": "question",
+          "render": "value"
+        },
+        {
+          "title_key": "siteProfileThresholdCol",
+          "field": "question",
+          "render": "threshold_label"
+        },
+        {
+          "title_key": "siteProfileStatusCol",
+          "field": "question",
+          "render": "threshold"
+        }
+      ],
+      "col_span": 24
+    },
+    {
+      "id": 14,
+      "tab": "recommendations",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileFinalRecommendations",
+      "questions": [
+        "recommendations",
+        "improvement_action",
+        "improvement_action_details",
+        "dws_officer_name"
+      ],
+      "col_span": 12
+    },
+    {
+      "id": 15,
+      "tab": "recommendations",
+      "order": 2,
+      "chart_type": "field",
+      "label_key": "siteProfileRemarks",
+      "questions": ["final_comments", "general_remarks"],
+      "col_span": 12
+    },
+    {
+      "id": 16,
+      "tab": "constructions",
+      "order": 1,
+      "chart_type": "line",
+      "label_key": "siteProfileConstructionProgressTrend",
+      "question": "project_completion_percentage",
+      "unit": "%",
+      "threshold": {
+        "max": 100
+      },
+      "col_span": 24
     }
   ]
 }

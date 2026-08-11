@@ -88,14 +88,33 @@ export const useDashboardEscalation = (
     if (!escalationBlock || !enabled) {
       return null;
     }
-    const { monitoring_form_id, criteria = [] } = escalationBlock.api || {};
+    const {
+      monitoring_form_id,
+      criteria = [],
+      order_by,
+      order_dir,
+    } = escalationBlock.api || {};
 
     const out = {
-      criteria: serializeCriteria(criteria),
       columns: serializeColumns(escalationBlock.columns || []),
       page,
       page_size: pageSize,
     };
+    // Omit `criteria` entirely when a table has none — a whole-fleet listing
+    // has nothing to filter on, and sending a match-all makes the backend
+    // materialise every parent id per request instead of slicing the query.
+    const serializedCriteria = serializeCriteria(criteria);
+    if (serializedCriteria) {
+      out.criteria = serializedCriteria;
+    }
+    // Sort by a `latest_date` column instead of insertion order — an
+    // inspections feed is only a feed if it is chronological. Names a column
+    // key from `columns`; the backend falls back to id ordering for anything
+    // it cannot sort, so a stale key degrades quietly rather than erroring.
+    if (order_by) {
+      out.order_by = order_by;
+      out.order_dir = order_dir || "desc";
+    }
     // Optional: when omitted, the backend resolves the latest answer per
     // question across every monitoring form (cross-form escalation).
     if (monitoring_form_id) {

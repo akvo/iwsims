@@ -14,6 +14,7 @@ import { computeKpiStack } from "./compute/kpiStack";
 import { computeProcessCounts } from "./compute/processCounts";
 import { computeGroupedStack } from "./compute/groupedStack";
 import { computeBucketBar } from "./compute/bucketBar";
+import { computeScoreHistogram } from "./compute/scoreHistogram";
 import { computeDateHistogram } from "./compute/dateHistogram";
 import { computeValueBuckets } from "./compute/valueBuckets";
 import DotsChart from "./DotsChart";
@@ -43,6 +44,38 @@ const NOT_APPLICABLE_COLOR = "#546e7a";
  */
 const tooltipPatch = (config) =>
   config?.tooltip ? { tooltip: config.tooltip } : {};
+
+/**
+ * Reserve room under a vertical chart for its category-axis NAME.
+ *
+ * akvo-charts hardcodes `grid: { containLabel: true, bottom: "10%", ... }`.
+ * `containLabel` accounts for axis tick *labels* but not the axis *name*, and
+ * the name is drawn `nameGap` (48) below the axis line — so on a card-height
+ * chart it lands outside the canvas and simply never appears. Charts have been
+ * working around it one at a time with a bespoke `grid` or a shrunken
+ * `nameGap`; this makes the renderer carry it instead.
+ *
+ * Only applies when the chart actually asks for a name, and never overrides an
+ * explicit `config.grid`. Horizontal charts are left alone: their category
+ * name sits on the y-axis and needs left-gutter room, which depends on how
+ * long the category labels are — no single default fits.
+ *
+ * @returns {object} a `{ grid }` patch, or `{}` when nothing is needed
+ */
+export const axisNameGridPatch = (config = {}, horizontal = false) => {
+  if (config.grid || horizontal) {
+    return {};
+  }
+  if (!config.xAxisLabel) {
+    return {};
+  }
+  const nameGap = config.xAxis?.nameGap ?? 48;
+  return {
+    // nameGap positions the name below the axis line; the extra 24px covers
+    // the tick labels it has to clear.
+    grid: { bottom: nameGap + 24, containLabel: true },
+  };
+};
 
 /**
  * Reshape ChartRenderer's `[{label, value}]` rows into ECharts' native
@@ -368,6 +401,9 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
         ? { yAxis: commonProps.config.yAxis }
         : {}),
       ...(commonProps.config?.grid ? { grid: commonProps.config.grid } : {}),
+      // Falls back to a computed grid only when the chart names its category
+      // axis and did not supply a grid of its own.
+      ...axisNameGridPatch(commonProps.config, horizontal),
       ...tooltipPatch(commonProps.config),
     };
 
@@ -630,6 +666,11 @@ const ChartRenderer = ({
     if (item.compute === "bucket_bar") {
       const responses = computeResponses?.bucket_bar?.[item.id];
       return computeBucketBar(item.buckets, responses);
+    }
+
+    if (item.compute === "score_histogram") {
+      const responses = computeResponses?.score_histogram?.[item.id];
+      return computeScoreHistogram(item.segments, responses, item.display).data;
     }
 
     if (item.compute === "date_histogram") {

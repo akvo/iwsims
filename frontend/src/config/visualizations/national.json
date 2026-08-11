@@ -1,0 +1,302 @@
+{
+  "slug": "national-overview",
+  "name": "National Overview",
+  "cross_asset": true,
+  "description": "Fleet-wide view across all five asset types. Every widget names its own registration form.",
+  "fiscal_year_start_month": 1,
+  "items": [
+    {
+      "id": "title_national",
+      "chart_type": "section_title",
+      "order": 1,
+      "col_span": 24,
+      "text": "National Overview"
+    },
+    {
+      "id": "kpi_total_wwtp",
+      "info": "Count of registered WWTP records. Not affected by the monitoring-period filter.",
+      "chart_type": "card",
+      "order": 2,
+      "col_span": 5,
+      "label": "Total WWTP",
+      "api": {
+        "parent_form_id": 1748903240763,
+        "monitoring": "latest",
+        "ignore_date_filter": true
+      }
+    },
+    {
+      "id": "kpi_total_wtp",
+      "info": "Count of registered WTP records. Not affected by the monitoring-period filter.",
+      "chart_type": "card",
+      "order": 3,
+      "col_span": 5,
+      "label": "Total WTP",
+      "api": {
+        "parent_form_id": 1749634736797,
+        "monitoring": "latest",
+        "ignore_date_filter": true
+      }
+    },
+    {
+      "id": "kpi_total_rws",
+      "info": "Count of registered RWS records. Not affected by the monitoring-period filter.",
+      "chart_type": "card",
+      "order": 4,
+      "col_span": 5,
+      "label": "Total RWS",
+      "api": {
+        "parent_form_id": 1749621221728,
+        "monitoring": "latest",
+        "ignore_date_filter": true
+      }
+    },
+    {
+      "id": "kpi_total_eps",
+      "info": "Count of registered EPS records. Not affected by the monitoring-period filter.",
+      "chart_type": "card",
+      "order": 5,
+      "col_span": 5,
+      "label": "Total EPS",
+      "api": {
+        "parent_form_id": 1749623934933,
+        "monitoring": "latest",
+        "ignore_date_filter": true
+      }
+    },
+    {
+      "id": "kpi_total_pump",
+      "info": "Count of registered Pump Stations records. Not affected by the monitoring-period filter.",
+      "chart_type": "card",
+      "order": 6,
+      "col_span": 4,
+      "label": "Total Pump Stations",
+      "api": {
+        "parent_form_id": 1749611049520,
+        "monitoring": "latest",
+        "ignore_date_filter": true
+      }
+    },
+    {
+      "id": "chart_inspected_by_asset",
+      "info": "Count of sites per asset type with a monitoring submission in the last 12 months, from each family's own inspection-date question (WTP uses date_of_inspection, the rest inspection_date).\nBars are absolute counts, not shares — the fleets differ hugely in size, so read this next to the totals above rather than as a coverage rate.",
+      "chart_type": "bar",
+      "compute": "bucket_bar",
+      "order": 7,
+      "col_span": 12,
+      "description": "Sites monitored in the last 12 months, by asset type.",
+      "config": {
+        "title": "Inspected in the Last 12 Months",
+        "xAxisLabel": "asset type",
+        "yAxisLabel": "# of sites"
+      },
+      "buckets": [
+        {
+          "label": "WWTP",
+          "segment": "wwtp"
+        },
+        {
+          "label": "WTP",
+          "segment": "wtp"
+        },
+        {
+          "label": "RWS",
+          "segment": "rws"
+        },
+        {
+          "label": "EPS",
+          "segment": "eps"
+        },
+        {
+          "label": "Pump Stations",
+          "segment": "pump"
+        }
+      ],
+      "segments": [
+        {
+          "key": "wwtp",
+          "api": {
+            "parent_form_id": 1748903240763,
+            "question_name": "inspection_date",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "wtp",
+          "api": {
+            "parent_form_id": 1749634736797,
+            "question_name": "date_of_inspection",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "rws",
+          "api": {
+            "parent_form_id": 1749621221728,
+            "question_name": "inspection_date",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "eps",
+          "api": {
+            "parent_form_id": 1749623934933,
+            "question_name": "inspection_date",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "pump",
+          "api": {
+            "parent_form_id": 1749611049520,
+            "question_name": "inspection_date",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "chart_sampling_by_asset",
+      "info": "Per asset type, sites whose latest monitoring recorded that a water sample could be taken versus could not. Each family asks this differently — WWTP can_take_sample, WTP can_take_water_sample, RWS water_sample_collected, EPS can_collect_water_sample.\nPump stations are absent: wastewater pump stations take no water sample, so the form has no such question.",
+      "chart_type": "stack_bar",
+      "compute": "grouped_stack",
+      "orientation": "horizontal",
+      "order": 8,
+      "col_span": 12,
+      "description": "Whether a water sample could be collected on the latest visit. Pump stations do not sample.",
+      "config": {
+        "title": "Water Sampling by Asset",
+        "xAxisLabel": "# of sites",
+        "color": ["#2fb36d", "#d93c35"],
+        "grid": {
+          "left": 120,
+          "right": 32,
+          "top": 32,
+          "bottom": 72,
+          "containLabel": false
+        }
+      },
+      "stacks": [
+        {
+          "key": "taken",
+          "label": "Sample taken"
+        },
+        {
+          "key": "not_taken",
+          "label": "Could not sample"
+        }
+      ],
+      "segments": [
+        {
+          "key": "wwtp__taken",
+          "group": "wwtp",
+          "group_label": "WWTP",
+          "stack": "taken",
+          "api": {
+            "parent_form_id": 1748903240763,
+            "question_name": "can_take_sample",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "wwtp__not_taken",
+          "group": "wwtp",
+          "group_label": "WWTP",
+          "stack": "not_taken",
+          "api": {
+            "parent_form_id": 1748903240763,
+            "question_name": "can_take_sample",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "wtp__taken",
+          "group": "wtp",
+          "group_label": "WTP",
+          "stack": "taken",
+          "api": {
+            "parent_form_id": 1749634736797,
+            "question_name": "can_take_water_sample",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "wtp__not_taken",
+          "group": "wtp",
+          "group_label": "WTP",
+          "stack": "not_taken",
+          "api": {
+            "parent_form_id": 1749634736797,
+            "question_name": "can_take_water_sample",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "rws__taken",
+          "group": "rws",
+          "group_label": "RWS",
+          "stack": "taken",
+          "api": {
+            "parent_form_id": 1749621221728,
+            "question_name": "water_sample_collected",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "rws__not_taken",
+          "group": "rws",
+          "group_label": "RWS",
+          "stack": "not_taken",
+          "api": {
+            "parent_form_id": 1749621221728,
+            "question_name": "water_sample_collected",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "eps__taken",
+          "group": "eps",
+          "group_label": "EPS",
+          "stack": "taken",
+          "api": {
+            "parent_form_id": 1749623934933,
+            "question_name": "can_collect_water_sample",
+            "option_value": "yes",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "eps__not_taken",
+          "group": "eps",
+          "group_label": "EPS",
+          "stack": "not_taken",
+          "api": {
+            "parent_form_id": 1749623934933,
+            "question_name": "can_collect_water_sample",
+            "option_value": "no",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        }
+      ]
+    }
+  ]
+}

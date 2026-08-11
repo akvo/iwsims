@@ -1,0 +1,234 @@
+{
+  "slug": "inspections-feed",
+  "name": "Inspections Feed",
+  "cross_asset": true,
+  "description": "Every inspection across all asset types, most recent first. One tab per asset; each paginates independently.",
+  "fiscal_year_start_month": 1,
+  "items": [
+    {
+      "id": "title_feed",
+      "chart_type": "section_title",
+      "order": 1,
+      "col_span": 24,
+      "text": "Inspections Feed — most recent first"
+    },
+    {
+      "id": "tabs_feed",
+      "chart_type": "tabs",
+      "order": 2,
+      "col_span": 24,
+      "items": [
+        {
+          "id": "pane_wwtp",
+          "label": "WWTP",
+          "order": 1,
+          "items": [
+            {
+              "id": "feed_wwtp",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "WWTP — inspections",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
+              "api": {
+                "form_id": 1748903240763,
+                "order_by": "last_inspected",
+                "order_dir": "desc"
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_wtp",
+          "label": "WTP",
+          "order": 2,
+          "items": [
+            {
+              "id": "feed_wtp",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "WTP — inspections",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749634736797,
+                "order_by": "last_inspected",
+                "order_dir": "desc"
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "date_of_inspection",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_rws",
+          "label": "RWS",
+          "order": 3,
+          "items": [
+            {
+              "id": "feed_rws",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "RWS — inspections",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749621221728,
+                "order_by": "last_inspected",
+                "order_dir": "desc"
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_eps",
+          "label": "EPS",
+          "order": 4,
+          "items": [
+            {
+              "id": "feed_eps",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "EPS — inspections",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749623934933,
+                "order_by": "last_inspected",
+                "order_dir": "desc"
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_pump",
+          "label": "Pump Stations",
+          "order": 5,
+          "items": [
+            {
+              "id": "feed_pump",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "Pump Stations — inspections",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749611049520,
+                "order_by": "last_inspected",
+                "order_dir": "desc"
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

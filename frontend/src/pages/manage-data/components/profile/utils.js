@@ -250,7 +250,13 @@ const visitChild = (child, query) => {
       );
       pushUnique(query.records, child.date_question);
     } else {
+      // A trend line may alias the same measurement across monitoring forms
+      // (`questions: [...]`); fetch every alias so the widget can pick the one
+      // this datapoint actually has history for.
       pushUnique(query.history, child.question);
+      (child.questions || []).forEach((name) =>
+        pushUnique(query.history, name)
+      );
     }
     return;
   }
@@ -264,6 +270,11 @@ const visitChild = (child, query) => {
   if (type === "record") {
     (child.rows || []).forEach((row) => {
       pushUnique(query.questions, row.question);
+      // Rows may alias the same parameter across monitoring forms; every alias
+      // has to be fetched or the row resolves to a question we never asked for.
+      (row.questions || []).forEach((name) =>
+        pushUnique(query.questions, name)
+      );
       pushUnique(query.questions, row.photo);
       pushUnique(query.questions, row.notes);
     });

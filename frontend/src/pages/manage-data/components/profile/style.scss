@@ -1,9 +1,14 @@
 .site-profile {
+  // Vertical rhythm now comes from the Row gutter, not per-item margins —
+  // these are grid columns rather than stacked divs. Stretch so boxes sharing
+  // a row line up at the bottom instead of ragging.
   .site-profile-item {
-    margin-bottom: 16px;
-  }
-  .site-profile-item:last-child {
-    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+
+    > * {
+      flex: 1 1 auto;
+    }
   }
 
   // Tighter card padding so tables/charts use more horizontal space.
@@ -99,6 +104,20 @@
   }
 
   .site-profile-hero-info {
+    // Title and the Word Report action share a row; the button drops below the
+    // title rather than squeezing it on a narrow viewport.
+    .site-profile-hero-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      h2 {
+        margin: 0;
+      }
+    }
+
     flex: 1 1 auto;
   }
   .site-profile-hero-info h2 {
