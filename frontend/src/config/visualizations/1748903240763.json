@@ -90,7 +90,15 @@
         "ignore_date_filter": true
       },
       "rules": [
-        { "all_of": [{ "question_name": "bod", "op": "gt", "value": 40 }] },
+        {
+          "all_of": [
+            {
+              "question_name": "bod",
+              "op": "gt",
+              "value": 40
+            }
+          ]
+        },
         {
           "all_of": [
             {
@@ -224,7 +232,7 @@
       "info": "Group monitoring submissions by month over the last 12 months. Per month, each line is the % of plants passing that domain:\n  • Drinking water — BOD<40 AND COD<100 AND TDS<1000\n  • Pumps & dosing — Are there any influent pump station? = Yes\n  • Operational — Working tools? = Yes\n  • OHS — OHS equipment available? = Yes",
       "chart_type": "custom_component",
       "component": "ComplianceTrendWidget",
-      "order": 8,
+      "order": 11,
       "col_span": 24,
       "title": "Compliance Trend",
       "subtitle": "last 12 months · % plants passing each domain",
@@ -236,7 +244,11 @@
           "color": "#1f6fd6",
           "type": "threshold_all",
           "params": [
-            { "question_name": "bod", "op": "<", "value": 40 },
+            {
+              "question_name": "bod",
+              "op": "<",
+              "value": 40
+            },
             {
               "question_name": "chemical_oxygen_demand",
               "op": "<",
@@ -278,7 +290,7 @@
     {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 9,
+      "order": 12,
       "col_span": 24,
       "items": [
         {
@@ -310,7 +322,11 @@
               "rules": [
                 {
                   "all_of": [
-                    { "question_name": "bod", "op": "gt", "value": 40 }
+                    {
+                      "question_name": "bod",
+                      "op": "gt",
+                      "value": 40
+                    }
                   ]
                 },
                 {
@@ -415,7 +431,7 @@
               "id": "rank_most_recently_monitored",
               "info": "Top 8 plants ORDER BY latest Plant inspection date? DESC.",
               "chart_type": "ranking",
-              "order": 4,
+              "order": 5,
               "col_span": 12,
               "label": "Most recently monitored",
               "api": {
@@ -423,13 +439,16 @@
                 "sort": "desc",
                 "limit": 8,
                 "monitoring": "latest"
-              }
+              },
+              "entity_label": "Plant",
+              "date_label": "Last inspected",
+              "elapsed_unit": "days"
             },
             {
               "id": "rank_needs_monitoring",
               "info": "Top 8 plants ORDER BY latest inspection date ASC.",
               "chart_type": "ranking",
-              "order": 5,
+              "order": 6,
               "col_span": 12,
               "label": "Needs monitoring",
               "api": {
@@ -437,6 +456,46 @@
                 "sort": "asc",
                 "limit": 8,
                 "monitoring": "latest"
+              },
+              "entity_label": "Plant",
+              "date_label": "Last inspected",
+              "elapsed_unit": "months",
+              "subtitle": "overdue or oldest first"
+            },
+            {
+              "id": "chart_inspectiondate_histogram",
+              "info": "Bucket plants by months since their latest monitoring submission (0–17 + >18). Bar coloured by recency (≤6 mo green, 7–12 amber, >12 red).",
+              "chart_type": "bar",
+              "compute": "date_histogram",
+              "order": 4,
+              "col_span": 24,
+              "description": "Green = inspected ≤ 6 months ago · Amber = 7–12 months · Red = > 12 months (overdue).",
+              "config": {
+                "title": "Inspection-date histogram",
+                "xAxisLabel": "Month",
+                "yAxisLabel": "count",
+                "xAxis": {
+                  "axisLabel": {
+                    "interval": 1,
+                    "rotate": 45
+                  },
+                  "nameGap": 72
+                }
+              },
+              "api": {
+                "question_name": "inspection_date",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              },
+              "display": {
+                "mode": "date_histogram",
+                "months": 18,
+                "overdue_label": "> 18 mo",
+                "colors": {
+                  "recent": "#2fb36d",
+                  "watch": "#f5a623",
+                  "overdue": "#d93c35"
+                }
               }
             }
           ]
@@ -507,6 +566,51 @@
               },
               "api": {
                 "question_name": "total_dissolved_solids",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_ph",
+              "info": "Per-plant effluent pH on the latest monitoring. Acceptance band 6.5–8.5, matching the band the WWTP site profile already uses.",
+              "chart_type": "dot_strip",
+              "order": 4,
+              "col_span": 12,
+              "label": "pH",
+              "description": "Acceptance band 6.5 – 8.5",
+              "config": {
+                "title": "pH",
+                "xAxisLabel": "pH",
+                "entity_label": "WWTP"
+              },
+              "threshold": {
+                "min": 6.5,
+                "max": 8.5
+              },
+              "api": {
+                "question_name": "ph",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_nitrate",
+              "info": "Per-plant effluent nitrate on the latest monitoring (mg/L). DWS recorded \"no standard\" for nitrate; 20 mg/L is the working value carried over from the dashboard design and should be confirmed before it drives any alert.",
+              "chart_type": "dot_strip",
+              "order": 5,
+              "col_span": 12,
+              "label": "Nitrate",
+              "description": "Working threshold < 20 mg/L — no DWS standard agreed",
+              "config": {
+                "title": "Nitrate",
+                "xAxisLabel": "mg/L",
+                "entity_label": "WWTP"
+              },
+              "threshold": {
+                "max": 20
+              },
+              "api": {
+                "question_name": "nitrate",
                 "group_by": "parent_id",
                 "monitoring": "latest"
               }
@@ -1692,6 +1796,147 @@
               "order": 20
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "chart_effluent_compliance_by_parameter",
+      "info": "Each plant is judged once on its latest monitoring against the DWS mandatory rule:\n  BOD < 40 AND COD < 100 AND TDS < 1000 mg/L\nCompliant = passes all three. Non-compliant plants are stacked by which parameter they failed, so one plant can appear in more than one failure segment. No information available = registered plants with no usable effluent values.\npH and nitrate are shown as advisory dot strips on the Water quality tab and deliberately do not affect this verdict — DWS lists only BOD, COD and TDS as mandatory.",
+      "chart_type": "stack_bar",
+      "order": 8,
+      "col_span": 16,
+      "description": "Compliant = passes all three mandatory DWS parameters. The non-compliant bar is split by the parameter that failed.",
+      "config": {
+        "title": "Effluent Compliance by Parameter"
+      },
+      "compute": "compliance",
+      "include_unanswered": true,
+      "params_ref": ["param_bod", "param_cod", "param_tds"],
+      "globals_ref": "wq_globals"
+    },
+    {
+      "id": "chart_sample_method",
+      "info": "Share of plants per combination of Effluent test method (Lab Test / Testing Kits / Other) on the latest monitoring. Multi-select, so a plant choosing more than one appears as its own combination. Plants that recorded no method fall into No information available.\nComprehensive form question 1748917751258 · Quick form question 1748919506489.",
+      "chart_type": "half_doughnut",
+      "order": 9,
+      "col_span": 8,
+      "config": {
+        "title": "Sample Method",
+        "tooltip": {
+          "trigger": "item",
+          "formatter": "{b}: {c} ({d}%)"
+        }
+      },
+      "api": {
+        "question_name": "effluent_test_method",
+        "group_by": "option_combo",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_ohs_score_distribution",
+      "info": "Score each plant out of 8 on its latest monitoring, then count plants per score:\n  • Do you have an OHS Policy for the Plant? = Yes\n  • Do your staff use OHS equipment at the workplace? = Yes\n  • Do plant staff comply with the requirements of the OHS Policy? = Yes\n  • Working tools? = Yes\n  • OHS equipment available? = Yes\n  • Do you have urgent maintenance programs? = No — inverted, an outstanding urgent job is a warning, matching the tone the condition matrix already gives it\n  • Do you have planned preventative maintenance programs? = Yes\n  • Do you have any upgrading programs? = Yes\nPlants that did not answer all 8 are excluded rather than scored out of 8 — the OHS questions are split across the Comprehensive and Quick monitoring forms, so a plant answering 2 of 8 perfectly would otherwise render next to a genuinely poor 2/8.",
+      "chart_type": "bar",
+      "compute": "score_histogram",
+      "order": 10,
+      "col_span": 24,
+      "description": "Plants scored on all 8 OHS and maintenance checks from the Comprehensive monitoring form. Plants with an incomplete OHS section are not scored.",
+      "config": {
+        "title": "OHS Compliance Score Distribution",
+        "xAxisLabel": "Items compliant out of 8",
+        "yAxisLabel": "# of plants",
+        "grid": {
+          "bottom": 72,
+          "containLabel": true
+        },
+        "xAxis": {
+          "nameGap": 44
+        }
+      },
+      "display": {
+        "label_suffix": "/8"
+      },
+      "segments": [
+        {
+          "key": "has_ohs_policy",
+          "label": "OHS policy in place",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "has_ohs_policy",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "staff_use_ohs_equipment_at_workplace",
+          "label": "Staff use OHS equipment",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "staff_use_ohs_equipment_at_workplace",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "plant_staffs_comply_to_the_requirements_of_the_ohs_policy",
+          "label": "Staff comply with OHS policy",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "plant_staffs_comply_to_the_requirements_of_the_ohs_policy",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "working_tools",
+          "label": "Working tools available",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "working_tools",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "ohs_equipment_available",
+          "label": "OHS equipment available",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "ohs_equipment_available",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "urgent_maintenance_programs",
+          "label": "No urgent maintenance outstanding",
+          "pass_value": "no",
+          "api": {
+            "question_name": "urgent_maintenance_programs",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "planned_preventative_maintenance_programs",
+          "label": "Planned preventative maintenance",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "planned_preventative_maintenance_programs",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "any_upgrading_programs",
+          "label": "Upgrading programme in place",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "any_upgrading_programs",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
         }
       ]
     }

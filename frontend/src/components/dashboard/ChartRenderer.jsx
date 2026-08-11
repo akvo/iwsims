@@ -14,6 +14,7 @@ import { computeKpiStack } from "./compute/kpiStack";
 import { computeProcessCounts } from "./compute/processCounts";
 import { computeGroupedStack } from "./compute/groupedStack";
 import { computeBucketBar } from "./compute/bucketBar";
+import { computeScoreHistogram } from "./compute/scoreHistogram";
 import { computeDateHistogram } from "./compute/dateHistogram";
 import { computeValueBuckets } from "./compute/valueBuckets";
 import DotsChart from "./DotsChart";
@@ -630,6 +631,11 @@ const ChartRenderer = ({
     if (item.compute === "bucket_bar") {
       const responses = computeResponses?.bucket_bar?.[item.id];
       return computeBucketBar(item.buckets, responses);
+    }
+
+    if (item.compute === "score_histogram") {
+      const responses = computeResponses?.score_histogram?.[item.id];
+      return computeScoreHistogram(item.segments, responses, item.display).data;
     }
 
     if (item.compute === "date_histogram") {
