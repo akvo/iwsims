@@ -82,7 +82,20 @@ that directory's `index.js` (`RAW_CONFIGS` array). Filename = `parent_form_id`.
 | WTP | `/dashboard/wtp-overview` | `1749634736797.json` | ✅ | most complete |
 | RWS | `/dashboard/rws-overview` | `1749621221728.json` | ✅ | complete + construction tab |
 | EPS | `/dashboard/eps-overview` | `1749623934933.json` | ✅ | complete + construction tab |
-| Pump Stations | `/dashboard/pump-overview` | `1749611049520.json` | ✅ | **6 items total — biggest gap** |
+| Pump Stations | `/dashboard/pump-overview` | `1749611049520.json` | ✅ | complete |
+
+### Cross-asset dashboards
+
+These declare `"cross_asset": true` and **no root `parent_form_id`** — every api
+block names its own form (`parent_form_id` for `/values`, `form_id` for
+`/escalation`). A registry test enforces that; a widget naming neither would
+silently query nothing.
+
+| Page | Slug / URL | Config file |
+|---|---|---|
+| National Overview | `/dashboard/national-overview` | `national.json` |
+| All Alerts | `/dashboard/all-alerts` | `all-alerts.json` |
+| Inspections Feed | `/dashboard/inspections-feed` | `inspections-feed.json` |
 
 ### Site profiles
 
@@ -169,6 +182,7 @@ currently wired (Dashboard.jsx fan-out + widget-local):
 | `grouped_stack` | `compute/groupedStack.js` | grouped stacked bars |
 | `date_histogram` | `compute/dateHistogram.js` | inspection-date histogram |
 | `process_counts` | `compute/processCounts.js` | treatment-process counts |
+| `score_histogram` | `compute/scoreHistogram.js` | "how many of N checks did each entity pass"; per-segment `pass_value` scores an inverted check without special-casing |
 
 Not yet referenced from any config but available: `valueBuckets`, `valueHistogramBins`,
 `progressHistogram`, `stageFlow`, `conditionMatrix`, `processStatus`, `complianceTrend`,
@@ -180,7 +194,15 @@ Not yet referenced from any config but available: `valueBuckets`, `valueHistogra
 from `{"chart_type": "custom_component", "component": "<Name>"}`.
 
 `ComplianceTrendWidget` · `ConditionMatrixWidget` · `ProcessStatusWidget` ·
-`CapacityComparePerPlant` · `StageFlowWidget` · `IndividualRWSOverview` · `IndividualEPSOverview`
+`CapacityComparePerPlant` · `StageFlowWidget` · `IndividualRWSOverview` ·
+`IndividualEPSOverview` · `IndividualWWTPOverview` · `IndividualWTPOverview`
+
+The last two are thin wrappers over the generic
+`individual-overview/IndividualPlantOverview`, driven by a question-id config
+(`individual-overview/config/wwtp.js`, `wtp.js`). A further asset is a config
+file, not another component. EPS and RWS keep bespoke components — they carry
+sections the generic shape has no room for (project scope, per-infrastructure
+construction).
 
 ---
 
@@ -231,6 +253,28 @@ mode — check the browser console, don't assume it rendered.**
 **R10 — Update this file.** Tick the box and note the config file touched in the
 same commit as the change.
 
+**R11 — Verify *through* the code path, not around it.** Three bugs shipped in
+this epic because a probe script built the request by hand and so skipped the
+very function that was dropping data:
+
+- criteria marked `hide: true` serialized to `""` and 400'd every fleet table —
+  the probe assembled the criteria string itself
+- `collectSiteProfileQueries` never fetched multi-form question aliases, so a
+  merged table rendered all `—` — the resolver and the collector were each
+  tested, but neither knew about the other
+- a fake match-all criteria silently restricted "All Sites" to *monitored*
+  sites (WWTP showed 59 of 79)
+
+So: drive the real `serializeCriteria` / `serializeColumns` / resolver in the
+test, and hit the endpoint with **their** output. `curl` with a hand-written
+query string proves the backend works, not that the app sends what you think.
+
+**R12 — Check the form before designing.** Roughly a third of the planned items
+turned out to have no question behind them, or a question nobody has answered.
+Dump the form definition and probe `/values` for a row count *before* writing
+config — it is cheaper than building a chart that renders empty, and the finding
+is itself the deliverable.
+
 ### Known inconsistencies to watch
 
 - `README.md` §9 documents the dot-strip chart as **`boxplot`**. The actual
@@ -238,6 +282,14 @@ same commit as the change.
   **`dot_strip`** (with `dots` as a separate type). Use `dot_strip`.
 - `DashboardRenderer` accepts a deprecated `complianceResponses` prop aliased into
   `computeResponses.compliance`. Use `computeResponses` for anything new.
+- **`hide: true` on an escalation criterion means "do not send it"**, not "do not
+  display it" — `serializeCriteria` filters those out. A table whose criteria are
+  all hidden serializes to `""` and the endpoint 400s, while the config looks fine.
+- Horizontal charts route `config.xAxis.nameGap` to the **category** axis (the
+  y-axis), where `nameLocation: "middle"` renders the name rotated over the
+  category labels. The WTP horizontal charts each compensate with a large
+  `nameGap`; there is no renderer-level default for this yet. Vertical charts
+  are handled — `axisNameGridPatch` in `ChartRenderer` reserves the room.
 
 ---
 
