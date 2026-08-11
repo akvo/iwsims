@@ -725,14 +725,22 @@
                   "label": "Operational Status",
                   "source": "answer",
                   "question_name": "system_status",
-                  "hide": false
+                  "hide": false,
+                  "tones": {
+                    "operational": "good",
+                    "issue_with_system": "critical"
+                  }
                 },
                 {
                   "key": "water_collection",
                   "label": "Not able to collect the water sample",
                   "source": "answer",
                   "question_name": "can_collect_water_sample",
-                  "hide": false
+                  "hide": false,
+                  "tones": {
+                    "yes": "good",
+                    "no": "warning"
+                  }
                 },
                 {
                   "key": "critical_issues",
@@ -1359,7 +1367,11 @@
           "label": "System status",
           "source": "answer",
           "question_name": "system_status",
-          "hide": false
+          "hide": false,
+          "tones": {
+            "operational": "good",
+            "issue_with_system": "critical"
+          }
         },
         {
           "key": "last_monitoring",

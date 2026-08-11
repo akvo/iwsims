@@ -1982,7 +1982,11 @@
           "label": "OHS equipment",
           "source": "answer",
           "question_name": "ohs_equipment_available",
-          "hide": false
+          "hide": false,
+          "tones": {
+            "yes": "good",
+            "no": "critical"
+          }
         },
         {
           "key": "last_monitoring",

@@ -1,9 +1,10 @@
 import React, { useCallback, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { Alert, Table, Button } from "antd";
+import { Alert, Table, Button, Tag } from "antd";
 import { DownCircleOutlined, LeftCircleOutlined } from "@ant-design/icons";
 import { useDashboardEscalation } from "../../util/hooks";
 import { uiText, store } from "../../lib";
+import { toneTagColor } from "./constants";
 
 const MAX_COLUMNS = 6;
 
@@ -98,23 +99,38 @@ const EscalationTable = ({
     [cellComputers, allQuestions]
   );
 
+  // Indicator columns declare `tones: { <option value>: good|warning|critical }`
+  // in config rather than reading the form's own option colours: those are
+  // inconsistent across questions (an "electrical hazard" option is green in
+  // the form definition), and the same answer means opposite things in
+  // different columns — "yes" is good for OHS equipment and bad for production
+  // constraints. The pill always carries its label, so colour never stands alone.
+  const renderCell = useCallback(
+    (c, row) => {
+      const display = resolveDisplay(c, row);
+      if (display === null) {
+        return <span style={{ color: "#bbb" }}>—</span>;
+      }
+      const tone = c.tones?.[renderValue(c, row, cellComputers)];
+      if (!tone) {
+        return <span>{display}</span>;
+      }
+      return <Tag color={toneTagColor(tone)}>{display}</Tag>;
+    },
+    [resolveDisplay, cellComputers]
+  );
+
   const columns = useMemo(
     () => [
       ...summaryColumns.map((c) => ({
         title: c.label,
         dataIndex: c.key,
         key: c.key,
-        render: (_value, row) => {
-          const display = resolveDisplay(c, row);
-          if (display === null) {
-            return <span style={{ color: "#bbb" }}>—</span>;
-          }
-          return <span>{display}</span>;
-        },
+        render: (_value, row) => renderCell(c, row),
       })),
       Table.EXPAND_COLUMN,
     ],
-    [summaryColumns, resolveDisplay]
+    [summaryColumns, renderCell]
   );
 
   const renderExpandedRow = useCallback(
@@ -122,7 +138,7 @@ const EscalationTable = ({
       const rows = visibleColumns.map((c) => ({
         key: c.key,
         label: c.label,
-        display: resolveDisplay(c, row),
+        display: renderCell(c, row),
       }));
       return (
         <div>
@@ -178,7 +194,7 @@ const EscalationTable = ({
         </div>
       );
     },
-    [visibleColumns, resolveDisplay, parentFormId]
+    [visibleColumns, renderCell, parentFormId]
   );
 
   if (error) {

@@ -43,6 +43,27 @@ export const CONDITION_TONE_COLORS = {
   track: "#e6e9ed",
 };
 
+/**
+ * Tone → AntD Tag preset, for indicator pills in tables.
+ *
+ * Presets rather than our own hexes on purpose: AntD renders them as a tinted
+ * background with dark text, which stays legible. Passing a solid status hex
+ * gives white-on-fill instead, and white on `warning` (#fab219, 1.79:1 on a
+ * light surface) is unreadable. The pill always shows its label, so colour is
+ * never the only channel either way.
+ */
+export const STATUS_TAG_COLORS = {
+  good: "green",
+  warning: "gold",
+  serious: "orange",
+  critical: "red",
+  neutral: "default",
+};
+
+/** Resolve a config-declared tone to its Tag preset; unknown tones stay neutral. */
+export const toneTagColor = (tone) =>
+  STATUS_TAG_COLORS[tone] || STATUS_TAG_COLORS.neutral;
+
 export const buildSiteDetailHref = (formId, dataId) => {
   if (
     !formId ||

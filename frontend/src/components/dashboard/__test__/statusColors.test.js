@@ -1,6 +1,13 @@
-import { STATUS_COLORS, CONDITION_TONE_COLORS } from "../constants";
+import {
+  STATUS_COLORS,
+  CONDITION_TONE_COLORS,
+  toneTagColor,
+} from "../constants";
 import epsOverview from "../../../config/visualizations/1749623934933.json";
 import rwsOverview from "../../../config/visualizations/1749621221728.json";
+import wwtpOverview from "../../../config/visualizations/1748903240763.json";
+import wtpOverview from "../../../config/visualizations/1749634736797.json";
+import pumpOverview from "../../../config/visualizations/1749611049520.json";
 
 /** Every colour a config assigns, with the role it plays. */
 const colorsIn = (config) => {
@@ -104,4 +111,56 @@ function stackOf(config) {
     });
   walk(config.items);
   return found;
+}
+
+describe("indicator pills", () => {
+  it("maps every tone to a legible AntD preset", () => {
+    // Presets give a tinted background with dark text. Passing our own status
+    // hex would render white-on-fill, and white on warning (#fab219, 1.79:1)
+    // is unreadable — so pills use presets even though the charts use hexes.
+    expect(toneTagColor("good")).toBe("green");
+    expect(toneTagColor("warning")).toBe("gold");
+    expect(toneTagColor("serious")).toBe("orange");
+    expect(toneTagColor("critical")).toBe("red");
+  });
+
+  it("falls back to neutral for an unknown or missing tone", () => {
+    expect(toneTagColor("mystery")).toBe("default");
+    expect(toneTagColor()).toBe("default");
+  });
+
+  it("tones the same answer differently per column where it means the opposite", () => {
+    // "yes" is good for OHS equipment and bad for production constraints —
+    // which is why tones are declared per column rather than globally.
+    const ohs = columnTones(wwtpOverview, "ohs");
+    const constraints = columnTones(wtpOverview, "constraints");
+    expect(ohs.yes).toBe("good");
+    expect(constraints.yes).toBe("critical");
+  });
+
+  it("declares a tone for every option a pilled column can show", () => {
+    // A value with no tone silently renders as plain text, so a pilled column
+    // that misses one option looks broken only for that answer.
+    const pump = columnTones(pumpOverview, "status");
+    ["operational", "overflowing", "blocked", "not_operational"].forEach((v) =>
+      expect(pump[v]).toBeTruthy()
+    );
+  });
+});
+
+function columnTones(config, key) {
+  let tones = null;
+  const walk = (items) =>
+    (items || []).forEach((item) => {
+      if (item.chart_type === "table") {
+        (item.columns || []).forEach((c) => {
+          if (c.key === key && c.tones) {
+            tones = c.tones;
+          }
+        });
+      }
+      walk(item.items);
+    });
+  walk(config.items);
+  return tones || {};
 }

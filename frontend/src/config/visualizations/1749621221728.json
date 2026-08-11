@@ -820,14 +820,22 @@
                   "label": "Operational Status",
                   "source": "answer",
                   "question_name": "infrastructure_status",
-                  "hide": false
+                  "hide": false,
+                  "tones": {
+                    "operational": "good",
+                    "non_operational": "critical"
+                  }
                 },
                 {
                   "key": "water_collection",
                   "label": "Not able to collect the water sample",
                   "source": "answer",
                   "question_name": "water_sample_collected",
-                  "hide": false
+                  "hide": false,
+                  "tones": {
+                    "yes": "good",
+                    "no": "warning"
+                  }
                 },
                 {
                   "key": "critical_issues",
@@ -1360,7 +1368,11 @@
           "label": "Infrastructure status",
           "source": "answer",
           "question_name": "infrastructure_status",
-          "hide": false
+          "hide": false,
+          "tones": {
+            "operational": "good",
+            "non_operational": "critical"
+          }
         },
         {
           "key": "last_monitoring",

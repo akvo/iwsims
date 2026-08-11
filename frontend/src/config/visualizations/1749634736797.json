@@ -1660,7 +1660,11 @@
           "label": "Production constraints",
           "source": "answer",
           "question_name": "has_production_constraints",
-          "hide": false
+          "hide": false,
+          "tones": {
+            "yes": "critical",
+            "no": "good"
+          }
         },
         {
           "key": "last_monitoring",

@@ -1101,14 +1101,25 @@
           "label": "Station status",
           "source": "answer",
           "question_name": "station_status",
-          "hide": false
+          "hide": false,
+          "tones": {
+            "operational": "good",
+            "overflowing": "critical",
+            "blocked": "critical",
+            "not_operational": "critical"
+          }
         },
         {
           "key": "ohs",
           "label": "OHS equipment",
           "source": "answer",
           "question_name": "ohs_equipment",
-          "hide": false
+          "hide": false,
+          "tones": {
+            "available": "good",
+            "not_used": "warning",
+            "not_available": "critical"
+          }
         },
         {
           "key": "last_monitoring",
