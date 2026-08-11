@@ -1,11 +1,13 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
-import { Alert, Card, Empty, Skeleton, Typography } from "antd";
+import { Alert, Card, Empty, Skeleton, Table, Typography } from "antd";
 import { useDashboardValues } from "../../../util/hooks";
 import { buildSiteDetailHref } from "../constants";
 import FormulaInfo from "./FormulaInfo";
 
 const { Text } = Typography;
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const stripRankingFields = (api = {}) => {
   const next = { ...api, group_by: "parent_id" };
@@ -29,6 +31,42 @@ const formatDate = (value) => {
     month: "short",
     day: "numeric",
   }).format(new Date(time));
+};
+
+/**
+ * Whole days between `value` and `today`, or null when the date is unusable.
+ * Negative elapsed (a future-dated inspection) is clamped to 0 rather than
+ * rendered as "-3 days ago".
+ */
+const elapsedDays = (value, today) => {
+  const time = toTimestamp(value);
+  if (time === null) {
+    return null;
+  }
+  const now = today instanceof Date ? today.getTime() : Date.now();
+  return Math.max(0, Math.floor((now - time) / MS_PER_DAY));
+};
+
+/**
+ * Whole calendar months between `value` and `today`. Counted on the calendar
+ * rather than as days/30 so "inspected 20 Jul, today 19 Aug" reads as 0 months
+ * rather than 1 — the Needs-monitoring list is about overdue-ness, and rounding
+ * up would overstate it.
+ */
+const elapsedMonths = (value, today) => {
+  const time = toTimestamp(value);
+  if (time === null) {
+    return null;
+  }
+  const then = new Date(time);
+  const now = today instanceof Date ? new Date(today.getTime()) : new Date();
+  let months =
+    (now.getFullYear() - then.getFullYear()) * 12 +
+    (now.getMonth() - then.getMonth());
+  if (now.getDate() < then.getDate()) {
+    months -= 1;
+  }
+  return Math.max(0, months);
 };
 
 /** Humanize a snake_case question_name, e.g. "date_of_inspection" -> "Date of inspection". */
@@ -107,6 +145,53 @@ const RankingWidget = ({
   const detailFormId = parentFormId || item.api?.form_id;
   const dateLabel = resolveDateLabel(item);
 
+  // Mirrors the design's ranking tables: entity · last inspected · elapsed.
+  // Division is intentionally omitted — it is already carried in the entity
+  // label the backend returns ("FLOW-243250955 - Votua WWTP - Western").
+  const inMonths = item.elapsed_unit === "months";
+  const columns = useMemo(() => {
+    const cols = [
+      {
+        title: item.entity_label || "Name",
+        dataIndex: "label",
+        key: "label",
+        render: (label, row) => {
+          const text = label || row.group;
+          const href = buildSiteDetailHref(detailFormId, row.group);
+          if (!href) {
+            return <Text>{text}</Text>;
+          }
+          return (
+            <a href={href} target="_blank" rel="noopener noreferrer">
+              {text}
+            </a>
+          );
+        },
+      },
+      {
+        title: dateLabel || "Last inspected",
+        dataIndex: "value",
+        key: "value",
+        width: 130,
+        render: (value) => <Text type="secondary">{formatDate(value)}</Text>,
+      },
+      {
+        title: inMonths ? "Months ago" : "Days ago",
+        dataIndex: "value",
+        key: "elapsed",
+        width: 110,
+        align: "right",
+        render: (value) => {
+          const elapsed = inMonths
+            ? elapsedMonths(value, today)
+            : elapsedDays(value, today);
+          return <Text>{elapsed === null ? "—" : elapsed}</Text>;
+        },
+      },
+    ];
+    return cols;
+  }, [item.entity_label, dateLabel, inMonths, detailFormId, today]);
+
   return (
     <Card
       title={
@@ -119,9 +204,9 @@ const RankingWidget = ({
       style={{ marginBottom: 0 }}
       data-testid={`ranking-widget-${item.id}`}
       extra={
-        dateLabel ? (
+        item.subtitle ? (
           <Text type="secondary" style={{ fontWeight: "normal" }}>
-            {dateLabel}
+            {item.subtitle}
           </Text>
         ) : null
       }
@@ -131,38 +216,15 @@ const RankingWidget = ({
       ) : rows.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
-        <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none" }}>
-          {rows.map((row, index) => {
-            const label = row.label || row.group;
-            const href = buildSiteDetailHref(detailFormId, row.group);
-            return (
-              <li
-                key={`${row.label}-${index}`}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "32px 1fr",
-                  columnGap: 12,
-                  padding: "8px 0",
-                  borderBottom:
-                    index === rows.length - 1 ? "none" : "1px solid #f0f0f0",
-                }}
-              >
-                <Text strong>{index + 1}</Text>
-                <div>
-                  {href ? (
-                    <a href={href} target="_blank" rel="noopener noreferrer">
-                      {label}
-                    </a>
-                  ) : (
-                    <Text>{label}</Text>
-                  )}
-                  <br />
-                  <Text type="secondary">{formatDate(row.value)}</Text>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+        <Table
+          columns={columns}
+          dataSource={rows.map((row, index) => ({
+            ...row,
+            key: `${row.group ?? row.label}-${index}`,
+          }))}
+          size="small"
+          pagination={false}
+        />
       )}
       {error && (
         <Alert
