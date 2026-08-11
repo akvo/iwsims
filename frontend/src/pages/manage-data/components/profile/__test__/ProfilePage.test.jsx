@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 import ProfilePage from "../ProfilePage";
 import uiText from "../../../../../lib/ui-text";
@@ -35,6 +36,10 @@ jest.mock("antd", () => {
     ReactMock.createElement("div", null, tab, children);
   return {
     Alert: ({ message }) => ReactMock.createElement("div", null, message),
+    // The header's Word Report action. This antd mock is intentionally
+    // partial, so each newly used component has to be added here.
+    Button: ({ children, onClick }) =>
+      ReactMock.createElement("button", { onClick, type: "button" }, children),
     Spin: ({ children }) => ReactMock.createElement("div", null, children),
     Card: ({ title, extra, children }) =>
       ReactMock.createElement("section", null, title, extra, children),
@@ -183,14 +188,18 @@ describe("ProfilePage", () => {
   });
 
   test("renders header (meta + location), a record table and a field list", async () => {
+    // MemoryRouter: the header's Word Report button uses useNavigate, and in
+    // the app the profile always renders under a route.
     render(
-      <ProfilePage
-        parentId={500}
-        parentFormId={1748903240763}
-        config={config}
-        text={uiText.en}
-        enabled
-      />
+      <MemoryRouter>
+        <ProfilePage
+          parentId={500}
+          parentFormId={1748903240763}
+          config={config}
+          text={uiText.en}
+          enabled
+        />
+      </MemoryRouter>
     );
 
     expect(await screen.findByText("Olosara WWTP")).toBeInTheDocument();

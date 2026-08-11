@@ -1107,6 +1107,9 @@ const uiText = {
     approveNoteRequired:
       "Please provide notes or feedback to decline or approved the submission",
     downloadReport: "Download Report",
+    siteProfileWordReport: "Word Report",
+    siteProfileReportQueued:
+      "Report queued — collect it from the Downloads page when it is ready",
     downloadReportSuccess: "Report downloaded successfully",
     downloadReportError: "Unable to download report",
     downloadData: "Download Data",

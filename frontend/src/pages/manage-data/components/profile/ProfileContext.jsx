@@ -101,6 +101,7 @@ export const ProfileProvider = ({
     return {
       config,
       text: resolvedText,
+      parentId,
       parentFormId,
       payload: state.data,
       registration,
@@ -109,11 +110,12 @@ export const ProfileProvider = ({
       recordContext: {
         payload: state.data,
         registration,
+        parentId,
         parentFormId,
         text: resolvedText,
       },
     };
-  }, [config, text, parentFormId, state, registration]);
+  }, [config, text, parentId, parentFormId, state, registration]);
 
   return (
     <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>

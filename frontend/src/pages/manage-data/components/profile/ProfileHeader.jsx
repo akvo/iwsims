@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Card, Empty, Image } from "antd";
+import ReportButton from "./widgets/ReportButton";
 
 import {
   answerValue,
@@ -83,6 +84,8 @@ const headerPhotos = (header, recordContext) => {
 };
 
 const ProfileHeader = ({ config, recordContext }) => {
+  const parentId = recordContext?.parentId;
+  const parentFormId = recordContext?.parentFormId;
   const text = recordContext?.text || {};
   const payload = recordContext?.payload;
   const header = config?.header || {};
@@ -118,7 +121,14 @@ const ProfileHeader = ({ config, recordContext }) => {
           )}
         </div>
         <div className="site-profile-hero-info">
-          <h2>{title}</h2>
+          <div className="site-profile-hero-head">
+            <h2>{title}</h2>
+            <ReportButton
+              parentId={parentId}
+              parentFormId={parentFormId}
+              text={text}
+            />
+          </div>
           {subtitle ? (
             <div className="site-profile-hero-subtitle">{subtitle}</div>
           ) : null}
