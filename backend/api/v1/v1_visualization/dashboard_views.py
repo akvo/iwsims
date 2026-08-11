@@ -381,6 +381,24 @@ def visualization_values(request, version):
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
+            name="order_by", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "Column key from `columns` to sort by. Only a "
+                "`latest_date` column can be sorted; any other value "
+                "falls back to id ordering. Rows without the answer "
+                "sort last."
+            ),
+        ),
+        OpenApiParameter(
+            name="order_dir", required=False,
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=["asc", "desc"],
+            description="Defaults to desc (most recent first).",
+        ),
+        OpenApiParameter(
             name="administration_id", required=False,
             type=OpenApiTypes.INT,
             location=OpenApiParameter.QUERY,
@@ -437,6 +455,8 @@ def visualization_escalation(request, form_id, version):
         params={
             "page": validated.get("page", 1),
             "page_size": validated.get("page_size", 20),
+            "order_by": validated.get("order_by"),
+            "order_dir": validated.get("order_dir", "desc"),
             "administration_id": resolve_default_administration_id(
                 validated.get("administration_id"),
             ),
