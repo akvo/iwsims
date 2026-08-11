@@ -45,6 +45,10 @@
       "label_key": "siteProfileWaterQuality"
     },
     {
+      "key": "recommendations",
+      "label_key": "siteProfileRecommendations"
+    },
+    {
       "key": "inspection",
       "label_key": "siteProfileInspectionHistory"
     }
@@ -334,6 +338,29 @@
           "render": "threshold"
         }
       ]
+    },
+    {
+      "id": 14,
+      "tab": "recommendations",
+      "position": "left",
+      "order": 1,
+      "chart_type": "field",
+      "label_key": "siteProfileFinalRecommendations",
+      "questions": [
+        "recommendations",
+        "improvement_action",
+        "improvement_action_details",
+        "dws_officer_name"
+      ]
+    },
+    {
+      "id": 15,
+      "tab": "recommendations",
+      "position": "right",
+      "order": 2,
+      "chart_type": "field",
+      "label_key": "siteProfileRemarks",
+      "questions": ["final_comments", "general_remarks"]
     }
   ]
 }
