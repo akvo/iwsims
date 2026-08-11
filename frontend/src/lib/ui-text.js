@@ -968,6 +968,7 @@ const uiText = {
     siteProfileOperationalFlags: "Operational flags",
     siteProfileConstructions: "Constructions",
     siteProfileConstructionDetails: "Construction details",
+    siteProfileConstructionProgressTrend: "Construction Progress",
     siteProfileWaterQuality: "Water Quality",
     siteProfileAutoMappedFromMonitoringForm: "auto-mapped from monitoring form",
     siteProfileInspectorCol: "Inspector",
