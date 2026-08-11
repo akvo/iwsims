@@ -1331,6 +1331,124 @@
         "group_by": "option",
         "monitoring": "latest"
       }
+    },
+    {
+      "id": "table_all_sites",
+      "info": "Every registered site with at least one monitoring submission.\nThe escalation endpoint requires criteria, and its grammar has no match-all, so the criteria below OR together questions that every monitored site answers — the count stops growing as further questions are added, which is how coverage was checked. Sites never monitored do not appear.",
+      "chart_type": "table",
+      "order": 18,
+      "col_span": 24,
+      "label": "All EPS Sites",
+      "description": "Every monitored site in this family. Click a row to open its site profile.",
+      "api": {
+        "criteria": [
+          {
+            "type": "option_equals",
+            "question_name": "can_collect_water_sample",
+            "value": "yes",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "can_collect_water_sample",
+            "value": "no",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "able_to_take_sample",
+            "value": "yes",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "able_to_take_sample",
+            "value": "no",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "weather_conditions",
+            "value": "rainy",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "weather_conditions",
+            "value": "cloudy",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "weather_conditions",
+            "value": "fine",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "weather_condition",
+            "value": "rainy",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "weather_condition",
+            "value": "cloudy",
+            "label": "Monitored",
+            "hide": true
+          },
+          {
+            "type": "option_equals",
+            "question_name": "weather_condition",
+            "value": "fine",
+            "label": "Monitored",
+            "hide": true
+          }
+        ]
+      },
+      "columns": [
+        {
+          "key": "name",
+          "label": "EPS",
+          "source": "parent_name",
+          "hide": false
+        },
+        {
+          "key": "administration",
+          "label": "Division",
+          "source": "administration",
+          "hide": false
+        },
+        {
+          "key": "households",
+          "label": "Households",
+          "source": "parent_answer",
+          "question_name": "number_of_households",
+          "hide": false
+        },
+        {
+          "key": "status",
+          "label": "System status",
+          "source": "answer",
+          "question_name": "system_status",
+          "hide": false
+        },
+        {
+          "key": "last_monitoring",
+          "label": "Last inspected",
+          "source": "latest_date",
+          "question_name": "inspection_date",
+          "hide": false
+        }
+      ]
     }
   ]
 }
