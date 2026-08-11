@@ -90,7 +90,7 @@
       "position": "right",
       "order": 1,
       "chart_type": "line",
-      "question": "ph",
+      "questions": ["ph", "lab_ph"],
       "unit": "pH",
       "threshold": {
         "min": 6.5,
@@ -103,7 +103,7 @@
       "position": "right",
       "order": 2,
       "chart_type": "line",
-      "question": "turbidity_ntu",
+      "questions": ["turbidity_ntu", "lab_turbidity_ntu"],
       "unit": "NTU",
       "threshold": {
         "max": 5
@@ -115,7 +115,7 @@
       "position": "right",
       "order": 3,
       "chart_type": "line",
-      "question": "lab_ecoli",
+      "questions": ["lab_ecoli", "lab_ecoli_count"],
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
@@ -127,7 +127,7 @@
       "position": "right",
       "order": 4,
       "chart_type": "line",
-      "question": "total_coliform_count",
+      "questions": ["total_coliform_count", "lab_total_coliform"],
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
@@ -139,7 +139,7 @@
       "position": "right",
       "order": 5,
       "chart_type": "line",
-      "question": "fecal_coliform_count",
+      "questions": ["fecal_coliform_count", "lab_fecal_coliform"],
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0
@@ -151,7 +151,7 @@
       "position": "right",
       "order": 6,
       "chart_type": "line",
-      "question": "temperature_c",
+      "questions": ["temperature_c", "lab_temperature_c"],
       "unit": "°C"
     },
     {
@@ -160,7 +160,7 @@
       "position": "right",
       "order": 7,
       "chart_type": "line",
-      "question": "conductivity",
+      "questions": ["conductivity", "lab_conductivity"],
       "unit": "µS/cm"
     },
     {
@@ -169,7 +169,7 @@
       "position": "right",
       "order": 8,
       "chart_type": "line",
-      "question": "salinity",
+      "questions": ["salinity", "lab_salinity_ppt"],
       "unit": "PPT"
     },
     {
@@ -178,7 +178,7 @@
       "position": "right",
       "order": 9,
       "chart_type": "line",
-      "question": "cbt_ecoli",
+      "questions": ["cbt_ecoli", "cbt_ecoli_count"],
       "unit": "cfu/100ml",
       "threshold": {
         "max": 0

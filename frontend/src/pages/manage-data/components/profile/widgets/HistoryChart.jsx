@@ -234,10 +234,40 @@ ConfiguredLine.propTypes = {
   pointColors: PropTypes.array,
 };
 
+/**
+ * Resolve which question a trend line should chart.
+ *
+ * Mirrors `resolveRowQuestion` in RecordTable: assets whose parameters are
+ * collected by more than one monitoring form list `questions: [...]` — the
+ * same measurement under each form's name — and the alias with history for
+ * this datapoint wins. EPS records E. coli as `e_coli_level` on the
+ * construction form and `e_coli_lab_count` on the water-quality form.
+ *
+ * NB `questions` carries a different meaning on `source: "risk_score"` items,
+ * where it is the list of questions being scored. Those items never set
+ * `question`, and this helper is only called for non-risk-score charts, so the
+ * two uses never overlap — but keep the guard in mind when editing.
+ *
+ * Falls back to the first alias so the chart still renders its empty state.
+ */
+export const resolveHistoryQuestion = (item = {}, history = {}) => {
+  if (item.question) {
+    return item.question;
+  }
+  const names = item.questions || [];
+  return (
+    names.find((name) => (history?.[name] || []).length) || names[0] || null
+  );
+};
+
 const HistoryChart = ({ item, recordContext }) => {
   const text = useMemo(() => recordContext?.text || {}, [recordContext]);
-  const question = findQuestionByName(item.question);
   const isRiskScore = item.source === "risk_score";
+  const historyMap = recordContext?.payload?.history || {};
+  const questionName = isRiskScore
+    ? item.question
+    : resolveHistoryQuestion(item, historyMap);
+  const question = findQuestionByName(questionName);
 
   const data = useMemo(() => {
     if (isRiskScore) {
@@ -258,13 +288,13 @@ const HistoryChart = ({ item, recordContext }) => {
         .sort((a, b) => new Date(a.date) - new Date(b.date))
         .map(({ label, value }) => ({ label, value }));
     }
-    const history = recordContext?.payload?.history?.[item.question] || [];
+    const history = recordContext?.payload?.history?.[questionName] || [];
     return history
       .map((row) => ({ label: formatDate(row.date), value: Number(row.value) }))
       .filter((row) => !Number.isNaN(row.value));
   }, [
     recordContext,
-    item.question,
+    questionName,
     item.questions,
     item.date_question,
     isRiskScore,
