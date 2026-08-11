@@ -6,7 +6,7 @@ import { useDashboardValues } from "../../../util/hooks";
 import { computeComplianceTrend } from "../compute/complianceTrend";
 import FormulaInfo from "../widgets/FormulaInfo";
 
-const { Text } = Typography;
+const { Paragraph, Text } = Typography;
 
 const MONTHS_SHORT = [
   "Jan",
@@ -216,6 +216,9 @@ const ComplianceTrendWidget = ({
           </Text>
         )}
       </div>
+      {item.description && (
+        <Paragraph type="secondary">{item.description}</Paragraph>
+      )}
       {fetchSpecs.map((f) => (
         <Fetcher
           key={f.key}
@@ -260,6 +263,7 @@ ComplianceTrendWidget.propTypes = {
     title: PropTypes.string,
     label: PropTypes.string,
     subtitle: PropTypes.string,
+    description: PropTypes.string,
     months: PropTypes.number,
     height: PropTypes.number,
     domains: PropTypes.arrayOf(
