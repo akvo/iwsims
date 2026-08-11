@@ -1970,7 +1970,7 @@
             "question_name": "total_population_connected",
             "value": "-1",
             "label": "Monitored",
-            "hide": true
+            "hide": false
           }
         ]
       },
