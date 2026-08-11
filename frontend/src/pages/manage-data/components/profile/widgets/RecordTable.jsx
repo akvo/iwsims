@@ -18,6 +18,28 @@ import {
   thresholdLabel,
 } from "../utils";
 
+/**
+ * Resolve which question name a `source: "rows"` row should read.
+ *
+ * A row normally names one question. Assets whose parameters are collected by
+ * more than one monitoring form can instead list `questions: [...]` — the same
+ * measurement under each form's name — and the first one this datapoint
+ * actually answered wins. EPS records E. coli as `e_coli_level` on the
+ * construction form and `e_coli_lab_count` on the water-quality form; RWS
+ * splits nearly every parameter the same way. Resolving once here keeps the
+ * label, value, threshold and status cells all reading the same question.
+ *
+ * Falls back to the first listed name so the row still renders (as "no data")
+ * for a datapoint that answered none of them.
+ */
+export const resolveRowQuestion = (row = {}, latest = {}) => {
+  if (row.question) {
+    return row.question;
+  }
+  const names = row.questions || [];
+  return names.find((name) => latest[name]) || names[0] || null;
+};
+
 const renderOptionPills = (entry, questionName) => {
   const question = findQuestionByName(questionName);
   const value = answerValue(entry);
@@ -137,9 +159,16 @@ const RecordTable = ({ item, recordContext }) => {
   const submissions = recordContext?.payload?.submissions || [];
   const isSubmissions = item.source === "submissions";
 
+  // Resolve each row's effective question up front so every cell — and the
+  // compliance verdict below — agrees on which name it is reading.
+  const resolvedRows = (item.rows || []).map((row) => ({
+    ...row,
+    question: resolveRowQuestion(row, latest),
+  }));
+
   const dataSource = isSubmissions
     ? submissions.map((s) => ({ key: s.data_id, ...s }))
-    : (item.rows || []).map((row, idx) => ({
+    : resolvedRows.map((row, idx) => ({
         key: row.id || row.question || idx,
         __row: row,
       }));
@@ -156,8 +185,18 @@ const RecordTable = ({ item, recordContext }) => {
 
   const complianceRule = item.compliance_rule || [];
   const verdictPass = complianceRule.every((name) => {
-    const row = (item.rows || []).find((r) => r.question === name);
-    return passThreshold(answerValue(latest[name]), row?.threshold) !== false;
+    // A rule may name the row's id or any of a multi-form row's aliases;
+    // judge the row on whichever question that datapoint actually answered.
+    const row = resolvedRows.find(
+      (r) =>
+        r.id === name ||
+        r.question === name ||
+        (r.questions || []).includes(name)
+    );
+    const questionName = row?.question || name;
+    return (
+      passThreshold(answerValue(latest[questionName]), row?.threshold) !== false
+    );
   });
   const complianceText = getText(
     text,

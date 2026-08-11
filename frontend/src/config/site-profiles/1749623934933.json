@@ -215,6 +215,118 @@
       "label_key": "siteProfileRiskScoreTrend",
       "questions": ["system_status", "is_project_completed"],
       "date_question": "inspection_date"
+    },
+    {
+      "id": 13,
+      "tab": "waterQuality",
+      "position": "left",
+      "order": 0,
+      "chart_type": "record",
+      "source": "rows",
+      "label_key": "siteProfileLatestWaterTest",
+      "compliance_rule": [
+        "e_coli",
+        "total_coliform",
+        "fecal_coliform",
+        "turbidity"
+      ],
+      "compliance_text": "microbial parameters and turbidity compliant.",
+      "rows": [
+        {
+          "id": "e_coli",
+          "questions": ["e_coli_level", "e_coli_lab_count"],
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "id": "total_coliform",
+          "questions": ["total_coliform_level", "total_coliform_cfu_100ml"],
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "id": "fecal_coliform",
+          "questions": ["fecal_coliform_level", "fecal_coliform_cfu_100ml"],
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "id": "e_coli_cbt",
+          "questions": ["cbt_bag_contamination_level", "e_coli_count_cbt"],
+          "unit": "cfu/100ml",
+          "threshold": {
+            "max": 0
+          }
+        },
+        {
+          "id": "turbidity",
+          "question": "turbidity_ntu",
+          "unit": "NTU",
+          "threshold": {
+            "max": 5
+          }
+        },
+        {
+          "id": "ph",
+          "question": "ph",
+          "threshold": {
+            "min": 6.5,
+            "max": 8.5
+          }
+        },
+        {
+          "id": "conductivity",
+          "question": "conductivity",
+          "unit": "µS/cm",
+          "threshold": {
+            "max": 1000
+          }
+        },
+        {
+          "id": "salinity",
+          "question": "salinity",
+          "unit": "PPT",
+          "threshold": {
+            "max": 1
+          }
+        },
+        {
+          "id": "temperature",
+          "question": "temperature_c",
+          "unit": "°C",
+          "threshold": {
+            "max": 30
+          }
+        }
+      ],
+      "cols": [
+        {
+          "title_key": "siteProfileParameterCol",
+          "field": "question",
+          "render": "question_label"
+        },
+        {
+          "title_key": "siteProfileResultCol",
+          "field": "question",
+          "render": "value"
+        },
+        {
+          "title_key": "siteProfileThresholdCol",
+          "field": "question",
+          "render": "threshold_label"
+        },
+        {
+          "title_key": "siteProfileStatusCol",
+          "field": "question",
+          "render": "threshold"
+        }
+      ]
     }
   ]
 }
