@@ -213,14 +213,38 @@
             "value": "_no_info",
             "label": "No information available",
             "all_of": [
-              { "question_name": "lab_ecoli_count", "op": "is_empty" },
-              { "question_name": "lab_turbidity_ntu", "op": "is_empty" },
-              { "question_name": "lab_total_coliform", "op": "is_empty" },
-              { "question_name": "lab_fecal_coliform", "op": "is_empty" },
-              { "question_name": "lab_temperature_c", "op": "is_empty" },
-              { "question_name": "lab_ph", "op": "is_empty" },
-              { "question_name": "lab_conductivity", "op": "is_empty" },
-              { "question_name": "lab_salinity_ppt", "op": "is_empty" }
+              {
+                "question_name": "lab_ecoli_count",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "lab_turbidity_ntu",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "lab_total_coliform",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "lab_fecal_coliform",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "lab_temperature_c",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "lab_ph",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "lab_conductivity",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "lab_salinity_ppt",
+                "op": "is_empty"
+              }
             ]
           }
         ],
@@ -390,7 +414,7 @@
       "chart_type": "card",
       "order": 13,
       "col_span": 6,
-      "label": "Accessibility Issues \u2014 No Issues",
+      "label": "Accessibility Issues — No Issues",
       "color": "#13c2c2",
       "compute": "accessibility_no_issues_kpi",
       "sample_api": {
@@ -626,7 +650,7 @@
     {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 20,
+      "order": 21,
       "col_span": 24,
       "items": [
         {
@@ -1002,10 +1026,10 @@
               "col_span": 12,
               "group": "physical",
               "label": "Water Temperature",
-              "description": "Acceptance threshold < 30 \u00b0C",
+              "description": "Acceptance threshold < 30 °C",
               "config": {
                 "title": "Water Temperature",
-                "xAxisLabel": "\u00b0C",
+                "xAxisLabel": "°C",
                 "entity_label": "RWS"
               },
               "threshold": {
@@ -1058,10 +1082,10 @@
               "col_span": 8,
               "group": "chemical",
               "label": "Conductivity",
-              "description": "Acceptance threshold < 1000 \u00b5S/cm",
+              "description": "Acceptance threshold < 1000 µS/cm",
               "config": {
                 "title": "Conductivity",
-                "xAxisLabel": "\u00b5S/cm",
+                "xAxisLabel": "µS/cm",
                 "entity_label": "RWS"
               },
               "threshold": {
@@ -1279,6 +1303,28 @@
           ]
         }
       ]
+    },
+    {
+      "id": "chart_rws_improvement_action",
+      "info": "Count of RWS per option of \"Is there any improvement action to be taken by the implementing agency?\" (improvement_action) on the latest comprehensive monitoring.\nThis is the closest the form gets to the design's \"maintenance required\" indicator — there is no maintenance question on either RWS monitoring form.",
+      "chart_type": "doughnut",
+      "order": 20,
+      "col_span": 24,
+      "description": "Improvement action outstanding, as recorded by the inspector. Stands in for the design's \"maintenance required\" indicator, which has no question on the form.",
+      "config": {
+        "title": "Improvement Action Required"
+      },
+      "color_map": {
+        "Yes": "#e6ab02",
+        "No": "#64A73B",
+        "No information available": "#999999"
+      },
+      "api": {
+        "question_name": "improvement_action",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
     }
   ]
 }

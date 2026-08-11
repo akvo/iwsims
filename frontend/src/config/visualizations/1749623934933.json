@@ -144,8 +144,18 @@
                 "value": 30,
                 "label": "Water Temperature"
               },
-              { "question_name": "ph", "op": "<", "value": 6.5, "label": "pH" },
-              { "question_name": "ph", "op": ">", "value": 8.5, "label": "pH" },
+              {
+                "question_name": "ph",
+                "op": "<",
+                "value": 6.5,
+                "label": "pH"
+              },
+              {
+                "question_name": "ph",
+                "op": ">",
+                "value": 8.5,
+                "label": "pH"
+              },
               {
                 "question_name": "conductivity",
                 "op": ">",
@@ -166,7 +176,11 @@
                     "op": "option_not_contains",
                     "value": "cbt_test"
                   },
-                  { "question_name": "e_coli_count_cbt", "op": ">", "value": 0 }
+                  {
+                    "question_name": "e_coli_count_cbt",
+                    "op": ">",
+                    "value": 0
+                  }
                 ]
               }
             ]
@@ -175,14 +189,38 @@
             "value": "_no_info",
             "label": "No information available",
             "any_of": [
-              { "question_name": "e_coli_lab_count", "op": "is_empty" },
-              { "question_name": "turbidity_ntu", "op": "is_empty" },
-              { "question_name": "total_coliform_cfu_100ml", "op": "is_empty" },
-              { "question_name": "fecal_coliform_cfu_100ml", "op": "is_empty" },
-              { "question_name": "temperature_c", "op": "is_empty" },
-              { "question_name": "ph", "op": "is_empty" },
-              { "question_name": "conductivity", "op": "is_empty" },
-              { "question_name": "salinity", "op": "is_empty" },
+              {
+                "question_name": "e_coli_lab_count",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "turbidity_ntu",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "total_coliform_cfu_100ml",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "temperature_c",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "ph",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "conductivity",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "salinity",
+                "op": "is_empty"
+              },
               {
                 "all_of": [
                   {
@@ -190,7 +228,10 @@
                     "op": "option_not_contains",
                     "value": "cbt_test"
                   },
-                  { "question_name": "e_coli_count_cbt", "op": "is_empty" }
+                  {
+                    "question_name": "e_coli_count_cbt",
+                    "op": "is_empty"
+                  }
                 ]
               }
             ]
@@ -510,7 +551,7 @@
     {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 15,
+      "order": 17,
       "col_span": 24,
       "items": [
         {
@@ -901,10 +942,10 @@
               "col_span": 12,
               "group": "physical",
               "label": "Water Temperature",
-              "description": "Acceptance threshold < 30 \u00b0C",
+              "description": "Acceptance threshold < 30 °C",
               "config": {
                 "title": "Water Temperature",
-                "xAxisLabel": "\u00b0C",
+                "xAxisLabel": "°C",
                 "entity_label": "EPS"
               },
               "threshold": {
@@ -960,10 +1001,10 @@
               "col_span": 8,
               "group": "chemical",
               "label": "Conductivity",
-              "description": "Acceptance threshold < 1000 \u00b5S/cm",
+              "description": "Acceptance threshold < 1000 µS/cm",
               "config": {
                 "title": "Conductivity",
-                "xAxisLabel": "\u00b5S/cm",
+                "xAxisLabel": "µS/cm",
                 "entity_label": "EPS"
               },
               "threshold": {
@@ -1243,6 +1284,53 @@
           ]
         }
       ]
+    },
+    {
+      "id": "chart_eps_accessibility",
+      "info": "Count of EPS per option of \"Is the EPS accessible under normal conditions for inspection?\" (eps_accessibility) on the latest construction monitoring.\nDerived differently from the RWS Accessibility chart on purpose: EPS asks accessibility directly, whereas RWS infers it from sample-taken plus major-issues. The RWS accessibility_bucket compute cannot be reused here — it requires yes/no on both inputs, and EPS's system_status is operational / issue_with_system, which the compute reads as \"no issues\" and would mark every sampled EPS easily accessible.",
+      "chart_type": "doughnut",
+      "order": 15,
+      "col_span": 12,
+      "description": "Accessibility is a High-priority DWS indicator. Few submissions so far — the question is new on the construction monitoring form.",
+      "config": {
+        "title": "Accessibility"
+      },
+      "color_map": {
+        "Yes": "#64A73B",
+        "No": "#e41a1c",
+        "No information available": "#999999"
+      },
+      "api": {
+        "question_name": "eps_accessibility",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
+      "id": "chart_eps_site_security",
+      "info": "Count of EPS reporting each element of \"Site security and perimeter\" (site_security_and_perimeter_details — fencing / lock / signboard) on the latest construction monitoring. Multi-select, so one EPS can contribute to more than one bar.",
+      "chart_type": "bar",
+      "order": 16,
+      "col_span": 12,
+      "description": "Fencing, lock and signboard recorded per site. Few submissions so far.",
+      "config": {
+        "title": "Site Security & Perimeter",
+        "xAxisLabel": "element",
+        "yAxisLabel": "# of EPS",
+        "grid": {
+          "bottom": 72,
+          "containLabel": true
+        },
+        "xAxis": {
+          "nameGap": 44
+        }
+      },
+      "api": {
+        "question_name": "site_security_and_perimeter_details",
+        "group_by": "option",
+        "monitoring": "latest"
+      }
     }
   ]
 }
