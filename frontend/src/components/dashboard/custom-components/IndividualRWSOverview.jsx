@@ -324,10 +324,14 @@ const IndividualRWSOverview = () => {
           optionFilterProp="name"
         />
         {waterSourceLabel && (
-          <Tag color="blue">Water source: {waterSourceLabel}</Tag>
+          <Tag className="status-pill" color="blue">
+            Water source: {waterSourceLabel}
+          </Tag>
         )}
         {projectTypeLabel && (
-          <Tag color="purple">Project type: {projectTypeLabel}</Tag>
+          <Tag className="status-pill" color="purple">
+            Project type: {projectTypeLabel}
+          </Tag>
         )}
       </Space>
 
@@ -434,7 +438,9 @@ const IndividualRWSOverview = () => {
                       Operational status
                     </Title>
                     {wqStatus ? (
-                      <Tag color="blue">{wqStatus}</Tag>
+                      <Tag className="status-pill" color="blue">
+                        {wqStatus}
+                      </Tag>
                     ) : (
                       <Text type="secondary">Not reported</Text>
                     )}

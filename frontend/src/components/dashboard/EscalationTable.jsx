@@ -115,7 +115,11 @@ const EscalationTable = ({
       if (!tone) {
         return <span>{display}</span>;
       }
-      return <Tag color={toneTagColor(tone)}>{display}</Tag>;
+      return (
+        <Tag className="status-pill" color={toneTagColor(tone)}>
+          {display}
+        </Tag>
+      );
     },
     [resolveDisplay, cellComputers]
   );
