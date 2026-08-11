@@ -239,11 +239,117 @@
       "click_action": "popup"
     },
     {
+      "id": "section_pumps_at_a_glance",
+      "chart_type": "section_title",
+      "order": 7,
+      "col_span": 24,
+      "text": "Pumps at a glance"
+    },
+    {
+      "id": "chart_pumps_functioning",
+      "info": "Histogram of stations by Number of pumps in operation on the latest monitoring submission. Stations reporting 0 pumps in operation have no pumping capacity at all.",
+      "chart_type": "bar",
+      "order": 8,
+      "col_span": 12,
+      "description": "Per DWS a station counts as operational only when the required duty pumps are online with a working standby. The monitoring form records the number in operation; the required duty count is not captured, so this shows the distribution only.",
+      "config": {
+        "title": "Pumps Functioning",
+        "xAxisLabel": "Pumps in operation per station",
+        "yAxisLabel": "# of stations"
+      },
+      "api": {
+        "question_name": "num_pumps_operational",
+        "group_by": "parent_id",
+        "monitoring": "latest"
+      },
+      "display": {
+        "mode": "value_buckets",
+        "buckets": [
+          {
+            "label": "0",
+            "value": 0
+          },
+          {
+            "label": "1",
+            "value": 1
+          },
+          {
+            "label": "2",
+            "value": 2
+          },
+          {
+            "label": "3",
+            "value": 3
+          },
+          {
+            "label": "4+",
+            "min": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "chart_standby_availability",
+      "info": "Standby available = Number of pumps standby > 0 on the latest monitoring. No standby = Number of pumps standby ≤ 0. Same rule as the Standby facility layer on the map above.",
+      "chart_type": "doughnut",
+      "order": 9,
+      "col_span": 12,
+      "description": "Standby pump availability is a High-priority indicator. Stations without an operable standby trigger a RED alert per DWS rules.",
+      "config": {
+        "title": "Standby Pump Availability"
+      },
+      "color_map": {
+        "Standby available": "#64A73B",
+        "No standby": "#e41a1c"
+      },
+      "api": {
+        "question_name": "num_pumps_standby",
+        "group_by": "parent_id",
+        "monitoring": "latest"
+      },
+      "display": {
+        "mode": "value_buckets",
+        "buckets": [
+          {
+            "label": "Standby available",
+            "min": 1
+          },
+          {
+            "label": "No standby",
+            "max": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "chart_ohs_equipment",
+      "info": "Share of stations per option of OHS equipment (Available / Not used / Not available) on the latest monitoring. Stations monitored only via the Quick Monitoring form do not answer this question and fall into No information available.",
+      "chart_type": "half_doughnut",
+      "order": 10,
+      "col_span": 12,
+      "description": "The WAF pump station form carries a single OHS question with three options.",
+      "config": {
+        "title": "OHS Equipment"
+      },
+      "color_map": {
+        "Available": "#64A73B",
+        "Not used": "#e6ab02",
+        "Not available": "#e41a1c",
+        "No information available": "#999999"
+      },
+      "api": {
+        "question_name": "ohs_equipment",
+        "group_by": "option",
+        "monitoring": "latest",
+        "include_unanswered": true
+      }
+    },
+    {
       "id": "condition_matrix_structural_site",
       "info": "Per-field option breakdown (e.g. Good / Satisfactory / Maintenance in progress / Poor) on the latest monitoring, for: Ground conditions, Facility condition, Security gate & fencing, Non-return valve, Sluice valve, Ventilation, Electrical panel, Pump station lid, Gantry, Hour run meter, Amp meter, Volt meter, Guardrails, Power backup system, Odour, Fats / grease balls, Lights, Water supply, OHS equipment.",
       "chart_type": "custom_component",
       "component": "ConditionMatrixWidget",
-      "order": 7,
+      "order": 11,
       "col_span": 24,
       "title": "Structural & Site Condition",
       "subtitle": "per-field option breakdown from the WAF monitoring form",
