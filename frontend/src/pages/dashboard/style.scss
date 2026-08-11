@@ -481,12 +481,22 @@
       }
     }
 
+    // Custom widgets (compliance trend, condition matrix, process status)
+    // render their own head inside the card body rather than passing antd's
+    // `title` prop, so they get no `.ant-card-head`. Mirror that element's
+    // rule (see the `.ant-card-head` block above) so these cards read the
+    // same as the chart cards they sit beside.
     .condition-matrix-head {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       gap: 16px;
-      margin-bottom: 16px;
+      // Negative margins cancel the 16px `.ant-card-body` padding so the rule
+      // reaches both card edges like a real `.ant-card-head` does; the padding
+      // then restores the same 10px/16px inset that block uses for its title.
+      margin: -16px -16px 16px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f1f3f5;
     }
 
     .condition-matrix-title {

@@ -250,12 +250,19 @@
       "info": "Histogram of stations by Number of pumps in operation on the latest monitoring submission. Stations reporting 0 pumps in operation have no pumping capacity at all.",
       "chart_type": "bar",
       "order": 8,
-      "col_span": 12,
+      "col_span": 8,
       "description": "Per DWS a station counts as operational only when the required duty pumps are online with a working standby. The monitoring form records the number in operation; the required duty count is not captured, so this shows the distribution only.",
       "config": {
         "title": "Pumps Functioning",
         "xAxisLabel": "Pumps in operation per station",
-        "yAxisLabel": "# of stations"
+        "yAxisLabel": "# of stations",
+        "grid": {
+          "bottom": 72,
+          "containLabel": true
+        },
+        "xAxis": {
+          "nameGap": 44
+        }
       },
       "api": {
         "question_name": "num_pumps_operational",
@@ -293,7 +300,7 @@
       "info": "Standby available = Number of pumps standby > 0 on the latest monitoring. No standby = Number of pumps standby ≤ 0. Same rule as the Standby facility layer on the map above.",
       "chart_type": "doughnut",
       "order": 9,
-      "col_span": 12,
+      "col_span": 8,
       "description": "Standby pump availability is a High-priority indicator. Stations without an operable standby trigger a RED alert per DWS rules.",
       "config": {
         "title": "Standby Pump Availability"
@@ -326,7 +333,7 @@
       "info": "Share of stations per option of OHS equipment (Available / Not used / Not available) on the latest monitoring. Stations monitored only via the Quick Monitoring form do not answer this question and fall into No information available.",
       "chart_type": "half_doughnut",
       "order": 10,
-      "col_span": 12,
+      "col_span": 8,
       "description": "The WAF pump station form carries a single OHS question with three options.",
       "config": {
         "title": "OHS Equipment"
@@ -343,6 +350,209 @@
         "monitoring": "latest",
         "include_unanswered": true
       }
+    },
+    {
+      "id": "chart_electrical_safety_issues",
+      "info": "Stations whose latest monitoring reports a fault, missing equipment or hazard, per electrical component:\n  • Panel — Electrical panel ≠ Satisfactory (Broken / Need Maintenance / Electrical hazard)\n  • Amp meter — Amp meter ≠ Operational (Faulty / Maintenance in progress)\n  • Volt meter — Volt meter ≠ Operational\n  • Hour-run meter — Hour run meter ≠ Operational\n  • Lights — Lights ≠ Operational (Faulty / Not available)\n  • No back-up power — Power backup system = None\nEach bar is (stations answering the question) − (stations answering it OK), so every fault option counts without needing one call per option. Denominators differ per question because not every station answers every field.",
+      "chart_type": "bar",
+      "compute": "bucket_bar",
+      "orientation": "horizontal",
+      "order": 12,
+      "col_span": 12,
+      "description": "Counted per component rather than as a single \"Meters\" category: a station can fault on more than one meter, and summing separate per-meter counts would double-count it.",
+      "config": {
+        "title": "Electrical Safety Issues",
+        "xAxisLabel": "# of stations reporting an issue",
+        "grid": {
+          "left": 120,
+          "right": 32,
+          "top": 32,
+          "bottom": 72,
+          "containLabel": false
+        }
+      },
+      "buckets": [
+        {
+          "label": "Panel",
+          "subtract": ["panel_total", "panel_ok"]
+        },
+        {
+          "label": "Amp meter",
+          "subtract": ["amp_total", "amp_ok"]
+        },
+        {
+          "label": "Volt meter",
+          "subtract": ["volt_total", "volt_ok"]
+        },
+        {
+          "label": "Hour-run meter",
+          "subtract": ["hour_total", "hour_ok"]
+        },
+        {
+          "label": "Lights",
+          "subtract": ["lights_total", "lights_ok"]
+        },
+        {
+          "label": "No back-up power",
+          "segment": "backup_none"
+        }
+      ],
+      "segments": [
+        {
+          "key": "panel_total",
+          "api": {
+            "question_name": "electrical_panel",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "panel_ok",
+          "api": {
+            "question_name": "electrical_panel",
+            "option_value": "satisfactory",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "amp_total",
+          "api": {
+            "question_name": "amp_meter",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "amp_ok",
+          "api": {
+            "question_name": "amp_meter",
+            "option_value": "operational",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "volt_total",
+          "api": {
+            "question_name": "volt_meter",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "volt_ok",
+          "api": {
+            "question_name": "volt_meter",
+            "option_value": "operational",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "hour_total",
+          "api": {
+            "question_name": "hour_run_meter",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "hour_ok",
+          "api": {
+            "question_name": "hour_run_meter",
+            "option_value": "oprational",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "lights_total",
+          "api": {
+            "question_name": "lights",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "lights_ok",
+          "api": {
+            "question_name": "lights",
+            "option_value": "operational",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "backup_none",
+          "api": {
+            "question_name": "power_backup_system",
+            "option_value": "none",
+            "sum_by": "parent_id",
+            "monitoring": "latest"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chart_compliance_trend",
+      "info": "Group monitoring submissions by month over the last 12 months. Per month, each line is the % of stations passing that domain:\n  • Operational — Pump Station Status = Operational\n  • Pumps — Pump Status = Operational\n  • Standby — Number of pumps standby > 0\n  • Electrical — Electrical panel = Satisfactory\n  • OHS — OHS equipment = Available\nDenominator is the stations that answered that question in the month, so a month with no submissions leaves a gap in the line.",
+      "chart_type": "custom_component",
+      "component": "ComplianceTrendWidget",
+      "order": 13,
+      "col_span": 12,
+      "title": "Compliance Trend",
+      "subtitle": "last 12 months · % stations passing each domain",
+      "months": 12,
+      "domains": [
+        {
+          "key": "operational",
+          "label": "Operational",
+          "color": "#3cb44b",
+          "type": "option_share",
+          "question_name": "station_status",
+          "pass_value": "operational"
+        },
+        {
+          "key": "pumps",
+          "label": "Pumps",
+          "color": "#1f6fd6",
+          "type": "option_share",
+          "question_name": "pump_status",
+          "pass_value": "operational"
+        },
+        {
+          "key": "standby",
+          "label": "Standby",
+          "color": "#17b3a3",
+          "type": "threshold_all",
+          "params": [
+            {
+              "question_name": "num_pumps_standby",
+              "op": ">",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "key": "electrical",
+          "label": "Electrical",
+          "color": "#9c6ade",
+          "type": "option_share",
+          "question_name": "electrical_panel",
+          "pass_value": "satisfactory"
+        },
+        {
+          "key": "ohs",
+          "label": "OHS",
+          "color": "#f0ad4e",
+          "type": "option_share",
+          "question_name": "ohs_equipment",
+          "pass_value": "available"
+        }
+      ],
+      "description": "Each line is the share of stations that passed that check in the month they were monitored, so a line can move because conditions changed or because a different set of stations was visited.",
+      "height": 353
     },
     {
       "id": "condition_matrix_structural_site",
