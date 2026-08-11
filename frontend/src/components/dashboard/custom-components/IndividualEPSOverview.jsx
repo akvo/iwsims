@@ -14,6 +14,7 @@ import {
   Typography,
 } from "antd";
 import AdministrationDropdownLocal from "../../filters/AdministrationDropdownLocal";
+import { toneTagColor } from "../constants";
 import CharacteristicsTable from "./individual-overview/shared/CharacteristicsTable";
 import PhotoCaptionCard from "./individual-overview/shared/PhotoCaptionCard";
 import HistoricalLineChart from "./individual-overview/shared/HistoricalLineChart";
@@ -60,10 +61,13 @@ const SCOPE_COLUMNS = [
     key: "inScope",
     width: "10%",
     render: (inScope) =>
-      inScope === null ? null : inScope ? (
-        <Tag color="green">Yes</Tag>
-      ) : (
-        <Tag color="red">No</Tag>
+      inScope === null ? null : (
+        <Tag
+          className="status-pill"
+          color={toneTagColor(inScope ? "good" : "critical")}
+        >
+          {inScope ? "Yes" : "No"}
+        </Tag>
       ),
   },
   {
@@ -370,7 +374,9 @@ const IndividualEPSOverview = () => {
                       Operational status
                     </Title>
                     {wqStatus ? (
-                      <Tag color="blue">{wqStatus}</Tag>
+                      <Tag className="status-pill" color="blue">
+                        {wqStatus}
+                      </Tag>
                     ) : (
                       <Text type="secondary">Not reported</Text>
                     )}

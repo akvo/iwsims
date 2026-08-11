@@ -69,7 +69,7 @@
       "order": 4,
       "col_span": 6,
       "label": "Effluent Compliance",
-      "color": "#64A73B",
+      "color": "#0ca30c",
       "compute": "compliance_kpi",
       "params_ref": ["param_bod", "param_cod", "param_tds"],
       "globals_ref": "wq_globals",
@@ -84,7 +84,7 @@
       "order": 5,
       "col_span": 6,
       "label": "% Critical Alerts",
-      "color": "#e41a1c",
+      "color": "#d03b3b",
       "compute": "rules_kpi",
       "denominator_api": {
         "ignore_date_filter": true
@@ -304,7 +304,6 @@
               "order": 1,
               "col_span": 8,
               "label": "Monitored (12 mo)",
-              "color": "#1890ff",
               "api": {
                 "question_name": "inspection_date",
                 "sum_by": "parent_id",
@@ -410,7 +409,8 @@
                     }
                   ]
                 }
-              ]
+              ],
+              "color": "#d03b3b"
             },
             {
               "id": "kpi_no_sample_taken",
@@ -1982,7 +1982,11 @@
           "label": "OHS equipment",
           "source": "answer",
           "question_name": "ohs_equipment_available",
-          "hide": false
+          "hide": false,
+          "tones": {
+            "yes": "good",
+            "no": "critical"
+          }
         },
         {
           "key": "last_monitoring",

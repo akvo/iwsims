@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
+import { STATUS_COLORS } from "../constants";
 import { useDashboardValues } from "../../../util/hooks";
 import FormulaInfo from "./FormulaInfo";
 
@@ -128,11 +129,18 @@ const MetricCard = ({
             </>
           }
           value={displayValue}
-          {...(item.color ? { valueStyle: { color: item.color } } : {})}
+          // The accent rule above carries status; the value stays in text ink.
+          // Colouring the number too made a green "% Operational" and a plain
+          // "Total WWTPs" look like different kinds of thing when both are
+          // just numbers, and a status hex on 32px text is a lot of colour for
+          // a signal the rule already gives.
         />
       )}
       {error && (
-        <div role="alert" style={{ color: "#e41a1c", fontSize: 12 }}>
+        <div
+          role="alert"
+          style={{ color: STATUS_COLORS.critical, fontSize: 12 }}
+        >
           {error.message || "Failed to load"}
         </div>
       )}

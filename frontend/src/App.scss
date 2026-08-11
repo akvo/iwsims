@@ -17,6 +17,29 @@
     line-height: 1.4;
   }
 
+  // Status indicator pill — an AntD Tag styled as a true pill.
+  //
+  // Kept as a Tag rather than a bespoke span because the preset colours render
+  // a tinted background with dark text, which stays legible; a solid status
+  // hex would render white-on-fill, and white on warning (#fab219, 1.79:1 on
+  // a light surface) is unreadable. Only the geometry changes here.
+  .ant-tag.status-pill {
+    // inline-flex + fit-content + align-self keeps the pill hugging its label
+    // inside a flex or grid parent, which would otherwise stretch it to the
+    // full cross-axis width.
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    width: fit-content;
+    max-width: 100%;
+    border-radius: 999px;
+    padding: 0 10px;
+    margin-inline-end: 4px;
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: $font-weight-normal;
+  }
+
   .ant-btn {
     &:not(.ant-btn-danger):hover {
       border-color: $blue;

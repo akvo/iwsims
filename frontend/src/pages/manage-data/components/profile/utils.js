@@ -1,3 +1,5 @@
+import { toneTagColor } from "../../../../components/dashboard/constants";
+
 // Pure helpers for the Site Profile (no React/JSX).
 // Holds shared value/format helpers and the config query-collector.
 
@@ -42,9 +44,12 @@ export const optionSeverity = (color) =>
     ? SEVERITY_BY_COLOR[String(color).toLowerCase()] || "neutral"
     : "neutral";
 
+// Maps the profile's severity vocabulary onto the shared tone → Tag preset
+// table, so a pill looks the same on a site profile as in a dashboard table.
 export const severityTagColor = (sev) =>
-  ({ green: "green", amber: "gold", red: "red", neutral: "default" }[sev] ||
-  "default");
+  toneTagColor(
+    { green: "good", amber: "warning", red: "critical" }[sev] || "neutral"
+  );
 
 export const getText = (text, key, fallback = "") => {
   if (key && text?.[key]) {

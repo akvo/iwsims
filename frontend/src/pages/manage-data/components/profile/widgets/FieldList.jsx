@@ -26,7 +26,11 @@ const renderFieldValue = (entry, questionName) => {
       .map((v) => {
         const option = resolveOption(question, v);
         return (
-          <Tag key={v} color={severityTagColor(optionSeverity(option.color))}>
+          <Tag
+            key={v}
+            className="status-pill"
+            color={severityTagColor(optionSeverity(option.color))}
+          >
             {option.label}
           </Tag>
         );

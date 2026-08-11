@@ -172,7 +172,7 @@
       "config": {
         "title": "Water Sampling by Asset",
         "xAxisLabel": "# of sites",
-        "color": ["#2fb36d", "#d93c35"],
+        "color": ["#0ca30c", "#d03b3b"],
         "grid": {
           "left": 120,
           "right": 32,

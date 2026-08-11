@@ -6,7 +6,9 @@
     display: flex;
     flex-direction: column;
 
-    > * {
+    // Scoped to the widget card — a bare `> *` also stretched anything else
+    // that landed in the column, which is how status pills ended up full width.
+    > .ant-card {
       flex: 1 1 auto;
     }
   }

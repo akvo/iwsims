@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Card, Empty, Image, Table, Tag, Typography } from "antd";
+import { toneTagColor } from "../../../../../components/dashboard/constants";
 
 import {
   answerValue,
@@ -49,7 +50,11 @@ const renderOptionPills = (entry, questionName) => {
     .map((v) => {
       const option = resolveOption(question, v);
       return (
-        <Tag key={v} color={severityTagColor(optionSeverity(option.color))}>
+        <Tag
+          key={v}
+          className="status-pill"
+          color={severityTagColor(optionSeverity(option.color))}
+        >
           {option.label}
         </Tag>
       );
@@ -111,10 +116,15 @@ const renderCell = (col, record, ctx) => {
     case "threshold": {
       const status = passThreshold(answerValue(entry), threshold);
       if (status === null) {
-        return <Tag>{text.siteProfileStatusInfo}</Tag>;
+        return <Tag className="status-pill">{text.siteProfileStatusInfo}</Tag>;
       }
+      // Routed through the shared tone table rather than naming AntD presets
+      // directly, so a pass/fail pill cannot drift from every other one.
       return (
-        <Tag color={status ? "green" : "red"}>
+        <Tag
+          className="status-pill"
+          color={toneTagColor(status ? "good" : "critical")}
+        >
           {status ? text.siteProfileStatusPass : text.siteProfileStatusFail}
         </Tag>
       );
@@ -138,7 +148,10 @@ const renderCell = (col, record, ctx) => {
         Array.isArray(value) ? value[0] : value
       );
       return (
-        <Tag color={severityTagColor(optionSeverity(option.color))}>
+        <Tag
+          className="status-pill"
+          color={severityTagColor(optionSeverity(option.color))}
+        >
           {option.label}
         </Tag>
       );
