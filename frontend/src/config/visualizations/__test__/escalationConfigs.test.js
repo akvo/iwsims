@@ -25,15 +25,19 @@ describe("escalation table configs", () => {
     expect(allTables().length).toBeGreaterThan(0);
   });
 
-  // The endpoint rejects a blank `criteria` with a 400. serializeCriteria
-  // DROPS any criterion marked `hide: true`, so a table whose criteria are all
-  // hidden serializes to "" and fails at runtime while looking fine in config.
-  // Asserting through the real serializer is the point: building the query
-  // string by hand in a test would not have caught it.
+  // Criteria are optional — a whole-fleet listing declares none and the param
+  // is omitted. But a table that DOES declare criteria must produce a non-empty
+  // string: serializeCriteria drops anything marked `hide: true`, so a table
+  // whose criteria are all hidden serializes to "" and 400s at runtime while
+  // looking perfectly fine in config. Asserting through the real serializer is
+  // the point — building the query string by hand in a test missed exactly this.
   it.each(allTables().map(({ slug, item }) => [`${slug}/${item.id}`, item]))(
-    "%s serializes to a non-empty criteria string",
+    "%s either declares no criteria or serializes them all",
     (_name, item) => {
-      const criteria = item.api?.criteria || [];
+      const criteria = item.api?.criteria;
+      if (!criteria) {
+        return;
+      }
       expect(criteria.length).toBeGreaterThan(0);
 
       const serialized = serializeCriteria(criteria);

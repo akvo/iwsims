@@ -1628,23 +1628,13 @@
     },
     {
       "id": "table_all_sites",
-      "info": "Every registered site with at least one monitoring submission.\nThe escalation endpoint requires criteria, and its grammar has no match-all, so the criteria below OR together questions that every monitored site answers — the count stops growing as further questions are added, which is how coverage was checked. Sites never monitored do not appear.",
+      "info": "Every registered site in this family — including sites never monitored, which the previous match-all criteria silently excluded.\nNo criteria are sent, so the backend slices the query directly instead of matching every parent id per request.\nOne page is fetched at a time; changing page fetches only that page.",
       "chart_type": "table",
       "order": 18,
       "col_span": 24,
       "label": "All Water Treatment Plants",
-      "description": "Every monitored site in this family. Click a row to open its site profile.",
-      "api": {
-        "criteria": [
-          {
-            "type": "threshold_gt",
-            "question_name": "daily_production_megalitres",
-            "value": "-1",
-            "label": "Monitored",
-            "hide": false
-          }
-        ]
-      },
+      "description": "Every registered site in this family. Click a row to open its site profile.",
+      "api": {},
       "columns": [
         {
           "key": "name",

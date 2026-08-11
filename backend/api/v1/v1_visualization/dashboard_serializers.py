@@ -232,7 +232,11 @@ class EscalationFilterSerializer(serializers.Serializer):
     """
 
     monitoring_form_id = serializers.IntegerField(required=False)
-    criteria = serializers.CharField(required=True)
+    # Optional: omitted or blank means "no filter — every parent qualifies".
+    # A table listing a whole fleet has nothing to filter on, and the criteria
+    # grammar has no match-all, so requiring it forced callers to fake one —
+    # which made the request cost scale with the fleet instead of the page.
+    criteria = serializers.CharField(required=False, allow_blank=True)
     columns = serializers.CharField(required=True)
     # Sort the feed by a `latest_date` column instead of insertion order.
     # `order_by` names a column key from `columns`; anything else falls back
@@ -260,7 +264,9 @@ class EscalationFilterSerializer(serializers.Serializer):
             raise serializers.ValidationError(str(e))
 
     def validate_criteria(self, value):
-        """Parse and validate criteria string."""
+        """Parse and validate criteria string. Blank means no filter."""
+        if not value or not value.strip():
+            return []
         parsed = []
         for item in value.split(","):
             parts = item.strip().split(":")

@@ -29,21 +29,12 @@
               "order": 1,
               "col_span": 24,
               "label": "WWTP — inspections",
-              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
-              "description": "Most recent inspection first. One page is fetched at a time.",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
               "api": {
                 "form_id": 1748903240763,
                 "order_by": "last_inspected",
-                "order_dir": "desc",
-                "criteria": [
-                  {
-                    "type": "threshold_gt",
-                    "question_name": "total_population_connected",
-                    "value": "-1",
-                    "label": "Monitored",
-                    "hide": false
-                  }
-                ]
+                "order_dir": "desc"
               },
               "columns": [
                 {
@@ -80,21 +71,12 @@
               "order": 1,
               "col_span": 24,
               "label": "WTP — inspections",
-              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
-              "description": "Most recent inspection first. One page is fetched at a time.",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
               "api": {
                 "form_id": 1749634736797,
                 "order_by": "last_inspected",
-                "order_dir": "desc",
-                "criteria": [
-                  {
-                    "type": "threshold_gt",
-                    "question_name": "daily_production_megalitres",
-                    "value": "-1",
-                    "label": "Monitored",
-                    "hide": false
-                  }
-                ]
+                "order_dir": "desc"
               },
               "columns": [
                 {
@@ -131,28 +113,12 @@
               "order": 1,
               "col_span": 24,
               "label": "RWS — inspections",
-              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
-              "description": "Most recent inspection first. One page is fetched at a time.",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
               "api": {
                 "form_id": 1749621221728,
                 "order_by": "last_inspected",
-                "order_dir": "desc",
-                "criteria": [
-                  {
-                    "type": "option_equals",
-                    "question_name": "water_sample_collected",
-                    "value": "yes",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "water_sample_collected",
-                    "value": "no",
-                    "label": "Monitored",
-                    "hide": false
-                  }
-                ]
+                "order_dir": "desc"
               },
               "columns": [
                 {
@@ -189,84 +155,12 @@
               "order": 1,
               "col_span": 24,
               "label": "EPS — inspections",
-              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
-              "description": "Most recent inspection first. One page is fetched at a time.",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
               "api": {
                 "form_id": 1749623934933,
                 "order_by": "last_inspected",
-                "order_dir": "desc",
-                "criteria": [
-                  {
-                    "type": "option_equals",
-                    "question_name": "can_collect_water_sample",
-                    "value": "yes",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "can_collect_water_sample",
-                    "value": "no",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "able_to_take_sample",
-                    "value": "yes",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "able_to_take_sample",
-                    "value": "no",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "weather_conditions",
-                    "value": "rainy",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "weather_conditions",
-                    "value": "cloudy",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "weather_conditions",
-                    "value": "fine",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "weather_condition",
-                    "value": "rainy",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "weather_condition",
-                    "value": "cloudy",
-                    "label": "Monitored",
-                    "hide": false
-                  },
-                  {
-                    "type": "option_equals",
-                    "question_name": "weather_condition",
-                    "value": "fine",
-                    "label": "Monitored",
-                    "hide": false
-                  }
-                ]
+                "order_dir": "desc"
               },
               "columns": [
                 {
@@ -303,21 +197,12 @@
               "order": 1,
               "col_span": 24,
               "label": "Pump Stations — inspections",
-              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
-              "description": "Most recent inspection first. One page is fetched at a time.",
+              "info": "Every registered site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites never inspected have no date and sort last, so the tail of the feed is the never-visited backlog.\nNo criteria are sent, so the backend slices the query directly rather than matching every parent id per request. One page is fetched at a time.",
+              "description": "Most recent inspection first; never-inspected sites appear last. One page is fetched at a time.",
               "api": {
                 "form_id": 1749611049520,
                 "order_by": "last_inspected",
-                "order_dir": "desc",
-                "criteria": [
-                  {
-                    "type": "threshold_gt",
-                    "question_name": "num_pumps_operational",
-                    "value": "-1",
-                    "label": "Monitored",
-                    "hide": false
-                  }
-                ]
+                "order_dir": "desc"
               },
               "columns": [
                 {
