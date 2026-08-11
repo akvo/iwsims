@@ -1324,6 +1324,21 @@
               ]
             }
           ]
+        },
+        {
+          "id": "tab_individual_wtp",
+          "label": "Individual Plant Overview",
+          "order": 1,
+          "items": [
+            {
+              "id": "individual_wtp_overview",
+              "chart_type": "custom_component",
+              "component": "IndividualWTPOverview",
+              "order": 1,
+              "col_span": 24,
+              "info": "Pick a location and a WTP to see its registration characteristics, latest inspection photo and details, and each monitored parameter's trend. Reads the comprehensive monitoring form."
+            }
+          ]
         }
       ]
     },
