@@ -88,14 +88,7 @@
       "config": {
         "title": "Inspected in the Last 12 Months",
         "xAxisLabel": "asset type",
-        "yAxisLabel": "# of sites",
-        "grid": {
-          "bottom": 72,
-          "containLabel": true
-        },
-        "xAxis": {
-          "nameGap": 44
-        }
+        "yAxisLabel": "# of sites"
       },
       "buckets": [
         {

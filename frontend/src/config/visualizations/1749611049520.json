@@ -255,14 +255,7 @@
       "config": {
         "title": "Pumps Functioning",
         "xAxisLabel": "Pumps in operation per station",
-        "yAxisLabel": "# of stations",
-        "grid": {
-          "bottom": 72,
-          "containLabel": true
-        },
-        "xAxis": {
-          "nameGap": 44
-        }
+        "yAxisLabel": "# of stations"
       },
       "api": {
         "question_name": "num_pumps_operational",

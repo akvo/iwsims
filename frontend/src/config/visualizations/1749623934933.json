@@ -1317,14 +1317,7 @@
       "config": {
         "title": "Site Security & Perimeter",
         "xAxisLabel": "element",
-        "yAxisLabel": "# of EPS",
-        "grid": {
-          "bottom": 72,
-          "containLabel": true
-        },
-        "xAxis": {
-          "nameGap": 44
-        }
+        "yAxisLabel": "# of EPS"
       },
       "api": {
         "question_name": "site_security_and_perimeter_details",
