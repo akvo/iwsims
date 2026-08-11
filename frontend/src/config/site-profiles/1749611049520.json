@@ -50,7 +50,6 @@
     {
       "id": 1,
       "tab": "pumpNElectric",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "rows",
@@ -86,35 +85,35 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 2,
       "tab": "pumpNElectric",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfilePumpsPower",
       "questions": [
         "num_pumps_operational",
         "num_pumps_standby",
         "power_backup_system"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 3,
       "tab": "pumpNElectric",
-      "position": "right",
-      "order": 2,
+      "order": 3,
       "chart_type": "line",
       "label_key": "siteProfilePumpsOperationalTrend",
       "question": "num_pumps_operational",
-      "unit": "pumps"
+      "unit": "pumps",
+      "col_span": 24
     },
     {
       "id": 4,
       "tab": "infrastructure",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "rows",
@@ -162,13 +161,13 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 5,
       "tab": "infrastructure",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfileStationComponents",
       "questions": [
@@ -177,12 +176,12 @@
         "ventilation",
         "pump_station_lid",
         "gantry"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 6,
       "tab": "ohsSafety",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "rows",
@@ -215,21 +214,21 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 7,
       "tab": "ohsSafety",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfileOhsEquipment",
-      "questions": ["ohs_equipment", "guardrails_pump_station"]
+      "questions": ["ohs_equipment", "guardrails_pump_station"],
+      "col_span": 24
     },
     {
       "id": 8,
       "tab": "operations",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "rows",
@@ -259,25 +258,25 @@
           "field": "question",
           "render": "severity"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 9,
       "tab": "operations",
-      "position": "right",
-      "order": 1,
+      "order": 2,
       "chart_type": "field",
       "label_key": "siteProfilePumpsInService",
       "questions": [
         "station_status",
         "num_pumps_operational",
         "num_pumps_standby"
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 10,
       "tab": "inspection",
-      "position": "left",
       "order": 1,
       "chart_type": "record",
       "source": "submissions",
@@ -300,12 +299,12 @@
           "title_key": "siteProfileSupervisorCol",
           "dataIndex": "supervisor_name"
         }
-      ]
+      ],
+      "col_span": 24
     },
     {
       "id": 11,
       "tab": "inspection",
-      "position": "right",
       "order": 2,
       "chart_type": "line",
       "source": "risk_score",
@@ -319,12 +318,12 @@
         "security_gate_fencing",
         "ohs_equipment"
       ],
-      "date_question": "inspection_date"
+      "date_question": "inspection_date",
+      "col_span": 24
     },
     {
       "id": 12,
       "tab": "recommendations",
-      "position": "left",
       "order": 1,
       "chart_type": "field",
       "label_key": "siteProfileFinalRecommendations",
@@ -332,7 +331,8 @@
         "supervisor_comments",
         "dws_staff_comments",
         "dws_staff_name"
-      ]
+      ],
+      "col_span": 24
     }
   ]
 }

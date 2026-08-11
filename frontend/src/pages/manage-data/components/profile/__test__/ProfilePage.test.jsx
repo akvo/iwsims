@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import ProfilePage from "../ProfilePage";
+import ProfilePage, { resolveSpan } from "../ProfilePage";
 import uiText from "../../../../../lib/ui-text";
 import { api } from "../../../../../lib";
 
@@ -214,5 +214,34 @@ describe("ProfilePage", () => {
     expect(screen.getByText("Ground conditions")).toBeInTheDocument();
     expect(screen.getByText("Number of staff")).toBeInTheDocument();
     expect(screen.getByText("7")).toBeInTheDocument();
+  });
+});
+
+describe("resolveSpan", () => {
+  it("gives tables the full row", () => {
+    // Tables carry several columns; the old fixed 10/24 side column squeezed
+    // them badly.
+    expect(resolveSpan({ chart_type: "record" })).toBe(24);
+  });
+
+  it("pairs field lists and puts trend charts three to a row", () => {
+    expect(resolveSpan({ chart_type: "field" })).toBe(12);
+    expect(resolveSpan({ chart_type: "line" })).toBe(8);
+  });
+
+  it("lets config override the default", () => {
+    expect(resolveSpan({ chart_type: "line", col_span: 24 })).toBe(24);
+    expect(resolveSpan({ chart_type: "record", col_span: 12 })).toBe(12);
+  });
+
+  it("ignores a col_span outside the 1-24 grid", () => {
+    expect(resolveSpan({ chart_type: "field", col_span: 0 })).toBe(12);
+    expect(resolveSpan({ chart_type: "field", col_span: 30 })).toBe(12);
+    expect(resolveSpan({ chart_type: "field", col_span: "wide" })).toBe(12);
+  });
+
+  it("falls back to full width for an unknown type", () => {
+    expect(resolveSpan({ chart_type: "mystery" })).toBe(24);
+    expect(resolveSpan()).toBe(24);
   });
 });
