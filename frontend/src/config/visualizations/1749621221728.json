@@ -1341,14 +1341,14 @@
             "question_name": "water_sample_collected",
             "value": "yes",
             "label": "Monitored",
-            "hide": true
+            "hide": false
           },
           {
             "type": "option_equals",
             "question_name": "water_sample_collected",
             "value": "no",
             "label": "Monitored",
-            "hide": true
+            "hide": false
           }
         ]
       },

@@ -39,70 +39,70 @@
                     "question_name": "bod",
                     "value": 40,
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "chemical_oxygen_demand",
                     "value": 100,
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "total_dissolved_solids",
                     "value": 1000,
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "comment_on_operation_of_oxidation_ponds",
                     "value": "not_operational",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "comment_on_operation_of_pasveer_ditches",
                     "value": "not_operational",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "comment_on_operation_of_idea_lagoons",
                     "value": "not_operational",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "comment_on_operation_of_polishing_ponds",
                     "value": "not_operational",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "comment_on_operation_of_aerobic_lagoons",
                     "value": "not_operational",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "comment_on_operation_of_sludge_digester",
                     "value": "not_operational",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "comment_on_operation_of_imhoff",
                     "value": "not_operational",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },
@@ -151,49 +151,49 @@
                     "question_name": "has_production_constraints",
                     "value": "yes",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "pumps_rising_main_has_risks",
                     "value": "yes",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "risks_associated_with_the_high_lift_pumps",
                     "value": "yes",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "has_alum_dosing_risks",
                     "value": "yes",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "has_soda_ash_dosing_risks",
                     "value": "yes",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "turbidity_ntu",
                     "value": 5,
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "total_coliform_cfu_100ml",
                     "value": 0,
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },
@@ -242,77 +242,77 @@
                     "question_name": "water_sample_collected",
                     "value": "no",
                     "label": "No water sample",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "major_issues",
                     "value": "yes",
                     "label": "Major issues",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "lab_ecoli_count",
                     "value": 0,
                     "label": "E.coli above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "lab_total_coliform",
                     "value": 0,
                     "label": "Total coliform above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "lab_fecal_coliform",
                     "value": 0,
                     "label": "Fecal coliform above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "lab_turbidity_ntu",
                     "value": 5,
                     "label": "Turbidity above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "lab_temperature_c",
                     "value": 30,
                     "label": "Temperature above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_lt",
                     "question_name": "lab_ph",
                     "value": 6.5,
                     "label": "pH below acceptable range",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "lab_ph",
                     "value": 8.5,
                     "label": "pH above acceptable range",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "lab_conductivity",
                     "value": 1000,
                     "label": "Conductivity above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "lab_salinity_ppt",
                     "value": 1,
                     "label": "Salinity above threshold",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },
@@ -361,77 +361,77 @@
                     "question_name": "can_collect_water_sample",
                     "value": "no",
                     "label": "No water sample",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "system_status",
                     "value": "issue_with_system",
                     "label": "System issue",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "e_coli_lab_count",
                     "value": 0,
                     "label": "E.coli above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "total_coliform_cfu_100ml",
                     "value": 0,
                     "label": "Total coliform above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "fecal_coliform_cfu_100ml",
                     "value": 0,
                     "label": "Fecal coliform above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "turbidity_ntu",
                     "value": 5,
                     "label": "Turbidity above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "temperature_c",
                     "value": 30,
                     "label": "Temperature above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_lt",
                     "question_name": "ph",
                     "value": 6.5,
                     "label": "pH below acceptable range",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "ph",
                     "value": 8.5,
                     "label": "pH above acceptable range",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "conductivity",
                     "value": 1000,
                     "label": "Conductivity above threshold",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "threshold_gt",
                     "question_name": "salinity",
                     "value": 1,
                     "label": "Salinity above threshold",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },
@@ -480,42 +480,42 @@
                     "question_name": "station_status",
                     "value": "not_operational",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "station_status",
                     "value": "overflowing",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "station_status",
                     "value": "blocked",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "electrical_panel",
                     "value": "broken",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "electrical_panel",
                     "value": "electrical_hazard",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "ohs_equipment",
                     "value": "not_available",
                     "label": "Red condition",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },

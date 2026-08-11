@@ -41,7 +41,7 @@
                     "question_name": "total_population_connected",
                     "value": "-1",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },
@@ -92,7 +92,7 @@
                     "question_name": "daily_production_megalitres",
                     "value": "-1",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },
@@ -143,14 +143,14 @@
                     "question_name": "water_sample_collected",
                     "value": "yes",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "water_sample_collected",
                     "value": "no",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },
@@ -201,70 +201,70 @@
                     "question_name": "can_collect_water_sample",
                     "value": "yes",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "can_collect_water_sample",
                     "value": "no",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "able_to_take_sample",
                     "value": "yes",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "able_to_take_sample",
                     "value": "no",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "weather_conditions",
                     "value": "rainy",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "weather_conditions",
                     "value": "cloudy",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "weather_conditions",
                     "value": "fine",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "weather_condition",
                     "value": "rainy",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "weather_condition",
                     "value": "cloudy",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   },
                   {
                     "type": "option_equals",
                     "question_name": "weather_condition",
                     "value": "fine",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },
@@ -315,7 +315,7 @@
                     "question_name": "num_pumps_operational",
                     "value": "-1",
                     "label": "Monitored",
-                    "hide": true
+                    "hide": false
                   }
                 ]
               },

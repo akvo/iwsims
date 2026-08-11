@@ -1641,7 +1641,7 @@
             "question_name": "daily_production_megalitres",
             "value": "-1",
             "label": "Monitored",
-            "hide": true
+            "hide": false
           }
         ]
       },

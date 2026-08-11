@@ -1096,7 +1096,7 @@
             "question_name": "num_pumps_operational",
             "value": "-1",
             "label": "Monitored",
-            "hide": true
+            "hide": false
           }
         ]
       },
