@@ -304,7 +304,6 @@
               "order": 1,
               "col_span": 8,
               "label": "Monitored (12 mo)",
-              "color": "#1890ff",
               "api": {
                 "question_name": "inspection_date",
                 "sum_by": "parent_id",
@@ -410,7 +409,8 @@
                     }
                   ]
                 }
-              ]
+              ],
+              "color": "#d03b3b"
             },
             {
               "id": "kpi_no_sample_taken",

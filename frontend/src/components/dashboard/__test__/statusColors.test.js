@@ -164,3 +164,76 @@ function columnTones(config, key) {
   walk(config.items);
   return tones || {};
 }
+
+describe("KPI card accents", () => {
+  const cards = (config) => {
+    const out = [];
+    const walk = (items) =>
+      (items || []).forEach((item) => {
+        if (item.chart_type === "card" || item.chart_type === "metric_card") {
+          out.push(item);
+        }
+        walk(item.items);
+      });
+    walk(config.items);
+    return out;
+  };
+
+  const ALL = [
+    wwtpOverview,
+    wtpOverview,
+    rwsOverview,
+    epsOverview,
+    pumpOverview,
+  ];
+
+  it("only ever accents a card with a status colour", () => {
+    // A card's colour means "this is a state", so a decorative hue on a plain
+    // count (#1890ff on "Total EPS registered", #fa8c16 on "under
+    // construction") is what made the row look arbitrary.
+    const allowed = [STATUS_COLORS.good, STATUS_COLORS.critical];
+    ALL.flatMap(cards).forEach((card) => {
+      if (card.color) {
+        expect(allowed).toContain(card.color);
+      }
+    });
+  });
+
+  it("leaves plain counts unaccented", () => {
+    // "Total EPS operational" starts with Total but IS a state; match on the
+    // measurement, not the leading word.
+    const plain = ALL.flatMap(cards).filter((c) => {
+      const label = c.label || "";
+      const isCount =
+        /registered|inspected|monitored|under construction|^total (wwtp|wtp|rws|eps|pump)/i.test(
+          label
+        );
+      const isStatus = /operational|critical|compliance|committee|issues/i.test(
+        label
+      );
+      return isCount && !isStatus;
+    });
+    expect(plain.length).toBeGreaterThan(0);
+    plain.forEach((card) => expect(card.color).toBeUndefined());
+  });
+
+  it("gives the same metric the same accent on every dashboard", () => {
+    // DW Compliance was orange on WTP and green on RWS — the same measurement
+    // reading as a warning on one page and a success on another.
+    const byLabel = {};
+    ALL.flatMap(cards).forEach((c) => {
+      const key = (c.label || "").toLowerCase();
+      if (/compliance|operational/.test(key)) {
+        byLabel[key] = byLabel[key] || new Set();
+        byLabel[key].add(card_color(c));
+      }
+    });
+    Object.entries(byLabel).forEach(([, colors]) => {
+      expect(colors.size).toBe(1);
+    });
+  });
+});
+
+function card_color(card) {
+  return card.color || "none";
+}

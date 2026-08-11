@@ -318,7 +318,6 @@
       "order": 4,
       "col_span": 6,
       "label": "Total EPS registered",
-      "color": "#1890ff",
       "api": {
         "form_id": 1749623934933
       }
@@ -330,7 +329,6 @@
       "order": 5,
       "col_span": 6,
       "label": "Total EPS under construction",
-      "color": "#fa8c16",
       "api": {
         "form_id": 1749624452908,
         "question_name": "is_project_completed",
@@ -1065,7 +1063,6 @@
               "col_span": 12,
               "label": "Total EPS under construction",
               "description": "Share of registered EPS still under construction.",
-              "color": "#fa8c16",
               "api": {
                 "form_id": 1749624452908,
                 "question_name": "is_project_completed",

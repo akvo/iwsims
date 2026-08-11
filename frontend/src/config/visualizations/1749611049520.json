@@ -47,7 +47,6 @@
       "order": 3,
       "col_span": 6,
       "label": "Inspected (12 mo)",
-      "color": "#1890ff",
       "api": {
         "question_name": "inspection_date",
         "sum_by": "parent_id",

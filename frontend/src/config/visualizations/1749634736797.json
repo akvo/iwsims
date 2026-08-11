@@ -56,7 +56,6 @@
       "order": 3,
       "col_span": 5,
       "label": "Inspected (12 mo)",
-      "color": "#1890ff",
       "api": {
         "question_name": "date_of_inspection",
         "sum_by": "parent_id",
@@ -86,7 +85,7 @@
       "order": 5,
       "col_span": 5,
       "label": "DW Compliance",
-      "color": "#fa8c16",
+      "color": "#0ca30c",
       "compute": "compliance_kpi",
       "params_ref": [
         "param_total_coliform",
@@ -517,7 +516,8 @@
                     "monitoring": "latest"
                   }
                 }
-              ]
+              ],
+              "color": "#d03b3b"
             },
             {
               "id": "kpi_no_waterquality_check",

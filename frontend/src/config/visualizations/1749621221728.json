@@ -301,7 +301,6 @@
       "order": 4,
       "col_span": 6,
       "label": "Total RWS registered",
-      "color": "#3C3CFF",
       "api": {
         "monitoring": "latest",
         "ignore_date_filter": true
@@ -314,7 +313,6 @@
       "order": 5,
       "col_span": 6,
       "label": "RWS under construction",
-      "color": "#fa8c16",
       "api": {
         "question_name": "infrastructure_status",
         "option_value": "non_operational",
@@ -359,7 +357,7 @@
       "order": 10,
       "col_span": 6,
       "label": "Operational Systems",
-      "color": "#1890ff",
+      "color": "#0ca30c",
       "api": {
         "question_name": "infrastructure_status",
         "group_by": "option",
@@ -399,7 +397,7 @@
       "order": 12,
       "col_span": 6,
       "label": "Active Water Committees",
-      "color": "#fa8c16",
+      "color": "#0ca30c",
       "api": {
         "question_name": "water_committee",
         "group_by": "option",
@@ -415,7 +413,7 @@
       "order": 13,
       "col_span": 6,
       "label": "Accessibility Issues — No Issues",
-      "color": "#13c2c2",
+      "color": "#0ca30c",
       "compute": "accessibility_no_issues_kpi",
       "sample_api": {
         "question_name": "water_sample_collected",
@@ -1144,7 +1142,6 @@
               "col_span": 12,
               "label": "Total RWS under construction",
               "description": "Share of registered RWS still under construction.",
-              "color": "#fa8c16",
               "api": {
                 "question_name": "infrastructure_status",
                 "option_value": "non_operational",
