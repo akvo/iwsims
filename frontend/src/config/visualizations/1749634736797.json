@@ -70,7 +70,7 @@
       "order": 4,
       "col_span": 5,
       "label": "% Operational",
-      "color": "#64A73B",
+      "color": "#0ca30c",
       "api": {
         "question_name": "has_production_constraints",
         "group_by": "option",
@@ -107,7 +107,7 @@
       "order": 6,
       "col_span": 4,
       "label": "Critical",
-      "color": "#e41a1c",
+      "color": "#d03b3b",
       "compute": "critical_kpi",
       "denominator_api": {
         "ignore_date_filter": true
@@ -786,7 +786,7 @@
                 "title": "Treatment Chemicals",
                 "xAxisLabel": "# of plants",
                 "yAxisLabel": "chemical",
-                "color": ["#2fb36d", "#d93c35"],
+                "color": ["#0ca30c", "#d03b3b"],
                 "grid": {
                   "left": 220,
                   "right": 32,
@@ -1256,7 +1256,7 @@
                 "title": "Back-up Power Supply",
                 "xAxisLabel": "# of plants",
                 "yAxisLabel": "",
-                "color": ["#2fb36d", "#f5a623", "#d93c35"],
+                "color": ["#0ca30c", "#fab219", "#d03b3b"],
                 "grid": {
                   "left": 80,
                   "right": 32,
@@ -1354,7 +1354,7 @@
       "config": {
         "title": "Pumps & Chemical Dosing Functioning",
         "xAxisLabel": "# of plants",
-        "color": ["#2fb36d", "#d93c35"],
+        "color": ["#0ca30c", "#d03b3b"],
         "grid": {
           "left": 210,
           "right": 32,

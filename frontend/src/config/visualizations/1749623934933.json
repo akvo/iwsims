@@ -347,7 +347,7 @@
       "order": 6,
       "col_span": 6,
       "label": "Total EPS operational",
-      "color": "#64A73B",
+      "color": "#0ca30c",
       "api": {
         "form_id": 1749632545233,
         "question_name": "system_status",
@@ -363,7 +363,7 @@
       "order": 7,
       "col_span": 6,
       "label": "Total EPS with critical issues",
-      "color": "#e41a1c",
+      "color": "#d03b3b",
       "api": {
         "form_id": 1749632545233,
         "question_name": "system_status",
@@ -462,18 +462,18 @@
         "yAxisLabel": "EPS count"
       },
       "color_map": {
-        "Compliant": "#2e7d32",
-        "E-coli presence": "#c62828",
-        "Turbidity": "#ef6c00",
-        "Total coliform presence": "#6a1b9a",
-        "Fecal coliform presence": "#1565c0",
-        "Water Temperature": "#8d4e24",
-        "pH": "#d81b60",
-        "Conductivity": "#00838f",
-        "Salinity": "#9e7c00",
-        "E-coli CBT": "#7c4dff",
-        "No information available": "#90a4ae",
-        "N/A": "#263238"
+        "Compliant": "#0ca30c",
+        "E-coli presence": "#2a78d6",
+        "Turbidity": "#eda100",
+        "Total coliform presence": "#eb6834",
+        "Fecal coliform presence": "#1baf7a",
+        "Water Temperature": "#e87ba4",
+        "pH": "#008300",
+        "Conductivity": "#4a3aa7",
+        "Salinity": "#e34948",
+        "E-coli CBT": "#2a78d6",
+        "No information available": "#9aa0a6",
+        "N/A": "#546e7a"
       },
       "compute": "compliance",
       "include_unanswered": true,
@@ -582,7 +582,7 @@
               "order": 1,
               "col_span": 8,
               "label": "Total EPS with critical issues",
-              "color": "#e41a1c",
+              "color": "#d03b3b",
               "api": {
                 "form_id": 1749632545233,
                 "question_name": "system_status",
@@ -1296,9 +1296,9 @@
         "title": "Accessibility"
       },
       "color_map": {
-        "Yes": "#64A73B",
-        "No": "#e41a1c",
-        "No information available": "#999999"
+        "Yes": "#0ca30c",
+        "No": "#d03b3b",
+        "No information available": "#9aa0a6"
       },
       "api": {
         "question_name": "eps_accessibility",

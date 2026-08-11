@@ -61,7 +61,7 @@
       "order": 4,
       "col_span": 6,
       "label": "% Operational",
-      "color": "#64A73B",
+      "color": "#0ca30c",
       "compute": "rules_kpi",
       "denominator_api": {
         "ignore_date_filter": true
@@ -114,7 +114,7 @@
       "order": 5,
       "col_span": 6,
       "label": "Critical issues",
-      "color": "#e41a1c",
+      "color": "#d03b3b",
       "compute": "rules_kpi",
       "rules": [
         {
@@ -299,8 +299,8 @@
         "title": "Standby Pump Availability"
       },
       "color_map": {
-        "Standby available": "#64A73B",
-        "No standby": "#e41a1c"
+        "Standby available": "#0ca30c",
+        "No standby": "#d03b3b"
       },
       "api": {
         "question_name": "num_pumps_standby",
@@ -332,10 +332,10 @@
         "title": "OHS Equipment"
       },
       "color_map": {
-        "Available": "#64A73B",
-        "Not used": "#e6ab02",
-        "Not available": "#e41a1c",
-        "No information available": "#999999"
+        "Available": "#0ca30c",
+        "Not used": "#fab219",
+        "Not available": "#d03b3b",
+        "No information available": "#9aa0a6"
       },
       "api": {
         "question_name": "ohs_equipment",

@@ -329,7 +329,7 @@
       "order": 6,
       "col_span": 6,
       "label": "Operational RWS",
-      "color": "#64A73B",
+      "color": "#0ca30c",
       "api": {
         "question_name": "infrastructure_status",
         "option_value": "operational",
@@ -344,7 +344,7 @@
       "order": 7,
       "col_span": 6,
       "label": "RWS with critical issues",
-      "color": "#e41a1c",
+      "color": "#d03b3b",
       "api": {
         "question_name": "major_issues",
         "option_value": "yes",
@@ -375,7 +375,7 @@
       "order": 11,
       "col_span": 6,
       "label": "Drinking Water Compliance",
-      "color": "#64A73B",
+      "color": "#0ca30c",
       "compute": "compliance_kpi",
       "params_ref": [
         "param_e_coli",
@@ -590,7 +590,7 @@
       "config": {
         "title": "Accessibility",
         "yAxisLabel": "RWS count",
-        "color": ["#64A73B", "#FDAE60", "#e41a1c", "#bfbfbf"]
+        "color": ["#0ca30c", "#fab219", "#d03b3b", "#9aa0a6"]
       },
       "compute": "accessibility_bucket",
       "sample_api": {
@@ -622,16 +622,16 @@
         "yAxisLabel": "RWS count"
       },
       "color_map": {
-        "Compliant": "#64A73B",
-        "E-coli presence": "#e41a1c",
-        "Turbidity": "#ff7f00",
-        "Total coliform presence": "#984ea3",
-        "Fecal coliform presence": "#377eb8",
-        "Water Temperature": "#a65628",
-        "pH": "#f781bf",
-        "Conductivity": "#00838f",
-        "Salinity": "#9e7c00",
-        "No information available": "#999999"
+        "Compliant": "#0ca30c",
+        "E-coli presence": "#2a78d6",
+        "Turbidity": "#eda100",
+        "Total coliform presence": "#eb6834",
+        "Fecal coliform presence": "#1baf7a",
+        "Water Temperature": "#e87ba4",
+        "pH": "#008300",
+        "Conductivity": "#4a3aa7",
+        "Salinity": "#e34948",
+        "No information available": "#9aa0a6"
       },
       "compute": "compliance",
       "include_unanswered": true,
@@ -681,7 +681,7 @@
               "order": 2,
               "col_span": 8,
               "label": "RWS with critical issues",
-              "color": "#e41a1c",
+              "color": "#d03b3b",
               "api": {
                 "question_name": "major_issues",
                 "option_value": "yes",
@@ -1315,9 +1315,9 @@
         "title": "Improvement Action Required"
       },
       "color_map": {
-        "Yes": "#e6ab02",
-        "No": "#64A73B",
-        "No information available": "#999999"
+        "Yes": "#fab219",
+        "No": "#0ca30c",
+        "No information available": "#9aa0a6"
       },
       "api": {
         "question_name": "improvement_action",
