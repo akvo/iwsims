@@ -4,6 +4,7 @@ import wtpOverview from "./1749634736797.json";
 import wwtpOverview from "./1748903240763.json";
 import pumpOverview from "./1749611049520.json";
 import nationalOverview from "./national.json";
+import allAlerts from "./all-alerts.json";
 
 /**
  * Registry of dashboard configs keyed by `slug`.
@@ -24,6 +25,7 @@ const RAW_CONFIGS = [
   wwtpOverview,
   pumpOverview,
   nationalOverview,
+  allAlerts,
 ];
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
