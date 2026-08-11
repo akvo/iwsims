@@ -40,7 +40,11 @@ export const useDashboardValues = (apiBlock, filterState, options = {}) => {
       filterState,
       customFilterDefs
     );
-    if (parentFormId) {
+    // The dashboard's root form scopes every fetch, EXCEPT where an api block
+    // names its own. Cross-asset dashboards (the National Overview) have no
+    // single root: each segment queries a different registration family, so it
+    // carries `parent_form_id` in its own api block and must win here.
+    if (parentFormId && !merged.parent_form_id) {
       merged.parent_form_id = parentFormId;
     }
     return merged;

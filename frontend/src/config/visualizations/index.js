@@ -3,6 +3,7 @@ import rwsOverview from "./1749621221728.json";
 import wtpOverview from "./1749634736797.json";
 import wwtpOverview from "./1748903240763.json";
 import pumpOverview from "./1749611049520.json";
+import nationalOverview from "./national.json";
 
 /**
  * Registry of dashboard configs keyed by `slug`.
@@ -22,6 +23,7 @@ const RAW_CONFIGS = [
   wtpOverview,
   wwtpOverview,
   pumpOverview,
+  nationalOverview,
 ];
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -49,10 +51,22 @@ RAW_CONFIGS.forEach((config, index) => {
     );
     return;
   }
-  if (typeof parentFormId !== "number" || !Number.isFinite(parentFormId)) {
+  // A cross-asset dashboard spans several registration families, so it has no
+  // single root form. It declares `cross_asset: true` instead, and every api
+  // block inside it must name its own `parent_form_id` (useDashboardValues
+  // leaves an api-level value alone rather than overwriting it with the root).
+  if (config?.cross_asset !== true) {
+    if (typeof parentFormId !== "number" || !Number.isFinite(parentFormId)) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[visualizations] ${ref}: missing or invalid "parent_form_id" (must be a finite number, or set "cross_asset": true), skipped`
+      );
+      return;
+    }
+  } else if (typeof parentFormId !== "undefined" && parentFormId !== null) {
     // eslint-disable-next-line no-console
     console.warn(
-      `[visualizations] ${ref}: missing or invalid "parent_form_id" (must be a finite number), skipped`
+      `[visualizations] ${ref}: "cross_asset" configs must not set a root "parent_form_id" — every api block names its own`
     );
     return;
   }
