@@ -1,0 +1,349 @@
+{
+  "slug": "inspections-feed",
+  "name": "Inspections Feed",
+  "cross_asset": true,
+  "description": "Every inspection across all asset types, most recent first. One tab per asset; each paginates independently.",
+  "fiscal_year_start_month": 1,
+  "items": [
+    {
+      "id": "title_feed",
+      "chart_type": "section_title",
+      "order": 1,
+      "col_span": 24,
+      "text": "Inspections Feed — most recent first"
+    },
+    {
+      "id": "tabs_feed",
+      "chart_type": "tabs",
+      "order": 2,
+      "col_span": 24,
+      "items": [
+        {
+          "id": "pane_wwtp",
+          "label": "WWTP",
+          "order": 1,
+          "items": [
+            {
+              "id": "feed_wwtp",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "WWTP — inspections",
+              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
+              "description": "Most recent inspection first. One page is fetched at a time.",
+              "api": {
+                "form_id": 1748903240763,
+                "order_by": "last_inspected",
+                "order_dir": "desc",
+                "criteria": [
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "total_population_connected",
+                    "value": "-1",
+                    "label": "Monitored",
+                    "hide": true
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_wtp",
+          "label": "WTP",
+          "order": 2,
+          "items": [
+            {
+              "id": "feed_wtp",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "WTP — inspections",
+              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
+              "description": "Most recent inspection first. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749634736797,
+                "order_by": "last_inspected",
+                "order_dir": "desc",
+                "criteria": [
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "daily_production_megalitres",
+                    "value": "-1",
+                    "label": "Monitored",
+                    "hide": true
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "date_of_inspection",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_rws",
+          "label": "RWS",
+          "order": 3,
+          "items": [
+            {
+              "id": "feed_rws",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "RWS — inspections",
+              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
+              "description": "Most recent inspection first. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749621221728,
+                "order_by": "last_inspected",
+                "order_dir": "desc",
+                "criteria": [
+                  {
+                    "type": "option_equals",
+                    "question_name": "water_sample_collected",
+                    "value": "yes",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "water_sample_collected",
+                    "value": "no",
+                    "label": "Monitored",
+                    "hide": true
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_eps",
+          "label": "EPS",
+          "order": 4,
+          "items": [
+            {
+              "id": "feed_eps",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "EPS — inspections",
+              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
+              "description": "Most recent inspection first. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749623934933,
+                "order_by": "last_inspected",
+                "order_dir": "desc",
+                "criteria": [
+                  {
+                    "type": "option_equals",
+                    "question_name": "can_collect_water_sample",
+                    "value": "yes",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "can_collect_water_sample",
+                    "value": "no",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "able_to_take_sample",
+                    "value": "yes",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "able_to_take_sample",
+                    "value": "no",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "weather_conditions",
+                    "value": "rainy",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "weather_conditions",
+                    "value": "cloudy",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "weather_conditions",
+                    "value": "fine",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "weather_condition",
+                    "value": "rainy",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "weather_condition",
+                    "value": "cloudy",
+                    "label": "Monitored",
+                    "hide": true
+                  },
+                  {
+                    "type": "option_equals",
+                    "question_name": "weather_condition",
+                    "value": "fine",
+                    "label": "Monitored",
+                    "hide": true
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pane_pump",
+          "label": "Pump Stations",
+          "order": 5,
+          "items": [
+            {
+              "id": "feed_pump",
+              "chart_type": "table",
+              "order": 1,
+              "col_span": 24,
+              "label": "Pump Stations — inspections",
+              "info": "Every monitored site in this family, most recently inspected first.\nOrdered server-side by the inspection-date answer (order_by=last_inspected). Sites missing that answer sort last rather than bunching at the top.\nThe escalation endpoint needs criteria and has no match-all, so the criteria below OR together questions every monitored site answers — the same covering sets the All Sites tables use. A site never monitored has no inspection to feed and does not appear.\nOne page is fetched at a time; changing page or tab fetches only that page.",
+              "description": "Most recent inspection first. One page is fetched at a time.",
+              "api": {
+                "form_id": 1749611049520,
+                "order_by": "last_inspected",
+                "order_dir": "desc",
+                "criteria": [
+                  {
+                    "type": "threshold_gt",
+                    "question_name": "num_pumps_operational",
+                    "value": "-1",
+                    "label": "Monitored",
+                    "hide": true
+                  }
+                ]
+              },
+              "columns": [
+                {
+                  "key": "last_inspected",
+                  "label": "Inspected",
+                  "source": "latest_date",
+                  "question_name": "inspection_date",
+                  "hide": false
+                },
+                {
+                  "key": "name",
+                  "label": "Site",
+                  "source": "parent_name",
+                  "hide": false
+                },
+                {
+                  "key": "administration",
+                  "label": "Division",
+                  "source": "administration",
+                  "hide": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

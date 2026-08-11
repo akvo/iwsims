@@ -1,7 +1,7 @@
 from datetime import date
 from urllib.parse import urlencode
 
-from django.db.models import Q
+from django.db.models import F, OuterRef, Q, Subquery
 
 from api.v1.v1_data.models import FormData
 from api.v1.v1_forms.models import Questions
@@ -242,6 +242,55 @@ def extract_column_value(parent, latest_id, col, caches):
     return None
 
 
+def apply_escalation_ordering(
+    parents, columns, order_by, order_dir,
+    cross_form=False, parent_form_id=None,
+):
+    """Order the parent queryset by a `latest_date` column's answer.
+
+    Ordering has to happen before pagination, but column values are resolved
+    after it, so the sort key is annotated onto the queryset instead of read
+    from the caches. Date answers are stored as ISO strings, so a text sort is
+    chronological.
+
+    Falls back to `id` when no ordering is asked for, when the named column is
+    not in `columns`, or when it is not a `latest_date` column — those are the
+    only ones with a date to sort on. Rows missing the answer sort last in
+    both directions rather than bunching at the top of a descending feed.
+    """
+    if not order_by:
+        return parents.order_by("id")
+
+    col = next(
+        (c for c in columns if c.get("key") == order_by), None,
+    )
+    qname = col.get("question_name") if col else None
+    if not col or col.get("source") != "latest_date" or not qname:
+        return parents.order_by("id")
+
+    if cross_form:
+        sub = MVCrossFormLatest.objects.filter(
+            parent_id=OuterRef("id"),
+            parent_form_id=parent_form_id,
+            question_name=qname,
+        ).values("latest_text_value")[:1]
+    else:
+        sub = MVAnswerDenormalized.objects.filter(
+            data_id=OuterRef("latest_id"),
+            question_name=qname,
+        ).values("answer_name")[:1]
+
+    parents = parents.annotate(_order_key=Subquery(sub))
+    key = F("_order_key")
+    direction = (
+        key.desc(nulls_last=True)
+        if str(order_dir).lower() != "asc"
+        else key.asc(nulls_last=True)
+    )
+    # Secondary id keeps pagination stable when dates tie.
+    return parents.order_by(direction, "id")
+
+
 def handle_escalation(
     parent_form, monitoring_form_id,
     criteria, columns, params,
@@ -312,7 +361,12 @@ def handle_escalation(
     or_condition = build_escalation_criteria_filter(
         criteria, latest_ids
     )
-    matching = parents.filter(or_condition).order_by("id")
+    matching = apply_escalation_ordering(
+        parents.filter(or_condition),
+        columns,
+        params.get("order_by"),
+        params.get("order_dir"),
+    )
 
     total = matching.count()
     start = (page - 1) * page_size
@@ -589,7 +643,14 @@ def _handle_escalation_cross_form(parent_form, criteria, columns, params):
     matched = build_cross_form_escalation_filter(
         criteria, parent_ids, parent_form.id,
     )
-    matching = parents.filter(id__in=matched).order_by("id")
+    matching = apply_escalation_ordering(
+        parents.filter(id__in=matched),
+        columns,
+        params.get("order_by"),
+        params.get("order_dir"),
+        cross_form=True,
+        parent_form_id=parent_form.id,
+    )
 
     total = matching.count()
     start = (page - 1) * page_size

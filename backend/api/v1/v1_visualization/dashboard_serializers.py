@@ -234,6 +234,13 @@ class EscalationFilterSerializer(serializers.Serializer):
     monitoring_form_id = serializers.IntegerField(required=False)
     criteria = serializers.CharField(required=True)
     columns = serializers.CharField(required=True)
+    # Sort the feed by a `latest_date` column instead of insertion order.
+    # `order_by` names a column key from `columns`; anything else falls back
+    # to id ordering rather than erroring, so a stale config degrades quietly.
+    order_by = serializers.CharField(required=False)
+    order_dir = serializers.ChoiceField(
+        choices=["asc", "desc"], required=False, default="desc",
+    )
     page = serializers.IntegerField(default=1, min_value=1)
     page_size = serializers.IntegerField(
         default=20, min_value=1, max_value=100,
