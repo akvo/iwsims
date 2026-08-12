@@ -85,3 +85,38 @@ export const COMPLIANCE_PARAM_COMPUTES = [
   // "non-compliant" half of its critical predicate.
   "critical_kpi",
 ];
+
+/**
+ * The card wash for a status accent.
+ *
+ * KPI cards used to state their status with a 3px top border, which made an
+ * accented card three pixels taller than a plain one — so a row mixing
+ * "Total WWTP" with "Operational" never quite lined up. A background tint
+ * carries the same meaning and occupies no space, so every card in a row is
+ * the same height by construction.
+ *
+ * Kept faint on purpose: the tint says "this number is a state", while the
+ * figure itself stays in ink. A saturated fill would make the card compete
+ * with the charts below it and put light text over mid-tone colour.
+ *
+ * @param {string} hex   a status colour, e.g. STATUS_COLORS.critical
+ * @param {number} alpha 0–1
+ * @returns {string|null} an rgba() string, or null for anything unparseable
+ *                        so the caller simply renders an unaccented card
+ */
+export const statusTint = (hex, alpha = 0.08) => {
+  if (typeof hex !== "string") {
+    return null;
+  }
+  const match = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!match) {
+    return null;
+  }
+  const int = parseInt(match[1], 16);
+  /* eslint-disable no-bitwise */
+  const r = (int >> 16) & 255;
+  const g = (int >> 8) & 255;
+  const b = int & 255;
+  /* eslint-enable no-bitwise */
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};

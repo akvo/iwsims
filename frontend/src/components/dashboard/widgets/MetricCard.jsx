@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
-import { STATUS_COLORS } from "../constants";
+import { STATUS_COLORS, statusTint } from "../constants";
 import { useDashboardValues } from "../../../util/hooks";
 import FormulaInfo from "./FormulaInfo";
 
@@ -113,8 +113,8 @@ const MetricCard = ({
 
   return (
     <Card
-      {...(item.color
-        ? { style: { borderTop: `3px solid ${item.color}` } }
+      {...(statusTint(item.color)
+        ? { style: { background: statusTint(item.color) } }
         : {})}
       data-testid={`metric-card-${item.id}`}
     >
