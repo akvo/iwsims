@@ -87,36 +87,62 @@ export const COMPLIANCE_PARAM_COMPUTES = [
 ];
 
 /**
- * The card wash for a status accent.
+ * Ink for text sitting on a solid status fill.
  *
- * KPI cards used to state their status with a 3px top border, which made an
- * accented card three pixels taller than a plain one — so a row mixing
- * "Total WWTP" with "Operational" never quite lined up. A background tint
- * carries the same meaning and occupies no space, so every card in a row is
- * the same height by construction.
+ * A status card is filled with the status colour itself — the same value the
+ * charts and pills use, so the meaning cannot drift — which means the text
+ * colour has to be chosen per fill rather than fixed. Measured against WCAG:
  *
- * Kept faint on purpose: the tint says "this number is a state", while the
- * figure itself stays in ink. A saturated fill would make the card compete
- * with the charts below it and put light text over mid-tone colour.
+ *   good     #0ca30c   white 3.35   ink 4.71  -> ink
+ *   warning  #fab219   white 1.83   ink 8.60  -> ink
+ *   serious  #ec835a   white 2.64   ink 5.98  -> ink
+ *   critical #d03b3b   white 4.80   ink 3.29  -> white
+ *   noData   #9aa0a6   white 2.64   ink 5.98  -> ink
  *
- * @param {string} hex   a status colour, e.g. STATUS_COLORS.critical
- * @param {number} alpha 0–1
- * @returns {string|null} an rgba() string, or null for anything unparseable
- *                        so the caller simply renders an unaccented card
+ * White reads on the red alone. Darkening the others so white would work
+ * everywhere was the obvious alternative and it fails on the one that matters:
+ * warning has to drop to #9c6b03 before white passes, by which point it is
+ * olive and no longer reads as a warning at all.
+ *
+ * The 4.5 threshold is the card's small label, not its figure — the figure is
+ * large enough to clear 3:1 either way, so the label is what binds.
  */
-export const statusTint = (hex, alpha = 0.08) => {
-  if (typeof hex !== "string") {
-    return null;
-  }
-  const match = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+const CARD_INK = "#12212f";
+const CARD_ON_DARK = "#ffffff";
+
+const relativeLuminance = (hex) => {
+  const match = /^#([0-9a-f]{6})$/i.exec(String(hex).trim());
   if (!match) {
     return null;
   }
-  const int = parseInt(match[1], 16);
-  /* eslint-disable no-bitwise */
-  const r = (int >> 16) & 255;
-  const g = (int >> 8) & 255;
-  const b = int & 255;
-  /* eslint-enable no-bitwise */
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const channels = [0, 2, 4]
+    .map((i) => parseInt(match[1].slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+};
+
+/** WCAG contrast ratio between two hex colours, or null if either is unusable. */
+export const contrastRatio = (a, b) => {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  if (la === null || lb === null) {
+    return null;
+  }
+  const [hi, lo] = la > lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+/**
+ * The readable text colour for a solid status card.
+ *
+ * @param {string} fill a status colour
+ * @returns {string|null} null when the fill is unusable, so the caller can
+ *                        render an unfilled card rather than guess
+ */
+export const statusInk = (fill) => {
+  const onDark = contrastRatio(fill, CARD_ON_DARK);
+  if (onDark === null) {
+    return null;
+  }
+  return onDark >= 4.5 ? CARD_ON_DARK : CARD_INK;
 };

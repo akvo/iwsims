@@ -73,19 +73,39 @@
       padding: 0;
       text-align: left;
 
-      // A status accent must not cost height. As a 3px top border it made an
-      // accented card stand 3px taller than a plain one, so a row mixing
-      // "Total WWTP" with "Operational" never lined up.
+      // A status card is filled with the status colour itself, so a state
+      // reads at a glance across the row. The fill is the same value the
+      // charts and pills use — nothing here restates it.
       //
-      // The bar is inset, which occupies no space, and stays full strength
-      // because the accent has to remain readable: measured against white,
-      // the good and critical washes sit ΔE 3.1 apart for normal vision and
-      // 0.7 under deuteranopia — indistinguishable. The tint is atmosphere;
-      // the bar is the signal. The card's own elevation is restated here
-      // because an inset shadow would otherwise replace it.
-      &.has-status-accent {
-        background: var(--status-tint);
-        box-shadow: inset 0 3px 0 var(--status-accent), $box-shadow;
+      // Text colour comes with the fill because only the red carries white at
+      // AA; see `statusInk`. Everything inside inherits, so the label, figure,
+      // info icon and any error text move together rather than each keeping
+      // the stylesheet's default ink on a coloured ground.
+      //
+      // No border: as a 3px top rule the accent made a card stand 3px taller
+      // than a plain one, and a row mixing "Total WWTP" with "Operational"
+      // never lined up.
+      &.has-status-fill {
+        background: var(--status-fill);
+        color: var(--status-ink);
+
+        .ant-card-body,
+        .ant-statistic,
+        .ant-statistic-title,
+        .ant-statistic-content,
+        .ant-typography {
+          color: inherit;
+        }
+
+        // The title sits quieter than the figure without changing hue, which
+        // keeps the pairing readable on every fill.
+        .ant-statistic-title {
+          opacity: 0.85;
+        }
+
+        .anticon {
+          color: inherit;
+        }
       }
 
       // A tab container groups cards; it is not itself a surface. Left as one

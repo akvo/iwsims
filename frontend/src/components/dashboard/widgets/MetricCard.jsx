@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
-import { STATUS_COLORS, statusTint } from "../constants";
+import { STATUS_COLORS, statusInk } from "../constants";
 import { useDashboardValues } from "../../../util/hooks";
 import FormulaInfo from "./FormulaInfo";
 
@@ -113,12 +113,12 @@ const MetricCard = ({
 
   return (
     <Card
-      {...(statusTint(item.color)
+      {...(statusInk(item.color)
         ? {
-            className: "has-status-accent",
+            className: "has-status-fill",
             style: {
-              "--status-accent": item.color,
-              "--status-tint": statusTint(item.color),
+              "--status-fill": item.color,
+              "--status-ink": statusInk(item.color),
             },
           }
         : {})}
