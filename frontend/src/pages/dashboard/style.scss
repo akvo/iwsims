@@ -73,6 +73,21 @@
       padding: 0;
       text-align: left;
 
+      // A status accent must not cost height. As a 3px top border it made an
+      // accented card stand 3px taller than a plain one, so a row mixing
+      // "Total WWTP" with "Operational" never lined up.
+      //
+      // The bar is inset, which occupies no space, and stays full strength
+      // because the accent has to remain readable: measured against white,
+      // the good and critical washes sit ΔE 3.1 apart for normal vision and
+      // 0.7 under deuteranopia — indistinguishable. The tint is atmosphere;
+      // the bar is the signal. The card's own elevation is restated here
+      // because an inset shadow would otherwise replace it.
+      &.has-status-accent {
+        background: var(--status-tint);
+        box-shadow: inset 0 3px 0 var(--status-accent), $box-shadow;
+      }
+
       // A tab container groups cards; it is not itself a surface. Left as one
       // it repeated its children's elevation exactly — the same shadow at two
       // depths, which reads as muddy rather than layered. Elevation states

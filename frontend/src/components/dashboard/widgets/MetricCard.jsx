@@ -114,7 +114,13 @@ const MetricCard = ({
   return (
     <Card
       {...(statusTint(item.color)
-        ? { style: { background: statusTint(item.color) } }
+        ? {
+            className: "has-status-accent",
+            style: {
+              "--status-accent": item.color,
+              "--status-tint": statusTint(item.color),
+            },
+          }
         : {})}
       data-testid={`metric-card-${item.id}`}
     >

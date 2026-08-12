@@ -254,7 +254,13 @@ const KPICard = ({
   return (
     <Card
       {...(statusTint(item.color)
-        ? { style: { background: statusTint(item.color) } }
+        ? {
+            className: "has-status-accent",
+            style: {
+              "--status-accent": item.color,
+              "--status-tint": statusTint(item.color),
+            },
+          }
         : {})}
       data-testid={`kpi-card-${item.id}`}
     >
