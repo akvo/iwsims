@@ -87,28 +87,41 @@ export const COMPLIANCE_PARAM_COMPUTES = [
 ];
 
 /**
- * Ink for text sitting on a solid status fill.
+ * Solid fills for KPI cards, and the one ink that sits on all of them.
  *
- * A status card is filled with the status colour itself — the same value the
- * charts and pills use, so the meaning cannot drift — which means the text
- * colour has to be chosen per fill rather than fixed. Measured against WCAG:
+ * Every KPI card is filled and every one carries white text, so a row reads as
+ * one object rather than a mix of white tiles and coloured ones. That costs a
+ * separate fill scale: the status colours are tuned to be marks on a light
+ * surface, and white does not carry on all of them — #0ca30c reaches only
+ * 3.35 against white, below the 4.5 a small label needs.
  *
- *   good     #0ca30c   white 3.35   ink 4.71  -> ink
- *   warning  #fab219   white 1.83   ink 8.60  -> ink
- *   serious  #ec835a   white 2.64   ink 5.98  -> ink
- *   critical #d03b3b   white 4.80   ink 3.29  -> white
- *   noData   #9aa0a6   white 2.64   ink 5.98  -> ink
+ * So a card fill is the status hue stepped down until white clears AA. The
+ * marks themselves are untouched: charts, pills and map pins keep STATUS_COLORS,
+ * and only filled surfaces use these. Measured, white on each:
  *
- * White reads on the red alone. Darkening the others so white would work
- * everywhere was the obvious alternative and it fails on the one that matters:
- * warning has to drop to #9c6b03 before white passes, by which point it is
- * olive and no longer reads as a warning at all.
+ *   good      #0a890a   4.57      (from #0ca30c, 3.35)
+ *   warning   #9c6b03   4.65      (from #fab219, 1.83)
+ *   serious   #cd4a18   4.58      (from #ec835a, 2.64)
+ *   critical  #d03b3b   4.80      unchanged — it already carried white
+ *   noData    #6f767e   4.60      (from #9aa0a6, 2.64)
+ *   plain     #081c40  16.79      the app's navy, for a card with no state
  *
- * The 4.5 threshold is the card's small label, not its figure — the figure is
- * large enough to clear 3:1 either way, so the label is what binds.
+ * One caveat worth knowing before a warning card is ever configured: amber
+ * has to go so dark to hold white that #9c6b03 reads olive rather than
+ * cautionary. No card uses it today. If one does, it is worth reopening
+ * whether that card should carry dark ink instead, as the design does for its
+ * amber tile.
  */
-export const CARD_INK = "#12212f";
 export const CARD_ON_DARK = "#ffffff";
+export const CARD_PLAIN_FILL = "#081c40";
+
+const STATUS_CARD_FILLS = {
+  "#0ca30c": "#0a890a",
+  "#fab219": "#9c6b03",
+  "#ec835a": "#cd4a18",
+  "#d03b3b": "#d03b3b",
+  "#9aa0a6": "#6f767e",
+};
 
 const relativeLuminance = (hex) => {
   const match = /^#([0-9a-f]{6})$/i.exec(String(hex).trim());
@@ -133,16 +146,18 @@ export const contrastRatio = (a, b) => {
 };
 
 /**
- * The readable text colour for a solid status card.
+ * The fill for a KPI card. A card with no status takes the navy, so the row
+ * is uniform; a status card takes its hue stepped down to hold white text.
  *
- * @param {string} fill a status colour
- * @returns {string|null} null when the fill is unusable, so the caller can
- *                        render an unfilled card rather than guess
+ * An unrecognised colour falls back to the navy rather than being used raw —
+ * a fill that cannot hold white would render an unreadable card, and losing
+ * the accent is the safer failure.
  */
-export const statusInk = (fill) => {
-  const onDark = contrastRatio(fill, CARD_ON_DARK);
-  if (onDark === null) {
-    return null;
+export const cardFill = (statusColor) => {
+  if (!statusColor) {
+    return CARD_PLAIN_FILL;
   }
-  return onDark >= 4.5 ? CARD_ON_DARK : CARD_INK;
+  return (
+    STATUS_CARD_FILLS[String(statusColor).toLowerCase()] || CARD_PLAIN_FILL
+  );
 };

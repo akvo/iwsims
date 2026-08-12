@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
-import { CARD_ON_DARK, STATUS_COLORS, statusInk } from "../constants";
+import { cardFill } from "../constants";
 import { useDashboardValues } from "../../../util/hooks";
 import { getCompliantCount } from "../compute/compliance";
 import { computeAccessibilityBucket } from "../compute/accessibility";
@@ -253,20 +253,8 @@ const KPICard = ({
 
   return (
     <Card
-      {...(statusInk(item.color)
-        ? {
-            // `has-dark-ink` lets the stylesheet flip the info affordance's
-            // disc to a dark wash — a white one is invisible under dark ink.
-            className:
-              statusInk(item.color) === CARD_ON_DARK
-                ? "has-status-fill"
-                : "has-status-fill has-dark-ink",
-            style: {
-              "--status-fill": item.color,
-              "--status-ink": statusInk(item.color),
-            },
-          }
-        : {})}
+      className="has-status-fill"
+      style={{ "--status-fill": cardFill(item.color) }}
       data-testid={`kpi-card-${item.id}`}
     >
       {loading ? (
@@ -291,15 +279,7 @@ const KPICard = ({
         // On a filled card the surrounding ink is already readable against the
         // fill, so the message inherits it. A critical red on a critical fill
         // would be invisible, and on an amber one barely better.
-        <div
-          role="alert"
-          className="kpi-card-error"
-          style={
-            statusInk(item.color)
-              ? { fontSize: 12 }
-              : { color: STATUS_COLORS.critical, fontSize: 12 }
-          }
-        >
+        <div role="alert" className="kpi-card-error" style={{ fontSize: 12 }}>
           {error.message || "Failed to load"}
         </div>
       )}

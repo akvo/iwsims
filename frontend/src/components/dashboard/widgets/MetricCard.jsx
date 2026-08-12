@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
-import { CARD_ON_DARK, STATUS_COLORS, statusInk } from "../constants";
+import { cardFill } from "../constants";
 import { useDashboardValues } from "../../../util/hooks";
 import FormulaInfo from "./FormulaInfo";
 
@@ -113,20 +113,8 @@ const MetricCard = ({
 
   return (
     <Card
-      {...(statusInk(item.color)
-        ? {
-            // `has-dark-ink` lets the stylesheet flip the info affordance's
-            // disc to a dark wash — a white one is invisible under dark ink.
-            className:
-              statusInk(item.color) === CARD_ON_DARK
-                ? "has-status-fill"
-                : "has-status-fill has-dark-ink",
-            style: {
-              "--status-fill": item.color,
-              "--status-ink": statusInk(item.color),
-            },
-          }
-        : {})}
+      className="has-status-fill"
+      style={{ "--status-fill": cardFill(item.color) }}
       data-testid={`metric-card-${item.id}`}
     >
       {loading ? (
@@ -148,14 +136,7 @@ const MetricCard = ({
         />
       )}
       {error && (
-        <div
-          role="alert"
-          style={
-            statusInk(item.color)
-              ? { fontSize: 12 }
-              : { color: STATUS_COLORS.critical, fontSize: 12 }
-          }
-        >
+        <div role="alert" style={{ fontSize: 12 }}>
           {error.message || "Failed to load"}
         </div>
       )}

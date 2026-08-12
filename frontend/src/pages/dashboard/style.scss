@@ -73,53 +73,43 @@
       padding: 0;
       text-align: left;
 
-      // A status card is filled with the status colour itself, so a state
-      // reads at a glance across the row. The fill is the same value the
-      // charts and pills use — nothing here restates it.
+      // Every KPI card is filled and every one carries white text, so a row
+      // reads as one object instead of a mix of white tiles and coloured
+      // ones. Fills come from `cardFill`, which steps a status hue down until
+      // white clears AA; a card with no state takes the navy.
       //
-      // Text colour comes with the fill because only the red carries white at
-      // AA; see `statusInk`. Everything inside inherits, so the label, figure,
-      // info icon and any error text move together rather than each keeping
-      // the stylesheet's default ink on a coloured ground.
-      //
-      // No border: as a 3px top rule the accent made a card stand 3px taller
-      // than a plain one, and a row mixing "Total WWTP" with "Operational"
-      // never lined up.
+      // No border: as a 3px top rule the accent made an accented card stand
+      // 3px taller than a plain one, so a row never lined up.
       &.has-status-fill {
         background: var(--status-fill);
-        color: var(--status-ink);
+        color: #ffffff;
 
+        // Everything inside inherits, so the label, figure, info affordance
+        // and any error text move together rather than each keeping the
+        // stylesheet's default ink on a dark ground.
         .ant-card-body,
         .ant-statistic,
         .ant-statistic-title,
         .ant-statistic-content,
-        .ant-typography {
+        .ant-typography,
+        .anticon {
           color: inherit;
         }
 
-        // The title sits quieter than the figure without changing hue, which
-        // keeps the pairing readable on every fill.
+        // The title sits quieter than the figure without changing hue.
         .ant-statistic-title {
           opacity: 0.85;
         }
 
-        // The info affordance carries the card's ink, on a translucent disc of
-        // the same polarity — the design's treatment. Left at its default grey
-        // it disappeared entirely against a green or red fill.
-        --formula-info-color: var(--status-ink);
-
-        .anticon {
-          color: inherit;
-        }
+        // The info affordance is set inline to a mid grey that no rule can
+        // reach, and at 1.5:1 on these fills it disappeared. It reads the
+        // property instead, which is pointed at the card's own ink.
+        --formula-info-color: #ffffff;
 
         .formula-info-icon {
           padding: 3px;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.18);
-        }
-
-        &.has-dark-ink .formula-info-icon {
-          background: rgba(0, 0, 0, 0.1);
         }
       }
 
