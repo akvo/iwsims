@@ -6,7 +6,32 @@ import { FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { config, store, uiText } from "../../lib";
 import { eraseCookieFromAllPaths } from "../../util/date";
-import { listVisualizations } from "../../config/visualizations";
+import { listAvailableVisualizations } from "../../config/visualizations";
+
+/**
+ * Dropdown items for the Dashboards menu, with the two kinds of dashboard
+ * separated by a rule.
+ *
+ * One asset's dashboard and a page spanning the whole fleet answer different
+ * questions, so they read as one undifferentiated list only by accident. The
+ * split needs no new config: `cross_asset` already marks exactly that boundary,
+ * so a future fleet-wide page joins the second group on its own. The divider is
+ * dropped when either group is empty, rather than opening or closing the menu
+ * with a stray line.
+ *
+ * @param {Array<{slug: string, name: string, cross_asset: boolean}>} dashboards
+ * @param {(d: object) => React.ReactNode} renderLabel
+ */
+export const buildDashboardMenu = (dashboards = [], renderLabel) => {
+  const perAsset = dashboards.filter((d) => !d.cross_asset);
+  const crossAsset = dashboards.filter((d) => d.cross_asset);
+  const toItem = (d) => ({ key: d.slug, label: renderLabel(d) });
+  const groups = [perAsset, crossAsset].filter((group) => group.length > 0);
+  return groups.flatMap((group, index) => [
+    ...(index > 0 ? [{ type: "divider", key: `divider-${index}` }] : []),
+    ...group.map(toItem),
+  ]);
+};
 
 const Header = ({ className = "header", ...props }) => {
   const { isLoggedIn, user } = store.useState();
@@ -17,11 +42,10 @@ const Header = ({ className = "header", ...props }) => {
   const text = useMemo(() => {
     return uiText[activeLang];
   }, [activeLang]);
-  const dashboardForms = useMemo(() => {
-    const registered = listVisualizations();
-    const availableFormIds = new Set((window?.forms || []).map((f) => f.id));
-    return registered.filter((d) => availableFormIds.has(d.parent_form_id));
-  }, []);
+  const dashboardForms = useMemo(
+    () => listAvailableVisualizations((window?.forms || []).map((f) => f.id)),
+    []
+  );
   const showDashboardsMenu =
     location.pathname.startsWith("/control-center") ||
     location.pathname.startsWith("/dashboard");
@@ -80,22 +104,19 @@ const Header = ({ className = "header", ...props }) => {
     return userMenu;
   }, [text, signOut]);
 
-  const DashboardMenu = useMemo(() => {
-    return dashboardForms?.map((d) => {
-      return {
-        key: d.slug,
-        label: (
-          <Link
-            key={d.slug}
-            to={`/dashboard/${d.slug}`}
-            className="dropdown-menu-item"
-          >
-            {d.name}
-          </Link>
-        ),
-      };
-    });
-  }, [dashboardForms]);
+  const DashboardMenu = useMemo(
+    () =>
+      buildDashboardMenu(dashboardForms, (d) => (
+        <Link
+          key={d.slug}
+          to={`/dashboard/${d.slug}`}
+          className="dropdown-menu-item"
+        >
+          {d.name}
+        </Link>
+      )),
+    [dashboardForms]
+  );
 
   return (
     <Row
