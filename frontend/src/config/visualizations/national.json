@@ -78,11 +78,55 @@
       }
     },
     {
+      "id": "map_national_status",
+      "info": "Every registered asset, coloured by whether its latest monitoring found it working.\nEach family answers this under its own question and option set: station_status on pump stations (operational / blocked / overflowing / not_operational), system_status on EPS (operational / issue_with_system), infrastructure_status on RWS (operational / non_operational). Anything not listed as functional counts as non-functional.\nWWTP and WTP have no plant-level status question on either monitoring form, so their sites are always grey. That is a gap in the forms, not a finding about those plants — see issue #34 G1.\nGrey also covers a site whose family asks the question but which has not been monitored yet. An unanswered status is not evidence of a fault, so it is never coloured as one.",
+      "chart_type": "multi_asset_map",
+      "order": 7,
+      "col_span": 24,
+      "height": 520,
+      "zoom": 7,
+      "label": "Asset Status Nationwide",
+      "description": "Every registered asset, by whether its latest monitoring found it operational.",
+      "sources": [
+        {
+          "key": "wwtp",
+          "label": "WWTP",
+          "form_id": 1748903240763
+        },
+        {
+          "key": "wtp",
+          "label": "WTP",
+          "form_id": 1749634736797
+        },
+        {
+          "key": "rws",
+          "label": "RWS",
+          "form_id": 1749621221728,
+          "question_name": "infrastructure_status",
+          "functional_values": ["operational"]
+        },
+        {
+          "key": "eps",
+          "label": "EPS",
+          "form_id": 1749623934933,
+          "question_name": "system_status",
+          "functional_values": ["operational"]
+        },
+        {
+          "key": "pump",
+          "label": "Pump Stations",
+          "form_id": 1749611049520,
+          "question_name": "station_status",
+          "functional_values": ["operational"]
+        }
+      ]
+    },
+    {
       "id": "chart_inspected_by_asset",
       "info": "Count of sites per asset type with a monitoring submission in the last 12 months, from each family's own inspection-date question (WTP uses date_of_inspection, the rest inspection_date).\nBars are absolute counts, not shares — the fleets differ hugely in size, so read this next to the totals above rather than as a coverage rate.",
       "chart_type": "bar",
       "compute": "bucket_bar",
-      "order": 7,
+      "order": 8,
       "col_span": 12,
       "description": "Sites monitored in the last 12 months, by asset type.",
       "config": {
@@ -166,7 +210,7 @@
       "chart_type": "stack_bar",
       "compute": "grouped_stack",
       "orientation": "horizontal",
-      "order": 8,
+      "order": 9,
       "col_span": 12,
       "description": "Whether a water sample could be collected on the latest visit. Pump stations do not sample.",
       "config": {
@@ -302,7 +346,7 @@
       "id": "table_latest_inspections",
       "info": "The most recent inspections across every asset type, newest first, limited to the last 12 months.\nEach family records the date and the inspecting officer under its own question name — the date is date_of_inspection on WTP and inspection_date elsewhere; the officer is dws_staff_name (WWTP, Pump Stations), dws_officer_name (WTP, RWS) or officer_name (EPS).\nThe escalation endpoint is scoped to one asset family, so this asks each family for its 8 newest and keeps the 8 newest of those — which is exactly the fleet-wide top 8, since a row in the global top 8 must also lead its own family.\nInspector is currently recorded for very few sites; a dash means the field was left blank, not that nobody inspected.",
       "chart_type": "merged_table",
-      "order": 9,
+      "order": 10,
       "col_span": 24,
       "label": "Latest Inspections",
       "description": "The 8 most recent inspections nationwide, across all asset types, in the last 12 months.",
@@ -403,50 +447,6 @@
             "last_inspected": "inspection_date",
             "inspector": "dws_staff_name"
           }
-        }
-      ]
-    },
-    {
-      "id": "map_national_status",
-      "info": "Every registered asset, coloured by whether its latest monitoring found it working.\nEach family answers this under its own question and option set: station_status on pump stations (operational / blocked / overflowing / not_operational), system_status on EPS (operational / issue_with_system), infrastructure_status on RWS (operational / non_operational). Anything not listed as functional counts as non-functional.\nWWTP and WTP have no plant-level status question on either monitoring form, so their sites are always grey. That is a gap in the forms, not a finding about those plants — see issue #34 G1.\nGrey also covers a site whose family asks the question but which has not been monitored yet. An unanswered status is not evidence of a fault, so it is never coloured as one.",
-      "chart_type": "multi_asset_map",
-      "order": 10,
-      "col_span": 24,
-      "height": 520,
-      "zoom": 7,
-      "label": "Asset Status Nationwide",
-      "description": "Every registered asset, by whether its latest monitoring found it operational.",
-      "sources": [
-        {
-          "key": "wwtp",
-          "label": "WWTP",
-          "form_id": 1748903240763
-        },
-        {
-          "key": "wtp",
-          "label": "WTP",
-          "form_id": 1749634736797
-        },
-        {
-          "key": "rws",
-          "label": "RWS",
-          "form_id": 1749621221728,
-          "question_name": "infrastructure_status",
-          "functional_values": ["operational"]
-        },
-        {
-          "key": "eps",
-          "label": "EPS",
-          "form_id": 1749623934933,
-          "question_name": "system_status",
-          "functional_values": ["operational"]
-        },
-        {
-          "key": "pump",
-          "label": "Pump Stations",
-          "form_id": 1749611049520,
-          "question_name": "station_status",
-          "functional_values": ["operational"]
         }
       ]
     }
