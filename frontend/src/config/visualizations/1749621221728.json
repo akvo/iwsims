@@ -445,7 +445,7 @@
           "label": "Infrastructure status",
           "question_name": "infrastructure_status",
           "color_map": {
-            "_no_info": "#999999"
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -454,9 +454,9 @@
           "label": "Drinking water compliance",
           "formula_ref": "wq_globals",
           "color_map": {
-            "compliant": "#64A73B",
-            "non_compliant": "#e41a1c",
-            "_no_info": "#999999"
+            "compliant": "#0ca30c",
+            "non_compliant": "#d03b3b",
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -465,8 +465,8 @@
           "label": "Presence of active water committee",
           "question_name": "water_committee",
           "color_map": {
-            "not_active": "#999999",
-            "_no_info": "#377eb8"
+            "not_active": "#9aa0a6",
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -622,9 +622,9 @@
       "color_map": {
         "Compliant": "#0ca30c",
         "E-coli presence": "#2a78d6",
-        "Turbidity": "#eda100",
-        "Total coliform presence": "#eb6834",
-        "Fecal coliform presence": "#1baf7a",
+        "Turbidity": "#eb6834",
+        "Total coliform presence": "#1baf7a",
+        "Fecal coliform presence": "#eda100",
         "Water Temperature": "#e87ba4",
         "pH": "#008300",
         "Conductivity": "#4a3aa7",
@@ -1214,7 +1214,7 @@
                   "axis": "x",
                   "type": "today",
                   "format": "month_year_short",
-                  "color": "#e74c3c",
+                  "color": "#d03b3b",
                   "width": 2,
                   "label": "Today"
                 }

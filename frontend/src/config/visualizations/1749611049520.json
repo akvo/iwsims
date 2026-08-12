@@ -175,7 +175,7 @@
           "label": "Operationality",
           "question_name": "station_status",
           "color_map": {
-            "_no_info": "#999999"
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -184,7 +184,7 @@
           "label": "Electrical issues",
           "question_name": "electrical_panel",
           "color_map": {
-            "_no_info": "#999999"
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -222,9 +222,9 @@
             }
           },
           "color_map": {
-            "standby_available": "#64A73B",
-            "no_standby": "#e41a1c",
-            "_no_info": "#999999"
+            "standby_available": "#0ca30c",
+            "no_standby": "#d03b3b",
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -500,7 +500,7 @@
         {
           "key": "operational",
           "label": "Operational",
-          "color": "#3cb44b",
+          "color": "#1baf7a",
           "type": "option_share",
           "question_name": "station_status",
           "pass_value": "operational"
@@ -508,7 +508,7 @@
         {
           "key": "pumps",
           "label": "Pumps",
-          "color": "#1f6fd6",
+          "color": "#e87ba4",
           "type": "option_share",
           "question_name": "pump_status",
           "pass_value": "operational"
@@ -516,7 +516,7 @@
         {
           "key": "standby",
           "label": "Standby",
-          "color": "#17b3a3",
+          "color": "#2a78d6",
           "type": "threshold_all",
           "params": [
             {
@@ -529,7 +529,7 @@
         {
           "key": "electrical",
           "label": "Electrical",
-          "color": "#9c6ade",
+          "color": "#4a3aa7",
           "type": "option_share",
           "question_name": "electrical_panel",
           "pass_value": "satisfactory"
@@ -537,7 +537,7 @@
         {
           "key": "ohs",
           "label": "OHS",
-          "color": "#f0ad4e",
+          "color": "#eda100",
           "type": "option_share",
           "question_name": "ohs_equipment",
           "pass_value": "available"

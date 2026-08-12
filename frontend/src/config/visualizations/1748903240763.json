@@ -196,7 +196,7 @@
           "label": "Influent pump station presence (Y/N)",
           "question_name": "influent_pump_station",
           "color_map": {
-            "_no_info": "#999999"
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -205,9 +205,9 @@
           "label": "Final recommendations",
           "question_name": "final_recommendations",
           "color_map": {
-            "increase_in_budget": "#003f5c",
-            "training": "#66a61e",
-            "_no_info": "#999999"
+            "increase_in_budget": "#2a78d6",
+            "training": "#eb6834",
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -241,7 +241,7 @@
         {
           "key": "drinking_water",
           "label": "Drinking water",
-          "color": "#1f6fd6",
+          "color": "#2a78d6",
           "type": "threshold_all",
           "params": [
             {
@@ -264,7 +264,7 @@
         {
           "key": "pumps_dosing",
           "label": "Pumps & dosing",
-          "color": "#17b3a3",
+          "color": "#eb6834",
           "type": "option_share",
           "question_name": "influent_pump_station",
           "pass_value": "yes"
@@ -272,7 +272,7 @@
         {
           "key": "operational",
           "label": "Operational",
-          "color": "#3cb44b",
+          "color": "#1baf7a",
           "type": "option_share",
           "question_name": "working_tools",
           "pass_value": "yes"
@@ -280,7 +280,7 @@
         {
           "key": "ohs",
           "label": "OHS",
-          "color": "#f0ad4e",
+          "color": "#eda100",
           "type": "option_share",
           "question_name": "ohs_equipment_available",
           "pass_value": "yes"
@@ -492,9 +492,9 @@
                 "months": 18,
                 "overdue_label": "> 18 mo",
                 "colors": {
-                  "recent": "#2fb36d",
-                  "watch": "#f5a623",
-                  "overdue": "#d93c35"
+                  "recent": "#0ca30c",
+                  "watch": "#fab219",
+                  "overdue": "#d03b3b"
                 }
               }
             }
