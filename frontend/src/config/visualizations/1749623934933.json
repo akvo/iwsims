@@ -385,7 +385,7 @@
           "label": "Operational status",
           "question_name": "system_status",
           "color_map": {
-            "_no_info": "#999999"
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -395,10 +395,10 @@
           "form_id": 1749632545233,
           "formula_ref": "wq_globals",
           "color_map": {
-            "compliant": "#2e7d32",
-            "non_compliant": "#c62828",
-            "not_applicable": "#263238",
-            "_no_info": "#90a4ae"
+            "compliant": "#0ca30c",
+            "non_compliant": "#d03b3b",
+            "not_applicable": "#9aa0a6",
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -407,8 +407,8 @@
           "label": "Presence of active water committee",
           "question_name": "water_committee",
           "color_map": {
-            "not_active": "#999999",
-            "_no_info": "#377eb8"
+            "not_active": "#9aa0a6",
+            "_no_info": "#9aa0a6"
           }
         },
         {
@@ -462,16 +462,16 @@
       "color_map": {
         "Compliant": "#0ca30c",
         "E-coli presence": "#2a78d6",
-        "Turbidity": "#eda100",
-        "Total coliform presence": "#eb6834",
-        "Fecal coliform presence": "#1baf7a",
+        "Turbidity": "#eb6834",
+        "Total coliform presence": "#1baf7a",
+        "Fecal coliform presence": "#eda100",
         "Water Temperature": "#e87ba4",
         "pH": "#008300",
         "Conductivity": "#4a3aa7",
         "Salinity": "#e34948",
         "E-coli CBT": "#2a78d6",
         "No information available": "#9aa0a6",
-        "N/A": "#546e7a"
+        "N/A": "#9aa0a6"
       },
       "compute": "compliance",
       "include_unanswered": true,
@@ -1138,7 +1138,7 @@
                   "axis": "x",
                   "type": "today",
                   "format": "month_year_short",
-                  "color": "#e74c3c",
+                  "color": "#d03b3b",
                   "width": 2,
                   "label": "Today"
                 }

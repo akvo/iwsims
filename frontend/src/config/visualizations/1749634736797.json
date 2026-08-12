@@ -261,7 +261,7 @@
       "col_span": 12,
       "height": 480,
       "row_px": 34,
-      "over_capacity_color": "#f5a623",
+      "over_capacity_color": "#fab219",
       "config": {
         "title": "Production vs Design Capacity",
         "xAxisLabel": "ML/day per plant"
@@ -564,9 +564,9 @@
                 "months": 18,
                 "overdue_label": "> 18 mo",
                 "colors": {
-                  "recent": "#2fb36d",
-                  "watch": "#f5a623",
-                  "overdue": "#d93c35"
+                  "recent": "#0ca30c",
+                  "watch": "#fab219",
+                  "overdue": "#d03b3b"
                 }
               }
             },
@@ -1585,7 +1585,7 @@
         {
           "key": "drinking_water",
           "label": "Drinking water",
-          "color": "#1f6fd6",
+          "color": "#2a78d6",
           "type": "threshold_all",
           "params": [
             {
@@ -1603,7 +1603,7 @@
         {
           "key": "disinfection",
           "label": "Disinfection",
-          "color": "#17b3a3",
+          "color": "#eb6834",
           "type": "option_share",
           "question_name": "has_disinfection_sop",
           "pass_value": "yes"
@@ -1611,7 +1611,7 @@
         {
           "key": "operational",
           "label": "Operational",
-          "color": "#3cb44b",
+          "color": "#1baf7a",
           "type": "option_share",
           "question_name": "has_sop",
           "pass_value": "yes"
@@ -1619,7 +1619,7 @@
         {
           "key": "ohs",
           "label": "OHS",
-          "color": "#f0ad4e",
+          "color": "#eda100",
           "type": "option_share",
           "question_name": "has_ohs_policy",
           "pass_value": "yes"
