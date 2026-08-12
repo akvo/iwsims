@@ -4,6 +4,7 @@ import { Card, Col, Row, Typography } from "antd";
 import ChartRenderer from "./ChartRenderer";
 import DashboardMap from "./DashboardMap";
 import EscalationTable from "./EscalationTable";
+import MergedInspectionsTable from "./MergedInspectionsTable";
 import KPICard from "./widgets/KPICard";
 import MetricCard from "./widgets/MetricCard";
 import RankingWidget from "./widgets/RankingWidget";
@@ -228,6 +229,34 @@ const DashboardRenderer = ({
             customFilterDefs={customFilterDefs}
             cellComputers={cellComputersById?.[item.id] || {}}
             parentFormId={parentFormId}
+          />
+        </Card>
+      );
+    }
+
+    if (type === "merged_table") {
+      return (
+        <Card
+          title={
+            <>
+              {item.label || "Latest inspections"}
+              <FormulaInfo
+                info={item.info}
+                title={item.label || "Latest inspections"}
+              />
+            </>
+          }
+          size="small"
+          style={{ marginBottom: 0 }}
+          className="escalation-table-card"
+        >
+          {item.description && (
+            <Paragraph type="secondary">{item.description}</Paragraph>
+          )}
+          <MergedInspectionsTable
+            item={item}
+            filterState={filterState}
+            customFilterDefs={customFilterDefs}
           />
         </Card>
       );

@@ -297,6 +297,114 @@
           }
         }
       ]
+    },
+    {
+      "id": "table_latest_inspections",
+      "info": "The most recent inspections across every asset type, newest first, limited to the last 12 months.\nEach family records the date and the inspecting officer under its own question name — the date is date_of_inspection on WTP and inspection_date elsewhere; the officer is dws_staff_name (WWTP, Pump Stations), dws_officer_name (WTP, RWS) or officer_name (EPS).\nThe escalation endpoint is scoped to one asset family, so this asks each family for its 8 newest and keeps the 8 newest of those — which is exactly the fleet-wide top 8, since a row in the global top 8 must also lead its own family.\nInspector is currently recorded for very few sites; a dash means the field was left blank, not that nobody inspected.",
+      "chart_type": "merged_table",
+      "order": 9,
+      "col_span": 24,
+      "label": "Latest Inspections",
+      "description": "The 8 most recent inspections nationwide, across all asset types, in the last 12 months.",
+      "limit": 8,
+      "rolling_months": 12,
+      "date_key": "last_inspected",
+      "columns": [
+        {
+          "key": "last_inspected",
+          "source": "latest_date",
+          "title": "When",
+          "render": "date",
+          "width": 130
+        },
+        {
+          "key": "asset",
+          "computed": true,
+          "title": "Type",
+          "render": "asset_tag",
+          "width": 110
+        },
+        {
+          "key": "name",
+          "source": "parent_name",
+          "title": "Facility"
+        },
+        {
+          "key": "administration",
+          "source": "administration",
+          "title": "Division"
+        },
+        {
+          "key": "inspector",
+          "source": "answer",
+          "title": "Inspector",
+          "width": 150
+        },
+        {
+          "key": "days_ago",
+          "computed": true,
+          "title": "Days ago",
+          "render": "days_since",
+          "width": 100
+        }
+      ],
+      "segments": [
+        {
+          "key": "wwtp",
+          "label": "WWTP",
+          "api": {
+            "form_id": 1748903240763
+          },
+          "questions": {
+            "last_inspected": "inspection_date",
+            "inspector": "dws_staff_name"
+          }
+        },
+        {
+          "key": "wtp",
+          "label": "WTP",
+          "api": {
+            "form_id": 1749634736797
+          },
+          "questions": {
+            "last_inspected": "date_of_inspection",
+            "inspector": "dws_officer_name"
+          }
+        },
+        {
+          "key": "rws",
+          "label": "RWS",
+          "api": {
+            "form_id": 1749621221728
+          },
+          "questions": {
+            "last_inspected": "inspection_date",
+            "inspector": "dws_officer_name"
+          }
+        },
+        {
+          "key": "eps",
+          "label": "EPS",
+          "api": {
+            "form_id": 1749623934933
+          },
+          "questions": {
+            "last_inspected": "inspection_date",
+            "inspector": "officer_name"
+          }
+        },
+        {
+          "key": "pump",
+          "label": "Pump Stations",
+          "api": {
+            "form_id": 1749611049520
+          },
+          "questions": {
+            "last_inspected": "inspection_date",
+            "inspector": "dws_staff_name"
+          }
+        }
+      ]
     }
   ]
 }

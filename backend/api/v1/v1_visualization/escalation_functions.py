@@ -2,6 +2,7 @@ from datetime import date
 from urllib.parse import urlencode
 
 from django.db.models import F, OuterRef, Q, Subquery
+from django.db.models.functions import Substr
 
 from api.v1.v1_data.models import FormData
 from api.v1.v1_forms.models import Questions
@@ -609,6 +610,52 @@ def build_cross_form_column_caches(paginated, columns, parent_form_id):
     }
 
 
+def _apply_cross_form_date_window(parents, params, parent_form_id):
+    """Restrict parents to those whose latest monitoring falls in a window.
+
+    The pinned-monitoring-form path gets this from
+    ``get_latest_monitoring_subquery(..., date_filters)``. The cross-form path
+    resolves each question through mv_cross_form_latest instead, so it has to
+    apply the window itself — without this the endpoint accepts ``from_date``,
+    documents it, and echoes it back in the pagination links while returning
+    the whole fleet.
+
+    With ``date_question_name`` the bounds compare the date the inspector
+    recorded; without one they compare when the row was submitted. For
+    backdated data entry those are different questions, and only the first
+    answers "inspected in the last 12 months".
+    """
+    from_date = params.get("from_date")
+    to_date = params.get("to_date")
+    if not from_date and not to_date:
+        return parents
+
+    date_qname = params.get("date_question_name")
+    matching = MVCrossFormLatest.objects.filter(parent_form_id=parent_form_id)
+    if date_qname:
+        matching = matching.filter(
+            question_name=date_qname,
+            latest_text_value__isnull=False,
+        )
+        # Compare the YYYY-MM-DD prefix: the stored value carries a time and
+        # zone that would otherwise push an inspection captured on the bound
+        # to the wrong side of it.
+        matching = matching.annotate(
+            _ans_date=Substr("latest_text_value", 1, 10)
+        )
+        if from_date:
+            matching = matching.filter(_ans_date__gte=str(from_date))
+        if to_date:
+            matching = matching.filter(_ans_date__lte=str(to_date))
+    else:
+        if from_date:
+            matching = matching.filter(latest_created__date__gte=from_date)
+        if to_date:
+            matching = matching.filter(latest_created__date__lte=to_date)
+
+    return parents.filter(id__in=matching.values("parent_id"))
+
+
 def _handle_escalation_cross_form(parent_form, criteria, columns, params):
     """Escalation without a pinned monitoring form.
 
@@ -628,6 +675,10 @@ def _handle_escalation_cross_form(parent_form, criteria, columns, params):
     )
     if administration_id:
         parents = apply_administration_filter(parents, administration_id)
+
+    parents = _apply_cross_form_date_window(
+        parents, params, parent_form.id,
+    )
 
     filter_criteria = params.get("filter_criteria")
     if filter_criteria:

@@ -431,3 +431,82 @@ class EscalationTestCases(VisualizationValuesTestMixin, APITestCase):
             "&filter_criteria=bogus:1:2"
         )
         self.assertEqual(response.status_code, 400)
+
+    # -- Cross-form date window --
+    #
+    # The pinned path windows via get_latest_monitoring_subquery. The
+    # cross-form path resolves answers through mv_cross_form_latest and used
+    # to ignore from_date/to_date entirely — accepting the params, documenting
+    # them, echoing them in the pagination links, and returning the whole
+    # fleet. Latest inspection_date is 2025-03-10 (Alpha) and 2025-03-15
+    # (Beta).
+
+    def test_cross_form_from_date_excludes_older_inspections(self):
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            "?columns=name:parent_name"
+            f"&date_question_name={self.q_date.name}"
+            "&from_date=2025-03-12"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Beta")
+
+    def test_cross_form_to_date_excludes_newer_inspections(self):
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            "?columns=name:parent_name"
+            f"&date_question_name={self.q_date.name}"
+            "&to_date=2025-03-12"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Alpha")
+
+    def test_cross_form_window_can_exclude_everything(self):
+        # An empty feed is the honest answer to "inspected this month" when
+        # nobody was; returning the fleet would read as full coverage.
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            "?columns=name:parent_name"
+            f"&date_question_name={self.q_date.name}"
+            "&from_date=2026-01-01"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["count"], 0)
+
+    def test_cross_form_window_bounds_are_inclusive(self):
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            "?columns=name:parent_name"
+            f"&date_question_name={self.q_date.name}"
+            "&from_date=2025-03-15&to_date=2025-03-15"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Beta")
+
+    def test_cross_form_without_date_question_windows_submissions(self):
+        # No date question named → fall back to when the row was submitted,
+        # which is the only date available.
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            "?columns=name:parent_name"
+            "&from_date=2025-03-12"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["name"], "Site Beta")
+
+    def test_cross_form_no_window_still_lists_every_parent(self):
+        response = self.client.get(
+            f"{self.BASE_ESC_URL}/{self.registration.id}"
+            "?columns=name:parent_name"
+            f"&date_question_name={self.q_date.name}"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["count"], 2)
