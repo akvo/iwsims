@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
-import { STATUS_COLORS } from "../constants";
+import { cardFill } from "../constants";
 import { useDashboardValues } from "../../../util/hooks";
 import { getCompliantCount } from "../compute/compliance";
 import { computeAccessibilityBucket } from "../compute/accessibility";
@@ -253,9 +253,8 @@ const KPICard = ({
 
   return (
     <Card
-      {...(item.color
-        ? { style: { borderTop: `3px solid ${item.color}` } }
-        : {})}
+      className="has-status-fill"
+      style={{ "--status-fill": cardFill(item.color) }}
       data-testid={`kpi-card-${item.id}`}
     >
       {loading ? (
@@ -277,10 +276,10 @@ const KPICard = ({
         />
       )}
       {error && (
-        <div
-          role="alert"
-          style={{ color: STATUS_COLORS.critical, fontSize: 12 }}
-        >
+        // On a filled card the surrounding ink is already readable against the
+        // fill, so the message inherits it. A critical red on a critical fill
+        // would be invisible, and on an amber one barely better.
+        <div role="alert" className="kpi-card-error" style={{ fontSize: 12 }}>
           {error.message || "Failed to load"}
         </div>
       )}

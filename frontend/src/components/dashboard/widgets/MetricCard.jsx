@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
-import { STATUS_COLORS } from "../constants";
+import { cardFill } from "../constants";
 import { useDashboardValues } from "../../../util/hooks";
 import FormulaInfo from "./FormulaInfo";
 
@@ -113,9 +113,8 @@ const MetricCard = ({
 
   return (
     <Card
-      {...(item.color
-        ? { style: { borderTop: `3px solid ${item.color}` } }
-        : {})}
+      className="has-status-fill"
+      style={{ "--status-fill": cardFill(item.color) }}
       data-testid={`metric-card-${item.id}`}
     >
       {loading ? (
@@ -137,10 +136,7 @@ const MetricCard = ({
         />
       )}
       {error && (
-        <div
-          role="alert"
-          style={{ color: STATUS_COLORS.critical, fontSize: 12 }}
-        >
+        <div role="alert" style={{ fontSize: 12 }}>
           {error.message || "Failed to load"}
         </div>
       )}

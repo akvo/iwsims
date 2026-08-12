@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import axios from "axios";
 import ChartRenderer, { axisNameGridPatch } from "../ChartRenderer";
 import { __clearVisualizationCache } from "../../../util/hooks/useVisualizationRequest";
+import { STATUS_COLORS } from "../constants";
 
 jest.mock("axios");
 
@@ -525,7 +526,7 @@ describe("ChartRenderer", () => {
     );
     expect(opt.xAxis.data).toEqual(["> 3 mo", "Feb '26", "Mar '26", "Apr '26"]);
     expect(opt.series[0].data[0].value).toBe(2);
-    expect(opt.series[0].data[0].itemStyle.color).toBe("#d93c35");
+    expect(opt.series[0].data[0].itemStyle.color).toBe(STATUS_COLORS.critical);
   });
 
   test("display=value_buckets buckets parent-level numeric rows", async () => {

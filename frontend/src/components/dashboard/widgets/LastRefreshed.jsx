@@ -50,6 +50,7 @@ const LastRefreshed = ({ refreshedAt, onRefresh, loading }) => {
       <Tooltip title="Refetch every widget on this page">
         <Button
           size="small"
+          shape="round"
           icon={<ReloadOutlined />}
           onClick={onRefresh}
           loading={loading}

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { Card, Col, Empty, Progress, Row, Segmented, Typography } from "antd";
+import { Card, Col, Empty, Progress, Row, Tabs, Typography } from "antd";
 import { api } from "../../lib";
 import {
   computeComplianceDonut,
@@ -179,16 +179,6 @@ const ComplianceSnapshot = ({ item, computeResponses }) => {
       }
       size="small"
       style={{ marginBottom: 0 }}
-      extra={
-        options.length > 1 ? (
-          <Segmented
-            size="small"
-            options={options}
-            value={asset}
-            onChange={setAsset}
-          />
-        ) : null
-      }
     >
       {domains.flatMap((domain) =>
         (domain.families || []).map((family) => (
@@ -202,6 +192,18 @@ const ComplianceSnapshot = ({ item, computeResponses }) => {
       )}
       {item.description && (
         <Paragraph type="secondary">{item.description}</Paragraph>
+      )}
+      {options.length > 1 && (
+        // Rendered as Tabs rather than a Segmented control so narrowing the
+        // snapshot by asset looks like every other view switch on the
+        // dashboards. Nav only — the panes stay empty and the rings below
+        // re-read from responses already in hand.
+        <Tabs
+          className="compliance-snapshot-nav"
+          activeKey={asset}
+          onChange={setAsset}
+          items={options.map((o) => ({ key: o.value, label: o.label }))}
+        />
       )}
       {results.length === 0 ? (
         <Empty description="No domains configured" />

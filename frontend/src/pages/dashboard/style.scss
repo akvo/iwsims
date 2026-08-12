@@ -73,8 +73,59 @@
       padding: 0;
       text-align: left;
 
+      // Every KPI card is filled and every one carries white text, so a row
+      // reads as one object instead of a mix of white tiles and coloured
+      // ones. Fills come from `cardFill`, which steps a status hue down until
+      // white clears AA; a card with no state takes the navy.
+      //
+      // No border: as a 3px top rule the accent made an accented card stand
+      // 3px taller than a plain one, so a row never lined up.
+      &.has-status-fill {
+        background: var(--status-fill);
+        color: #ffffff;
+
+        // Everything inside inherits, so the label, figure, info affordance
+        // and any error text move together rather than each keeping the
+        // stylesheet's default ink on a dark ground.
+        .ant-card-body,
+        .ant-statistic,
+        .ant-statistic-title,
+        .ant-statistic-content,
+        .ant-typography,
+        .anticon {
+          color: inherit;
+        }
+
+        // The title sits quieter than the figure without changing hue.
+        .ant-statistic-title {
+          opacity: 0.85;
+        }
+
+        // The info affordance is set inline to a mid grey that no rule can
+        // reach, and at 1.5:1 on these fills it disappeared. It reads the
+        // property instead, which is pointed at the card's own ink.
+        --formula-info-color: #ffffff;
+
+        .formula-info-icon {
+          padding: 3px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.18);
+        }
+      }
+
+      // A tab container groups cards; it is not itself a surface. Left as one
+      // it repeated its children's elevation exactly — the same shadow at two
+      // depths, which reads as muddy rather than layered. Elevation states
+      // containment once, so the strip becomes navigation sitting on the page
+      // and only the leaf cards are raised.
       &.tabs-card {
         padding: 0;
+        background: transparent;
+        box-shadow: none;
+
+        > .ant-card-body {
+          padding: 0;
+        }
       }
 
       .ant-card-head {
@@ -251,11 +302,27 @@
     .ant-tabs {
       .ant-tabs-nav {
         margin-bottom: 16px;
+
+        // Standing on the page rather than on a card, the strip needs its own
+        // baseline: a hairline the full width anchors the tabs to the content
+        // below instead of leaving them floating over the grey.
+        &::before {
+          border-bottom: 1px solid #e4e7ec;
+        }
       }
       .ant-tabs-tab {
+        // No card padding to sit inside any more, so the first tab aligns to
+        // the same left edge as the cards beneath it.
         padding: 10px 16px;
         font-size: $font-size-regular;
         font-weight: $font-weight-medium;
+
+        + .ant-tabs-tab {
+          margin-left: 4px;
+        }
+      }
+      > .ant-tabs-nav .ant-tabs-tab:first-child {
+        padding-left: 0;
       }
       .ant-tabs-tab-active .ant-tabs-tab-btn {
         color: $blue;
@@ -263,6 +330,20 @@
       }
       .ant-tabs-ink-bar {
         background: $blue;
+        height: 2px;
+      }
+    }
+
+    // A nav-only strip inside a card: the compliance snapshot's asset filter
+    // switches what the card shows rather than navigating panes, so the empty
+    // content area collapses and the strip sits tighter than a page-level one.
+    .compliance-snapshot-nav {
+      .ant-tabs-content-holder {
+        display: none;
+      }
+
+      .ant-tabs-nav {
+        margin-bottom: 20px;
       }
     }
 

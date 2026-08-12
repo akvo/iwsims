@@ -24,6 +24,7 @@ import {
   distinctParentCount,
 } from "../processStatus";
 import { computeComplianceTrend, monthLabelToKey } from "../complianceTrend";
+import { STATUS_COLORS } from "../../constants";
 
 describe("rotateToFiscalOrder", () => {
   const rows = [
@@ -924,10 +925,10 @@ describe("computeDateHistogram", () => {
       { months: 3, overdue_label: "> 3 mo" }
     );
     expect(out).toEqual([
-      { label: "> 3 mo", value: 2, color: "#d93c35" },
-      { label: "Apr '26", value: 0, color: "#2fb36d" },
-      { label: "May '26", value: 1, color: "#2fb36d" },
-      { label: "Jun '26", value: 1, color: "#2fb36d" },
+      { label: "> 3 mo", value: 2, color: STATUS_COLORS.critical },
+      { label: "Apr '26", value: 0, color: STATUS_COLORS.good },
+      { label: "May '26", value: 1, color: STATUS_COLORS.good },
+      { label: "Jun '26", value: 1, color: STATUS_COLORS.good },
     ]);
   });
 
@@ -936,10 +937,10 @@ describe("computeDateHistogram", () => {
     const jan2026 = out.find((row) => row.label === "Jan '26");
     const jun2025 = out.find((row) => row.label === "Jun '25");
     const may2025 = out.find((row) => row.label === "May '25");
-    expect(jan2026.color).toBe("#2fb36d");
-    expect(jun2025.color).toBe("#f5a623");
-    expect(may2025.color).toBe("#d93c35");
-    expect(out[0].color).toBe("#d93c35");
+    expect(jan2026.color).toBe(STATUS_COLORS.good);
+    expect(jun2025.color).toBe(STATUS_COLORS.warning);
+    expect(may2025.color).toBe(STATUS_COLORS.critical);
+    expect(out[0].color).toBe(STATUS_COLORS.critical);
   });
 });
 

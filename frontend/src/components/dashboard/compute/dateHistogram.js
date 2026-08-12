@@ -1,3 +1,5 @@
+import { STATUS_COLORS } from "../constants";
+
 const MONTHS_SHORT = [
   "Jan",
   "Feb",
@@ -13,10 +15,13 @@ const MONTHS_SHORT = [
   "Dec",
 ];
 
+// Fallback bands for a config that declares no `display.colors`. Drawn from
+// the reserved status set rather than a private trio, so a new histogram
+// cannot quietly reintroduce a second vocabulary for good/warning/critical.
 const DEFAULT_COLORS = {
-  recent: "#2fb36d",
-  watch: "#f5a623",
-  overdue: "#d93c35",
+  recent: STATUS_COLORS.good,
+  watch: STATUS_COLORS.warning,
+  overdue: STATUS_COLORS.critical,
 };
 
 const parseDate = (value) => {

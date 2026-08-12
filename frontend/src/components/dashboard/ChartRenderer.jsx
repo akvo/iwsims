@@ -34,6 +34,36 @@ const NOT_APPLICABLE_LABEL = "N/A";
 const NOT_APPLICABLE_COLOR = "#546e7a";
 
 /**
+ * Legend swatches, defined once so every chart marks its series the same way.
+ *
+ * Circles rather than ECharts' default rounded rectangle: the map legend and
+ * the status pills are already round, and a swatch is an identity marker, not
+ * a miniature of the bar it labels. Width and height must match or the circle
+ * renders as an ellipse — ECharts' default item box is 25x14.
+ *
+ * `type: "scroll"` stays on every legend: on narrow viewports (1024x768) a
+ * many-entry legend otherwise wraps onto several rows and collides with the
+ * y-axis title.
+ */
+/**
+ * True when a Cartesian dataset is one series with categories on the axis —
+ * rows shaped `{label, value}` (optionally `color`), as opposed to the stacked
+ * shape `{category, SeriesA, SeriesB}`.
+ *
+ * Drives both the per-item colouring below and whether a legend exists at all.
+ */
+export const isSingleSeriesShape = (rows = []) =>
+  rows.length > 0 && "label" in rows[0];
+
+const LEGEND = {
+  type: "scroll",
+  icon: "circle",
+  itemWidth: 10,
+  itemHeight: 10,
+  itemGap: 16,
+};
+
+/**
  * akvo-charts' `transformConfig` hardcodes its default tooltip and does NOT
  * read `config.tooltip` — so a tooltip block in the visualization JSON is
  * silently dropped. Surface it here as a setOption patch so configs can
@@ -125,6 +155,9 @@ const PieWithHiddenLabels = ({ Component, commonProps }) => {
     }
     chart.setOption(
       {
+        // A pie already reads as round, but its legend must still match the
+        // bar and line charts beside it — one swatch shape per dashboard.
+        legend: LEGEND,
         series: [
           {
             label: { show: false },
@@ -174,7 +207,7 @@ const HalfDoughnut = ({ Component, commonProps }) => {
     }
     chart.setOption(
       {
-        legend: { bottom: 0, left: "center", type: "scroll" },
+        legend: { ...LEGEND, bottom: 0, left: "center" },
         series: [
           {
             startAngle: 180,
@@ -308,10 +341,7 @@ const ChartWithMarkLines = ({ Component, commonProps, markLines, today }) => {
     }
     chart.setOption(
       {
-        // On narrow viewports (e.g. 1024×768) many-entry legends wrap onto
-        // multiple rows and collide with the y-axis title. Pagination via
-        // `type: "scroll"` keeps the legend on a single row.
-        legend: { type: "scroll" },
+        legend: LEGEND,
         // Align x-axis ticks with labels (instead of between them) so each
         // bar sits directly under its category — see
         // https://echarts.apache.org/examples/en/editor.html?c=bar-tick-align.
@@ -393,7 +423,7 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
       nameLocation: "middle",
     };
     const overrides = {
-      legend: { type: "scroll" },
+      legend: LEGEND,
       ...(horizontal
         ? { yAxis: categoryAxisOverride }
         : { xAxis: categoryAxisOverride }),
@@ -429,8 +459,17 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
         notApplicableColor,
     };
     const chartData = commonProps.data || [];
-    if (chartData.length > 0 && "label" in chartData[0]) {
-      // Simple bar chart path.
+    if (isSingleSeriesShape(chartData)) {
+      // Simple bar chart path: one series, categories on the axis.
+      //
+      // A single series has nothing to tell apart, so it gets no legend — the
+      // card title already names the measure. Left on, ECharts had nothing to
+      // list but the row keys and rendered a legend reading "value" and
+      // "color", which named the data's field names rather than anything on
+      // screen. Where the bars are coloured by band (the inspection-date
+      // histogram), the card description explains the bands.
+      overrides.legend = { show: false };
+
       const hasPerRowStyle = chartData.some(
         (r) => r.color || r.label === noInfoLabel
       );
