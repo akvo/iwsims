@@ -73,8 +73,19 @@
       padding: 0;
       text-align: left;
 
+      // A tab container groups cards; it is not itself a surface. Left as one
+      // it repeated its children's elevation exactly — the same shadow at two
+      // depths, which reads as muddy rather than layered. Elevation states
+      // containment once, so the strip becomes navigation sitting on the page
+      // and only the leaf cards are raised.
       &.tabs-card {
         padding: 0;
+        background: transparent;
+        box-shadow: none;
+
+        > .ant-card-body {
+          padding: 0;
+        }
       }
 
       .ant-card-head {
@@ -251,11 +262,27 @@
     .ant-tabs {
       .ant-tabs-nav {
         margin-bottom: 16px;
+
+        // Standing on the page rather than on a card, the strip needs its own
+        // baseline: a hairline the full width anchors the tabs to the content
+        // below instead of leaving them floating over the grey.
+        &::before {
+          border-bottom: 1px solid #e4e7ec;
+        }
       }
       .ant-tabs-tab {
+        // No card padding to sit inside any more, so the first tab aligns to
+        // the same left edge as the cards beneath it.
         padding: 10px 16px;
         font-size: $font-size-regular;
         font-weight: $font-weight-medium;
+
+        + .ant-tabs-tab {
+          margin-left: 4px;
+        }
+      }
+      > .ant-tabs-nav .ant-tabs-tab:first-child {
+        padding-left: 0;
       }
       .ant-tabs-tab-active .ant-tabs-tab-btn {
         color: $blue;
@@ -263,6 +290,7 @@
       }
       .ant-tabs-ink-bar {
         background: $blue;
+        height: 2px;
       }
     }
 
