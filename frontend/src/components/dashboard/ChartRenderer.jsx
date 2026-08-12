@@ -11,6 +11,7 @@ import { toValueHistogramBins } from "./compute/valueHistogramBins";
 import { computeCrossTab } from "./compute/crossTab";
 import { computeAccessibilityBucket } from "./compute/accessibility";
 import { computeKpiStack } from "./compute/kpiStack";
+import { computeComplianceDonut } from "./compute/complianceDonut";
 import { computeProcessCounts } from "./compute/processCounts";
 import { computeGroupedStack } from "./compute/groupedStack";
 import { computeBucketBar } from "./compute/bucketBar";
@@ -649,6 +650,11 @@ const ChartRenderer = ({
         row[label] = r.value ?? 0;
       });
       return [row];
+    }
+
+    if (item.compute === "compliance_donut") {
+      const responses = computeResponses?.compliance_donut?.[item.id];
+      return computeComplianceDonut(item.segments, responses, item.labels).rows;
     }
 
     if (item.compute === "process_counts") {
