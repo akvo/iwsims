@@ -344,7 +344,7 @@
     },
     {
       "id": "compliance_snapshot",
-      "info": "Share of ASSESSED sites passing in each domain, so thin monitoring coverage is not reported as a compliance failure — the uncounted sites are stated separately beneath each ring.\nUse the selector to narrow to one asset type. A domain that the selected form does not ask about shows 'Not measured' rather than a score.\nTwo of Lotte's four domains are absent: Effluent needs the DWS thresholds (issue #34 B1) and Drinking Water needs multi-parameter rules that cannot yet resolve across configs (G1 decision 3). Neither is guessed at.",
+      "info": "Share of ASSESSED sites passing in each domain, so thin monitoring coverage is not reported as a compliance failure — the uncounted sites are stated separately beneath each ring.\nUse the selector to narrow to one asset type. A domain that does not apply to the selected asset shows 'Not measured' rather than a score.\nEvery rule is referenced from the dashboard that owns it, never restated, so a threshold edited on an asset dashboard moves this snapshot with it.",
       "chart_type": "compliance_snapshot",
       "order": 10,
       "col_span": 24,
@@ -359,6 +359,52 @@
         "pump": "Pump Stations"
       },
       "domains": [
+        {
+          "id": "domain_drinking_water",
+          "label": "Drinking Water",
+          "info": "Sites whose latest water test met every parameter its own dashboard checks. The rule is not restated here — each family's thresholds are referenced from the dashboard that owns and displays them, so the national figure cannot drift from the per-asset one.\nWTP: total coliform, turbidity, residual chlorine, pH and conductivity (the same five as its DW Compliance card).\nRWS and EPS: the compliance_formula already declared on their dashboards, including EPS's rule that a sample not sent to a lab is not applicable rather than failing.\nWWTP and Pump Stations are absent — neither supplies drinking water.",
+          "not_applicable_note": "This asset does not supply drinking water",
+          "families": [
+            {
+              "key": "wtp",
+              "form_id": 1749634736797,
+              "params_ref": [
+                "wtp-overview#param_total_coliform",
+                "wtp-overview#param_turbidity",
+                "wtp-overview#param_residual_chlorine",
+                "wtp-overview#param_ph",
+                "wtp-overview#param_conductivity"
+              ]
+            },
+            {
+              "key": "rws",
+              "form_id": 1749621221728,
+              "formula_ref": "rws-overview#wq_globals"
+            },
+            {
+              "key": "eps",
+              "form_id": 1749623934933,
+              "formula_ref": "eps-overview#wq_globals"
+            }
+          ]
+        },
+        {
+          "id": "domain_effluent",
+          "label": "Effluent",
+          "info": "WWTP sites whose latest effluent test met BOD, COD and TDS — the three mandatory parameters, referenced from the WWTP dashboard's own Effluent Compliance card rather than restated here.\nAdvisory parameters (pH, nitrate) are excluded, matching that card: they are reported but do not decide the verdict.\nOnly WWTP treats effluent, so no other asset appears.",
+          "not_applicable_note": "This asset does not treat effluent",
+          "families": [
+            {
+              "key": "wwtp",
+              "form_id": 1748903240763,
+              "params_ref": [
+                "wwtp-overview#param_bod",
+                "wwtp-overview#param_cod",
+                "wwtp-overview#param_tds"
+              ]
+            }
+          ]
+        },
         {
           "id": "donut_ohs_compliance",
           "label": "OHS Compliance",

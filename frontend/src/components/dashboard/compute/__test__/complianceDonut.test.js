@@ -3,6 +3,7 @@ import {
   domainFamilies,
   segmentFamily,
 } from "../complianceDonut";
+import { resolveFamilyFormula } from "../complianceFormula";
 import {
   getVisualizationConfigBySlug,
   listVisualizations,
@@ -134,9 +135,9 @@ describe("compliance donut configs", () => {
       const walk = (items) =>
         (items || []).forEach((item) => {
           if (item.chart_type === "compliance_snapshot") {
-            (item.domains || []).forEach((domain) =>
-              out.push({ slug, item: domain })
-            );
+            (item.domains || [])
+              .filter((domain) => domain.segments)
+              .forEach((domain) => out.push({ slug, item: domain }));
           }
           walk(item.items);
         });
@@ -253,5 +254,62 @@ describe("asset-type narrowing", () => {
     expect(segmentFamily({ key: "x__pass", family: "override" })).toBe(
       "override"
     );
+  });
+});
+
+describe("formula-backed domains", () => {
+  const formulaDomains = () =>
+    listVisualizations().flatMap(({ slug }) => {
+      const config = getVisualizationConfigBySlug(slug);
+      const out = [];
+      const walk = (items) =>
+        (items || []).forEach((item) => {
+          if (item.chart_type === "compliance_snapshot") {
+            (item.domains || [])
+              .filter((domain) => domain.families)
+              .forEach((domain) => out.push({ slug, domain }));
+          }
+          walk(item.items);
+        });
+      walk(config.items);
+      return out;
+    });
+
+  it("finds formula-backed domains to check", () => {
+    expect(formulaDomains().length).toBeGreaterThan(0);
+  });
+
+  it.each(
+    formulaDomains().flatMap(({ slug, domain }) =>
+      domain.families.map((family) => [
+        `${slug}/${domain.id}/${family.key}`,
+        family,
+      ])
+    )
+  )("%s resolves to a formula the backend will accept", (_name, family) => {
+    // A dangling reference resolves to null, which would render as an empty
+    // ring rather than an error — so the reference is checked here instead.
+    const formula = resolveFamilyFormula(family);
+    expect(formula).not.toBeNull();
+    expect(Array.isArray(formula.buckets)).toBe(true);
+    expect(formula.buckets.length).toBeGreaterThan(0);
+    // The serializer rejects a formula without a default bucket.
+    expect(formula.default).toEqual(
+      expect.objectContaining({ value: expect.any(String) })
+    );
+    expect(typeof family.form_id).toBe("number");
+  });
+
+  it("orders a synthesised formula so silence is not read as compliance", () => {
+    const { domain } = formulaDomains().find(({ domain: d }) =>
+      d.families.some((f) => f.params_ref)
+    );
+    const family = domain.families.find((f) => f.params_ref);
+    const formula = resolveFamilyFormula(family);
+    // A site with nothing recorded violates no threshold; if the no-info
+    // bucket were tested second, it would fall through to `default` and be
+    // counted as passing.
+    expect(formula.buckets[0].value).toBe("_no_info");
+    expect(formula.default.value).toBe("compliant");
   });
 });

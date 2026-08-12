@@ -1,10 +1,15 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Card, Col, Empty, Progress, Row, Segmented, Typography } from "antd";
+import { api } from "../../lib";
 import {
   computeComplianceDonut,
   domainFamilies,
 } from "./compute/complianceDonut";
+import {
+  countsFromBuckets,
+  resolveFamilyFormula,
+} from "./compute/complianceFormula";
 import { STATUS_COLORS } from "./constants";
 import FormulaInfo from "./widgets/FormulaInfo";
 
@@ -26,9 +31,76 @@ const ALL = "__all__";
  * which is a fact about monitoring, not about the sites. The uncounted
  * remainder is stated beneath the ring instead.
  */
+/**
+ * One family's compliance verdicts, from the rule its own dashboard uses.
+ *
+ * Renders nothing — it exists so each family gets its own hook call. The
+ * endpoint returns one bucket per site, which is counted client-side; that
+ * keeps the national verdict literally the same computation the per-asset
+ * dashboard performs, rather than a second implementation of it.
+ */
+const FormulaFamily = ({ domainId, family, onCounts }) => {
+  const formula = useMemo(() => resolveFamilyFormula(family), [family]);
+  const [counts, setCounts] = useState(null);
+
+  useEffect(() => {
+    if (!formula) {
+      // An unresolvable reference must not be reported as a fleet of passes.
+      onCounts(domainId, family.key, null);
+      return () => {};
+    }
+    let cancelled = false;
+    api
+      .get("visualization/values/formula", {
+        params: {
+          parent_form_id: family.form_id,
+          group_by: "parent_id",
+          monitoring: "latest",
+          formula: JSON.stringify(formula),
+        },
+      })
+      .then((res) => {
+        if (!cancelled) {
+          setCounts(countsFromBuckets(res?.data?.data || []));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCounts(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [formula, family, domainId, onCounts]);
+
+  useEffect(() => {
+    onCounts(domainId, family.key, counts);
+  }, [counts, domainId, family.key, onCounts]);
+
+  return null;
+};
+
+FormulaFamily.propTypes = {
+  domainId: PropTypes.string.isRequired,
+  family: PropTypes.object.isRequired,
+  onCounts: PropTypes.func.isRequired,
+};
+
 const ComplianceSnapshot = ({ item, computeResponses }) => {
   const [asset, setAsset] = useState(ALL);
+  const [formulaCounts, setFormulaCounts] = useState({});
   const domains = useMemo(() => item.domains || [], [item.domains]);
+
+  const onCounts = useCallback((domainId, familyKey, counts) => {
+    setFormulaCounts((prev) => {
+      const inner = prev[domainId] || {};
+      if (inner[familyKey] === counts) {
+        return prev;
+      }
+      return { ...prev, [domainId]: { ...inner, [familyKey]: counts } };
+    });
+  }, []);
 
   // Union of the families across domains, so the toggle offers an asset even
   // when only one domain measures it — picking it then shows the other domain
@@ -37,8 +109,10 @@ const ComplianceSnapshot = ({ item, computeResponses }) => {
     const labels = item.family_labels || {};
     const keys = [];
     domains.forEach((domain) => {
-      domainFamilies(domain.segments).forEach((family) => {
-        if (!keys.includes(family)) {
+      const fromSegments = domainFamilies(domain.segments);
+      const fromFormulas = (domain.families || []).map((f) => f.key);
+      [...fromSegments, ...fromFormulas].forEach((family) => {
+        if (family && !keys.includes(family)) {
           keys.push(family);
         }
       });
@@ -53,16 +127,44 @@ const ComplianceSnapshot = ({ item, computeResponses }) => {
 
   const results = useMemo(
     () =>
-      domains.map((domain) => ({
-        domain,
-        ...computeComplianceDonut(
-          domain.segments,
-          computeResponses?.compliance_donut?.[domain.id],
-          domain.labels,
-          asset === ALL ? null : asset
-        ),
-      })),
-    [domains, computeResponses, asset]
+      domains.map((domain) => {
+        if (domain.families) {
+          const scoped = domain.families.filter(
+            (f) => asset === ALL || f.key === asset
+          );
+          const counts = scoped
+            .map((f) => formulaCounts[domain.id]?.[f.key])
+            .filter(Boolean);
+          const pass = counts.reduce((n, c) => n + c.pass, 0);
+          const fail = counts.reduce((n, c) => n + c.fail, 0);
+          const notAssessed = counts.reduce((n, c) => n + c.notAssessed, 0);
+          return {
+            domain,
+            meta: {
+              pass,
+              fail,
+              notAssessed,
+              assessed: pass + fail,
+              total: pass + fail + notAssessed,
+              applicable: scoped.length > 0,
+              passRate:
+                pass + fail > 0
+                  ? Math.round((100 * pass) / (pass + fail))
+                  : null,
+            },
+          };
+        }
+        return {
+          domain,
+          ...computeComplianceDonut(
+            domain.segments,
+            computeResponses?.compliance_donut?.[domain.id],
+            domain.labels,
+            asset === ALL ? null : asset
+          ),
+        };
+      }),
+    [domains, computeResponses, asset, formulaCounts]
   );
 
   const span = Math.max(6, Math.floor(24 / Math.max(1, domains.length)));
@@ -88,6 +190,16 @@ const ComplianceSnapshot = ({ item, computeResponses }) => {
         ) : null
       }
     >
+      {domains.flatMap((domain) =>
+        (domain.families || []).map((family) => (
+          <FormulaFamily
+            key={`${domain.id}::${family.key}`}
+            domainId={domain.id}
+            family={family}
+            onCounts={onCounts}
+          />
+        ))
+      )}
       {item.description && (
         <Paragraph type="secondary">{item.description}</Paragraph>
       )}
