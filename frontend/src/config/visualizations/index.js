@@ -139,6 +139,7 @@ export const listVisualizations = () =>
     slug: c.slug,
     name: c.name,
     parent_form_id: c.parent_form_id,
+    cross_asset: c.cross_asset === true,
     form_ids: collectFormIds(c),
   }));
 

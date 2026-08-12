@@ -90,6 +90,28 @@ describe("visualization registry", () => {
     expect(found.form_ids).toEqual([1748903240763]);
   });
 
+  it("flags which dashboards are cross-asset, for menu grouping", () => {
+    const byKind = listVisualizations().reduce((acc, d) => {
+      acc[d.cross_asset ? "cross" : "single"] = [
+        ...(acc[d.cross_asset ? "cross" : "single"] || []),
+        d.slug,
+      ];
+      return acc;
+    }, {});
+    expect(byKind.cross.sort()).toEqual([
+      "all-alerts",
+      "inspections-feed",
+      "national-overview",
+    ]);
+    expect(byKind.single.sort()).toEqual([
+      "eps-overview",
+      "pump-overview",
+      "rws-overview",
+      "wtp-overview",
+      "wwtp-overview",
+    ]);
+  });
+
   it("ignores form ids that are not finite numbers", () => {
     expect(
       collectFormIds({
