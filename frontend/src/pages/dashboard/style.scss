@@ -103,8 +103,23 @@
           opacity: 0.85;
         }
 
+        // The info affordance carries the card's ink, on a translucent disc of
+        // the same polarity — the design's treatment. Left at its default grey
+        // it disappeared entirely against a green or red fill.
+        --formula-info-color: var(--status-ink);
+
         .anticon {
           color: inherit;
+        }
+
+        .formula-info-icon {
+          padding: 3px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.18);
+        }
+
+        &.has-dark-ink .formula-info-icon {
+          background: rgba(0, 0, 0, 0.1);
         }
       }
 

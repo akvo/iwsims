@@ -32,7 +32,15 @@ const FormulaInfo = ({ info, title }) => {
     >
       <InfoCircleOutlined
         className="formula-info-icon"
-        style={{ marginLeft: 6, color: "#8c8c8c", cursor: "help" }}
+        // The colour is routed through a custom property rather than fixed
+        // here so a surface that sets its own ink — a solid status card, where
+        // a fixed grey is invisible — can override it. Everywhere else the
+        // fallback applies and nothing changes.
+        style={{
+          marginLeft: 6,
+          color: "var(--formula-info-color, #8c8c8c)",
+          cursor: "help",
+        }}
         aria-label="How this is calculated"
       />
     </Popover>

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Card, Skeleton, Statistic } from "antd";
-import { STATUS_COLORS, statusInk } from "../constants";
+import { CARD_ON_DARK, STATUS_COLORS, statusInk } from "../constants";
 import { useDashboardValues } from "../../../util/hooks";
 import { getCompliantCount } from "../compute/compliance";
 import { computeAccessibilityBucket } from "../compute/accessibility";
@@ -255,7 +255,12 @@ const KPICard = ({
     <Card
       {...(statusInk(item.color)
         ? {
-            className: "has-status-fill",
+            // `has-dark-ink` lets the stylesheet flip the info affordance's
+            // disc to a dark wash — a white one is invisible under dark ink.
+            className:
+              statusInk(item.color) === CARD_ON_DARK
+                ? "has-status-fill"
+                : "has-status-fill has-dark-ink",
             style: {
               "--status-fill": item.color,
               "--status-ink": statusInk(item.color),

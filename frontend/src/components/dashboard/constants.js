@@ -107,8 +107,8 @@ export const COMPLIANCE_PARAM_COMPUTES = [
  * The 4.5 threshold is the card's small label, not its figure — the figure is
  * large enough to clear 3:1 either way, so the label is what binds.
  */
-const CARD_INK = "#12212f";
-const CARD_ON_DARK = "#ffffff";
+export const CARD_INK = "#12212f";
+export const CARD_ON_DARK = "#ffffff";
 
 const relativeLuminance = (hex) => {
   const match = /^#([0-9a-f]{6})$/i.exec(String(hex).trim());
