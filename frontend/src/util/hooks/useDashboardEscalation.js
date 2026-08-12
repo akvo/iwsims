@@ -121,11 +121,27 @@ export const useDashboardEscalation = (
       out.monitoring_form_id = monitoring_form_id;
     }
 
-    if (filterState?.from_date) {
-      out.from_date = filterState.from_date;
+    // A user-set window always wins; an item may declare its own default
+    // (e.g. a "latest inspections" feed that only ever looks back 12 months).
+    // `date_question_name` makes the bounds compare the inspection date the
+    // field recorded rather than when the row was submitted — without it the
+    // backend windows on the submission timestamp, which for backdated data
+    // entry is a different question entirely.
+    const {
+      from_date: apiFromDate,
+      to_date: apiToDate,
+      date_question_name: dateQuestionName,
+    } = escalationBlock.api || {};
+    const fromDate = filterState?.from_date || apiFromDate;
+    const toDate = filterState?.to_date || apiToDate;
+    if (fromDate) {
+      out.from_date = fromDate;
     }
-    if (filterState?.to_date) {
-      out.to_date = filterState.to_date;
+    if (toDate) {
+      out.to_date = toDate;
+    }
+    if ((fromDate || toDate) && dateQuestionName) {
+      out.date_question_name = dateQuestionName;
     }
     if (filterState?.administration_id) {
       out.administration_id = filterState.administration_id;

@@ -427,6 +427,18 @@ const Dashboard = () => {
     () => (config ? collectByCompute(config.items, "process_counts") : []),
     [config]
   );
+  // A compliance snapshot holds several domains, each with its own segments.
+  // Flatten to domains so the existing per-segment fetcher can drive them and
+  // each domain's responses land under its own id.
+  const complianceDonutItems = useMemo(
+    () =>
+      config
+        ? collectByType(config.items, "compliance_snapshot").flatMap(
+            (item) => item.domains || []
+          )
+        : [],
+    [config]
+  );
   const groupedStackItems = useMemo(
     () => (config ? collectByCompute(config.items, "grouped_stack") : []),
     [config]
@@ -468,6 +480,7 @@ const Dashboard = () => {
     useState({});
   const [criticalByItem, setCriticalByItem] = useState({});
   const [rulesByItem, setRulesByItem] = useState({});
+  const [complianceDonutByItem, setComplianceDonutByItem] = useState({});
 
   const onCrossTabData = useCallback((id, payload) => {
     setCrossTabByItem((prev) =>
@@ -493,6 +506,18 @@ const Dashboard = () => {
       return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
     });
   }, []);
+  const onComplianceDonutSegmentData = useCallback(
+    (itemId, segmentKey, data) => {
+      setComplianceDonutByItem((prev) => {
+        const inner = prev[itemId] || {};
+        if (inner[segmentKey] === data) {
+          return prev;
+        }
+        return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+      });
+    },
+    []
+  );
   const onProcessCountSegmentData = useCallback((itemId, segmentKey, data) => {
     setProcessCountsByItem((prev) => {
       const inner = prev[itemId] || {};
@@ -559,6 +584,7 @@ const Dashboard = () => {
       cross_tab: crossTabByItem,
       accessibility_bucket: accessibilityBucketByItem,
       kpi_stack: kpiStackByItem,
+      compliance_donut: complianceDonutByItem,
       process_counts: processCountsByItem,
       grouped_stack: groupedStackByItem,
       bucket_bar: bucketBarByItem,
@@ -573,6 +599,7 @@ const Dashboard = () => {
       crossTabByItem,
       accessibilityBucketByItem,
       kpiStackByItem,
+      complianceDonutByItem,
       processCountsByItem,
       groupedStackByItem,
       bucketBarByItem,
@@ -851,6 +878,22 @@ const Dashboard = () => {
             fiscalYearStartMonth={fyStart}
             customFilterDefs={customFilterDefs}
             onSegmentData={onKpiStackSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible compliance_donut segment fetchers — one per (item, segment) */}
+      {complianceDonutItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onComplianceDonutSegmentData}
           />
         ))
       )}

@@ -78,11 +78,55 @@
       }
     },
     {
+      "id": "map_national_status",
+      "info": "Every registered asset, coloured by whether its latest monitoring found it working.\nEach family answers this under its own question and option set: station_status on pump stations (operational / blocked / overflowing / not_operational), system_status on EPS (operational / issue_with_system), infrastructure_status on RWS (operational / non_operational). Anything not listed as functional counts as non-functional.\nWWTP and WTP have no plant-level status question on either monitoring form, so their sites are always grey. That is a gap in the forms, not a finding about those plants — see issue #34 G1.\nGrey also covers a site whose family asks the question but which has not been monitored yet. An unanswered status is not evidence of a fault, so it is never coloured as one.",
+      "chart_type": "multi_asset_map",
+      "order": 7,
+      "col_span": 24,
+      "height": 520,
+      "zoom": 7,
+      "label": "Asset Status Nationwide",
+      "description": "Every registered asset, by whether its latest monitoring found it operational.",
+      "sources": [
+        {
+          "key": "wwtp",
+          "label": "WWTP",
+          "form_id": 1748903240763
+        },
+        {
+          "key": "wtp",
+          "label": "WTP",
+          "form_id": 1749634736797
+        },
+        {
+          "key": "rws",
+          "label": "RWS",
+          "form_id": 1749621221728,
+          "question_name": "infrastructure_status",
+          "functional_values": ["operational"]
+        },
+        {
+          "key": "eps",
+          "label": "EPS",
+          "form_id": 1749623934933,
+          "question_name": "system_status",
+          "functional_values": ["operational"]
+        },
+        {
+          "key": "pump",
+          "label": "Pump Stations",
+          "form_id": 1749611049520,
+          "question_name": "station_status",
+          "functional_values": ["operational"]
+        }
+      ]
+    },
+    {
       "id": "chart_inspected_by_asset",
       "info": "Count of sites per asset type with a monitoring submission in the last 12 months, from each family's own inspection-date question (WTP uses date_of_inspection, the rest inspection_date).\nBars are absolute counts, not shares — the fleets differ hugely in size, so read this next to the totals above rather than as a coverage rate.",
       "chart_type": "bar",
       "compute": "bucket_bar",
-      "order": 7,
+      "order": 8,
       "col_span": 12,
       "description": "Sites monitored in the last 12 months, by asset type.",
       "config": {
@@ -166,7 +210,7 @@
       "chart_type": "stack_bar",
       "compute": "grouped_stack",
       "orientation": "horizontal",
-      "order": 8,
+      "order": 9,
       "col_span": 12,
       "description": "Whether a water sample could be collected on the latest visit. Pump stations do not sample.",
       "config": {
@@ -294,6 +338,397 @@
             "option_value": "no",
             "sum_by": "parent_id",
             "monitoring": "latest"
+          }
+        }
+      ]
+    },
+    {
+      "id": "compliance_snapshot",
+      "info": "Share of ASSESSED sites passing in each domain, so thin monitoring coverage is not reported as a compliance failure — the uncounted sites are stated separately beneath each ring.\nUse the selector to narrow to one asset type. A domain that does not apply to the selected asset shows 'Not measured' rather than a score.\nEvery rule is referenced from the dashboard that owns it, never restated, so a threshold edited on an asset dashboard moves this snapshot with it.",
+      "chart_type": "compliance_snapshot",
+      "order": 10,
+      "col_span": 24,
+      "label": "National Compliance Snapshot",
+      "description": "Section 13(2)(a–h) domains, by share of assessed sites passing.",
+      "all_label": "All assets",
+      "family_labels": {
+        "wwtp": "WWTP",
+        "wtp": "WTP",
+        "rws": "RWS",
+        "eps": "EPS",
+        "pump": "Pump Stations"
+      },
+      "domains": [
+        {
+          "id": "domain_drinking_water",
+          "label": "Drinking Water",
+          "info": "Sites whose latest water test met every parameter its own dashboard checks. The rule is not restated here — each family's thresholds are referenced from the dashboard that owns and displays them, so the national figure cannot drift from the per-asset one.\nWTP: total coliform, turbidity, residual chlorine, pH and conductivity (the same five as its DW Compliance card).\nRWS and EPS: the compliance_formula already declared on their dashboards, including EPS's rule that a sample not sent to a lab is not applicable rather than failing.\nWWTP and Pump Stations are absent — neither supplies drinking water.",
+          "not_applicable_note": "This asset does not supply drinking water",
+          "families": [
+            {
+              "key": "wtp",
+              "form_id": 1749634736797,
+              "params_ref": [
+                "wtp-overview#param_total_coliform",
+                "wtp-overview#param_turbidity",
+                "wtp-overview#param_residual_chlorine",
+                "wtp-overview#param_ph",
+                "wtp-overview#param_conductivity"
+              ]
+            },
+            {
+              "key": "rws",
+              "form_id": 1749621221728,
+              "formula_ref": "rws-overview#wq_globals"
+            },
+            {
+              "key": "eps",
+              "form_id": 1749623934933,
+              "formula_ref": "eps-overview#wq_globals"
+            }
+          ]
+        },
+        {
+          "id": "domain_effluent",
+          "label": "Effluent",
+          "info": "WWTP sites whose latest effluent test met BOD, COD and TDS — the three mandatory parameters, referenced from the WWTP dashboard's own Effluent Compliance card rather than restated here.\nAdvisory parameters (pH, nitrate) are excluded, matching that card: they are reported but do not decide the verdict.\nOnly WWTP treats effluent, so no other asset appears.",
+          "not_applicable_note": "This asset does not treat effluent",
+          "families": [
+            {
+              "key": "wwtp",
+              "form_id": 1748903240763,
+              "params_ref": [
+                "wwtp-overview#param_bod",
+                "wwtp-overview#param_cod",
+                "wwtp-overview#param_tds"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "donut_ohs_compliance",
+          "label": "OHS Compliance",
+          "info": "Share of ASSESSED sites passing, so a domain measured on part of its fleet is not reported as failing. The unmeasured remainder is the grey slice.\nEach family asks its own question: ohs_equipment_available (WWTP), has_ohs_policy (WTP), ohs_equipment (Pump Stations).\nPassing means the equipment or policy is present; every other answer counts as failing, including a pump station recording OHS equipment as 'not used'.\nRWS and EPS are absent from this donut because neither form asks an OHS question at all — see issue #34 G1 decision 2.",
+          "not_applicable_note": "Neither the RWS nor the EPS form asks about OHS",
+          "labels": {
+            "pass": "Passing",
+            "fail": "Failing",
+            "notAssessed": "Not assessed"
+          },
+          "segments": [
+            {
+              "key": "wwtp__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1748903240763,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wwtp__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1748903240763,
+                "question_name": "ohs_equipment_available",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wwtp__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1748903240763,
+                "question_name": "ohs_equipment_available",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "yes",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wtp__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749634736797,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wtp__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749634736797,
+                "question_name": "has_ohs_policy",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wtp__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749634736797,
+                "question_name": "has_ohs_policy",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "yes",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "question_name": "ohs_equipment",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "question_name": "ohs_equipment",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "available",
+                "ignore_date_filter": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "donut_operational_compliance",
+          "label": "Operational Status",
+          "info": "Share of ASSESSED sites operational, so a domain measured on part of its fleet is not reported as failing. The unmeasured remainder is the grey slice.\nEach family asks its own question: infrastructure_status (RWS), system_status (EPS), station_status (Pump Stations).\nPassing means 'operational'; every other answer counts as failing — a blocked or overflowing pump station is not operating normally.\nWWTP and WTP are absent because neither form asks a plant-level status question. WTP's has_production_constraints is not a substitute: a production constraint is not the same as a plant that is not running. See issue #34 G1 decision 1.\nThe passing count matches the functional total on the map above, which reads the same three questions.",
+          "not_applicable_note": "No plant-level status question on this form",
+          "labels": {
+            "pass": "Passing",
+            "fail": "Failing",
+            "notAssessed": "Not assessed"
+          },
+          "segments": [
+            {
+              "key": "rws__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749621221728,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "rws__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749621221728,
+                "question_name": "infrastructure_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "rws__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749621221728,
+                "question_name": "infrastructure_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "operational",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "eps__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749623934933,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "eps__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749623934933,
+                "question_name": "system_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "eps__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749623934933,
+                "question_name": "system_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "operational",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "question_name": "station_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "question_name": "station_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "operational",
+                "ignore_date_filter": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_latest_inspections",
+      "info": "The most recent inspections across every asset type, newest first, limited to the last 12 months.\nEach family records the date and the inspecting officer under its own question name — the date is date_of_inspection on WTP and inspection_date elsewhere; the officer is dws_staff_name (WWTP, Pump Stations), dws_officer_name (WTP, RWS) or officer_name (EPS).\nThe escalation endpoint is scoped to one asset family, so this asks each family for its 8 newest and keeps the 8 newest of those — which is exactly the fleet-wide top 8, since a row in the global top 8 must also lead its own family.\nInspector is currently recorded for very few sites; a dash means the field was left blank, not that nobody inspected.",
+      "chart_type": "merged_table",
+      "order": 12,
+      "col_span": 24,
+      "label": "Latest Inspections",
+      "description": "The 8 most recent inspections nationwide, across all asset types, in the last 12 months.",
+      "limit": 8,
+      "rolling_months": 12,
+      "date_key": "last_inspected",
+      "columns": [
+        {
+          "key": "last_inspected",
+          "source": "latest_date",
+          "title": "When",
+          "render": "date",
+          "width": 130
+        },
+        {
+          "key": "asset",
+          "computed": true,
+          "title": "Type",
+          "render": "asset_tag",
+          "width": 110
+        },
+        {
+          "key": "name",
+          "source": "parent_name",
+          "title": "Facility"
+        },
+        {
+          "key": "administration",
+          "source": "administration",
+          "title": "Division"
+        },
+        {
+          "key": "inspector",
+          "source": "answer",
+          "title": "Inspector",
+          "width": 150
+        },
+        {
+          "key": "days_ago",
+          "computed": true,
+          "title": "Days ago",
+          "render": "days_since",
+          "width": 100
+        }
+      ],
+      "segments": [
+        {
+          "key": "wwtp",
+          "label": "WWTP",
+          "api": {
+            "form_id": 1748903240763
+          },
+          "questions": {
+            "last_inspected": "inspection_date",
+            "inspector": "dws_staff_name"
+          }
+        },
+        {
+          "key": "wtp",
+          "label": "WTP",
+          "api": {
+            "form_id": 1749634736797
+          },
+          "questions": {
+            "last_inspected": "date_of_inspection",
+            "inspector": "dws_officer_name"
+          }
+        },
+        {
+          "key": "rws",
+          "label": "RWS",
+          "api": {
+            "form_id": 1749621221728
+          },
+          "questions": {
+            "last_inspected": "inspection_date",
+            "inspector": "dws_officer_name"
+          }
+        },
+        {
+          "key": "eps",
+          "label": "EPS",
+          "api": {
+            "form_id": 1749623934933
+          },
+          "questions": {
+            "last_inspected": "inspection_date",
+            "inspector": "officer_name"
+          }
+        },
+        {
+          "key": "pump",
+          "label": "Pump Stations",
+          "api": {
+            "form_id": 1749611049520
+          },
+          "questions": {
+            "last_inspected": "inspection_date",
+            "inspector": "dws_staff_name"
           }
         }
       ]

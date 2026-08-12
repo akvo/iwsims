@@ -135,3 +135,16 @@
     box-sizing: border-box;
   }
 }
+
+// Legend swatch for the multi-asset status map. Matches the marker dot so a
+// legend entry and the pin it explains read as the same object.
+.dashboard-map-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.45);
+  vertical-align: middle;
+}

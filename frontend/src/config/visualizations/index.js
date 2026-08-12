@@ -96,6 +96,44 @@ export const getVisualizationConfigBySlug = (slug) => {
 };
 
 /**
+ * Resolve a `slug#item_id` reference into another dashboard's item.
+ *
+ * Threshold definitions live once, in the dashboard that displays them — the
+ * WTP config owns `param_turbidity` and its `< 5`. A cross-asset page needs
+ * the same rule but cannot reach it: `params_ref` resolves against the config
+ * it appears in. Copying the numbers into a second config is how a national
+ * figure and a per-asset dashboard end up disagreeing after somebody edits
+ * one of them, so reference them instead.
+ *
+ * Returns null for an unresolvable reference rather than throwing: a stale ref
+ * should cost one widget, not the page.
+ */
+export const resolveCrossConfigRef = (ref) => {
+  if (typeof ref !== "string" || !ref.includes("#")) {
+    return null;
+  }
+  const [slug, itemId] = ref.split("#");
+  const config = SLUG_INDEX.get(slug);
+  if (!config || !itemId) {
+    return null;
+  }
+  let found = null;
+  const walk = (items) =>
+    (items || []).forEach((item) => {
+      if (found) {
+        return;
+      }
+      if (item?.id === itemId) {
+        found = item;
+        return;
+      }
+      walk(item?.items);
+    });
+  walk(config.items);
+  return found;
+};
+
+/**
  * Every form a config reads, wherever it names one.
  *
  * A single-asset dashboard names its form once at the root. A cross-asset one

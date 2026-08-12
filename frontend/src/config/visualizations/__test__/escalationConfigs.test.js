@@ -3,15 +3,16 @@ import {
   serializeColumns,
 } from "../../../util/hooks/useDashboardEscalation";
 import { listVisualizations, getVisualizationConfigBySlug } from "../index";
+import { resolveSegmentColumns } from "../../../components/dashboard/compute/mergeInspections";
 
-/** Every `table` item across every registered dashboard. */
-const allTables = () =>
+/** Every item of the given chart_type across every registered dashboard. */
+const allOfType = (chartType) =>
   listVisualizations().flatMap(({ slug }) => {
     const config = getVisualizationConfigBySlug(slug);
     const out = [];
     const walk = (items) =>
       (items || []).forEach((item) => {
-        if (item.chart_type === "table") {
+        if (item.chart_type === chartType) {
           out.push({ slug, item });
         }
         walk(item.items);
@@ -19,6 +20,14 @@ const allTables = () =>
     walk(config.items);
     return out;
   });
+
+const allTables = () => allOfType("table");
+
+/** Every (merged_table, segment) pair — one request each at runtime. */
+const allMergedSegments = () =>
+  allOfType("merged_table").flatMap(({ slug, item }) =>
+    (item.segments || []).map((segment) => ({ slug, item, segment }))
+  );
 
 describe("escalation table configs", () => {
   it("finds table items to check", () => {
@@ -56,4 +65,51 @@ describe("escalation table configs", () => {
       expect(serializeColumns(item.columns || [])).not.toBe("");
     }
   );
+});
+
+describe("merged inspection table configs", () => {
+  it("finds merged_table segments to check", () => {
+    expect(allMergedSegments().length).toBeGreaterThan(0);
+  });
+
+  // Driven through the SAME resolver + serializer the widget uses at runtime.
+  // Every previous bug in this area came from a probe that built the query
+  // string by hand and so agreed with nothing the app actually sends.
+  it.each(
+    allMergedSegments().map(({ slug, item, segment }) => [
+      `${slug}/${item.id}/${segment.key}`,
+      item,
+      segment,
+    ])
+  )("%s serializes backend-resolvable columns", (_name, item, segment) => {
+    const serialized = serializeColumns(
+      resolveSegmentColumns(item.columns, segment)
+    );
+    expect(serialized).not.toBe("");
+    // The column the feed sorts and windows on must survive resolution for
+    // THIS segment — its absence would silently sort by insertion order.
+    const dateKey = item.date_key || "last_inspected";
+    expect(serialized).toContain(`${dateKey}:latest_date:`);
+  });
+
+  it.each(
+    allMergedSegments().map(({ slug, item, segment }) => [
+      `${slug}/${item.id}/${segment.key}`,
+      item,
+      segment,
+    ])
+  )("%s names its own form and date question", (_name, item, segment) => {
+    // A cross-asset page has no root form; a segment naming neither a form
+    // nor its date question queries nothing, or windows on the wrong field.
+    expect(typeof segment.api?.form_id).toBe("number");
+    const dateKey = item.date_key || "last_inspected";
+    expect(typeof segment.questions?.[dateKey]).toBe("string");
+  });
+
+  it("gives every segment a distinct key, since rows are keyed by it", () => {
+    allOfType("merged_table").forEach(({ item }) => {
+      const keys = (item.segments || []).map((s) => s.key);
+      expect(new Set(keys).size).toBe(keys.length);
+    });
+  });
 });
