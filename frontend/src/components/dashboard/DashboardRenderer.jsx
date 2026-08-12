@@ -5,6 +5,7 @@ import ChartRenderer from "./ChartRenderer";
 import DashboardMap from "./DashboardMap";
 import EscalationTable from "./EscalationTable";
 import MergedInspectionsTable from "./MergedInspectionsTable";
+import MultiAssetMap from "./MultiAssetMap";
 import KPICard from "./widgets/KPICard";
 import MetricCard from "./widgets/MetricCard";
 import RankingWidget from "./widgets/RankingWidget";
@@ -257,6 +258,30 @@ const DashboardRenderer = ({
             item={item}
             filterState={filterState}
             customFilterDefs={customFilterDefs}
+          />
+        </Card>
+      );
+    }
+
+    if (type === "multi_asset_map") {
+      return (
+        <Card
+          title={
+            <>
+              {item.label || "Asset status"}
+              <FormulaInfo info={item.info} title={item.label} />
+            </>
+          }
+          size="small"
+          style={{ marginBottom: 0 }}
+        >
+          {item.description && (
+            <Paragraph type="secondary">{item.description}</Paragraph>
+          )}
+          <MultiAssetMap
+            item={item}
+            filterState={filterState}
+            height={item.height || 480}
           />
         </Card>
       );

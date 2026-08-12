@@ -405,6 +405,50 @@
           }
         }
       ]
+    },
+    {
+      "id": "map_national_status",
+      "info": "Every registered asset, coloured by whether its latest monitoring found it working.\nEach family answers this under its own question and option set: station_status on pump stations (operational / blocked / overflowing / not_operational), system_status on EPS (operational / issue_with_system), infrastructure_status on RWS (operational / non_operational). Anything not listed as functional counts as non-functional.\nWWTP and WTP have no plant-level status question on either monitoring form, so their sites are always grey. That is a gap in the forms, not a finding about those plants — see issue #34 G1.\nGrey also covers a site whose family asks the question but which has not been monitored yet. An unanswered status is not evidence of a fault, so it is never coloured as one.",
+      "chart_type": "multi_asset_map",
+      "order": 10,
+      "col_span": 24,
+      "height": 520,
+      "zoom": 7,
+      "label": "Asset Status Nationwide",
+      "description": "Every registered asset, by whether its latest monitoring found it operational.",
+      "sources": [
+        {
+          "key": "wwtp",
+          "label": "WWTP",
+          "form_id": 1748903240763
+        },
+        {
+          "key": "wtp",
+          "label": "WTP",
+          "form_id": 1749634736797
+        },
+        {
+          "key": "rws",
+          "label": "RWS",
+          "form_id": 1749621221728,
+          "question_name": "infrastructure_status",
+          "functional_values": ["operational"]
+        },
+        {
+          "key": "eps",
+          "label": "EPS",
+          "form_id": 1749623934933,
+          "question_name": "system_status",
+          "functional_values": ["operational"]
+        },
+        {
+          "key": "pump",
+          "label": "Pump Stations",
+          "form_id": 1749611049520,
+          "question_name": "station_status",
+          "functional_values": ["operational"]
+        }
+      ]
     }
   ]
 }
