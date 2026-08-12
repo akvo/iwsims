@@ -45,6 +45,16 @@ const NOT_APPLICABLE_COLOR = "#546e7a";
  * many-entry legend otherwise wraps onto several rows and collides with the
  * y-axis title.
  */
+/**
+ * True when a Cartesian dataset is one series with categories on the axis —
+ * rows shaped `{label, value}` (optionally `color`), as opposed to the stacked
+ * shape `{category, SeriesA, SeriesB}`.
+ *
+ * Drives both the per-item colouring below and whether a legend exists at all.
+ */
+export const isSingleSeriesShape = (rows = []) =>
+  rows.length > 0 && "label" in rows[0];
+
 const LEGEND = {
   type: "scroll",
   icon: "circle",
@@ -449,8 +459,17 @@ const ChartWithScrollLegend = ({ Component, commonProps }) => {
         notApplicableColor,
     };
     const chartData = commonProps.data || [];
-    if (chartData.length > 0 && "label" in chartData[0]) {
-      // Simple bar chart path.
+    if (isSingleSeriesShape(chartData)) {
+      // Simple bar chart path: one series, categories on the axis.
+      //
+      // A single series has nothing to tell apart, so it gets no legend — the
+      // card title already names the measure. Left on, ECharts had nothing to
+      // list but the row keys and rendered a legend reading "value" and
+      // "color", which named the data's field names rather than anything on
+      // screen. Where the bars are coloured by band (the inspection-date
+      // histogram), the card description explains the bands.
+      overrides.legend = { show: false };
+
       const hasPerRowStyle = chartData.some(
         (r) => r.color || r.label === noInfoLabel
       );
