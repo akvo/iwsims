@@ -294,6 +294,19 @@
       }
     }
 
+    // A nav-only strip inside a card: the compliance snapshot's asset filter
+    // switches what the card shows rather than navigating panes, so the empty
+    // content area collapses and the strip sits tighter than a page-level one.
+    .compliance-snapshot-nav {
+      .ant-tabs-content-holder {
+        display: none;
+      }
+
+      .ant-tabs-nav {
+        margin-bottom: 20px;
+      }
+    }
+
     .ant-table-wrapper {
       .ant-table-thead > tr > th {
         background: #f2f2f3;
