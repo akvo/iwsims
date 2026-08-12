@@ -1,4 +1,17 @@
-import { getVisualizationConfigBySlug, listVisualizations } from "../index";
+import {
+  collectFormIds,
+  getVisualizationConfigBySlug,
+  listAvailableVisualizations,
+  listVisualizations,
+} from "../index";
+
+const ASSET_FORM_IDS = [
+  1748903240763, // WWTP
+  1749634736797, // WTP
+  1749621221728, // RWS
+  1749623934933, // EPS
+  1749611049520, // Pump Stations
+];
 
 describe("visualization registry", () => {
   it("registers every dashboard, including the cross-asset one", () => {
@@ -58,6 +71,61 @@ describe("visualization registry", () => {
       expect(missing).toEqual([]);
     }
   );
+
+  it.each(["national-overview", "all-alerts", "inspections-feed"])(
+    "%s reports the forms it reads even with no root form",
+    (slug) => {
+      // The menu filters on these ids. A cross-asset config has no root
+      // parent_form_id by design, so reading that field alone reports
+      // `undefined` and drops the page out of the Dashboards dropdown — which
+      // is exactly how all three went missing from the menu.
+      const found = listVisualizations().find((d) => d.slug === slug);
+      expect(found.parent_form_id).toBeUndefined();
+      expect(found.form_ids.sort()).toEqual([...ASSET_FORM_IDS].sort());
+    }
+  );
+
+  it("reports a single-asset dashboard's own form", () => {
+    const found = listVisualizations().find((d) => d.slug === "wwtp-overview");
+    expect(found.form_ids).toEqual([1748903240763]);
+  });
+
+  it("ignores form ids that are not finite numbers", () => {
+    expect(
+      collectFormIds({
+        parent_form_id: null,
+        items: [
+          { api: { form_id: "1748903240763" } },
+          { api: { parent_form_id: NaN } },
+          { api: {} },
+        ],
+      })
+    ).toEqual([]);
+  });
+
+  it("offers every dashboard on an instance running all five assets", () => {
+    const slugs = listAvailableVisualizations(ASSET_FORM_IDS).map(
+      (d) => d.slug
+    );
+    expect(slugs).toEqual(
+      expect.arrayContaining(listVisualizations().map((d) => d.slug))
+    );
+  });
+
+  it("keeps a cross-asset page when only some of its assets are deployed", () => {
+    // A national view of three assets is still worth opening; only a dashboard
+    // whose every form is absent should disappear.
+    const slugs = listAvailableVisualizations([1748903240763]).map(
+      (d) => d.slug
+    );
+    expect(slugs).toContain("national-overview");
+    expect(slugs).toContain("wwtp-overview");
+    expect(slugs).not.toContain("wtp-overview");
+  });
+
+  it("offers nothing when no form is deployed", () => {
+    expect(listAvailableVisualizations([])).toEqual([]);
+  });
 
   it("returns null for an unknown slug", () => {
     expect(getVisualizationConfigBySlug("nope")).toBeNull();

@@ -96,12 +96,64 @@ export const getVisualizationConfigBySlug = (slug) => {
 };
 
 /**
+ * Every form a config reads, wherever it names one.
+ *
+ * A single-asset dashboard names its form once at the root. A cross-asset one
+ * must not (the registry rejects that above) and instead names a form inside
+ * each api block — `parent_form_id` for `/values`, `form_id` for `/escalation`
+ * — so the only honest answer walks the whole config.
+ */
+export const collectFormIds = (config) => {
+  const ids = new Set();
+  const add = (id) => {
+    if (typeof id === "number" && Number.isFinite(id)) {
+      ids.add(id);
+    }
+  };
+  add(config?.parent_form_id);
+  const walk = (node) => {
+    if (Array.isArray(node)) {
+      node.forEach(walk);
+      return;
+    }
+    if (!node || typeof node !== "object") {
+      return;
+    }
+    if (node.api && typeof node.api === "object") {
+      add(node.api.parent_form_id);
+      add(node.api.form_id);
+    }
+    Object.values(node).forEach(walk);
+  };
+  walk(config?.items);
+  return Array.from(ids);
+};
+
+/**
  * Enumerate all registered dashboards for menu rendering.
- * @returns {Array<{slug: string, name: string, parent_form_id: number}>}
+ * @returns {Array<{slug: string, name: string, parent_form_id: number,
+ *   form_ids: number[]}>}
  */
 export const listVisualizations = () =>
   Array.from(SLUG_INDEX.values()).map((c) => ({
     slug: c.slug,
     name: c.name,
     parent_form_id: c.parent_form_id,
+    form_ids: collectFormIds(c),
   }));
+
+/**
+ * The dashboards worth offering on an instance that deploys `formIds`.
+ *
+ * Menu visibility is a deployment guard, not a permission check: `window.forms`
+ * is the instance's published form list (generated into config.min.js), the
+ * same for every user. A dashboard earns its menu entry when at least one form
+ * it reads is deployed — "at least one" because a cross-asset page spanning
+ * five assets is still worth opening on an instance that runs three of them.
+ */
+export const listAvailableVisualizations = (formIds = []) => {
+  const available = new Set(formIds);
+  return listVisualizations().filter((d) =>
+    d.form_ids.some((id) => available.has(id))
+  );
+};

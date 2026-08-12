@@ -6,7 +6,7 @@ import { FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { config, store, uiText } from "../../lib";
 import { eraseCookieFromAllPaths } from "../../util/date";
-import { listVisualizations } from "../../config/visualizations";
+import { listAvailableVisualizations } from "../../config/visualizations";
 
 const Header = ({ className = "header", ...props }) => {
   const { isLoggedIn, user } = store.useState();
@@ -17,11 +17,10 @@ const Header = ({ className = "header", ...props }) => {
   const text = useMemo(() => {
     return uiText[activeLang];
   }, [activeLang]);
-  const dashboardForms = useMemo(() => {
-    const registered = listVisualizations();
-    const availableFormIds = new Set((window?.forms || []).map((f) => f.id));
-    return registered.filter((d) => availableFormIds.has(d.parent_form_id));
-  }, []);
+  const dashboardForms = useMemo(
+    () => listAvailableVisualizations((window?.forms || []).map((f) => f.id)),
+    []
+  );
   const showDashboardsMenu =
     location.pathname.startsWith("/control-center") ||
     location.pathname.startsWith("/dashboard");
