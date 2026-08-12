@@ -1,0 +1,166 @@
+import React, { useMemo, useState } from "react";
+import PropTypes from "prop-types";
+import { Card, Col, Empty, Progress, Row, Segmented, Typography } from "antd";
+import {
+  computeComplianceDonut,
+  domainFamilies,
+} from "./compute/complianceDonut";
+import { STATUS_COLORS } from "./constants";
+import FormulaInfo from "./widgets/FormulaInfo";
+
+const { Paragraph, Text } = Typography;
+
+const ALL = "__all__";
+
+/**
+ * National Compliance Snapshot — one ring per domain, with an asset-type
+ * selector.
+ *
+ * Every ring is drawn from counts already fetched for the whole fleet, so the
+ * selector is arithmetic over responses in hand: switching assets is instant
+ * and issues no request.
+ *
+ * The ring shows the share of ASSESSED sites passing. Rating a domain against
+ * its whole fleet would turn thin monitoring coverage into an apparent
+ * compliance failure — RWS answers its status question for 4 of 112 sites,
+ * which is a fact about monitoring, not about the sites. The uncounted
+ * remainder is stated beneath the ring instead.
+ */
+const ComplianceSnapshot = ({ item, computeResponses }) => {
+  const [asset, setAsset] = useState(ALL);
+  const domains = useMemo(() => item.domains || [], [item.domains]);
+
+  // Union of the families across domains, so the toggle offers an asset even
+  // when only one domain measures it — picking it then shows the other domain
+  // honestly as "not measured here" rather than hiding the option.
+  const families = useMemo(() => {
+    const labels = item.family_labels || {};
+    const keys = [];
+    domains.forEach((domain) => {
+      domainFamilies(domain.segments).forEach((family) => {
+        if (!keys.includes(family)) {
+          keys.push(family);
+        }
+      });
+    });
+    return keys.map((key) => ({ value: key, label: labels[key] || key }));
+  }, [domains, item.family_labels]);
+
+  const options = useMemo(
+    () => [{ value: ALL, label: item.all_label || "All assets" }, ...families],
+    [families, item.all_label]
+  );
+
+  const results = useMemo(
+    () =>
+      domains.map((domain) => ({
+        domain,
+        ...computeComplianceDonut(
+          domain.segments,
+          computeResponses?.compliance_donut?.[domain.id],
+          domain.labels,
+          asset === ALL ? null : asset
+        ),
+      })),
+    [domains, computeResponses, asset]
+  );
+
+  const span = Math.max(6, Math.floor(24 / Math.max(1, domains.length)));
+
+  return (
+    <Card
+      title={
+        <>
+          {item.label || "National Compliance Snapshot"}
+          <FormulaInfo info={item.info} title={item.label} />
+        </>
+      }
+      size="small"
+      style={{ marginBottom: 0 }}
+      extra={
+        options.length > 1 ? (
+          <Segmented
+            size="small"
+            options={options}
+            value={asset}
+            onChange={setAsset}
+          />
+        ) : null
+      }
+    >
+      {item.description && (
+        <Paragraph type="secondary">{item.description}</Paragraph>
+      )}
+      {results.length === 0 ? (
+        <Empty description="No domains configured" />
+      ) : (
+        <Row gutter={[16, 16]}>
+          {results.map(({ domain, meta }) => (
+            <Col key={domain.id} span={span} style={{ textAlign: "center" }}>
+              {meta.applicable ? (
+                <>
+                  <Progress
+                    type="circle"
+                    width={132}
+                    percent={meta.passRate ?? 0}
+                    strokeColor={STATUS_COLORS.good}
+                    trailColor="#e6e9ed"
+                    format={() =>
+                      meta.passRate === null ? (
+                        <Text type="secondary" style={{ fontSize: 15 }}>
+                          No data
+                        </Text>
+                      ) : (
+                        <span style={{ fontSize: 26 }}>{meta.passRate}%</span>
+                      )
+                    }
+                  />
+                  <div style={{ marginTop: 8, fontWeight: 500 }}>
+                    {domain.label}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#8c8c8c" }}>
+                    {meta.pass} of {meta.assessed} assessed pass
+                  </div>
+                  {meta.notAssessed > 0 && (
+                    <div style={{ fontSize: 12, color: STATUS_COLORS.noData }}>
+                      {meta.notAssessed} not assessed
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Progress
+                    type="circle"
+                    width={132}
+                    percent={100}
+                    strokeColor="#e6e9ed"
+                    trailColor="#e6e9ed"
+                    format={() => (
+                      <Text type="secondary" style={{ fontSize: 15 }}>
+                        Not measured
+                      </Text>
+                    )}
+                  />
+                  <div style={{ marginTop: 8, fontWeight: 500 }}>
+                    {domain.label}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#8c8c8c" }}>
+                    {domain.not_applicable_note ||
+                      "This form asks no such question"}
+                  </div>
+                </>
+              )}
+            </Col>
+          ))}
+        </Row>
+      )}
+    </Card>
+  );
+};
+
+ComplianceSnapshot.propTypes = {
+  item: PropTypes.object.isRequired,
+  computeResponses: PropTypes.object,
+};
+
+export default ComplianceSnapshot;

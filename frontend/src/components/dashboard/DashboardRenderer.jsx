@@ -6,6 +6,7 @@ import DashboardMap from "./DashboardMap";
 import EscalationTable from "./EscalationTable";
 import MergedInspectionsTable from "./MergedInspectionsTable";
 import MultiAssetMap from "./MultiAssetMap";
+import ComplianceSnapshot from "./ComplianceSnapshot";
 import KPICard from "./widgets/KPICard";
 import MetricCard from "./widgets/MetricCard";
 import RankingWidget from "./widgets/RankingWidget";
@@ -260,6 +261,15 @@ const DashboardRenderer = ({
             customFilterDefs={customFilterDefs}
           />
         </Card>
+      );
+    }
+
+    if (type === "compliance_snapshot") {
+      return (
+        <ComplianceSnapshot
+          item={item}
+          computeResponses={resolvedComputeResponses}
+        />
       );
     }
 

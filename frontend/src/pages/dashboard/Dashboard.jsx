@@ -427,8 +427,16 @@ const Dashboard = () => {
     () => (config ? collectByCompute(config.items, "process_counts") : []),
     [config]
   );
+  // A compliance snapshot holds several domains, each with its own segments.
+  // Flatten to domains so the existing per-segment fetcher can drive them and
+  // each domain's responses land under its own id.
   const complianceDonutItems = useMemo(
-    () => (config ? collectByCompute(config.items, "compliance_donut") : []),
+    () =>
+      config
+        ? collectByType(config.items, "compliance_snapshot").flatMap(
+            (item) => item.domains || []
+          )
+        : [],
     [config]
   );
   const groupedStackItems = useMemo(

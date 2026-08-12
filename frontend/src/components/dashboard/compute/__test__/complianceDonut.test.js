@@ -1,4 +1,8 @@
-import { computeComplianceDonut } from "../complianceDonut";
+import {
+  computeComplianceDonut,
+  domainFamilies,
+  segmentFamily,
+} from "../complianceDonut";
 import {
   getVisualizationConfigBySlug,
   listVisualizations,
@@ -129,8 +133,10 @@ describe("compliance donut configs", () => {
       const out = [];
       const walk = (items) =>
         (items || []).forEach((item) => {
-          if (item.compute === "compliance_donut") {
-            out.push({ slug, item });
+          if (item.chart_type === "compliance_snapshot") {
+            (item.domains || []).forEach((domain) =>
+              out.push({ slug, item: domain })
+            );
           }
           walk(item.items);
         });
@@ -196,4 +202,56 @@ describe("compliance donut configs", () => {
       expect(new Set(keys).size).toBe(keys.length);
     }
   );
+});
+
+describe("asset-type narrowing", () => {
+  const SCOPED = [
+    { key: "wwtp__total", role: "total" },
+    { key: "wwtp__assessed", role: "assessed" },
+    { key: "wwtp__pass", role: "pass" },
+    { key: "pump__total", role: "total" },
+    { key: "pump__assessed", role: "assessed" },
+    { key: "pump__pass", role: "pass" },
+  ];
+  const RESPONSES = {
+    wwtp__total: value(80),
+    wwtp__assessed: value(80),
+    wwtp__pass: value(72),
+    pump__total: value(700),
+    pump__assessed: value(700),
+    pump__pass: value(630),
+  };
+
+  it("sums every family when no asset is selected", () => {
+    const { meta } = computeComplianceDonut(SCOPED, RESPONSES, {}, null);
+    expect(meta.total).toBe(780);
+    expect(meta.pass).toBe(702);
+    expect(meta.applicable).toBe(true);
+  });
+
+  it("narrows to the selected family", () => {
+    const { meta } = computeComplianceDonut(SCOPED, RESPONSES, {}, "wwtp");
+    expect(meta.total).toBe(80);
+    expect(meta.pass).toBe(72);
+    expect(meta.passRate).toBe(90);
+  });
+
+  it("marks a domain not applicable to the selected asset", () => {
+    // "We never ask this here" must not read as a fleet of failures, nor as
+    // a perfect score over zero sites.
+    const { meta } = computeComplianceDonut(SCOPED, RESPONSES, {}, "rws");
+    expect(meta.applicable).toBe(false);
+    expect(meta.passRate).toBeNull();
+  });
+
+  it("lists a domain's families in config order", () => {
+    expect(domainFamilies(SCOPED)).toEqual(["wwtp", "pump"]);
+  });
+
+  it("reads the family from the segment key or an explicit field", () => {
+    expect(segmentFamily({ key: "pump__pass" })).toBe("pump");
+    expect(segmentFamily({ key: "x__pass", family: "override" })).toBe(
+      "override"
+    );
+  });
 });

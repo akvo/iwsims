@@ -27,19 +27,42 @@ const scalar = (response) => {
   return rows.length > 0 ? rows[0].value ?? 0 : 0;
 };
 
+/** The asset family a segment belongs to, from its `<family>__<role>` key. */
+export const segmentFamily = (segment = {}) =>
+  segment.family || String(segment.key || "").split("__")[0];
+
+/** Families a domain covers, in config order — the toggle's options. */
+export const domainFamilies = (segments = []) => {
+  const seen = [];
+  segments.forEach((seg) => {
+    const family = segmentFamily(seg);
+    if (family && !seen.includes(family)) {
+      seen.push(family);
+    }
+  });
+  return seen;
+};
+
 /**
  * @param {Array<{key:string, role:"total"|"assessed"|"pass"}>} segments
  * @param {Object.<string,object>} responses  { [segment.key]: /values response }
  * @param {{pass?:string, fail?:string, notAssessed?:string}} [labels]
+ * @param {string|null} [family]  restrict to one asset family; null = all
  * @returns {{rows: Array<{label:string,value:number}>, meta: object}}
  */
 export const computeComplianceDonut = (
   segments = [],
   responses = {},
-  labels = {}
+  labels = {},
+  family = null
 ) => {
   const totals = { total: 0, assessed: 0, pass: 0 };
-  (segments || []).forEach((seg) => {
+  // Narrowing to one asset is pure arithmetic over responses already in hand,
+  // so switching the toggle costs nothing and never refetches.
+  const scoped = family
+    ? (segments || []).filter((seg) => segmentFamily(seg) === family)
+    : segments || [];
+  scoped.forEach((seg) => {
     if (Object.prototype.hasOwnProperty.call(totals, seg.role)) {
       totals[seg.role] += scalar(responses?.[seg.key]);
     }
@@ -68,6 +91,10 @@ export const computeComplianceDonut = (
       notAssessed,
       assessed: pass + fail,
       total: totals.total,
+      // A domain that does not cover the selected asset has no segments at
+      // all. That is "we never ask this here", which must not read as a
+      // fleet of failures or a suspiciously perfect score.
+      applicable: scoped.length > 0,
       // Share of ASSESSED sites passing, not of all registered: a domain
       // measured on a tenth of its fleet would otherwise report a compliance
       // rate of 10% when nothing had failed. The uncounted sites are visible

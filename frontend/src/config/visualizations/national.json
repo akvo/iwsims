@@ -343,243 +343,239 @@
       ]
     },
     {
-      "id": "title_compliance_snapshot",
-      "chart_type": "section_title",
-      "order": 9.5,
-      "col_span": 24,
-      "text": "National Compliance Snapshot"
-    },
-    {
-      "id": "donut_ohs_compliance",
-      "info": "Share of ASSESSED sites passing, so a domain measured on part of its fleet is not reported as failing. The unmeasured remainder is the grey slice.\nEach family asks its own question: ohs_equipment_available (WWTP), has_ohs_policy (WTP), ohs_equipment (Pump Stations).\nPassing means the equipment or policy is present; every other answer counts as failing, including a pump station recording OHS equipment as 'not used'.\nRWS and EPS are absent from this donut because neither form asks an OHS question at all — see issue #34 G1 decision 2.",
-      "chart_type": "doughnut",
-      "compute": "compliance_donut",
+      "id": "compliance_snapshot",
+      "info": "Share of ASSESSED sites passing in each domain, so thin monitoring coverage is not reported as a compliance failure — the uncounted sites are stated separately beneath each ring.\nUse the selector to narrow to one asset type. A domain that the selected form does not ask about shows 'Not measured' rather than a score.\nTwo of Lotte's four domains are absent: Effluent needs the DWS thresholds (issue #34 B1) and Drinking Water needs multi-parameter rules that cannot yet resolve across configs (G1 decision 3). Neither is guessed at.",
+      "chart_type": "compliance_snapshot",
       "order": 10,
-      "col_span": 12,
-      "label": "OHS Compliance",
-      "description": "Sites whose latest monitoring found OHS provision in place. WWTP, WTP and Pump Stations only — RWS and EPS forms ask nothing about OHS.",
-      "config": {
-        "title": "OHS Compliance",
-        "color": ["#0ca30c", "#d03b3b", "#9aa0a6"]
+      "col_span": 24,
+      "label": "National Compliance Snapshot",
+      "description": "Section 13(2)(a–h) domains, by share of assessed sites passing.",
+      "all_label": "All assets",
+      "family_labels": {
+        "wwtp": "WWTP",
+        "wtp": "WTP",
+        "rws": "RWS",
+        "eps": "EPS",
+        "pump": "Pump Stations"
       },
-      "labels": {
-        "pass": "Passing",
-        "fail": "Failing",
-        "notAssessed": "Not assessed"
-      },
-      "segments": [
+      "domains": [
         {
-          "key": "wwtp__total",
-          "role": "total",
-          "api": {
-            "parent_form_id": 1748903240763,
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
+          "id": "donut_ohs_compliance",
+          "label": "OHS Compliance",
+          "info": "Share of ASSESSED sites passing, so a domain measured on part of its fleet is not reported as failing. The unmeasured remainder is the grey slice.\nEach family asks its own question: ohs_equipment_available (WWTP), has_ohs_policy (WTP), ohs_equipment (Pump Stations).\nPassing means the equipment or policy is present; every other answer counts as failing, including a pump station recording OHS equipment as 'not used'.\nRWS and EPS are absent from this donut because neither form asks an OHS question at all — see issue #34 G1 decision 2.",
+          "not_applicable_note": "Neither the RWS nor the EPS form asks about OHS",
+          "labels": {
+            "pass": "Passing",
+            "fail": "Failing",
+            "notAssessed": "Not assessed"
+          },
+          "segments": [
+            {
+              "key": "wwtp__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1748903240763,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wwtp__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1748903240763,
+                "question_name": "ohs_equipment_available",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wwtp__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1748903240763,
+                "question_name": "ohs_equipment_available",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "yes",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wtp__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749634736797,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wtp__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749634736797,
+                "question_name": "has_ohs_policy",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "wtp__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749634736797,
+                "question_name": "has_ohs_policy",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "yes",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "question_name": "ohs_equipment",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "question_name": "ohs_equipment",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "available",
+                "ignore_date_filter": true
+              }
+            }
+          ]
         },
         {
-          "key": "wwtp__assessed",
-          "role": "assessed",
-          "api": {
-            "parent_form_id": 1748903240763,
-            "question_name": "ohs_equipment_available",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "wwtp__pass",
-          "role": "pass",
-          "api": {
-            "parent_form_id": 1748903240763,
-            "question_name": "ohs_equipment_available",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "option_value": "yes",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "wtp__total",
-          "role": "total",
-          "api": {
-            "parent_form_id": 1749634736797,
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "wtp__assessed",
-          "role": "assessed",
-          "api": {
-            "parent_form_id": 1749634736797,
-            "question_name": "has_ohs_policy",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "wtp__pass",
-          "role": "pass",
-          "api": {
-            "parent_form_id": 1749634736797,
-            "question_name": "has_ohs_policy",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "option_value": "yes",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "pump__total",
-          "role": "total",
-          "api": {
-            "parent_form_id": 1749611049520,
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "pump__assessed",
-          "role": "assessed",
-          "api": {
-            "parent_form_id": 1749611049520,
-            "question_name": "ohs_equipment",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "pump__pass",
-          "role": "pass",
-          "api": {
-            "parent_form_id": 1749611049520,
-            "question_name": "ohs_equipment",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "option_value": "available",
-            "ignore_date_filter": true
-          }
-        }
-      ]
-    },
-    {
-      "id": "donut_operational_compliance",
-      "info": "Share of ASSESSED sites operational, so a domain measured on part of its fleet is not reported as failing. The unmeasured remainder is the grey slice.\nEach family asks its own question: infrastructure_status (RWS), system_status (EPS), station_status (Pump Stations).\nPassing means 'operational'; every other answer counts as failing — a blocked or overflowing pump station is not operating normally.\nWWTP and WTP are absent because neither form asks a plant-level status question. WTP's has_production_constraints is not a substitute: a production constraint is not the same as a plant that is not running. See issue #34 G1 decision 1.\nThe passing count matches the functional total on the map above, which reads the same three questions.",
-      "chart_type": "doughnut",
-      "compute": "compliance_donut",
-      "order": 11,
-      "col_span": 12,
-      "label": "Operational Status",
-      "description": "Sites whose latest monitoring found the system operational. RWS, EPS and Pump Stations only — WWTP and WTP have no plant-level status question.",
-      "config": {
-        "title": "Operational Status",
-        "color": ["#0ca30c", "#d03b3b", "#9aa0a6"]
-      },
-      "labels": {
-        "pass": "Passing",
-        "fail": "Failing",
-        "notAssessed": "Not assessed"
-      },
-      "segments": [
-        {
-          "key": "rws__total",
-          "role": "total",
-          "api": {
-            "parent_form_id": 1749621221728,
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "rws__assessed",
-          "role": "assessed",
-          "api": {
-            "parent_form_id": 1749621221728,
-            "question_name": "infrastructure_status",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "rws__pass",
-          "role": "pass",
-          "api": {
-            "parent_form_id": 1749621221728,
-            "question_name": "infrastructure_status",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "option_value": "operational",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "eps__total",
-          "role": "total",
-          "api": {
-            "parent_form_id": 1749623934933,
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "eps__assessed",
-          "role": "assessed",
-          "api": {
-            "parent_form_id": 1749623934933,
-            "question_name": "system_status",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "eps__pass",
-          "role": "pass",
-          "api": {
-            "parent_form_id": 1749623934933,
-            "question_name": "system_status",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "option_value": "operational",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "pump__total",
-          "role": "total",
-          "api": {
-            "parent_form_id": 1749611049520,
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "pump__assessed",
-          "role": "assessed",
-          "api": {
-            "parent_form_id": 1749611049520,
-            "question_name": "station_status",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "ignore_date_filter": true
-          }
-        },
-        {
-          "key": "pump__pass",
-          "role": "pass",
-          "api": {
-            "parent_form_id": 1749611049520,
-            "question_name": "station_status",
-            "sum_by": "parent_id",
-            "monitoring": "latest",
-            "option_value": "operational",
-            "ignore_date_filter": true
-          }
+          "id": "donut_operational_compliance",
+          "label": "Operational Status",
+          "info": "Share of ASSESSED sites operational, so a domain measured on part of its fleet is not reported as failing. The unmeasured remainder is the grey slice.\nEach family asks its own question: infrastructure_status (RWS), system_status (EPS), station_status (Pump Stations).\nPassing means 'operational'; every other answer counts as failing — a blocked or overflowing pump station is not operating normally.\nWWTP and WTP are absent because neither form asks a plant-level status question. WTP's has_production_constraints is not a substitute: a production constraint is not the same as a plant that is not running. See issue #34 G1 decision 1.\nThe passing count matches the functional total on the map above, which reads the same three questions.",
+          "not_applicable_note": "No plant-level status question on this form",
+          "labels": {
+            "pass": "Passing",
+            "fail": "Failing",
+            "notAssessed": "Not assessed"
+          },
+          "segments": [
+            {
+              "key": "rws__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749621221728,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "rws__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749621221728,
+                "question_name": "infrastructure_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "rws__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749621221728,
+                "question_name": "infrastructure_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "operational",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "eps__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749623934933,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "eps__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749623934933,
+                "question_name": "system_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "eps__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749623934933,
+                "question_name": "system_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "operational",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__total",
+              "role": "total",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__assessed",
+              "role": "assessed",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "question_name": "station_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "ignore_date_filter": true
+              }
+            },
+            {
+              "key": "pump__pass",
+              "role": "pass",
+              "api": {
+                "parent_form_id": 1749611049520,
+                "question_name": "station_status",
+                "sum_by": "parent_id",
+                "monitoring": "latest",
+                "option_value": "operational",
+                "ignore_date_filter": true
+              }
+            }
+          ]
         }
       ]
     },
