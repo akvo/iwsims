@@ -16,8 +16,12 @@ echo "Coverage"
 coverage combine --rcfile=./.coveragerc
 coverage report -m --rcfile=./.coveragerc
 
+# Reporting coverage is not a quality gate — lint and the test suite above are.
+# The upload reaches out to coveralls.io from inside the container, so a blip
+# there ("Network is unreachable") would otherwise abort the build after every
+# test has already passed, and take the frontend build down with it.
 if [[ -n "${COVERALLS_REPO_TOKEN:-}" ]] ; then
-  coveralls
+  coveralls || echo "WARNING: could not submit coverage to coveralls.io"
 fi
 
 echo "Generate Django DBML"
