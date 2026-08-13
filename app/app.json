@@ -3,7 +3,7 @@
     "newArchEnabled": true,
     "name": "DWS DataPro",
     "slug": "dws-datapro-mobile",
-    "version": "4.1.29",
+    "version": "4.1.30",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.akvo.dws_datapro",
-      "versionCode": 4129
+      "versionCode": 4130
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -61,6 +61,14 @@
       "expo-document-picker",
       "expo-asset",
       "expo-background-task",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "DWS DataPro saves a copy of each photo you take to your gallery, so it can be recovered if the app loses it.",
+          "savePhotosPermission": "DWS DataPro saves a copy of each photo you take to your gallery.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
       "@react-native-community/datetimepicker"
     ],
     "androidNavigationBar": {
