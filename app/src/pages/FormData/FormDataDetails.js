@@ -75,6 +75,12 @@ const FormDataDetails = ({ navigation, route }) => {
         s.currentValues = updatedValues;
       });
       await crudDataPoints.updateJson(db, datapointId, updatedValues);
+      // The Submission list caches its rows and only refetches on mount or on
+      // refreshPage. Without this it keeps showing the File missing badge, and
+      // re-opening this screen reseeds currentValues from the stale row.
+      UIState.update((s) => {
+        s.refreshPage = true;
+      });
       ToastAndroid.show(trans.retakeSuccess, ToastAndroid.LONG);
     } finally {
       setRetakingKey(null);
@@ -127,6 +133,9 @@ const FormDataDetails = ({ navigation, route }) => {
         s.currentValues = updatedValues;
       });
       await crudDataPoints.updateJson(db, datapointId, updatedValues);
+      UIState.update((s) => {
+        s.refreshPage = true;
+      });
       ToastAndroid.show(trans.reattachSuccess, ToastAndroid.LONG);
     } finally {
       setRetakingKey(null);
