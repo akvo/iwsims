@@ -175,7 +175,7 @@ to the code it runs. Two materially different builds are both called 4129 right 
 | F13 | When a photo is captured **with the camera** in `TypeImage`, a copy is also written to the device gallery, into an album named from `BuildParamsState.apkName` — never a hardcoded literal, so a rebranded APK groups photos under its own name. |
 | F14 | The behaviour is **off by default** and controlled by a `saveToGallery` setting under Settings → Advanced, following the exact pattern `imageQuality` already uses (`config` table → `BuildParamsState` → Settings dropdown). |
 | F15 | Gallery write is **best-effort and never blocks the answer**: a denied permission or a failed write is captured to Sentry, the form value is still set from `persistImage`, and no error is shown to the enumerator. |
-| F16 | Permission is requested **write-only** (`requestPermissionsAsync(true)`), on first capture after the setting is enabled — never at app start, and never when the setting is off. |
+| F16 | Permission is requested on first capture after the setting is enabled — never at app start, and never when the setting is off. **Full access, not write-only**: grouping into an album has to *read* MediaStore to find whether the album already exists. |
 | F17 | Photos picked *from* the gallery are **not** copied back (they are already there), and neither are attachments or signatures. |
 
 ### Non-functional
@@ -363,7 +363,7 @@ Both are additionally gated on `canRetake` (`!!datapointId && !isSynced`), uncha
 | Permissions | None requested for gallery | `launchImageLibraryAsync` requires none, same as `TypeImage.selectFile` |
 | Toast copy | Reuse `trans.retakeSuccess` | "Photo updated. It will be uploaded on the next sync." reads correctly for a gallery pick; a separate string would need new `en`/`fr` entries |
 | i18n key | Existing `trans.buttonFromGallery` | Already shipped in `en` and `fr` for `TypeImage` |
-| Button layout | Row `View` inside the missing block | Two short labels fit side by side; a column would push the image further down |
+| Button layout | Column `View` inside the missing block | Full-width stacked buttons stay legible in French, where "Reprendre la photo" / "De la galerie" truncate badly side by side on narrow devices |
 
 ---
 
@@ -687,6 +687,34 @@ Replace `handleRetake` (currently lines 305–336) with:
 bindings above are untouched. `handleReattach` deliberately does **not** route through
 `savePhoto` — it persists into the `attachments` subdir and fires a different toast.
 
+#### Invalidating the Submission list
+
+Found on device: after a successful repair the list still showed the **File missing**
+badge, and re-opening the datapoint showed the old missing state — even though SQLite held
+the repaired uri and the file existed.
+
+`Submission.fetchData` runs on mount and when `UIState.refreshPage` flips true. Pushing
+`FormDataDetails` does not unmount `Submission`, so its `data` array kept the pre-repair
+row. `goToDetails` then reseeds `FormState.currentValues` from that stale `item.json`,
+which is what made the repaired photo look like it had vanished.
+
+Both `savePhoto` and `handleReattach` therefore signal a refresh after `updateJson`,
+matching how `SyncService` and `background-task` already invalidate these lists:
+
+```js
+      await crudDataPoints.updateJson(db, datapointId, updatedValues);
+      // The Submission list caches its rows and only refetches on mount or on
+      // refreshPage. Without this it keeps showing the File missing badge, and
+      // re-opening this screen reseeds currentValues from the stale row.
+      UIState.update((s) => {
+        s.refreshPage = true;
+      });
+```
+
+Only the repair paths signal this. Any other pushed screen that mutates a datapoint has
+the same staleness; a `focus` listener on `Submission` would fix the class rather than the
+instance, but that changes a shared screen's behaviour and was left alone.
+
 ---
 
 ### Task 2 — `ImageView`: two new props
@@ -798,7 +826,7 @@ Append to `src/components/FormDataDetails/styles.js`:
 
 ```js
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 8,
   },
   repairButton: {
@@ -806,8 +834,9 @@ Append to `src/components/FormDataDetails/styles.js`:
   },
 ```
 
-`flex: 1` on each container splits the row evenly so neither label truncates; French
-(`De la galerie` / `Reprendre la photo`) is the longest pair and fits at this width.
+Stacked, not side by side: the French pair (`Reprendre la photo` / `De la galerie`) is the
+longest, and at half width on a narrow device the labels truncate. Full-width buttons also
+give a larger touch target for a one-handed field user.
 
 ---
 
@@ -1258,10 +1287,14 @@ Wiring, all following `imageQuality`:
 | `src/store/buildParams.js` | `saveToGallery: 0` (integer, matching the TINYINT the switch writes) |
 | `App.js` `handleInitConfig` | include in `addConfig`; hydrate `s.saveToGallery = configExist.saveToGallery \|\| 0` |
 | `Settings/config.js` | `id: 52`, `type: 'switch'`, key `BuildParamsState.saveToGallery`, with `fr` translations |
-| `Settings/SettingsForm.js` | destructure from `BuildParamsState` and seed `settingsState` |
+| `Settings/SettingsForm.js` | destructure from `BuildParamsState`, seed `settingsState`, **and add `saveToGallery` to the `configFields` whitelist** |
 
-`handleOnSwitch` already writes `1`/`0` to both the store and the `config` row, so no new
-persistence code was needed.
+`handleOnSwitch` writes `1`/`0` to the store and calls `handleUpdateOnDB` — but that
+function persists only fields present in a hardcoded `configFields` array. Omitting the
+new field made the switch flip on screen and silently never reach SQLite, so it reset on
+the next launch. **This whitelist is a silent-failure trap**: any future setting added to
+`Settings/config.js` without a matching entry here fails the same way, with no error.
+Worth replacing with a check against the actual `config` columns; out of scope here.
 
 #### 13b — the write
 
@@ -1278,8 +1311,10 @@ import * as MediaLibrary from 'expo-media-library';
 
   const copyToGallery = async (uri) => {
     try {
-      // Write-only: the app never needs to read the user's existing library
-      const { granted } = await MediaLibrary.requestPermissionsAsync(true);
+      // Full access, not write-only: grouping into an album needs to *read*
+      // MediaStore to find whether the album already exists. With write-only the
+      // asset lands in the default camera bucket and getAlbumAsync fails.
+      const { granted } = await MediaLibrary.requestPermissionsAsync();
       if (!granted) {
         return;
       }
@@ -1300,9 +1335,11 @@ import * as MediaLibrary from 'expo-media-library';
 `apkName` already exists in `BuildParamsState`, sourced from `src/build.json`
 (`"apkName": "DWS DataPro"`).
 
-`false` as the last argument to both album calls means *move-less copy semantics are not
-used* — the asset stays where `createAssetAsync` put it rather than being relocated, which
-is what keeps the app's own `documentDirectory` copy authoritative.
+`false` as the last argument to both album calls means **move, not copy**
+(`copyAsset` defaults to `true`). Copying would leave a duplicate in the default camera
+bucket and double the storage this feature costs, so the asset is relocated into the album
+instead. The app's own `documentDirectory` copy is untouched either way — it is a separate
+file, and remains the authoritative one the answer points at.
 
 `handleOnChange` gains one parameter and one trailing call. Order matters (**T29**):
 `onChange` fires first so the preview appears immediately, and the gallery write happens
@@ -1347,7 +1384,7 @@ Call sites: `handleCamera` passes `true`, `selectFile` passes nothing — satisf
 
 Five cases added to `src/form/fields/__test__/TypeImage.test.js` under a
 `describe('save to gallery')`, with `expo-media-library` jest-mocked: setting off → library
-untouched (**T26**); write-only permission + album created from `apkName`; existing album
+untouched (**T26**); permission requested + album created from `apkName`; existing album
 reused instead of duplicated; denied permission → answer still set (**T27**); write throws
 → answer still set; gallery pick → no copy back (**T28**).
 
@@ -1407,14 +1444,51 @@ npm install --save-dev react-test-renderer@^19 @testing-library/react-native@^13
 snapshot check — **T21 has never been executed**, so the extraction's behaviour-neutrality
 rests on code review alone.
 
-Manual pass (**U1–U10**) needs a device where the photo file can be deleted. Use the
-`QA_Rootable` AVD — a `google_apis` (non-Play-Store) image, where `adb root` works:
+Manual pass (**U1–U10**) needs a device where the photo file can be deleted. Use a
+`google_apis` (non-Play-Store) AVD, where `adb root` works.
+
+Find which pending submissions reference which files, then delete one:
 
 ```bash
 adb root
-adb shell 'ls /data/data/host.exp.exponent/files/ExperienceData/*/images/'
-adb shell 'rm /data/data/host.exp.exponent/files/ExperienceData/*/images/<file>.jpg'
+DB=/data/data/host.exp.exponent/files/SQLite/app.db
+# pending submissions and the file:// answers they point at
+adb shell "sqlite3 $DB \"SELECT id, json FROM datapoints WHERE syncedAt IS NULL;\"" \
+  | grep -oE 'file://[^\"]+'
+adb shell 'rm /data/data/host.exp.exponent/files/images/<file>.jpeg'
 ```
 
-Then reopen the datapoint in the app. Confirmed working on this machine:
-`adb root` → `restarting adbd as root`, `adb shell id` → `uid=0(root)`.
+Back the file up with `adb pull` first if you want to undo it — otherwise every run costs
+a fresh submission. When restoring with `adb push`, note it lands as `root:root` mode
+`666`; `chown` it to the images directory's owner and `chmod 600`, or the app cannot read
+its own file back.
+
+Seeding the emulator gallery, so **From Gallery** has something to pick:
+
+```bash
+adb push <file> /sdcard/DCIM/Camera/<name>.jpg
+adb shell 'am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/DCIM/Camera/<name>.jpg'
+```
+
+The broadcast is the part that matters — without it the file exists on disk but never
+enters MediaStore, so the picker does not list it.
+
+#### Gotcha: the Docker dev server can serve a stale file
+
+`./dc-mobile.sh` bind-mounts `./app` into `iwsims-mobileapp-1`. An editor that saves
+atomically (write temp → rename) creates a **new inode**, and the container can keep
+serving the old one — same path, different inode, so Metro bundles pre-edit code while
+`git diff` shows the fix. New files appear instantly, which makes the mount look healthy.
+
+Symptom: a change has no effect on device no matter how many reloads. Check with:
+
+```bash
+md5sum app/src/<file>
+docker exec iwsims-mobileapp-1 md5sum /app/src/<file>
+```
+
+If they differ, rewrite the file in place (preserves the inode) or restart the container:
+
+```bash
+cp app/src/<file> /tmp/f && cat /tmp/f > app/src/<file> && rm /tmp/f
+```
