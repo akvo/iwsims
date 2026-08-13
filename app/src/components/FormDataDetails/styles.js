@@ -33,7 +33,7 @@ export default StyleSheet.create({
     marginBottom: 8,
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 8,
   },
   repairButton: {
