@@ -2,58 +2,73 @@ import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { divIcon } from "leaflet";
-import { Alert, Skeleton, Space, Tag } from "antd";
+import { Alert, Skeleton, Space, Tabs, Tag } from "antd";
 import "leaflet/dist/leaflet.css";
 import { api, geo } from "../../lib";
+import { UNKNOWN, valuesByParent } from "./compute/assetStatus";
+import { resolveFamilyFormula } from "./compute/complianceFormula";
 import {
-  FUNCTIONAL,
-  NON_FUNCTIONAL,
-  STATUS_TONE,
-  UNKNOWN,
-  buildStatusPoints,
-  countByStatus,
-  valuesByParent,
-} from "./compute/assetStatus";
+  buildModePoints,
+  latestByParent,
+  modeBuckets,
+  resolveFamilies,
+  resolveModes,
+  toneColor,
+  verdictsByParent,
+} from "./compute/mapModes";
+import FormulaInfo from "./widgets/FormulaInfo";
 import "./DashboardMap/styles.scss";
 
-const BUCKETS = [
-  { key: FUNCTIONAL, label: "Functional" },
-  { key: NON_FUNCTIONAL, label: "Non-functional" },
-  { key: UNKNOWN, label: "No status recorded" },
-];
-
-const markerIcon = (status) =>
+const markerIcon = (color) =>
   divIcon({
     className: "dashboard-map-marker",
     iconSize: [16, 16],
     iconAnchor: [8, 8],
-    html: `<span class="dashboard-map-marker-dot" style="background:${
-      STATUS_TONE[status] || STATUS_TONE[UNKNOWN]
-    };"></span>`,
+    html: `<span class="dashboard-map-marker-dot" style="background:${color};"></span>`,
   });
 
-/**
- * Fetch one asset family's points and, when it has a status question, that
- * question's latest value per site.
- *
- * Both endpoints are scoped to a single registration family, so a fleet-wide
- * map is a fan-out — one pair of requests per asset, merged for display.
- */
-const fetchSource = (source, administrationId) => {
+/** One family's registered sites. Independent of the mode, so fetched once. */
+const fetchPoints = (family, administrationId) => {
   const query = new URLSearchParams();
   if (administrationId) {
     query.set("administration", administrationId);
   }
   const qs = query.toString();
-  const geoPath = qs
-    ? `/maps/geolocation/${source.form_id}?${qs}`
-    : `/maps/geolocation/${source.form_id}`;
+  const path = qs
+    ? `/maps/geolocation/${family.form_id}?${qs}`
+    : `/maps/geolocation/${family.form_id}`;
+  return api.get(path).then((res) => res?.data || []);
+};
 
-  const points = api.get(geoPath).then((res) => res?.data || []);
-  if (!source.question_name) {
-    return points.then((p) => ({ source, points: p, byParent: {} }));
+/**
+ * What the active mode needs to know about one family, as parent_id → answer.
+ *
+ * Three shapes, because three kinds of question: an option value, a date, and
+ * a compliance verdict. The verdict comes from the formula endpoint using the
+ * rule the family's own dashboard declares — the same call the National
+ * Compliance Snapshot makes, so a pin cannot disagree with the ring.
+ */
+const fetchModeAnswers = (mode, source, administrationId) => {
+  if (mode.type === "formula") {
+    const formula = resolveFamilyFormula(source);
+    if (!formula) {
+      return Promise.resolve({});
+    }
+    return api
+      .get("visualization/values/formula", {
+        params: {
+          parent_form_id: source.form_id,
+          group_by: "parent_id",
+          monitoring: "latest",
+          formula: JSON.stringify(formula),
+        },
+      })
+      .then((res) => verdictsByParent(res?.data?.data || []));
   }
-  const values = api
+  if (!source.question_name) {
+    return Promise.resolve({});
+  }
+  return api
     .get("visualization/values", {
       params: {
         question_name: source.question_name,
@@ -63,79 +78,139 @@ const fetchSource = (source, administrationId) => {
         ...(administrationId ? { administration_id: administrationId } : {}),
       },
     })
-    .then((res) => valuesByParent(res?.data?.data || []));
-  return Promise.all([points, values]).then(([p, byParent]) => ({
-    source,
-    points: p,
-    byParent,
-  }));
+    .then((res) =>
+      mode.type === "recency"
+        ? latestByParent(res?.data?.data || [])
+        : valuesByParent(res?.data?.data || [])
+    );
 };
 
 /**
- * A national map of every registered asset, coloured by whether its latest
- * monitoring found it working.
+ * A national map of every registered asset, coloured by whatever the active
+ * mode asks of it.
  *
  * `DashboardMap` takes one `source_form_id`; a cross-asset page has no single
- * form, so this widget takes a list and merges. Colour comes from the reserved
- * status palette rather than a per-question colour map, because the question
- * differs per family but the meaning does not.
+ * form, so this takes a list of families and merges. Colour comes from the
+ * reserved status palette rather than a per-question colour map, because the
+ * question differs per family but the meaning does not.
+ *
+ * Points and verdicts are fetched separately: switching mode re-asks the
+ * question, not where the sites are.
  */
-const MultiAssetMap = ({ item, filterState, height = 480 }) => {
-  const [responses, setResponses] = useState([]);
-  const [loading, setLoading] = useState(true);
+const MultiAssetMap = ({ item, filterState, height = 480, today }) => {
+  const modes = useMemo(() => resolveModes(item), [item]);
+  const families = useMemo(() => resolveFamilies(item), [item]);
+  const [modeKey, setModeKey] = useState(modes[0]?.key);
+  const mode = useMemo(
+    () => modes.find((m) => m.key === modeKey) || modes[0],
+    [modes, modeKey]
+  );
+
+  const [pointsByFamily, setPointsByFamily] = useState({});
+  const [failedFamilies, setFailedFamilies] = useState([]);
+  const [pointsLoading, setPointsLoading] = useState(true);
+  const [answersByFamily, setAnswersByFamily] = useState({});
+  const [answersLoading, setAnswersLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const sources = useMemo(() => item?.sources || [], [item]);
   const administrationId = filterState?.administration_id;
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    setPointsLoading(true);
     setError(null);
     // One asset failing must not blank the national map — the rest is still a
-    // valid, if partial, picture, so a rejected source becomes no points
+    // valid, if partial, picture, so a rejected family becomes no points
     // rather than a rejected batch.
     Promise.all(
-      sources.map((source) =>
-        fetchSource(source, administrationId).catch(() => ({
-          source,
-          points: [],
-          byParent: {},
-          failed: true,
-        }))
+      families.map((family) =>
+        fetchPoints(family, administrationId)
+          .then((points) => ({ family, points }))
+          .catch(() => ({ family, points: [], failed: true }))
       )
-    )
-      .then((results) => {
-        if (cancelled) {
-          return;
-        }
-        setResponses(results);
-        const failed = results.filter((r) => r.failed);
-        if (failed.length === sources.length && sources.length > 0) {
-          setError(new Error("No asset could be loaded"));
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err);
-          setLoading(false);
-        }
+    ).then((results) => {
+      if (cancelled) {
+        return;
+      }
+      const next = {};
+      results.forEach(({ family, points }) => {
+        next[family.key] = points;
       });
+      setPointsByFamily(next);
+      setFailedFamilies(
+        results
+          .filter((r) => r.failed)
+          .map((r) => r.family.label || r.family.key)
+      );
+      if (results.length > 0 && results.every((r) => r.failed)) {
+        setError(new Error("No asset could be loaded"));
+      }
+      setPointsLoading(false);
+    });
     return () => {
       cancelled = true;
     };
-  }, [sources, administrationId]);
+  }, [families, administrationId]);
 
-  const points = useMemo(() => buildStatusPoints(responses), [responses]);
-  const counts = useMemo(() => countByStatus(points), [points]);
+  useEffect(() => {
+    let cancelled = false;
+    setAnswersLoading(true);
+    const sources = mode?.sources || [];
+    Promise.all(
+      sources.map((source) =>
+        fetchModeAnswers(mode, source, administrationId)
+          .then((byParent) => ({ source, byParent }))
+          .catch(() => ({ source, byParent: {} }))
+      )
+    ).then((results) => {
+      if (cancelled) {
+        return;
+      }
+      const next = {};
+      results.forEach(({ source, byParent }) => {
+        next[source.key] = byParent;
+      });
+      setAnswersByFamily(next);
+      setAnswersLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, administrationId]);
+
+  const buckets = useMemo(() => modeBuckets(mode), [mode]);
+  const colorOf = useMemo(() => {
+    const byKey = {};
+    buckets.forEach((bucket) => {
+      byKey[bucket.key] = bucket.color;
+    });
+    return (key) => byKey[key] || toneColor("noData");
+  }, [buckets]);
+
+  const points = useMemo(
+    () =>
+      buildModePoints(families, pointsByFamily, mode, answersByFamily, today),
+    [families, pointsByFamily, mode, answersByFamily, today]
+  );
+
+  const counts = useMemo(() => {
+    const tally = {};
+    buckets.forEach((bucket) => {
+      tally[bucket.key] = 0;
+    });
+    points.forEach((point) => {
+      const key = point.__status || UNKNOWN;
+      tally[key] = (tally[key] || 0) + 1;
+    });
+    return tally;
+  }, [points, buckets]);
+
   const center = useMemo(() => {
     const d = geo?.defaultPos?.();
     return d?.coordinates || [0, 0];
   }, []);
-  const failedLabels = responses
-    .filter((r) => r.failed)
-    .map((r) => r.source?.label || r.source?.key);
+
+  const loading = pointsLoading || answersLoading;
 
   if (error) {
     return <Alert type="error" showIcon message="Could not load the map." />;
@@ -143,24 +218,46 @@ const MultiAssetMap = ({ item, filterState, height = 480 }) => {
 
   return (
     <div className="dashboard-map">
-      {failedLabels.length > 0 && (
+      {failedFamilies.length > 0 && (
         <Alert
           type="warning"
           showIcon
           style={{ marginBottom: 8 }}
-          message={`${failedLabels.join(
+          message={`${failedFamilies.join(
             ", "
           )} could not be loaded; showing the rest.`}
         />
       )}
+      {modes.length > 1 && (
+        // Nav only — the panes stay empty and the map below re-reads. Tabs
+        // rather than a button strip so switching what the pins mean looks
+        // like every other view switch on the dashboards.
+        <Tabs
+          className="compliance-snapshot-nav"
+          activeKey={mode?.key}
+          onChange={setModeKey}
+          items={modes.map((m) => ({
+            key: m.key,
+            label: (
+              <>
+                {m.label}
+                <FormulaInfo info={m.info} title={m.label} />
+              </>
+            ),
+          }))}
+        />
+      )}
+      {mode?.description && (
+        <div className="dashboard-map-note">{mode.description}</div>
+      )}
       <Space wrap style={{ marginBottom: 8 }}>
-        {BUCKETS.map((bucket) => (
+        {buckets.map((bucket) => (
           <Tag key={bucket.key} className="status-pill" color="default">
             <span
               className="dashboard-map-legend-dot"
-              style={{ background: STATUS_TONE[bucket.key] }}
+              style={{ background: bucket.color }}
             />
-            {bucket.label} · {counts[bucket.key]}
+            {bucket.label} · {counts[bucket.key] || 0}
           </Tag>
         ))}
       </Space>
@@ -180,7 +277,7 @@ const MultiAssetMap = ({ item, filterState, height = 480 }) => {
               <Marker
                 key={`${point.__sourceKey}-${point.id}`}
                 position={point.geo}
-                icon={markerIcon(point.__status)}
+                icon={markerIcon(colorOf(point.__status))}
               >
                 <Popup>
                   <div className="dashboard-map-popup">
@@ -190,7 +287,7 @@ const MultiAssetMap = ({ item, filterState, height = 480 }) => {
                     </div>
                     <div>{point.administration_full_name}</div>
                     <div>
-                      {BUCKETS.find((b) => b.key === point.__status)?.label}
+                      {buckets.find((b) => b.key === point.__status)?.label}
                     </div>
                   </div>
                 </Popup>
@@ -206,6 +303,7 @@ MultiAssetMap.propTypes = {
   item: PropTypes.object.isRequired,
   filterState: PropTypes.object,
   height: PropTypes.number,
+  today: PropTypes.instanceOf(Date),
 };
 
 export default MultiAssetMap;
