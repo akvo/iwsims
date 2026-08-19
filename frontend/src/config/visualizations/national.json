@@ -202,10 +202,7 @@
       "label": "Compliance Rate",
       "display": "percentage",
       "snapshot_ref": "compliance_snapshot",
-      "domain_ids": [
-        "domain_drinking_water",
-        "domain_effluent"
-      ],
+      "domain_ids": ["domain_drinking_water", "domain_effluent"],
       "caption": "{numerator} of {denominator} assessed pass",
       "status_thresholds": {
         "good": 90,
@@ -295,25 +292,19 @@
               "key": "rws",
               "form_id": 1749621221728,
               "question_name": "infrastructure_status",
-              "functional_values": [
-                "operational"
-              ]
+              "functional_values": ["operational"]
             },
             {
               "key": "eps",
               "form_id": 1749623934933,
               "question_name": "system_status",
-              "functional_values": [
-                "operational"
-              ]
+              "functional_values": ["operational"]
             },
             {
               "key": "pump",
               "form_id": 1749611049520,
               "question_name": "station_status",
-              "functional_values": [
-                "operational"
-              ]
+              "functional_values": ["operational"]
             }
           ]
         },
@@ -452,17 +443,13 @@
               "key": "rws",
               "form_id": 1749621221728,
               "question_name": "water_committee",
-              "functional_values": [
-                "yes"
-              ]
+              "functional_values": ["yes"]
             },
             {
               "key": "eps",
               "form_id": 1749623934933,
               "question_name": "water_committee",
-              "functional_values": [
-                "yes"
-              ]
+              "functional_values": ["yes"]
             }
           ]
         }
@@ -563,10 +550,7 @@
       "config": {
         "title": "Water Sampling by Asset",
         "xAxisLabel": "# of sites",
-        "color": [
-          "#0ca30c",
-          "#d03b3b"
-        ],
+        "color": ["#0ca30c", "#d03b3b"],
         "grid": {
           "left": 120,
           "right": 32,
