@@ -9,6 +9,7 @@ import {
 } from "../../util/hooks";
 import DashboardRenderer from "../../components/dashboard/DashboardRenderer";
 import LastRefreshed from "../../components/dashboard/widgets/LastRefreshed";
+import FormulaFamilyFetcher from "../../components/dashboard/FormulaFamilyFetcher";
 import { __clearVisualizationCache } from "../../util/hooks/useVisualizationRequest";
 import { fails } from "../../components/dashboard/compute/compliance";
 import { collectRuleQuestionNames } from "../../components/dashboard/compute/rulesKpi";
@@ -200,16 +201,25 @@ const SegmentFetcher = ({
   customFilterDefs,
   onSegmentData,
 }) => {
-  const { data } = useDashboardValues(segment.api, filterState, {
+  const { data, error } = useDashboardValues(segment.api, filterState, {
     fiscalYearStartMonth,
     customFilterDefs,
     parentFormId,
   });
+  // A failed segment reports an empty response rather than staying silent.
+  // Every compute already reads a missing segment as a zero, so this changes
+  // no number — but it tells a widget that waits for all its segments the
+  // difference between "still in flight" and "never coming", which is the
+  // difference between a value and a permanent skeleton.
   useEffect(() => {
     if (data) {
       onSegmentData(itemId, segment.key, data);
+      return;
     }
-  }, [itemId, segment.key, data, onSegmentData]);
+    if (error) {
+      onSegmentData(itemId, segment.key, { data: [], error });
+    }
+  }, [itemId, segment.key, data, error, onSegmentData]);
   return null;
 };
 
@@ -466,6 +476,31 @@ const Dashboard = () => {
     () => (config ? collectByCompute(config.items, "rules_kpi") : []),
     [config]
   );
+  // Fleet KPI cards whose value is a sum over per-family /values scalars.
+  const crossAssetKpiItems = useMemo(
+    () =>
+      config
+        ? collectByType(config.items, "cross_asset_card").filter(
+            (item) => (item.source || "segments") === "segments"
+          )
+        : [],
+    [config]
+  );
+  // Every (domain, family) pair a compliance snapshot judges by a formula.
+  // Fetched at page level rather than inside the snapshot so the fleet
+  // Compliance Rate card above it reads the same verdicts without asking
+  // for them again.
+  const formulaFamilies = useMemo(
+    () =>
+      config
+        ? collectByType(config.items, "compliance_snapshot").flatMap((item) =>
+            (item.domains || []).flatMap((domain) =>
+              (domain.families || []).map((family) => ({ domain, family }))
+            )
+          )
+        : [],
+    [config]
+  );
 
   const [crossTabByItem, setCrossTabByItem] = useState({});
   const [accessibilityBucketByItem, setAccessibilityBucketByItem] = useState(
@@ -481,6 +516,10 @@ const Dashboard = () => {
   const [criticalByItem, setCriticalByItem] = useState({});
   const [rulesByItem, setRulesByItem] = useState({});
   const [complianceDonutByItem, setComplianceDonutByItem] = useState({});
+  const [crossAssetKpiByItem, setCrossAssetKpiByItem] = useState({});
+  const [complianceFormulaByDomain, setComplianceFormulaByDomain] = useState(
+    {}
+  );
 
   const onCrossTabData = useCallback((id, payload) => {
     setCrossTabByItem((prev) =>
@@ -566,6 +605,24 @@ const Dashboard = () => {
       return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
     });
   }, []);
+  const onCrossAssetKpiSegmentData = useCallback((itemId, segmentKey, data) => {
+    setCrossAssetKpiByItem((prev) => {
+      const inner = prev[itemId] || {};
+      if (inner[segmentKey] === data) {
+        return prev;
+      }
+      return { ...prev, [itemId]: { ...inner, [segmentKey]: data } };
+    });
+  }, []);
+  const onFormulaFamilyCounts = useCallback((domainId, familyKey, counts) => {
+    setComplianceFormulaByDomain((prev) => {
+      const inner = prev[domainId] || {};
+      if (inner[familyKey] === counts) {
+        return prev;
+      }
+      return { ...prev, [domainId]: { ...inner, [familyKey]: counts } };
+    });
+  }, []);
   const onRulesSegmentData = useCallback((itemId, segmentKey, data) => {
     setRulesByItem((prev) => {
       const inner = prev[itemId] || {};
@@ -592,8 +649,12 @@ const Dashboard = () => {
       accessibility_no_issues_kpi: accessibilityNoIssuesKpiByItem,
       critical: criticalByItem,
       rules: rulesByItem,
+      cross_asset_kpi: crossAssetKpiByItem,
+      compliance_formula: complianceFormulaByDomain,
     }),
     [
+      crossAssetKpiByItem,
+      complianceFormulaByDomain,
       complianceResponses,
       complianceTotals,
       crossTabByItem,
@@ -1006,6 +1067,34 @@ const Dashboard = () => {
           />
         ))
       )}
+
+      {/* Invisible cross_asset_card segment fetchers — one per (item, segment)
+          pair. Each segment is one asset family's contribution to a fleet
+          total. */}
+      {crossAssetKpiItems.flatMap((item) =>
+        (item.segments || []).map((segment) => (
+          <SegmentFetcher
+            key={`${item.id}::${segment.key}`}
+            itemId={item.id}
+            segment={segment}
+            filterState={filters.queryParams}
+            parentFormId={config.parent_form_id}
+            fiscalYearStartMonth={fyStart}
+            customFilterDefs={customFilterDefs}
+            onSegmentData={onCrossAssetKpiSegmentData}
+          />
+        ))
+      )}
+
+      {/* Invisible compliance-formula fetchers — one per (domain, family). */}
+      {formulaFamilies.map(({ domain, family }) => (
+        <FormulaFamilyFetcher
+          key={`${domain.id}::${family.key}`}
+          domainId={domain.id}
+          family={family}
+          onCounts={onFormulaFamilyCounts}
+        />
+      ))}
 
       <Row gutter={[0, 0]} className="dashboard-header">
         <Col span={24}>

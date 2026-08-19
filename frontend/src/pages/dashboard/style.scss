@@ -111,6 +111,17 @@
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.18);
         }
+
+        // The caption under the figure: what the number is a share of, or
+        // what it is asking for. It sits below the figure rather than beside
+        // the label because it qualifies the value, not the question — and
+        // quieter than both, so the row still reads as five numbers.
+        .kpi-card-caption {
+          margin-top: 2px;
+          font-size: 12px;
+          line-height: 1.4;
+          opacity: 0.8;
+        }
       }
 
       // A tab container groups cards; it is not itself a surface. Left as one

@@ -148,3 +148,13 @@
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.45);
   vertical-align: middle;
 }
+
+// The active mode's own note, between the mode tabs and the legend. Sits
+// quieter than the card's description because it changes as you switch and
+// should not compete with the map itself.
+.dashboard-map-note {
+  margin-bottom: 8px;
+  color: #8c8c8c;
+  font-size: 12px;
+  line-height: 1.5;
+}

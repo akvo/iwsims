@@ -9,6 +9,7 @@ import MultiAssetMap from "./MultiAssetMap";
 import ComplianceSnapshot from "./ComplianceSnapshot";
 import KPICard from "./widgets/KPICard";
 import MetricCard from "./widgets/MetricCard";
+import CrossAssetKPICard from "./widgets/CrossAssetKPICard";
 import RankingWidget from "./widgets/RankingWidget";
 import SectionTitleWidget from "./widgets/SectionTitleWidget";
 import FilterBarWidget from "./widgets/FilterBarWidget";
@@ -144,6 +145,18 @@ const DashboardRenderer = ({
           definitionsById={definitionsById}
           computeResponses={resolvedComputeResponses}
           parentFormId={parentFormId}
+        />
+      );
+    }
+
+    if (type === "cross_asset_card") {
+      return (
+        <CrossAssetKPICard
+          item={item}
+          filterState={filterState}
+          customFilterDefs={customFilterDefs}
+          definitionsById={definitionsById}
+          computeResponses={resolvedComputeResponses}
         />
       );
     }
@@ -292,6 +305,7 @@ const DashboardRenderer = ({
             item={item}
             filterState={filterState}
             height={item.height || 480}
+            today={today}
           />
         </Card>
       );

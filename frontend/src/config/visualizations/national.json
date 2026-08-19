@@ -13,81 +13,231 @@
       "text": "National Overview"
     },
     {
-      "id": "kpi_total_wwtp",
-      "info": "Count of registered WWTP records. Not affected by the monitoring-period filter.",
-      "chart_type": "card",
+      "id": "kpi_total_assets",
+      "info": "Every asset registered in IWSIMS, across all five families: WWTP, WTP, RWS, EPS and Pump Stations.\nOne count per registration form, summed. Not affected by the monitoring-period filter — an asset that was not inspected this quarter still exists.\nThe per-family breakdown lives on each asset's own dashboard.",
+      "chart_type": "cross_asset_card",
+      "source": "segments",
       "order": 2,
       "col_span": 5,
-      "label": "Total WWTP",
-      "api": {
-        "parent_form_id": 1748903240763,
-        "monitoring": "latest",
-        "ignore_date_filter": true
-      }
+      "label": "Total Assets",
+      "caption": "across 5 categories",
+      "segments": [
+        {
+          "key": "wwtp",
+          "api": {
+            "parent_form_id": 1748903240763,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        },
+        {
+          "key": "wtp",
+          "api": {
+            "parent_form_id": 1749634736797,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        },
+        {
+          "key": "rws",
+          "api": {
+            "parent_form_id": 1749621221728,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        },
+        {
+          "key": "eps",
+          "api": {
+            "parent_form_id": 1749623934933,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        },
+        {
+          "key": "pump",
+          "api": {
+            "parent_form_id": 1749611049520,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        }
+      ]
     },
     {
-      "id": "kpi_total_wtp",
-      "info": "Count of registered WTP records. Not affected by the monitoring-period filter.",
-      "chart_type": "card",
+      "id": "kpi_inspected_12mo",
+      "info": "Assets with at least one monitoring submission in the last 12 months, read from each family's own inspection-date question (WTP records it as date_of_inspection, the rest as inspection_date).\nThe same counts the 'Inspected in the Last 12 Months' bar shows, summed — read that chart to see which families the gap sits in.\nThe share is of every registered asset, so a family that is never inspected lowers it rather than dropping out of the denominator.",
+      "chart_type": "cross_asset_card",
+      "source": "segments",
       "order": 3,
       "col_span": 5,
-      "label": "Total WTP",
-      "api": {
-        "parent_form_id": 1749634736797,
-        "monitoring": "latest",
-        "ignore_date_filter": true
-      }
+      "label": "Inspected (12 mo)",
+      "caption": "{percent}% of assets",
+      "status_thresholds": {
+        "good": 80,
+        "warning": 50
+      },
+      "segments": [
+        {
+          "key": "wwtp",
+          "role": "numerator",
+          "api": {
+            "parent_form_id": 1748903240763,
+            "question_name": "inspection_date",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "wtp",
+          "role": "numerator",
+          "api": {
+            "parent_form_id": 1749634736797,
+            "question_name": "date_of_inspection",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "rws",
+          "role": "numerator",
+          "api": {
+            "parent_form_id": 1749621221728,
+            "question_name": "inspection_date",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "eps",
+          "role": "numerator",
+          "api": {
+            "parent_form_id": 1749623934933,
+            "question_name": "inspection_date",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "pump",
+          "role": "numerator",
+          "api": {
+            "parent_form_id": 1749611049520,
+            "question_name": "inspection_date",
+            "sum_by": "parent_id",
+            "rolling_months": 12
+          }
+        },
+        {
+          "key": "wwtp__total",
+          "role": "denominator",
+          "api": {
+            "parent_form_id": 1748903240763,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        },
+        {
+          "key": "wtp__total",
+          "role": "denominator",
+          "api": {
+            "parent_form_id": 1749634736797,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        },
+        {
+          "key": "rws__total",
+          "role": "denominator",
+          "api": {
+            "parent_form_id": 1749621221728,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        },
+        {
+          "key": "eps__total",
+          "role": "denominator",
+          "api": {
+            "parent_form_id": 1749623934933,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        },
+        {
+          "key": "pump__total",
+          "role": "denominator",
+          "api": {
+            "parent_form_id": 1749611049520,
+            "monitoring": "latest",
+            "ignore_date_filter": true
+          }
+        }
+      ]
     },
     {
-      "id": "kpi_total_rws",
-      "info": "Count of registered RWS records. Not affected by the monitoring-period filter.",
-      "chart_type": "card",
+      "id": "kpi_operational_rate",
+      "info": "Share of ASSESSED sites whose latest monitoring found them operational.\nThe counts are the Operational Status ring's, unchanged — the same three questions the map colours its pins by: infrastructure_status (RWS), system_status (EPS), station_status (Pump Stations).\nWWTP and WTP are not in the denominator at all: neither form asks a plant-level status question, so dividing by the whole fleet would report a gap in the forms as a fleet of broken plants. See issue #34 G1 decision 1.\nThe card is filled from its own value — green at 90% or above, amber at 75%, red below — rather than a fixed colour that would stay green at any reading.",
+      "chart_type": "cross_asset_card",
+      "source": "donut_domain",
       "order": 4,
       "col_span": 5,
-      "label": "Total RWS",
-      "api": {
-        "parent_form_id": 1749621221728,
-        "monitoring": "latest",
-        "ignore_date_filter": true
+      "label": "% Operational",
+      "display": "percentage",
+      "snapshot_ref": "compliance_snapshot",
+      "domain_id": "donut_operational_compliance",
+      "caption": "{numerator} of {denominator} assessed",
+      "status_thresholds": {
+        "good": 90,
+        "warning": 75
       }
     },
     {
-      "id": "kpi_total_eps",
-      "info": "Count of registered EPS records. Not affected by the monitoring-period filter.",
-      "chart_type": "card",
+      "id": "kpi_compliance_rate",
+      "info": "Share of ASSESSED sites meeting the water-quality standard that applies to them — drinking water for WTP, RWS and EPS; effluent for WWTP.\nEvery family is judged by the rule its own dashboard owns and displays, so this headline moves when a threshold there moves. It pools exactly the sites the Drinking Water and Effluent rings below count, which are disjoint: no asset both supplies drinking water and treats effluent.\nPump Stations are absent — neither rule applies to them.\nSites never sampled, and EPS sites whose sample never went to a lab, are not assessed rather than failing: an untested site is a gap in monitoring, not a breach.",
+      "chart_type": "cross_asset_card",
+      "source": "formula_domains",
       "order": 5,
       "col_span": 5,
-      "label": "Total EPS",
-      "api": {
-        "parent_form_id": 1749623934933,
-        "monitoring": "latest",
-        "ignore_date_filter": true
+      "label": "Compliance Rate",
+      "display": "percentage",
+      "snapshot_ref": "compliance_snapshot",
+      "domain_ids": ["domain_drinking_water", "domain_effluent"],
+      "caption": "{numerator} of {denominator} assessed pass",
+      "status_thresholds": {
+        "good": 90,
+        "warning": 75
       }
     },
     {
-      "id": "kpi_total_pump",
-      "info": "Count of registered Pump Stations records. Not affected by the monitoring-period filter.",
-      "chart_type": "card",
+      "id": "kpi_critical_alerts",
+      "info": "Assets whose latest monitoring trips at least one red condition for their family.\nThis is the row count of each All Alerts tab, summed — the same definition, the same criteria, one number. Open All Alerts to see which sites and why.\nOne site counts once however many conditions it trips.",
+      "chart_type": "cross_asset_card",
+      "source": "escalation",
       "order": 6,
       "col_span": 4,
-      "label": "Total Pump Stations",
-      "api": {
-        "parent_form_id": 1749611049520,
-        "monitoring": "latest",
-        "ignore_date_filter": true
-      }
+      "label": "Critical Alerts",
+      "caption": "assets need attention",
+      "status_when_positive": "critical",
+      "refs": [
+        "all-alerts#alerts_wwtp",
+        "all-alerts#alerts_wtp",
+        "all-alerts#alerts_rws",
+        "all-alerts#alerts_eps",
+        "all-alerts#alerts_pump"
+      ]
     },
     {
       "id": "map_national_status",
-      "info": "Every registered asset, coloured by whether its latest monitoring found it working.\nEach family answers this under its own question and option set: station_status on pump stations (operational / blocked / overflowing / not_operational), system_status on EPS (operational / issue_with_system), infrastructure_status on RWS (operational / non_operational). Anything not listed as functional counts as non-functional.\nWWTP and WTP have no plant-level status question on either monitoring form, so their sites are always grey. That is a gap in the forms, not a finding about those plants — see issue #34 G1.\nGrey also covers a site whose family asks the question but which has not been monitored yet. An unanswered status is not evidence of a fault, so it is never coloured as one.",
+      "info": "One pin per registered asset, coloured by whichever question the tab above selects.\nNot every family answers every question, and a family that does not is left grey rather than dropped — a site missing from the map reads as a site that does not exist. Each mode's own note says which families it covers.\nCritical alerts are deliberately not a mode: the escalation endpoint pages at 100 rows and an overlay needs every id. The Critical Alerts card above counts them, and the All Alerts dashboard lists them.",
       "chart_type": "multi_asset_map",
       "order": 7,
       "col_span": 24,
       "height": 520,
       "zoom": 7,
-      "label": "Asset Status Nationwide",
-      "description": "Every registered asset, by whether its latest monitoring found it operational.",
-      "sources": [
+      "label": "Asset Map",
+      "description": "Every registered asset. Pick what the pins should say.",
+      "families": [
         {
           "key": "wwtp",
           "label": "WWTP",
@@ -101,23 +251,207 @@
         {
           "key": "rws",
           "label": "RWS",
-          "form_id": 1749621221728,
-          "question_name": "infrastructure_status",
-          "functional_values": ["operational"]
+          "form_id": 1749621221728
         },
         {
           "key": "eps",
           "label": "EPS",
-          "form_id": 1749623934933,
-          "question_name": "system_status",
-          "functional_values": ["operational"]
+          "form_id": 1749623934933
         },
         {
           "key": "pump",
           "label": "Pump Stations",
-          "form_id": 1749611049520,
-          "question_name": "station_status",
-          "functional_values": ["operational"]
+          "form_id": 1749611049520
+        }
+      ],
+      "modes": [
+        {
+          "key": "operational",
+          "label": "Operational status",
+          "type": "option",
+          "info": "Whether each site's latest monitoring found it working.\nEach family answers under its own question and option set: station_status on Pump Stations (operational / blocked / overflowing / not_operational), system_status on EPS (operational / issue_with_system), infrastructure_status on RWS (operational / non_operational). Anything not listed as functional counts as non-functional.\nWWTP and WTP have no plant-level status question on either monitoring form, so their sites are always grey. That is a gap in the forms, not a finding about those plants — see issue #34 G1.\nGrey also covers a site whose family asks the question but which has not been monitored yet. An unanswered status is not evidence of a fault, so it is never coloured as one.",
+          "buckets": [
+            {
+              "key": "functional",
+              "label": "Functional",
+              "tone": "good"
+            },
+            {
+              "key": "non_functional",
+              "label": "Non-functional",
+              "tone": "critical"
+            },
+            {
+              "key": "unknown",
+              "label": "No status recorded",
+              "tone": "noData"
+            }
+          ],
+          "sources": [
+            {
+              "key": "rws",
+              "form_id": 1749621221728,
+              "question_name": "infrastructure_status",
+              "functional_values": ["operational"]
+            },
+            {
+              "key": "eps",
+              "form_id": 1749623934933,
+              "question_name": "system_status",
+              "functional_values": ["operational"]
+            },
+            {
+              "key": "pump",
+              "form_id": 1749611049520,
+              "question_name": "station_status",
+              "functional_values": ["operational"]
+            }
+          ]
+        },
+        {
+          "key": "inspected",
+          "label": "Inspected",
+          "type": "recency",
+          "info": "How long ago each site was last inspected, from its family's own inspection-date question (WTP records it as date_of_inspection, the rest as inspection_date).\nThe bands are the inspection-date histogram's: 6 months and 12 months, so a site amber here is amber there.\nGrey is a site with no inspection date at all. That is not the same as overdue — one is a site nobody has been to, the other a date that has gone stale — so it is not coloured as one.",
+          "bands": [
+            {
+              "key": "recent",
+              "label": "≤ 6 months",
+              "max_months": 6,
+              "tone": "good"
+            },
+            {
+              "key": "watch",
+              "label": "7–12 months",
+              "max_months": 12,
+              "tone": "warning"
+            },
+            {
+              "key": "overdue",
+              "label": "> 12 months",
+              "tone": "critical"
+            }
+          ],
+          "unknown_label": "Never inspected",
+          "sources": [
+            {
+              "key": "wwtp",
+              "form_id": 1748903240763,
+              "question_name": "inspection_date"
+            },
+            {
+              "key": "wtp",
+              "form_id": 1749634736797,
+              "question_name": "date_of_inspection"
+            },
+            {
+              "key": "rws",
+              "form_id": 1749621221728,
+              "question_name": "inspection_date"
+            },
+            {
+              "key": "eps",
+              "form_id": 1749623934933,
+              "question_name": "inspection_date"
+            },
+            {
+              "key": "pump",
+              "form_id": 1749611049520,
+              "question_name": "inspection_date"
+            }
+          ]
+        },
+        {
+          "key": "compliance",
+          "label": "Compliance",
+          "type": "formula",
+          "info": "Whether each site met the water-quality standard that applies to it — drinking water for WTP, RWS and EPS; effluent for WWTP.\nEvery family is judged by the rule its own dashboard owns and displays, so a pin here cannot disagree with that dashboard or with the Compliance Rate card above.\nPump Stations are always grey: neither rule applies to them. Grey also covers a site never sampled, and an EPS site whose sample never went to a lab — an untested site is a gap in monitoring, not a breach.\nThe formula endpoint takes no administration filter, so narrowing the division narrows which pins are drawn, not how they are judged.",
+          "buckets": [
+            {
+              "key": "compliant",
+              "label": "Compliant",
+              "tone": "good"
+            },
+            {
+              "key": "non_compliant",
+              "label": "Non-compliant",
+              "tone": "critical"
+            },
+            {
+              "key": "unknown",
+              "label": "Not assessed",
+              "tone": "noData"
+            }
+          ],
+          "sources": [
+            {
+              "key": "wwtp",
+              "form_id": 1748903240763,
+              "params_ref": [
+                "wwtp-overview#param_bod",
+                "wwtp-overview#param_cod",
+                "wwtp-overview#param_tds"
+              ]
+            },
+            {
+              "key": "wtp",
+              "form_id": 1749634736797,
+              "params_ref": [
+                "wtp-overview#param_total_coliform",
+                "wtp-overview#param_turbidity",
+                "wtp-overview#param_residual_chlorine",
+                "wtp-overview#param_ph",
+                "wtp-overview#param_conductivity"
+              ]
+            },
+            {
+              "key": "rws",
+              "form_id": 1749621221728,
+              "formula_ref": "rws-overview#wq_globals"
+            },
+            {
+              "key": "eps",
+              "form_id": 1749623934933,
+              "formula_ref": "eps-overview#wq_globals"
+            }
+          ]
+        },
+        {
+          "key": "committee",
+          "label": "Water committee",
+          "type": "option",
+          "info": "Whether the site has a water committee and whether it is active, from the water_committee question.\nOnly RWS and EPS ask it — these are the community-managed supplies where a committee is the operator. WWTP, WTP and Pump Stations are utility-run and have no such question, so their sites stay grey.\nGrey also covers an RWS or EPS site that has not been monitored yet.",
+          "buckets": [
+            {
+              "key": "functional",
+              "label": "Active committee",
+              "tone": "good"
+            },
+            {
+              "key": "non_functional",
+              "label": "No active committee",
+              "tone": "critical"
+            },
+            {
+              "key": "unknown",
+              "label": "Not asked / no answer",
+              "tone": "noData"
+            }
+          ],
+          "sources": [
+            {
+              "key": "rws",
+              "form_id": 1749621221728,
+              "question_name": "water_committee",
+              "functional_values": ["yes"]
+            },
+            {
+              "key": "eps",
+              "form_id": 1749623934933,
+              "question_name": "water_committee",
+              "functional_values": ["yes"]
+            }
+          ]
         }
       ]
     },
