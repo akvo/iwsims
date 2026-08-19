@@ -15,9 +15,14 @@ import { listAvailableVisualizations } from "../../config/visualizations";
  * One asset's dashboard and a page spanning the whole fleet answer different
  * questions, so they read as one undifferentiated list only by accident. The
  * split needs no new config: `cross_asset` already marks exactly that boundary,
- * so a future fleet-wide page joins the second group on its own. The divider is
+ * so a future fleet-wide page joins the first group on its own. The divider is
  * dropped when either group is empty, rather than opening or closing the menu
  * with a stray line.
+ *
+ * The fleet-wide pages lead. They are where you start — what the country looks
+ * like, what needs attention, what was inspected — and an asset dashboard is
+ * where you go once you know which asset you care about. Ordered the other way
+ * the entry point sat below five pages you had to scroll past to reach it.
  *
  * @param {Array<{slug: string, name: string, cross_asset: boolean}>} dashboards
  * @param {(d: object) => React.ReactNode} renderLabel
@@ -26,7 +31,7 @@ export const buildDashboardMenu = (dashboards = [], renderLabel) => {
   const perAsset = dashboards.filter((d) => !d.cross_asset);
   const crossAsset = dashboards.filter((d) => d.cross_asset);
   const toItem = (d) => ({ key: d.slug, label: renderLabel(d) });
-  const groups = [perAsset, crossAsset].filter((group) => group.length > 0);
+  const groups = [crossAsset, perAsset].filter((group) => group.length > 0);
   return groups.flatMap((group, index) => [
     ...(index > 0 ? [{ type: "divider", key: `divider-${index}` }] : []),
     ...group.map(toItem),
