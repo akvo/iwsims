@@ -166,6 +166,32 @@ describe("buildModePoints", () => {
     expect(wwtp.__asset).toBe("WWTP");
   });
 
+  it("survives answers left over from another mode", () => {
+    // Switching mode re-renders before the new fetch lands. The previous
+    // mode's answers are not merely stale — a recency mode's are bare date
+    // strings, and an option classifier reading one used to throw and blank
+    // the page. The map now discards them, but nothing here may crash on a
+    // shape it did not expect either.
+    expect(() =>
+      buildModePoints(families, pointsByFamily, mode, {
+        rws: { 1: "2026-07-01T00:00:00Z" },
+      })
+    ).not.toThrow();
+    const points = buildModePoints(families, pointsByFamily, mode, {
+      rws: { 1: "2026-07-01T00:00:00Z" },
+    });
+    // A date is not one of the committee question's passing values, so the
+    // honest answer is "not functional" — but it is a colour, not a crash.
+    expect(points.find((p) => p.id === 1).__status).toBe("non_functional");
+  });
+
+  it("reads a single-option answer returned as a bare value", () => {
+    const points = buildModePoints(families, pointsByFamily, mode, {
+      rws: { 1: "operational" },
+    });
+    expect(points.find((p) => p.id === 1).__status).toBe("functional");
+  });
+
   it("bands a recency mode by date", () => {
     const points = buildModePoints(
       families,

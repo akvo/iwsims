@@ -109,7 +109,12 @@ const MultiAssetMap = ({ item, filterState, height = 480, today }) => {
   const [pointsByFamily, setPointsByFamily] = useState({});
   const [failedFamilies, setFailedFamilies] = useState([]);
   const [pointsLoading, setPointsLoading] = useState(true);
-  const [answersByFamily, setAnswersByFamily] = useState({});
+  // Answers are stamped with the mode that fetched them. Switching mode
+  // re-renders before the new fetch lands, and the previous mode's answers
+  // are not merely stale — they are a different shape. A date read as an
+  // option value is not a wrong colour but a crash, so the stamp is checked
+  // before they are used.
+  const [answers, setAnswers] = useState({ modeKey: null, byFamily: {} });
   const [answersLoading, setAnswersLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -170,7 +175,7 @@ const MultiAssetMap = ({ item, filterState, height = 480, today }) => {
       results.forEach(({ source, byParent }) => {
         next[source.key] = byParent;
       });
-      setAnswersByFamily(next);
+      setAnswers({ modeKey: mode?.key, byFamily: next });
       setAnswersLoading(false);
     });
     return () => {
@@ -187,10 +192,17 @@ const MultiAssetMap = ({ item, filterState, height = 480, today }) => {
     return (key) => byKey[key] || toneColor("noData");
   }, [buckets]);
 
+  // A mode's answers are only its own. Anything left over from the mode you
+  // switched away from is discarded rather than classified.
+  const answersForMode = useMemo(
+    () => (answers.modeKey === mode?.key ? answers.byFamily : {}),
+    [answers, mode]
+  );
+
   const points = useMemo(
     () =>
-      buildModePoints(families, pointsByFamily, mode, answersByFamily, today),
-    [families, pointsByFamily, mode, answersByFamily, today]
+      buildModePoints(families, pointsByFamily, mode, answersForMode, today),
+    [families, pointsByFamily, mode, answersForMode, today]
   );
 
   const counts = useMemo(() => {

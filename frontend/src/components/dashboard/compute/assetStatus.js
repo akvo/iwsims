@@ -29,14 +29,17 @@ export const STATUS_TONE = {
  * invent non-functional sites out of missing monitoring — so an absent answer,
  * an absent question, and an empty array all land on UNKNOWN.
  *
- * @param {string[]|null|undefined} values latest option values for the site
+ * @param {string[]|string|null|undefined} values latest option values for the
+ *   site. A bare value is accepted as a one-element answer — /values returns a
+ *   scalar for a single-option question and an array for a multi-option one.
  * @param {{question_name?: string, functional_values?: string[]}} source
  */
 export const classifySite = (values, source = {}) => {
   if (!source.question_name) {
     return UNKNOWN;
   }
-  const answered = (values || []).filter(
+  const list = Array.isArray(values) ? values : [values];
+  const answered = list.filter(
     (v) => v !== null && typeof v !== "undefined" && v !== ""
   );
   if (!answered.length) {
