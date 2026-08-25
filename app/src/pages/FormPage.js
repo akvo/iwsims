@@ -126,13 +126,29 @@ const FormPage = ({ navigation, route }) => {
     return unsubscribe;
   }, []);
 
+  // Every exit returns to the screen that opened the form — the list the user was
+  // working in, which refetches and shows what just happened. Home is only a fallback
+  // for a stack with nothing to go back to (restored state, a future deep link).
+  const leaveForm = () => {
+    // Home stays mounted below and computes its card counts once, so it has to be
+    // told. This replaces navigating to Home purely to trigger that refresh.
+    UIState.update((s) => {
+      s.refreshPage = true;
+    });
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate('Home');
+  };
+
   const handleOnPressArrowBackButton = async () => {
     if (hasUnsavedChanges) {
       setShowDialogMenu(true);
       return;
     }
     await refreshForm();
-    navigation.goBack();
+    leaveForm();
   };
 
   // Queues the upload job. Deliberately non-fatal: the answers are what matter, and
@@ -175,7 +191,7 @@ const FormPage = ({ navigation, route }) => {
     }
     await refreshStorageWarning();
     await refreshForm();
-    navigation.navigate('Home', { ...route?.params });
+    leaveForm();
   };
 
   const handleOnSaveAndExit = async ({ sendToWeb = false } = {}) => {
@@ -226,7 +242,7 @@ const FormPage = ({ navigation, route }) => {
 
   const handleOnExit = async () => {
     await refreshForm();
-    return navigation.navigate('Home');
+    return leaveForm();
   };
 
   const handleOnSubmitForm = async (values) => {
