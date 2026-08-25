@@ -7,8 +7,10 @@ const uiText = {
     swipeHintText: 'Swipe a draft right for more actions',
     deleteDraftTitle: 'Delete draft',
     deleteDraftMessage: 'This draft will be permanently deleted from this device.',
-    deleteDraftWebWarning:
-      'This draft is also on the web dashboard and may reappear after the next sync.',
+    deleteDraftWebToo: 'The copy on the web dashboard will be deleted as well.',
+    deleteDraftFailedText: 'Could not delete this draft. Nothing was removed — please try again.',
+    deleteNeedsConnectionText:
+      'This draft is on the web dashboard. Connect to the internet to delete it.',
     sendToWebTitle: 'Send to web dashboard',
     sendToWebMessage: 'This draft will be uploaded to the web dashboard on the next sync.',
     sendToWebToast: 'Draft will be uploaded on the next sync',
@@ -184,8 +186,11 @@ const uiText = {
     swipeHintText: 'Faites glisser un brouillon vers la droite pour plus d’actions',
     deleteDraftTitle: 'Supprimer le brouillon',
     deleteDraftMessage: 'Ce brouillon sera définitivement supprimé de cet appareil.',
-    deleteDraftWebWarning:
-      'Ce brouillon est aussi sur le tableau de bord web et peut réapparaître après la synchronisation.',
+    deleteDraftWebToo: 'La copie sur le tableau de bord web sera également supprimée.',
+    deleteDraftFailedText:
+      'Impossible de supprimer ce brouillon. Rien n’a été retiré — veuillez réessayer.',
+    deleteNeedsConnectionText:
+      'Ce brouillon est sur le tableau de bord web. Connectez-vous à Internet pour le supprimer.',
     sendToWebTitle: 'Envoyer au tableau de bord web',
     sendToWebMessage:
       'Ce brouillon sera téléversé vers le tableau de bord web lors de la prochaine synchronisation.',

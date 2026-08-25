@@ -16,7 +16,7 @@ import * as SQLite from 'expo-sqlite';
 import * as Sentry from '@sentry/react-native';
 import moment from 'moment';
 import { FormState, UIState, UserState } from '../store';
-import { i18n } from '../lib';
+import { api, i18n } from '../lib';
 import { BaseLayout, FAButton } from '../components';
 import { getCurrentTimestamp } from '../form/lib';
 import { crudDataPoints, crudForms } from '../database/crud';
@@ -29,10 +29,6 @@ const Submission = ({ navigation, route }) => {
   const [draftsOnly, setDraftsOnly] = useState(false);
   const [sortByLastSubmission, setSortByLastSubmission] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
-  // Bumped whenever a confirmation opens. It is part of each swipeable row's key, so
-  // the rows remount closed — otherwise an opened row stays open behind the dialog
-  // and is still open after the list refetches.
-  const [swipeToken, setSwipeToken] = useState(0);
 
   const previousForm = FormState.useState((s) => s.previousForm);
   const activeForm = FormState.useState((s) => s.form);
@@ -41,6 +37,7 @@ const Submission = ({ navigation, route }) => {
   const trans = i18n.text(activeLang);
   const db = SQLite.useSQLiteContext();
   const refreshPage = UIState.useState((s) => s.refreshPage);
+  const isOnline = UIState.useState((s) => s.online);
 
   // The registration list is the only place monitoring rollups make sense: a
   // monitoring list is already scoped to one uuid and has no children of its own.
@@ -363,9 +360,23 @@ const Submission = ({ navigation, route }) => {
     }
     try {
       if (type === 'delete') {
+        // Atomic: the server copy goes first, and the local row only follows if that
+        // succeeded. Either both disappear or neither does — a half-deleted draft
+        // that comes back on the next sync is harder to explain than a failure.
+        // The device route, not the web one: /draft-submission requires
+        // IsAuthenticated, which a MobileAssignmentToken can never satisfy.
+        if (item.draftId) {
+          await api.delete(`/draft-list/${item.draftId}`);
+        }
         await removeLocalFiles(item);
         await crudDataPoints.deleteDataPoint(db, item.id);
         await refreshStorageWarning();
+        // Home stays mounted underneath and computes its Submitted/Draft/Synced
+        // counts once, so without this its card still counts the deleted draft
+        // until something else happens to refresh it.
+        UIState.update((s) => {
+          s.refreshPage = true;
+        });
       } else {
         await crudDataPoints.setSendToWeb(db, item.id);
         if (Platform.OS === 'android') {
@@ -376,12 +387,22 @@ const Submission = ({ navigation, route }) => {
     } catch (error) {
       Sentry.captureMessage('[Submission] Unable to apply draft action');
       Sentry.captureException(error);
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(trans.deleteDraftFailedText, ToastAndroid.LONG);
+      }
     }
   };
 
-  const askConfirm = (payload) => {
-    setSwipeToken((prev) => prev + 1);
-    setConfirmAction(payload);
+  // A web-known draft cannot be deleted offline, and finding that out after
+  // confirming is worse than not being offered it: say so on the tap instead.
+  const askDelete = (item) => {
+    if (item.draftId && !isOnline) {
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(trans.deleteNeedsConnectionText, ToastAndroid.LONG);
+      }
+      return;
+    }
+    setConfirmAction({ type: 'delete', item });
   };
 
   const renderRowBody = (item) => (
@@ -455,7 +476,7 @@ const Submission = ({ navigation, route }) => {
     }
     return (
       <ListItem.Swipeable
-        key={`${item.id}-${swipeToken}`}
+        key={item.id}
         onPress={() => openFamilyDraft(item)}
         containerStyle={[styles.itemContainer, styles.itemDraftBorder]}
         testID={`submission-item-${item.id}`}
@@ -464,7 +485,7 @@ const Submission = ({ navigation, route }) => {
         leftContent={
           <View style={styles.swipeActions}>
             <TouchableOpacity
-              onPress={() => askConfirm({ type: 'delete', item })}
+              onPress={() => askDelete(item)}
               testID={`delete-draft-${item.id}`}
               style={styles.swipeAction}
             >
@@ -472,7 +493,7 @@ const Submission = ({ navigation, route }) => {
             </TouchableOpacity>
             {!item.draftId && !item.sendToWeb && (
               <TouchableOpacity
-                onPress={() => askConfirm({ type: 'sendToWeb', item })}
+                onPress={() => setConfirmAction({ type: 'sendToWeb', item })}
                 testID={`send-to-web-${item.id}`}
                 style={styles.swipeAction}
               >
@@ -599,7 +620,7 @@ const Submission = ({ navigation, route }) => {
         <Text>
           {confirmAction?.type === 'delete'
             ? `${trans.deleteDraftMessage}${
-                confirmAction?.item?.draftId ? ` ${trans.deleteDraftWebWarning}` : ''
+                confirmAction?.item?.draftId ? ` ${trans.deleteDraftWebToo}` : ''
               }`
             : trans.sendToWebMessage}
         </Text>

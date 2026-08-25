@@ -4,7 +4,9 @@
 finish) · [akvo/iwsims#16](https://github.com/akvo/iwsims/issues/16) (Step 0 — the SQLite
 connection fix). One PR, two issue references.
 
-Implementation plan. **No backend, no new screens, no redesign.** Most UI work lands in one
+Implementation plan. **No new screens, no redesign.** Almost entirely app-side; the single
+backend change is one routed `destroy` action, explained under "Why deleting a web-known draft
+requires connectivity". Most UI work lands in one
 screen ([Submission.js](app/src/pages/Submission.js)); two smaller changes touch
 [App.js](app/App.js) (Step 0) and [AttachmentView.js](app/src/components/FormDataDetails/AttachmentView.js) (Step 7).
 
@@ -45,19 +47,31 @@ are the places the code differs from the snippets, and why.
 | 7 | — | `beforeRemove` no longer re-dispatches `e.data.action` (Submission, FormOptions) | Neither listener calls `preventDefault()`, so the dispatch ran the action a second time — "GO_BACK was not handled by any navigator" once the screen was gone. |
 | 8 | — | `FAButton`: `position: 'fixed'` → `'absolute'` + `useSafeAreaInsets()`; lists get `paddingBottom: 88` | `fixed` is not a React Native position value; it fell back to in-flow layout and painted a full-width band over the list. Going absolute then required handling the nav-bar inset explicitly. |
 | 9 | — | `SaveDialogMenu` overlay sized by content; Cancel is `type="clear"` | `flex: 0.2` was tuned for three buttons and clipped the fourth once "Save and send to web dashboard" was added. |
+| 10 | Deletion is local-only; the dialog warns the draft may reappear | **Atomic delete of both copies**, gated on connectivity — see below | The endpoint already existed, so the plan was wrong to assume a backend change was needed. |
+| 11 | `swipeToken` in the row key, to close the swipe on confirm | **Removed** | It remounted the row — and the button being pressed — before the confirmation could open, so no dialog appeared at all. Losing the auto-close is cosmetic; a confirmation that never shows is not. |
+| 12 | — | `destroy` action + route on the mobile `DraftFormDataViewSet`, and 8 tests for it | The PR's only backend change; the web delete endpoint is unreachable with a device token. |
+| 13 | — | `UIState.refreshPage` set after a delete | Home stays mounted and would otherwise keep counting the deleted draft on its card. |
 
 Also shipped as planned but worth noting concretely: `expo-intent-launcher@12.1.5`,
 `BYTES_PER_MB` in constants, `DATABASE_VERSION` 9 → 10, and a `finishInit` helper in `App.js` so
 config, session, recovery and the storage probe run on the migration path too — previously an
 upgrade launch skipped them and the app looked logged out until restarted.
 
-### Step 9 (tests) was not done
+### Step 9 (tests): backend covered, mobile blocked
 
-The suite cannot run in this environment: **66 failed / 6 passed, 17 failed tests** — and the
+**Backend — added and passing.** `api/v1/v1_mobile/tests/tests_mobile_draft_delete.py`, 8 tests:
+a successful delete asserted through `_base_manager` (so a soft delete would fail the test, since
+a soft-deleted draft returns through the draft-list download); another user's draft 404s; a
+*published* submission 404s, which is the worst thing this endpoint could get wrong; an invalid
+token 401s; a web session token 403s, documenting the auth asymmetry that made this endpoint
+necessary; the list route still resolves, guarding the unanchored-pattern ordering; and GET on the
+detail route 405s.
+
+**Mobile — still blocked.** The suite reports **66 failed / 6 passed, 17 failed tests**, and the
 identical figures come back with every change on this branch stashed, on stock `main`. The causes
 are `Cannot find native module 'ExpoTaskManager'` and react-test-renderer against React 19, neither
-related to this work. Writing suites that cannot execute would read as coverage in review while
-proving nothing, so the specs in Step 9 stand as the definition of what to add once the harness is
+related to this work. Suites that cannot execute would read as coverage in review while proving
+nothing, so the specs in Step 9 stand as the definition of what to add once the harness is
 repaired.
 
 ---
@@ -2112,6 +2126,60 @@ Pullstate updates.
 - **`expo-intent-launcher` is Android-only.** The app already ships Android-only (`PermissionsAndroid`,
   `ToastAndroid` throughout), so this adds no new platform constraint — but the open handler
   should still fall back to `Linking.openURL` if `Platform.OS !== 'android'`.
+
+
+### Why deleting a web-known draft requires connectivity
+
+Deletion splits by whether the backend knows about the draft:
+
+| Draft | Offline behaviour |
+|---|---|
+| Local only (no `draftId`) — the common case after P4 | Deletes immediately, as always |
+| Known to the web (`draftId` set: sent to web, or downloaded from it) | Blocked while offline, with a message |
+
+When it runs, it is **atomic**: the server copy is deleted first, and the local row only goes if
+that succeeded. Either both copies disappear or nothing does. A failure leaves the draft intact and
+retryable rather than half-deleted.
+
+**The web endpoint could not be reused, and this is the PR's one backend change.**
+`DELETE /draft-submission/<id>` does exist
+([v1_data/views.py:1110-1127](backend/api/v1/v1_data/views.py#L1110-L1127)) — my first attempt
+called it and every delete failed. It is gated on `IsAuthenticated`, and the app does not
+authenticate as a user: it sends a `MobileAssignmentToken`, which
+`AssignmentAwareJWTAuthentication.get_user` deliberately resolves to `AnonymousUser`
+([v1_mobile/authentication.py:47-51](backend/api/v1/v1_mobile/authentication.py#L47-L51)). No
+device can ever pass that permission.
+
+The device surface already had the right home: `DraftFormDataViewSet`
+([v1_mobile/views.py:711](backend/api/v1/v1_mobile/views.py#L711)) is a `ModelViewSet` with
+`IsMobileAssignment`, whose `get_queryset` already scopes to the assignment's own drafts — so
+`destroy` existed and was simply unrouted. Added: a `destroy` override calling `hard_delete()`
+(a soft delete would return through the draft-list download and undo itself), and a
+`device/draft-list/<pk>` route declared **before** the list route, whose pattern is unanchored and
+would otherwise swallow it.
+
+**Why not queue it like every other write.** A queued delete needs a tombstone, because a hard
+delete takes the `draftId` with it and nothing would tell the next sync which server draft to
+remove. Two ways to hold that:
+
+- a dedicated queue table — a migration for a transient scrap of data;
+- a `jobs` row (`type` tags it, `info` carries the draftId, and the create → process → delete
+  lifecycle already matches) — no migration, but still a new job type, a drain step ordered *before*
+  the draft download, and a 404-means-already-gone branch.
+
+Both were built and rejected. The machinery only pays off for drafts that reached the web, which
+P4 makes the exception rather than the rule — and it buys a half-state ("deleted here, still there,
+will go later") that is harder to explain than "connect to the internet to delete this one". If
+enumerators report needing to delete web-known drafts offline, the `jobs` route is the one to take:
+no migration, and the ordering constraint is the only subtle part.
+
+**Home has to be told.** It stays mounted under the Submission screen and computes its
+Submitted / Draft / Synced counts once, so a delete left its card counting a draft that no longer
+exists. Setting `UIState.refreshPage` after a successful delete drives the `getUserForms` refresh
+that already existed. Submission keeps its own explicit `fetchData()` rather than relying on the
+same flag: both screens consume `refreshPage` and each clears it, so whichever effect runs first
+wins — fine as a broadcast, unreliable as the only trigger for the list you are looking at. The
+cost is at most one redundant local query.
 
 ## Resolved: what the checkbox means
 
