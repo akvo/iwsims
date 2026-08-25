@@ -2181,6 +2181,15 @@ same flag: both screens consume `refreshPage` and each clears it, so whichever e
 wins — fine as a broadcast, unreliable as the only trigger for the list you are looking at. The
 cost is at most one redundant local query.
 
+## Follow-up: only ask to save when there are unsaved changes
+
+Reviewing drafts became a routine activity once this work made them findable — and every review
+ends in a save/exit dialog that had nothing to offer, because `FormPage` prompts on "are there any
+answers" rather than "did anything change".
+
+Designed and implemented separately, in
+[`mobile-unsaved-changes-dialog.md`](doc/claude/mobile-unsaved-changes-dialog.md).
+
 ## Resolved: what the checkbox means
 
 **Checked = drafts only**, labelled `Show drafts only (12)`.

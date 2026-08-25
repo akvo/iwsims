@@ -29,6 +29,7 @@ const FormPage = ({ navigation, route }) => {
   const surveyDuration = FormState.useState((s) => s.surveyDuration);
   const surveyStart = FormState.useState((s) => s.surveyStart);
   const currentValues = FormState.useState((s) => s.currentValues);
+  const hasUnsavedChanges = FormState.useState((s) => s.hasUnsavedChanges);
   const cascades = FormState.useState((s) => s.cascades);
   const repeats = FormState.useState((s) => s.repeats);
   const userId = UserState.useState((s) => s.id);
@@ -48,6 +49,22 @@ const FormPage = ({ navigation, route }) => {
   // Stable for the life of this screen, so a retry after a failed save overwrites its
   // own fallback file instead of accumulating one per attempt.
   const submissionUuidRef = useRef(route.params?.uuid || Crypto.randomUUID());
+  // Writes made by the app itself — loading a draft, clearing the form — are not
+  // changes by the user. Pullstate dispatches subscriptions synchronously inside
+  // update() (_updateState iterates clientSubscriptions in a plain loop), so raising
+  // this before an update and lowering it after covers exactly that update.
+  const suppressTrackingRef = useRef(false);
+
+  // Runs `write` with change tracking off. Synchronous by design: an async callback
+  // would leave tracking disabled while unrelated writes land.
+  const withoutTracking = (write) => {
+    suppressTrackingRef.current = true;
+    try {
+      write();
+    } finally {
+      suppressTrackingRef.current = false;
+    }
+  };
 
   const formJSON = useMemo(() => {
     if (!selectedForm?.json) {
@@ -67,18 +84,50 @@ const FormPage = ({ navigation, route }) => {
       }, Promise.resolve());
     }
 
-    FormState.update((s) => {
-      s.surveyStart = null;
-      s.currentValues = {};
-      s.visitedQuestionGroup = [];
-      s.cascades = {};
-      s.surveyDuration = 0;
-      s.repeats = {};
+    // Suppressed, and not merely for tidiness: subscribers run inside _updateState
+    // after the new state is committed, so the subscription below would fire on
+    // `currentValues = {}` and set hasUnsavedChanges back to true in a nested update
+    // — leaving the flag raised on a form with no answers in it.
+    withoutTracking(() => {
+      FormState.update((s) => {
+        s.surveyStart = null;
+        s.currentValues = {};
+        s.visitedQuestionGroup = [];
+        s.cascades = {};
+        s.surveyDuration = 0;
+        s.repeats = {};
+        s.hasUnsavedChanges = false;
+      });
     });
   }, [formJSON]);
 
+  useEffect(() => {
+    // FormState is global and outlives this screen, so a flag left raised by the last
+    // form would make the very first back press prompt. Reset on mount.
+    FormState.update((s) => {
+      s.hasUnsavedChanges = false;
+    });
+
+    // Subscribing catches every writer — fields, prefill, geo, autofield, map — and
+    // any added later, which setting the flag at each call site would not. Installed
+    // once: it captures nothing that changes.
+    const unsubscribe = FormState.subscribe(
+      (s) => s.currentValues,
+      () => {
+        if (suppressTrackingRef.current) {
+          return;
+        }
+        FormState.update((s) => {
+          s.hasUnsavedChanges = true;
+        });
+      },
+    );
+
+    return unsubscribe;
+  }, []);
+
   const handleOnPressArrowBackButton = async () => {
-    if (Object.keys(currentValues).length) {
+    if (hasUnsavedChanges) {
       setShowDialogMenu(true);
       return;
     }
@@ -226,7 +275,7 @@ const FormPage = ({ navigation, route }) => {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (Object.keys(currentValues).length) {
+      if (hasUnsavedChanges) {
         setShowDialogMenu(true);
         return true;
       }
@@ -234,7 +283,7 @@ const FormPage = ({ navigation, route }) => {
       return false;
     });
     return () => backHandler.remove();
-  }, [currentValues, refreshForm]);
+  }, [hasUnsavedChanges, refreshForm]);
 
   const fetchSavedSubmission = useCallback(async () => {
     if (!savedDataPointId) {
@@ -259,9 +308,12 @@ const FormPage = ({ navigation, route }) => {
             jsonData[q.id] = [val];
           }
         });
-      FormState.update((s) => {
-        s.currentValues = jsonData;
-        s.prevAdmAnswer = prevAdmAnswer;
+      // The stored answers arriving in state is not the user changing them.
+      withoutTracking(() => {
+        FormState.update((s) => {
+          s.currentValues = jsonData;
+          s.prevAdmAnswer = prevAdmAnswer;
+        });
       });
     }
     setLoading(false);
