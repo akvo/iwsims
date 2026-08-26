@@ -3,6 +3,9 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from rest_framework import status
 
+from django_q.models import OrmQ
+from django_q.tasks import async_task
+
 from api.v1.v1_forms.models import Forms
 from api.v1.v1_jobs.constants import JobStatus, JobTypes
 from api.v1.v1_jobs.models import Jobs
@@ -136,3 +139,73 @@ class DownloadRetryAPITestCase(TestCase, ProfileTestHelperMixin):
         self.assertNotEqual(job.result, old_result)
         self.assertTrue(job.result.startswith("download-"))
         self.assertTrue(job.result.endswith(".xlsx"))
+
+    # ---- TC-6 -----------------------------------------------------------
+    def test_retry_forwards_the_original_download_options(self):
+        """A retry must not silently change what the user asked for.
+
+        _generate_*_download reads these from kwargs, not job.info, so a
+        retry that omits them falls back to use_label=True and no date
+        filter. doc/claude/download-fails-on-question-type-change.md
+        """
+        job = self._make_job(JobStatus.failed)
+        job.info = {
+            **self.job_info,
+            "use_label": False,
+            "download_type": "all",
+            "date_from": "2026-05-01",
+            "date_to": "2026-08-21",
+        }
+        job.save()
+        OrmQ.objects.all().delete()
+
+        response = self.client.post(
+            f"/api/v1/download/retry/{job.id}",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        queued = [row.task() for row in OrmQ.objects.all()]
+        self.assertEqual(len(queued), 1)
+        kwargs = queued[0]["kwargs"]
+        self.assertEqual(kwargs["use_label"], False)
+        self.assertEqual(kwargs["download_type"], "all")
+        self.assertEqual(kwargs["date_from"], "2026-05-01")
+        self.assertEqual(kwargs["date_to"], "2026-08-21")
+        self.assertNotIn("retry", kwargs)
+
+    # ---- TC-7 -----------------------------------------------------------
+    def test_retry_purges_the_previous_task(self):
+        job = self._make_job(JobStatus.failed)
+        OrmQ.objects.all().delete()
+        stale_id = async_task(
+            "api.v1.v1_jobs.job.job_generate_data_download", job.id
+        )
+        job.task_id = stale_id
+        job.save()
+        self.assertEqual(OrmQ.objects.count(), 1)
+
+        response = self.client.post(
+            f"/api/v1/download/retry/{job.id}",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        queued = [row.task() for row in OrmQ.objects.all()]
+        self.assertEqual(len(queued), 1, "one task per job id")
+        self.assertNotEqual(queued[0]["id"], stale_id)
+
+    def test_retry_commits_job_before_enqueueing(self):
+        """The worker reads job.result; it must be the new filename."""
+        job = self._make_job(JobStatus.failed)
+        OrmQ.objects.all().delete()
+        response = self.client.post(
+            f"/api/v1/download/retry/{job.id}",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        queued = [row.task() for row in OrmQ.objects.all()][0]
+        persisted = Jobs.objects.get(pk=queued["args"][0])
+        expected = response.data["file_url"].split("/")[-1]
+        self.assertEqual(persisted.result, expected)
+        self.assertEqual(persisted.task_id, queued["id"])

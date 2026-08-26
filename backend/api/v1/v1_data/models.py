@@ -167,6 +167,22 @@ class FormData(SoftDeletes, Draft):
         db_table = "data"
 
 
+def option_answer_text(answer, separator: str = "|") -> str:
+    """Display text for a geo/option/multiple_option answer.
+
+    Falls back to name/value when `options` is NULL. That is the shape left
+    behind when a question is retyped to an option type after the answer was
+    written: the submitted value stays in `name` and `options` was never
+    populated.
+    See doc/claude/download-fails-on-question-type-change.md
+    """
+    if answer.options:
+        return separator.join(map(str, answer.options))
+    if answer.name is not None:
+        return str(answer.name)
+    return "" if answer.value is None else str(answer.value)
+
+
 class Answers(models.Model):
     data = models.ForeignKey(
         to=FormData, on_delete=models.CASCADE, related_name="data_answer"
@@ -197,7 +213,7 @@ class Answers(models.Model):
             QuestionTypes.option,
             QuestionTypes.multiple_option,
         ]:
-            answer = "|".join(map(str, self.options))
+            answer = option_answer_text(self)
         elif q.type in [
             QuestionTypes.input,
             QuestionTypes.text,

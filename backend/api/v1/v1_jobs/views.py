@@ -31,6 +31,7 @@ from rest_framework.fields import ChoiceField
 
 from api.v1.v1_forms.models import Forms
 from api.v1.v1_jobs.constants import JobStatus, JobTypes, DataDownloadTypes
+from api.v1.v1_jobs.job import purge_queued_task
 from api.v1.v1_jobs.models import Jobs
 from api.v1.v1_jobs.serializers import (
     DownloadDataRequestSerializer,
@@ -242,17 +243,32 @@ def download_retry(request, version, job_id):
     new_file = "download-{0}-{1}-{2}.{3}".format(
         form_name, today, uuid4(), ext
     )
+    # Drop the previous attempt from the broker queue: it is unacked, still
+    # scheduled for re-delivery, and would race this one on the same
+    # job.result path.
+    purge_queued_task(job.task_id)
     job.result = new_file
     job.status = JobStatus.on_progress
     job.attempt = 0
+    # Commit before enqueueing — a worker can pick the task up immediately
+    # and would otherwise read the previous job.result.
+    job.save()
+    # The original options live in job.info; _generate_*_download reads them
+    # from kwargs, so a retry that omits them silently changes the export.
     task_id = async_task(
         "api.v1.v1_jobs.job.job_generate_data_download",
         job.id,
-        retry=0,
+        download_type=job.info.get(
+            "download_type", DataDownloadTypes.recent
+        ),
+        use_label=job.info.get("use_label", True),
+        date_from=job.info.get("date_from"),
+        date_to=job.info.get("date_to"),
+        administration=job.info.get("administration"),
         hook="api.v1.v1_jobs.job.job_generate_data_download_result",
     )
     job.task_id = task_id
-    job.save()
+    job.save(update_fields=["task_id"])
     return Response(
         {
             "task_id": task_id,
