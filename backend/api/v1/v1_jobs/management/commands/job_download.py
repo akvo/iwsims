@@ -99,7 +99,6 @@ class Command(BaseCommand):
             "api.v1.v1_jobs.job.job_generate_data_download",
             job.id,
             **info,
-            retry=0,
             hook="api.v1.v1_jobs.job.job_generate_data_download_result",
         )
         job.task_id = task_id

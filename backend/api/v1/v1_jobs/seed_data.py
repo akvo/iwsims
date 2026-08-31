@@ -130,18 +130,31 @@ def collect_answers(user: SystemUser, dp: dict, qs: dict, data_id):
                 if q.meta:
                     names.append(str(aw))
         if q.type == QuestionTypes.option:
-            answer.options = [aw] if aw else None
-            if q.meta and aw:
-                names.append(aw)
+            # An empty cell must not persist options=NULL: every reader of
+            # an option answer assumes a list. Skip the row instead, the way
+            # the geo/date branches above already do.
+            if aw:
+                answer.options = [aw]
+                if q.meta:
+                    names.append(aw)
+            else:
+                valid = False
         if q.type == QuestionTypes.multiple_option:
             if isinstance(aw, str):
                 answer.options = aw.split("|")
                 if q.meta:
                     names.append(aw.replace("|", "-"))
-            else:
+            elif isinstance(aw, list):
                 answer.options = aw
                 if q.meta and aw:
-                    names.append("-".join(aw))
+                    names.append("-".join([str(o) for o in aw]))
+            elif aw is not None:
+                # numeric option codes arrive from pandas as int/float
+                answer.options = [str(aw)]
+                if q.meta:
+                    names.append(str(aw))
+            else:
+                valid = False
         if q.type == QuestionTypes.cascade and aw:
             answer.name = aw
             if q.extra and q.extra.get("type") == "entity" and administration:

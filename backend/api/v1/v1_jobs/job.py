@@ -2,11 +2,12 @@ import logging
 import os
 import re
 import shutil
+from pathlib import Path
 import tempfile
 import zipfile
 from datetime import datetime, time, timedelta
 from dateutil import parser
-from django_q.models import Task
+from django_q.models import Task, OrmQ
 
 import pandas as pd
 from django.conf import settings
@@ -25,7 +26,7 @@ from api.v1.v1_forms.models import (
     QuestionOptions,
 )
 from api.v1.v1_forms.constants import QuestionTypes
-from api.v1.v1_data.models import FormData
+from api.v1.v1_data.models import FormData, option_answer_text
 from api.v1.v1_jobs.constants import JobStatus, JobTypes
 
 from api.v1.v1_jobs.models import Jobs
@@ -221,6 +222,12 @@ def get_answer_label(answer_values, question_id):
         ).first()
         if options:
             answer_label.append(options.label)
+        else:
+            # No matching option: either the option was removed from the
+            # form, or the question was retyped after this answer was
+            # written and the stored text was never an option value.
+            # Keep it — dropping it silently loses the submitted answer.
+            answer_label.append(value)
     return "|".join(answer_label)
 
 
@@ -541,8 +548,7 @@ def _resolve_administration(kwargs):
 
 def _generate_excel_download(job, **kwargs):
     file_path = "./tmp/{0}".format(job.result)
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    Path(file_path).unlink(missing_ok=True)
     administration_ids, administration_name = _resolve_administration(kwargs)
     form = Forms.objects.get(pk=job.info.get("form_id"))
     download_type = kwargs.get("download_type", DataDownloadTypes.recent)
@@ -569,14 +575,15 @@ def _generate_excel_download(job, **kwargs):
             writer, form, monitoring_forms, job,
             administration_name, date_from, date_to,
         )
-    url = upload(file=file_path, folder="download")
-    return url
+    try:
+        return upload(file=file_path, folder="download")
+    finally:
+        Path(file_path).unlink(missing_ok=True)
 
 
 def _generate_zip_download(job, **kwargs):
     zip_path = "./tmp/{0}".format(job.result)
-    if os.path.exists(zip_path):
-        os.remove(zip_path)
+    Path(zip_path).unlink(missing_ok=True)
     administration_ids, administration_name = _resolve_administration(kwargs)
     form = Forms.objects.get(pk=job.info.get("form_id"))
     download_type = kwargs.get("download_type", DataDownloadTypes.recent)
@@ -642,10 +649,27 @@ def _generate_zip_download(job, **kwargs):
                     )
                 zf.write(child_path, f"{child_name}.xlsx")
 
-        url = upload(file=zip_path, folder="download")
-        return url
+        return upload(file=zip_path, folder="download")
     finally:
+        Path(zip_path).unlink(missing_ok=True)
         shutil.rmtree(scratch_dir, ignore_errors=True)
+
+
+def purge_queued_task(task_id: str) -> int:
+    """Drop a task from the broker queue by its django-q task id.
+
+    OrmQ stores a signed payload, so the id is only readable by unpacking
+    each row. ponytail: linear scan — the queue is capped at queue_limit=50,
+    index the unpacked id if that ever changes.
+    """
+    if not task_id:
+        return 0
+    removed = 0
+    for row in OrmQ.objects.all():
+        if row.task().get("id") == task_id:
+            row.delete()
+            removed += 1
+    return removed
 
 
 def job_generate_data_download(job_id, **kwargs):
@@ -786,21 +810,29 @@ def transform_form_data_for_report(
                             if answer:
                                 # Format answer as before
                                 if question.type == QuestionTypes.geo:
-                                    value = ",".join(map(str, answer.options))
+                                    value = option_answer_text(
+                                        answer, separator=","
+                                    )
                                 elif question.type in [
                                     QuestionTypes.option,
                                     QuestionTypes.multiple_option,
                                 ]:
-                                    options = answer.question.options.filter(
-                                        value__in=answer.options
-                                    ).all()
-                                    value = (
-                                        "|".join(
-                                            [opt.label for opt in options]
+                                    if not answer.options:
+                                        # question retyped after submission
+                                        value = answer.name or ""
+                                    else:
+                                        options = (
+                                            answer.question.options.filter(
+                                                value__in=answer.options
+                                            ).all()
                                         )
-                                        if options
-                                        else ""
-                                    )
+                                        value = (
+                                            "|".join(
+                                                [o.label for o in options]
+                                            )
+                                            if options
+                                            else ""
+                                        )
                                 elif question.type == QuestionTypes.date:
                                     value = ""
                                     if (
@@ -900,19 +932,25 @@ def transform_form_data_for_report(
                         if form_data_index is None:
                             continue
                         if question.type == QuestionTypes.geo:
-                            value = ",".join(map(str, answer.options))
+                            value = option_answer_text(
+                                answer, separator=","
+                            )
                         elif question.type in [
                             QuestionTypes.option,
                             QuestionTypes.multiple_option,
                         ]:
-                            options = answer.question.options.filter(
-                                value__in=answer.options
-                            ).all()
-                            value = (
-                                "|".join([opt.label for opt in options])
-                                if options
-                                else ""
-                            )
+                            if not answer.options:
+                                # question retyped after submission
+                                value = answer.name or ""
+                            else:
+                                options = answer.question.options.filter(
+                                    value__in=answer.options
+                                ).all()
+                                value = (
+                                    "|".join([o.label for o in options])
+                                    if options
+                                    else ""
+                                )
                         elif question.type == QuestionTypes.date:
                             value = ""
                             if isinstance(answer.name, str) and answer.name:
@@ -999,8 +1037,7 @@ def job_generate_data_report(job_id: int, **kwargs):
 
         # Clean up any existing file
         temp_file_path = f"./tmp/{job.result}"
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
+        Path(temp_file_path).unlink(missing_ok=True)
 
         # Generate dynamic data from database
         form_data = transform_form_data_for_report(
@@ -1038,15 +1075,43 @@ def job_generate_data_report(job_id: int, **kwargs):
             form_name=form.name,
             display_names=display_names,
         )
-        url = upload(file=file_path, folder="download_datapoint_report")
-        return url
+        try:
+            return upload(
+                file=file_path, folder="download_datapoint_report"
+            )
+        finally:
+            Path(file_path).unlink(missing_ok=True)
     except Forms.DoesNotExist:
         logger.error(f"Form with ID {form_id} not found")
         return []
 
 
+def _job_for_task(task):
+    """Resolve the Jobs row a finished task belongs to.
+
+    `task_id` is written by the enqueueing caller *after* async_task returns,
+    so a fast worker can finish before that column is set. Every job function
+    takes job_id as its first positional arg, so fall back to that rather
+    than raising out of a hook — an exception here leaves the job stuck on
+    `on_progress` forever.
+    """
+    job = Jobs.objects.filter(task_id=task.id).first()
+    if job:
+        return job
+    args = task.args or ()
+    if args:
+        job = Jobs.objects.filter(pk=args[0]).first()
+    if not job:
+        logger.warning(
+            f"No Jobs row for task {task.id} ({task.name}); orphaned task"
+        )
+    return job
+
+
 def job_generate_data_download_result(task):
-    job = Jobs.objects.get(task_id=task.id)
+    job = _job_for_task(task)
+    if not job:
+        return
     job.attempt = job.attempt + 1
     if task.success:
         job.status = JobStatus.done
@@ -1070,7 +1135,9 @@ def seed_data_job(job_id):
 
 
 def seed_data_job_result(task):
-    job = Jobs.objects.get(task_id=task.id)
+    job = _job_for_task(task)
+    if not job:
+        return
     job.attempt = job.attempt + 1
     is_super_admin = job.user.is_superuser
     if task.result:
@@ -1148,7 +1215,9 @@ def validate_excel(job_id):
 
 
 def validate_excel_result(task):
-    job = Jobs.objects.get(task_id=task.id)
+    job = _job_for_task(task)
+    if not job:
+        return
     job.attempt = job.attempt + 1
     job_info = job.info
     if task.result:

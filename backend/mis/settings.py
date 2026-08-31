@@ -256,6 +256,12 @@ Q_CLUSTER = {
     "queue_limit": 50,
     "bulk": 10,
     "orm": "default",
+    # Without ack_failures a failed task is never acknowledged, so the ORM
+    # broker re-delivers it every `retry` seconds forever. max_attempts is
+    # the backstop for tasks killed without reporting (timeout).
+    # doc/claude/download-fails-on-question-type-change.md
+    "ack_failures": True,
+    "max_attempts": 3,
 }
 
 LOGGING = {

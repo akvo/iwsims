@@ -97,7 +97,7 @@ def formdata_stats(request, form_id, version):
                 for a in d.data_answer.filter(
                     question_id=question.id
                 ).all():
-                    for v in a.options:
+                    for v in a.options or []:
                         v_data = question.options.filter(value=v).first()
                         if v_data:
                             data.append({
