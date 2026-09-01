@@ -12,7 +12,146 @@
       "order": 0,
       "sample_question_name": "can_take_water_sample",
       "test_method_question_name": "water_testing_method",
-      "monitoring_form_id": 1749652214711
+      "monitoring_form_id": 1749652214711,
+      "info": "The drinking-water verdict for WTP, as returned by DWS on the 2026 threshold sheet (§3.1). Four parameters decide it — total coliform, faecal coliform, E. coli and turbidity. Residual chlorine, pH, conductivity and salinity have thresholds and are shown as dot strips, but DWS did not put them in the verdict, so a plant outside those bands is flagged rather than failed. Temperature was returned as \"acceptable (any range)\" and has no threshold at all.\nE. coli passes only at zero, and DWS drew no distinction between a lab result and a CBT bag test — the same limit applies to whichever number was recorded.\nDeclared here rather than on each card so the KPI, the stacked bar and the National Compliance Snapshot cannot drift apart.",
+      "compliance_formula": {
+        "buckets": [
+          {
+            "value": "_no_info",
+            "label": "No information available",
+            "all_of": [
+              {
+                "question_name": "total_coliform_cfu_100ml",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "turbidity_ntu",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "e_coli_cfu_100ml",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "e_coli_count_cbt",
+                "op": "is_empty"
+              }
+            ]
+          },
+          {
+            "value": "non_compliant",
+            "label": "No",
+            "any_of": [
+              {
+                "question_name": "total_coliform_cfu_100ml",
+                "op": ">",
+                "value": 0,
+                "label": "Total coliform"
+              },
+              {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "op": ">",
+                "value": 0,
+                "label": "Faecal coliform"
+              },
+              {
+                "question_name": "turbidity_ntu",
+                "op": ">=",
+                "value": 5,
+                "label": "Turbidity"
+              },
+              {
+                "label": "E. coli",
+                "any_of": [
+                  {
+                    "question_name": "e_coli_cfu_100ml",
+                    "op": ">",
+                    "value": 0
+                  },
+                  {
+                    "question_name": "e_coli_count_cbt",
+                    "op": ">",
+                    "value": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "default": {
+          "value": "compliant",
+          "label": "Yes"
+        }
+      }
+    },
+    {
+      "id": "operational_globals",
+      "chart_type": "operational_globals",
+      "hide": true,
+      "order": 0,
+      "info": "The plant-level operational rule for WTP, held here so the WTP dashboard and the National Compliance Snapshot cannot drift apart. Per the DWS calculation sheet a plant is operational when it reports no production constraints, produces more than zero megalitres a day, and registers no risk on whichever pumps carry its raw water.\nThe three pump conditions are written as option_not_contains rather than option_contains: a plant that does not use a given transport mode is never asked that question, and an unasked question must not fail it.",
+      "compliance_formula": {
+        "buckets": [
+          {
+            "value": "_no_info",
+            "label": "No information available",
+            "any_of": [
+              {
+                "question_name": "has_production_constraints",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "daily_production_megalitres",
+                "op": "is_empty"
+              }
+            ]
+          },
+          {
+            "value": "non_compliant",
+            "label": "No",
+            "any_of": [
+              {
+                "question_name": "has_production_constraints",
+                "op": "option_contains",
+                "value": "yes",
+                "label": "Production constraints reported"
+              },
+              {
+                "question_name": "daily_production_megalitres",
+                "op": "<=",
+                "value": 0,
+                "label": "No daily production"
+              },
+              {
+                "question_name": "pumps_rising_main_has_risks",
+                "op": "option_contains",
+                "value": "yes",
+                "label": "Rising main pump risks"
+              },
+              {
+                "question_name": "borehole_pump_has_risks",
+                "op": "option_contains",
+                "value": "yes",
+                "label": "Borehole pump risks"
+              },
+              {
+                "question_name": "borehole_gallery_pumps_has_risks",
+                "op": "option_contains",
+                "value": "yes",
+                "label": "Borehole gallery pump risks"
+              }
+            ]
+          }
+        ],
+        "default": {
+          "value": "compliant",
+          "label": "Yes"
+        }
+      }
     },
     {
       "id": "filters_main",
@@ -64,19 +203,47 @@
     },
     {
       "id": "kpi_operational",
-      "info": "Plant is OPERATIONAL when :\n  • Have you noted any production constraints? = No (no production constraints), AND\n  • What is the average daily production of the plant in megalitres? > 0, AND\n  • Are there any risks associated with the Pumps/Rising Main? = No (where Pumps/Rising Main is part of transport), AND\n  • Are there any risks associated with the Borehole Pump? = No (where Borehole Pump is part of transport), AND\n  • Are there any risks associated with the Borehole Gallery Pumps? = No (where Borehole Gallery Pumps part of transport).\n% = operational / total plants.",
-      "chart_type": "metric_card",
+      "info": "Plant is OPERATIONAL when :\n  • Have you noted any production constraints? = No (no production constraints), AND\n  • What is the average daily production of the plant in megalitres? > 0, AND\n  • Are there any risks associated with the Pumps/Rising Main? = No (where Pumps/Rising Main is part of transport), AND\n  • Are there any risks associated with the Borehole Pump? = No (where Borehole Pump is part of transport), AND\n  • Are there any risks associated with the Borehole Gallery Pumps? = No (where Borehole Gallery Pumps part of transport).\n% = operational / total plants.\nThe three pump conditions use option_not_equals, which passes on an unanswered question: a plant is only asked about a transport mode it actually uses, and an unasked question must not fail it.\nThis is the same rule the National Compliance Snapshot applies to WTP, declared once on operational_globals.",
+      "chart_type": "card",
+      "compute": "rules_kpi",
       "order": 4,
       "col_span": 5,
       "label": "% Operational",
       "color": "#0ca30c",
-      "api": {
-        "question_name": "has_production_constraints",
-        "group_by": "option",
-        "include_unanswered": true
+      "denominator_api": {
+        "ignore_date_filter": true
       },
-      "show_percentage": true,
-      "target_group": "no"
+      "rules": [
+        {
+          "all_of": [
+            {
+              "question_name": "has_production_constraints",
+              "op": "option_not_equals",
+              "value": "yes"
+            },
+            {
+              "question_name": "daily_production_megalitres",
+              "op": "gt",
+              "value": 0
+            },
+            {
+              "question_name": "pumps_rising_main_has_risks",
+              "op": "option_not_equals",
+              "value": "yes"
+            },
+            {
+              "question_name": "borehole_pump_has_risks",
+              "op": "option_not_equals",
+              "value": "yes"
+            },
+            {
+              "question_name": "borehole_gallery_pumps_has_risks",
+              "op": "option_not_equals",
+              "value": "yes"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "kpi_dw_compliance",
@@ -92,7 +259,10 @@
         "param_turbidity",
         "param_residual_chlorine",
         "param_ph",
-        "param_conductivity"
+        "param_conductivity",
+        "param_fecal_coliform",
+        "param_e_coli_lab",
+        "param_e_coli_cbt"
       ],
       "globals_ref": "wq_globals",
       "denominator_api": {
@@ -116,7 +286,10 @@
         "param_turbidity",
         "param_residual_chlorine",
         "param_ph",
-        "param_conductivity"
+        "param_conductivity",
+        "param_fecal_coliform",
+        "param_e_coli_lab",
+        "param_e_coli_cbt"
       ],
       "operational_segments": [
         {
@@ -228,7 +401,10 @@
         "param_turbidity",
         "param_residual_chlorine",
         "param_ph",
-        "param_conductivity"
+        "param_conductivity",
+        "param_fecal_coliform",
+        "param_e_coli_lab",
+        "param_e_coli_cbt"
       ],
       "globals_ref": "wq_globals"
     },
@@ -420,7 +596,7 @@
     {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 17,
+      "order": 18,
       "col_span": 24,
       "items": [
         {
@@ -453,7 +629,10 @@
                 "param_turbidity",
                 "param_residual_chlorine",
                 "param_ph",
-                "param_conductivity"
+                "param_conductivity",
+                "param_fecal_coliform",
+                "param_e_coli_lab",
+                "param_e_coli_cbt"
               ],
               "operational_segments": [
                 {
@@ -741,6 +920,75 @@
               },
               "api": {
                 "question_name": "ph",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_fecal_coliform",
+              "info": "Faecal coliform in cfu/100ml. Not drawn as a strip — it is carried so the DWS verdict on wq_globals can read it. Every recorded value on the fleet is currently 0.0, so it fails nobody today; it is in the rule because DWS put it there, not because it is currently discriminating.",
+              "chart_type": "dot_strip",
+              "hide": true,
+              "order": 90,
+              "col_span": 12,
+              "label": "Faecal coliform",
+              "description": "Acceptance threshold \u2264 0 CFU/100mL",
+              "config": {
+                "title": "Faecal coliform",
+                "xAxisLabel": "CFU/100mL",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 0
+              },
+              "api": {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_e_coli_lab",
+              "info": "E. coli from a lab test, in cfu/100ml. Carried for the DWS verdict on wq_globals rather than drawn. No plant on the fleet has recorded this yet — every E. coli figure currently comes from the CBT bag instead.",
+              "chart_type": "dot_strip",
+              "hide": true,
+              "order": 91,
+              "col_span": 12,
+              "label": "E. coli (lab)",
+              "description": "Acceptance threshold \u2264 0 CFU/100mL",
+              "config": {
+                "title": "E. coli (lab)",
+                "xAxisLabel": "CFU/100mL",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 0
+              },
+              "api": {
+                "question_name": "e_coli_cfu_100ml",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_e_coli_cbt",
+              "info": "E. coli from a CBT bag test. Carried for the DWS verdict on wq_globals rather than drawn. DWS set one limit of 0/100mL for E. coli and drew no lab-versus-CBT distinction, so this is judged against the same threshold as the lab figure.",
+              "chart_type": "dot_strip",
+              "hide": true,
+              "order": 92,
+              "col_span": 12,
+              "label": "E. coli (CBT)",
+              "description": "Acceptance threshold \u2264 0 CFU/100mL",
+              "config": {
+                "title": "E. coli (CBT)",
+                "xAxisLabel": "CFU/100mL",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 0
+              },
+              "api": {
+                "question_name": "e_coli_count_cbt",
                 "group_by": "parent_id",
                 "monitoring": "latest"
               }
@@ -1343,18 +1591,67 @@
       ]
     },
     {
+      "id": "chart_ohs_score_distribution",
+      "info": "Count, per plant, how many OHS checks its latest monitoring confirms in the healthy state:\n  • Do you have a OHS policy for the Plant? = Yes\n  • Do your staff use OHS equipment at the work place? = Yes\n  • Do plant staff comply to the requirements of the OHS Policy? = Yes\nThis counts confirmed assurance; it is not a score out of 3, so the bars are not a performance ranking. All three checks are asked on the Comprehensive monitoring form only, so a plant whose monitoring is all Quick is absent from the chart rather than scoring low.\nA check counts only when it is confirmed healthy. Unanswered and answered-badly both read as not confirmed — a deliberate merge, so a low bar means little assurance rather than proven failure.\nThis is not a restatement of the OHS Policy Flow above. That Sankey is sequential — a plant reaches the second stage only by passing the first — so a plant with no policy whose staff nonetheless use equipment is invisible there and scores 1 here.",
+      "chart_type": "bar",
+      "compute": "score_histogram",
+      "order": 14,
+      "col_span": 24,
+      "description": "How many OHS checks each plant has confirmed compliant on its latest monitoring. Every plant answering at least one check is counted.",
+      "config": {
+        "title": "OHS Items Confirmed Compliant",
+        "xAxisLabel": "OHS items confirmed compliant",
+        "yAxisLabel": "# of plants"
+      },
+      "display": {
+        "partial": true
+      },
+      "segments": [
+        {
+          "key": "has_ohs_policy",
+          "label": "OHS policy in place",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "has_ohs_policy",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "staff_use_ohs_equipment",
+          "label": "Staff use OHS equipment",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "staff_use_ohs_equipment",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "staff_comply_ohs_policy",
+          "label": "Staff comply with OHS policy",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "staff_comply_ohs_policy",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        }
+      ]
+    },
+    {
       "id": "chart_pumps_dosing_functioning",
-      "info": "Per subsystem, plants whose latest monitoring registered no risk against it versus plants that did.\n  • Raw water pumps — Are there risks associated with the rising main pumps?\n  • High-lift pumps — Are there risks associated with the high lift pumps?\n  • Pre-chlorination / Alum / Soda ash / Polymer / Lime — the dosing risk question for each chemical\nDenominators differ per subsystem: a plant is only asked about a chemical it actually doses, so each bar counts only the plants using that subsystem. Borehole and borehole-gallery pumps are omitted — no plant has answered their risk questions yet.",
+      "info": "Per subsystem, plants whose latest monitoring registered no risk against it, plants that did, and the rest of the fleet.\n  • Raw water pumps — Are there risks associated with the rising main pumps?\n  • High-lift pumps — Are there risks associated with the high lift pumps?\n  • Pre-chlorination / Alum / Soda ash / Polymer / Lime — the dosing risk question for each chemical\nA plant is only asked about a chemical it actually doses, so the two risk segments have a different denominator per subsystem. The third segment closes that gap to the registered fleet, so every bar sums to the same total and their lengths are comparable. Without it a short bar is ambiguous between \"few plants have a problem here\" and \"few plants use this at all\", which mean opposite things operationally.\nThe third segment is a remainder, not an answer: it holds every registered plant that did not answer this subsystem's risk question — whether because the plant does not use the subsystem, or because it has not been monitored. Borehole and borehole-gallery pumps are omitted — no plant has answered their risk questions yet.",
       "chart_type": "stack_bar",
       "compute": "grouped_stack",
       "orientation": "horizontal",
-      "order": 14,
+      "order": 15,
       "col_span": 24,
-      "description": "Green = subsystem in use with no risk registered · Red = risk registered. Both pumps and dosing are High-priority DWS indicators.",
+      "description": "Green = subsystem in use with no risk registered · Red = risk registered · Grey = not in use or not monitored. Every bar sums to the registered fleet. Both pumps and dosing are High-priority DWS indicators.",
       "config": {
         "title": "Pumps & Chemical Dosing Functioning",
         "xAxisLabel": "# of plants",
-        "color": ["#0ca30c", "#d03b3b"],
+        "color": ["#0ca30c", "#d03b3b", "#9aa0a6"],
         "grid": {
           "left": 210,
           "right": 32,
@@ -1363,6 +1660,7 @@
           "containLabel": false
         }
       },
+      "include_unanswered": true,
       "stacks": [
         {
           "key": "functioning",
@@ -1371,6 +1669,11 @@
         {
           "key": "risk",
           "label": "Risk registered"
+        },
+        {
+          "key": "not_in_use",
+          "label": "Not in use or not monitored",
+          "derive_remainder": true
         }
       ],
       "segments": [
@@ -1548,7 +1851,7 @@
       "id": "chart_raw_water_source",
       "info": "Count of plants per option of What is the raw water source? (multi-select — a plant drawing from both sources counts in both bars). Comprehensive monitoring form only.\nThe design also splits each source by whether a risk is registered against it, but issues_risk_associated_with_surface_water_source and ...ground_water_source have no submissions yet, so that split is not shown — rendering it would assert \"no risks\" where the truth is \"not yet asked\".",
       "chart_type": "bar",
-      "order": 15,
+      "order": 16,
       "col_span": 24,
       "description": "Surface versus ground water across the fleet. The risk overlay is pending data on the source-risk questions.",
       "config": {
@@ -1574,7 +1877,7 @@
       "info": "Group monitoring submissions by month over the last 12 months. Per month, each line is the % of plants passing that domain:\n  • Drinking water — Turbidity < 5 NTU AND Total coliform = 0 cfu/100ml\n  • Disinfection — Do you have SOPs for disinfection? = Yes\n  • Operational — Do you have SOPs? = Yes\n  • OHS — Do you have an OHS policy? = Yes\nE. coli is not in the drinking-water rule: e_coli_cfu_100ml has no submissions, so including it would drop every plant out of the denominator.",
       "chart_type": "custom_component",
       "component": "ComplianceTrendWidget",
-      "order": 16,
+      "order": 17,
       "col_span": 24,
       "title": "Compliance Trend",
       "subtitle": "last 12 months · % plants passing each domain",
@@ -1630,7 +1933,7 @@
       "id": "table_all_sites",
       "info": "Every registered site in this family — including sites never monitored, which the previous match-all criteria silently excluded.\nNo criteria are sent, so the backend slices the query directly instead of matching every parent id per request.\nOne page is fetched at a time; changing page fetches only that page.",
       "chart_type": "table",
-      "order": 18,
+      "order": 19,
       "col_span": 24,
       "label": "All Water Treatment Plants",
       "description": "Every registered site in this family. Click a row to open its site profile.",

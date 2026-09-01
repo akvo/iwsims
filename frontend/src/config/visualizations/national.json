@@ -177,7 +177,7 @@
     },
     {
       "id": "kpi_operational_rate",
-      "info": "Share of ASSESSED sites whose latest monitoring found them operational.\nThe counts are the Operational Status ring's, unchanged — the same three questions the map colours its pins by: infrastructure_status (RWS), system_status (EPS), station_status (Pump Stations).\nWWTP and WTP are not in the denominator at all: neither form asks a plant-level status question, so dividing by the whole fleet would report a gap in the forms as a fleet of broken plants. See issue #34 G1 decision 1.\nThe card is filled from its own value — green at 90% or above, amber at 75%, red below — rather than a fixed colour that would stay green at any reading.",
+      "info": "Share of ASSESSED sites whose latest monitoring found them operational.\nThe counts are the Operational Status ring's, unchanged: three families answer a status question directly — infrastructure_status (RWS), system_status (EPS), station_status (Pump Stations) — and WTP is judged by the derived rule its own dashboard declares.\nWWTP is not in the denominator at all: its form asks no plant-level status question and its derived rule is not yet settled, so dividing by the whole fleet would report a gap in the form as a fleet of broken plants. See issue #34 G1 decision 1 and 2.5.\nThe card is filled from its own value — green at 90% or above, amber at 75%, red below — rather than a fixed colour that would stay green at any reading.",
       "chart_type": "cross_asset_card",
       "source": "donut_domain",
       "order": 4,
@@ -269,7 +269,7 @@
           "key": "operational",
           "label": "Operational status",
           "type": "option",
-          "info": "Whether each site's latest monitoring found it working.\nEach family answers under its own question and option set: station_status on Pump Stations (operational / blocked / overflowing / not_operational), system_status on EPS (operational / issue_with_system), infrastructure_status on RWS (operational / non_operational). Anything not listed as functional counts as non-functional.\nWWTP and WTP have no plant-level status question on either monitoring form, so their sites are always grey. That is a gap in the forms, not a finding about those plants — see issue #34 G1.\nGrey also covers a site whose family asks the question but which has not been monitored yet. An unanswered status is not evidence of a fault, so it is never coloured as one.",
+          "info": "Whether each site's latest monitoring found it working.\nEach family answers under its own question and option set: station_status on Pump Stations (operational / blocked / overflowing / not_operational), system_status on EPS (operational / issue_with_system), infrastructure_status on RWS (operational / non_operational). Anything not listed as functional counts as non-functional.\nWWTP has no plant-level status question on either monitoring form, so its sites are always grey. That is a gap in the form, not a finding about those plants — see issue #34 G1. WTP has no such question either, but the National Compliance Snapshot judges it by the derived rule from the DWS calculation sheet; this map still colours only what a form states outright.\nGrey also covers a site whose family asks the question but which has not been monitored yet. An unanswered status is not evidence of a fault, so it is never coloured as one.",
           "buckets": [
             {
               "key": "functional",
@@ -396,13 +396,7 @@
             {
               "key": "wtp",
               "form_id": 1749634736797,
-              "params_ref": [
-                "wtp-overview#param_total_coliform",
-                "wtp-overview#param_turbidity",
-                "wtp-overview#param_residual_chlorine",
-                "wtp-overview#param_ph",
-                "wtp-overview#param_conductivity"
-              ]
+              "formula_ref": "wtp-overview#wq_globals"
             },
             {
               "key": "rws",
@@ -696,19 +690,13 @@
         {
           "id": "domain_drinking_water",
           "label": "Drinking Water",
-          "info": "Sites whose latest water test met every parameter its own dashboard checks. The rule is not restated here — each family's thresholds are referenced from the dashboard that owns and displays them, so the national figure cannot drift from the per-asset one.\nWTP: total coliform, turbidity, residual chlorine, pH and conductivity (the same five as its DW Compliance card).\nRWS and EPS: the compliance_formula already declared on their dashboards, including EPS's rule that a sample not sent to a lab is not applicable rather than failing.\nWWTP and Pump Stations are absent — neither supplies drinking water.",
+          "info": "Sites whose latest water test met every parameter its own dashboard checks. The rule is not restated here — each family's thresholds are referenced from the dashboard that owns and displays them, so the national figure cannot drift from the per-asset one.\nWTP: the four parameters DWS put in the verdict — total coliform, faecal coliform, E. coli and turbidity — from the compliance_formula on its own dashboard. Residual chlorine, pH, conductivity and salinity are shown there as dot strips, but DWS did not make them decide the verdict.\nRWS and EPS: the compliance_formula already declared on their dashboards, including EPS's rule that a sample not sent to a lab is not applicable rather than failing.\nWWTP and Pump Stations are absent — neither supplies drinking water.",
           "not_applicable_note": "This asset does not supply drinking water",
           "families": [
             {
               "key": "wtp",
               "form_id": 1749634736797,
-              "params_ref": [
-                "wtp-overview#param_total_coliform",
-                "wtp-overview#param_turbidity",
-                "wtp-overview#param_residual_chlorine",
-                "wtp-overview#param_ph",
-                "wtp-overview#param_conductivity"
-              ]
+              "formula_ref": "wtp-overview#wq_globals"
             },
             {
               "key": "rws",
@@ -851,13 +839,20 @@
         {
           "id": "donut_operational_compliance",
           "label": "Operational Status",
-          "info": "Share of ASSESSED sites operational, so a domain measured on part of its fleet is not reported as failing. The unmeasured remainder is the grey slice.\nEach family asks its own question: infrastructure_status (RWS), system_status (EPS), station_status (Pump Stations).\nPassing means 'operational'; every other answer counts as failing — a blocked or overflowing pump station is not operating normally.\nWWTP and WTP are absent because neither form asks a plant-level status question. WTP's has_production_constraints is not a substitute: a production constraint is not the same as a plant that is not running. See issue #34 G1 decision 1.\nThe passing count matches the functional total on the map above, which reads the same three questions.",
+          "info": "Share of ASSESSED sites operational, so a domain measured on part of its fleet is not reported as failing. The unmeasured remainder is the grey slice.\nThree families answer a single status question directly: infrastructure_status (RWS), system_status (EPS), station_status (Pump Stations). Passing means 'operational'; every other answer counts as failing — a blocked or overflowing pump station is not operating normally.\nWTP has no such question, so it is judged by the derived rule DWS set out in the calculation sheet — no production constraints, daily production above zero, and no risk on whichever pumps carry its raw water. That rule is referenced from the WTP dashboard rather than restated here, so the two cannot drift apart.\nWWTP is still absent: its form has no plant-level status question either, and the derived rule DWS proposed for it is not yet settled. See issue #34 G1 and 2.5.\nThe passing count for the three question-based families matches the functional total on the map above, which reads the same three questions.",
           "not_applicable_note": "No plant-level status question on this form",
           "labels": {
             "pass": "Passing",
             "fail": "Failing",
             "notAssessed": "Not assessed"
           },
+          "families": [
+            {
+              "key": "wtp",
+              "form_id": 1749634736797,
+              "formula_ref": "wtp-overview#operational_globals"
+            }
+          ],
           "segments": [
             {
               "key": "rws__total",

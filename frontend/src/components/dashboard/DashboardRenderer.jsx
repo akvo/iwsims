@@ -23,7 +23,15 @@ const { Paragraph } = Typography;
  * chart_types that are hidden definition entries only — never rendered.
  * They are still indexed into `definitionsById` for cross-ref resolution.
  */
-const HIDDEN_TYPES = new Set(["progress_definition", "water_quality_globals"]);
+// Definition-only items: they hold a rule other items reference by id and
+// have nothing to draw. `hide: true` already keeps them off the grid; naming
+// the types here means a definition added without that flag still cannot
+// render as a broken tile.
+const HIDDEN_TYPES = new Set([
+  "progress_definition",
+  "water_quality_globals",
+  "operational_globals",
+]);
 
 /**
  * chart_types that are chart-library widgets (dispatched to ChartRenderer).

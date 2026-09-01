@@ -572,20 +572,20 @@
             },
             {
               "id": "param_ph",
-              "info": "Per-plant effluent pH on the latest monitoring. Acceptance band 6.5–8.5, matching the band the WWTP site profile already uses.",
+              "info": "Per-plant effluent pH on the latest monitoring. Acceptance band 7.0–9.0, as confirmed by DWS. This is deliberately not the 6.5–8.5 drinking-water band — effluent is held to a different range.",
               "chart_type": "dot_strip",
               "order": 4,
               "col_span": 12,
               "label": "pH",
-              "description": "Acceptance band 6.5 – 8.5",
+              "description": "Acceptance band 7.0 – 9.0",
               "config": {
                 "title": "pH",
                 "xAxisLabel": "pH",
                 "entity_label": "WWTP"
               },
               "threshold": {
-                "min": 6.5,
-                "max": 8.5
+                "min": 7,
+                "max": 9
               },
               "api": {
                 "question_name": "ph",
@@ -595,22 +595,63 @@
             },
             {
               "id": "param_nitrate",
-              "info": "Per-plant effluent nitrate on the latest monitoring (mg/L). DWS recorded \"no standard\" for nitrate; 20 mg/L is the working value carried over from the dashboard design and should be confirmed before it drives any alert.",
+              "info": "Per-plant effluent nitrate on the latest monitoring (mg/L). DWS has now confirmed there is no standard for nitrate, so the previous working threshold of 20 mg/L has been removed rather than left to imply a limit nobody set. The strip shows the spread only — no value is flagged.",
               "chart_type": "dot_strip",
               "order": 5,
               "col_span": 12,
               "label": "Nitrate",
-              "description": "Working threshold < 20 mg/L — no DWS standard agreed",
+              "description": "No DWS standard — distribution only",
               "config": {
                 "title": "Nitrate",
                 "xAxisLabel": "mg/L",
                 "entity_label": "WWTP"
               },
-              "threshold": {
-                "max": 20
-              },
               "api": {
                 "question_name": "nitrate",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_tss",
+              "info": "Per-plant total suspended solids on the latest monitoring (mg/L). Acceptance threshold < 60 mg/L, as confirmed by DWS. Advisory only — the effluent verdict is decided by BOD, COD and TDS alone, so a plant over 60 here is flagged but not counted non-compliant.",
+              "chart_type": "dot_strip",
+              "order": 6,
+              "col_span": 12,
+              "label": "Total suspended solids",
+              "description": "Acceptance threshold < 60 mg/L",
+              "config": {
+                "title": "Total suspended solids",
+                "xAxisLabel": "mg/L",
+                "entity_label": "WWTP"
+              },
+              "threshold": {
+                "max": 60
+              },
+              "api": {
+                "question_name": "total_suspended_solids",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_ammonia",
+              "info": "Per-plant effluent ammonia on the latest monitoring (mg/L). Acceptance threshold < 10 mg/L, as confirmed by DWS. Advisory only — the effluent verdict is decided by BOD, COD and TDS alone, so a plant over 10 here is flagged but not counted non-compliant.",
+              "chart_type": "dot_strip",
+              "order": 7,
+              "col_span": 12,
+              "label": "Ammonia",
+              "description": "Acceptance threshold < 10 mg/L",
+              "config": {
+                "title": "Ammonia",
+                "xAxisLabel": "mg/L",
+                "entity_label": "WWTP"
+              },
+              "threshold": {
+                "max": 10
+              },
+              "api": {
+                "question_name": "ammonia",
                 "group_by": "parent_id",
                 "monitoring": "latest"
               }
