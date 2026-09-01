@@ -1393,17 +1393,17 @@
     },
     {
       "id": "chart_pumps_dosing_functioning",
-      "info": "Per subsystem, plants whose latest monitoring registered no risk against it versus plants that did.\n  • Raw water pumps — Are there risks associated with the rising main pumps?\n  • High-lift pumps — Are there risks associated with the high lift pumps?\n  • Pre-chlorination / Alum / Soda ash / Polymer / Lime — the dosing risk question for each chemical\nDenominators differ per subsystem: a plant is only asked about a chemical it actually doses, so each bar counts only the plants using that subsystem. Borehole and borehole-gallery pumps are omitted — no plant has answered their risk questions yet.",
+      "info": "Per subsystem, plants whose latest monitoring registered no risk against it, plants that did, and the rest of the fleet.\n  • Raw water pumps — Are there risks associated with the rising main pumps?\n  • High-lift pumps — Are there risks associated with the high lift pumps?\n  • Pre-chlorination / Alum / Soda ash / Polymer / Lime — the dosing risk question for each chemical\nA plant is only asked about a chemical it actually doses, so the two risk segments have a different denominator per subsystem. The third segment closes that gap to the registered fleet, so every bar sums to the same total and their lengths are comparable. Without it a short bar is ambiguous between \"few plants have a problem here\" and \"few plants use this at all\", which mean opposite things operationally.\nThe third segment is a remainder, not an answer: it holds every registered plant that did not answer this subsystem's risk question — whether because the plant does not use the subsystem, or because it has not been monitored. Borehole and borehole-gallery pumps are omitted — no plant has answered their risk questions yet.",
       "chart_type": "stack_bar",
       "compute": "grouped_stack",
       "orientation": "horizontal",
       "order": 15,
       "col_span": 24,
-      "description": "Green = subsystem in use with no risk registered · Red = risk registered. Both pumps and dosing are High-priority DWS indicators.",
+      "description": "Green = subsystem in use with no risk registered · Red = risk registered · Grey = not in use or not monitored. Every bar sums to the registered fleet. Both pumps and dosing are High-priority DWS indicators.",
       "config": {
         "title": "Pumps & Chemical Dosing Functioning",
         "xAxisLabel": "# of plants",
-        "color": ["#0ca30c", "#d03b3b"],
+        "color": ["#0ca30c", "#d03b3b", "#9aa0a6"],
         "grid": {
           "left": 210,
           "right": 32,
@@ -1412,6 +1412,7 @@
           "containLabel": false
         }
       },
+      "include_unanswered": true,
       "stacks": [
         {
           "key": "functioning",
@@ -1420,6 +1421,11 @@
         {
           "key": "risk",
           "label": "Risk registered"
+        },
+        {
+          "key": "not_in_use",
+          "label": "Not in use or not monitored",
+          "derive_remainder": true
         }
       ],
       "segments": [

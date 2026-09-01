@@ -699,7 +699,24 @@ const ChartRenderer = ({
 
     if (item.compute === "grouped_stack") {
       const responses = computeResponses?.grouped_stack?.[item.id];
-      return computeGroupedStack(item.segments, item.stacks, responses);
+      // A stack flagged derive_remainder needs the registered-fleet count so
+      // every bar can share a total; UniverseTotalsFetcher supplies it against
+      // the same include_unanswered opt-in the compliance chart uses.
+      // computeGroupedStack falls back to the measured stacks alone when the
+      // count has not arrived.
+      const groupedOptions = {};
+      if (item.include_unanswered === true) {
+        const total = computeResponses?.compliance_totals?.[item.id];
+        if (typeof total === "number") {
+          groupedOptions.totalRegistered = total;
+        }
+      }
+      return computeGroupedStack(
+        item.segments,
+        item.stacks,
+        responses,
+        groupedOptions
+      );
     }
 
     if (item.compute === "bucket_bar") {

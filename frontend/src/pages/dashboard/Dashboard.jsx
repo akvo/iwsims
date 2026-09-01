@@ -50,15 +50,17 @@ const WqParamFetcher = ({
 };
 
 /**
- * Invisible totals fetcher for compute=compliance charts that opt into
- * include_unanswered. Synthesizes { form_id: parentFormId } from the
+ * Invisible universe-count fetcher for charts that opt into
+ * include_unanswered — compute=compliance (which renders the gap as "No
+ * information available") and compute=grouped_stack (which renders it as the
+ * "not in use" remainder). Synthesizes { form_id: parentFormId } from the
  * dashboard root's existing parent_form_id (same shape as
  * kpi_total_registered.api), fires the count fetch, and reports the
  * scalar back via onData keyed by chart id.
  *
  * Spec: doc/claude/compliance-chart-no-info/.
  */
-const ComplianceTotalsFetcher = ({
+const UniverseTotalsFetcher = ({
   chartId,
   parentFormId,
   filterState,
@@ -376,31 +378,34 @@ const Dashboard = () => {
     );
   }, []);
 
-  // Compliance charts that opt into include_unanswered need an extra fetch
-  // for the registered universe so a "No information available" third bar
-  // can be rendered. Universe form_id comes from the dashboard root's
+  // Charts that opt into include_unanswered need an extra fetch for the
+  // registered universe so a bar covering the un-measured remainder can be
+  // rendered: "No information available" for compliance charts, "not in use"
+  // for grouped_stack ones. Both want the same number, so they share a
+  // fetcher. Universe form_id comes from the dashboard root's
   // parent_form_id; missing it is a config error and the flag is ignored.
   // Spec: doc/claude/compliance-chart-no-info/.
-  const complianceTotalsItems = useMemo(() => {
+  const universeTotalsItems = useMemo(() => {
     if (!config) {
       return [];
     }
-    const matches = collectByCompute(config.items, "compliance").filter(
-      (item) => item.include_unanswered === true
-    );
+    const matches = [
+      ...collectByCompute(config.items, "compliance"),
+      ...collectByCompute(config.items, "grouped_stack"),
+    ].filter((item) => item.include_unanswered === true);
     if (matches.length > 0 && !config.parent_form_id) {
       console.error(
-        "compliance chart has include_unanswered=true but dashboard config " +
-          "is missing parent_form_id; falling back to two-bar render"
+        "chart has include_unanswered=true but dashboard config is missing " +
+          "parent_form_id; falling back to a render without the extra bar"
       );
       return [];
     }
     return matches;
   }, [config]);
 
-  const [complianceTotals, setComplianceTotals] = useState({});
-  const onComplianceTotalData = useCallback((id, total) => {
-    setComplianceTotals((prev) => {
+  const [universeTotals, setUniverseTotals] = useState({});
+  const onUniverseTotalData = useCallback((id, total) => {
+    setUniverseTotals((prev) => {
       if (total === null) {
         if (!(id in prev)) {
           return prev;
@@ -637,7 +642,7 @@ const Dashboard = () => {
   const computeResponses = useMemo(
     () => ({
       compliance: complianceResponses,
-      compliance_totals: complianceTotals,
+      compliance_totals: universeTotals,
       cross_tab: crossTabByItem,
       accessibility_bucket: accessibilityBucketByItem,
       kpi_stack: kpiStackByItem,
@@ -656,7 +661,7 @@ const Dashboard = () => {
       crossAssetKpiByItem,
       complianceFormulaByDomain,
       complianceResponses,
-      complianceTotals,
+      universeTotals,
       crossTabByItem,
       accessibilityBucketByItem,
       kpiStackByItem,
@@ -863,16 +868,16 @@ const Dashboard = () => {
         />
       ))}
 
-      {/* Invisible compliance totals fetchers (universe count for _no_info bar) */}
-      {complianceTotalsItems.map((chartItem) => (
-        <ComplianceTotalsFetcher
+      {/* Invisible universe-count fetchers (shared gap/remainder denominator) */}
+      {universeTotalsItems.map((chartItem) => (
+        <UniverseTotalsFetcher
           key={chartItem.id}
           chartId={chartItem.id}
           parentFormId={config.parent_form_id}
           filterState={filters.queryParams}
           fiscalYearStartMonth={fyStart}
           customFilterDefs={customFilterDefs}
-          onData={onComplianceTotalData}
+          onData={onUniverseTotalData}
         />
       ))}
 
