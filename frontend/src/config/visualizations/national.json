@@ -396,13 +396,7 @@
             {
               "key": "wtp",
               "form_id": 1749634736797,
-              "params_ref": [
-                "wtp-overview#param_total_coliform",
-                "wtp-overview#param_turbidity",
-                "wtp-overview#param_residual_chlorine",
-                "wtp-overview#param_ph",
-                "wtp-overview#param_conductivity"
-              ]
+              "formula_ref": "wtp-overview#wq_globals"
             },
             {
               "key": "rws",
@@ -696,19 +690,13 @@
         {
           "id": "domain_drinking_water",
           "label": "Drinking Water",
-          "info": "Sites whose latest water test met every parameter its own dashboard checks. The rule is not restated here — each family's thresholds are referenced from the dashboard that owns and displays them, so the national figure cannot drift from the per-asset one.\nWTP: total coliform, turbidity, residual chlorine, pH and conductivity (the same five as its DW Compliance card).\nRWS and EPS: the compliance_formula already declared on their dashboards, including EPS's rule that a sample not sent to a lab is not applicable rather than failing.\nWWTP and Pump Stations are absent — neither supplies drinking water.",
+          "info": "Sites whose latest water test met every parameter its own dashboard checks. The rule is not restated here — each family's thresholds are referenced from the dashboard that owns and displays them, so the national figure cannot drift from the per-asset one.\nWTP: the four parameters DWS put in the verdict — total coliform, faecal coliform, E. coli and turbidity — from the compliance_formula on its own dashboard. Residual chlorine, pH, conductivity and salinity are shown there as dot strips, but DWS did not make them decide the verdict.\nRWS and EPS: the compliance_formula already declared on their dashboards, including EPS's rule that a sample not sent to a lab is not applicable rather than failing.\nWWTP and Pump Stations are absent — neither supplies drinking water.",
           "not_applicable_note": "This asset does not supply drinking water",
           "families": [
             {
               "key": "wtp",
               "form_id": 1749634736797,
-              "params_ref": [
-                "wtp-overview#param_total_coliform",
-                "wtp-overview#param_turbidity",
-                "wtp-overview#param_residual_chlorine",
-                "wtp-overview#param_ph",
-                "wtp-overview#param_conductivity"
-              ]
+              "formula_ref": "wtp-overview#wq_globals"
             },
             {
               "key": "rws",

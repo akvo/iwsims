@@ -12,7 +12,81 @@
       "order": 0,
       "sample_question_name": "can_take_water_sample",
       "test_method_question_name": "water_testing_method",
-      "monitoring_form_id": 1749652214711
+      "monitoring_form_id": 1749652214711,
+      "info": "The drinking-water verdict for WTP, as returned by DWS on the 2026 threshold sheet (§3.1). Four parameters decide it — total coliform, faecal coliform, E. coli and turbidity. Residual chlorine, pH, conductivity and salinity have thresholds and are shown as dot strips, but DWS did not put them in the verdict, so a plant outside those bands is flagged rather than failed. Temperature was returned as \"acceptable (any range)\" and has no threshold at all.\nE. coli passes only at zero, and DWS drew no distinction between a lab result and a CBT bag test — the same limit applies to whichever number was recorded.\nDeclared here rather than on each card so the KPI, the stacked bar and the National Compliance Snapshot cannot drift apart.",
+      "compliance_formula": {
+        "buckets": [
+          {
+            "value": "_no_info",
+            "label": "No information available",
+            "all_of": [
+              {
+                "question_name": "total_coliform_cfu_100ml",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "turbidity_ntu",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "e_coli_cfu_100ml",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "e_coli_count_cbt",
+                "op": "is_empty"
+              }
+            ]
+          },
+          {
+            "value": "non_compliant",
+            "label": "No",
+            "any_of": [
+              {
+                "question_name": "total_coliform_cfu_100ml",
+                "op": ">",
+                "value": 0,
+                "label": "Total coliform"
+              },
+              {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "op": ">",
+                "value": 0,
+                "label": "Faecal coliform"
+              },
+              {
+                "question_name": "turbidity_ntu",
+                "op": ">=",
+                "value": 5,
+                "label": "Turbidity"
+              },
+              {
+                "label": "E. coli",
+                "any_of": [
+                  {
+                    "question_name": "e_coli_cfu_100ml",
+                    "op": ">",
+                    "value": 0
+                  },
+                  {
+                    "question_name": "e_coli_count_cbt",
+                    "op": ">",
+                    "value": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "default": {
+          "value": "compliant",
+          "label": "Yes"
+        }
+      }
     },
     {
       "id": "operational_globals",
@@ -185,7 +259,10 @@
         "param_turbidity",
         "param_residual_chlorine",
         "param_ph",
-        "param_conductivity"
+        "param_conductivity",
+        "param_fecal_coliform",
+        "param_e_coli_lab",
+        "param_e_coli_cbt"
       ],
       "globals_ref": "wq_globals",
       "denominator_api": {
@@ -209,7 +286,10 @@
         "param_turbidity",
         "param_residual_chlorine",
         "param_ph",
-        "param_conductivity"
+        "param_conductivity",
+        "param_fecal_coliform",
+        "param_e_coli_lab",
+        "param_e_coli_cbt"
       ],
       "operational_segments": [
         {
@@ -321,7 +401,10 @@
         "param_turbidity",
         "param_residual_chlorine",
         "param_ph",
-        "param_conductivity"
+        "param_conductivity",
+        "param_fecal_coliform",
+        "param_e_coli_lab",
+        "param_e_coli_cbt"
       ],
       "globals_ref": "wq_globals"
     },
@@ -546,7 +629,10 @@
                 "param_turbidity",
                 "param_residual_chlorine",
                 "param_ph",
-                "param_conductivity"
+                "param_conductivity",
+                "param_fecal_coliform",
+                "param_e_coli_lab",
+                "param_e_coli_cbt"
               ],
               "operational_segments": [
                 {
@@ -834,6 +920,75 @@
               },
               "api": {
                 "question_name": "ph",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_fecal_coliform",
+              "info": "Faecal coliform in cfu/100ml. Not drawn as a strip — it is carried so the DWS verdict on wq_globals can read it. Every recorded value on the fleet is currently 0.0, so it fails nobody today; it is in the rule because DWS put it there, not because it is currently discriminating.",
+              "chart_type": "dot_strip",
+              "hide": true,
+              "order": 90,
+              "col_span": 12,
+              "label": "Faecal coliform",
+              "description": "Acceptance threshold \u2264 0 CFU/100mL",
+              "config": {
+                "title": "Faecal coliform",
+                "xAxisLabel": "CFU/100mL",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 0
+              },
+              "api": {
+                "question_name": "fecal_coliform_cfu_100ml",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_e_coli_lab",
+              "info": "E. coli from a lab test, in cfu/100ml. Carried for the DWS verdict on wq_globals rather than drawn. No plant on the fleet has recorded this yet — every E. coli figure currently comes from the CBT bag instead.",
+              "chart_type": "dot_strip",
+              "hide": true,
+              "order": 91,
+              "col_span": 12,
+              "label": "E. coli (lab)",
+              "description": "Acceptance threshold \u2264 0 CFU/100mL",
+              "config": {
+                "title": "E. coli (lab)",
+                "xAxisLabel": "CFU/100mL",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 0
+              },
+              "api": {
+                "question_name": "e_coli_cfu_100ml",
+                "group_by": "parent_id",
+                "monitoring": "latest"
+              }
+            },
+            {
+              "id": "param_e_coli_cbt",
+              "info": "E. coli from a CBT bag test. Carried for the DWS verdict on wq_globals rather than drawn. DWS set one limit of 0/100mL for E. coli and drew no lab-versus-CBT distinction, so this is judged against the same threshold as the lab figure.",
+              "chart_type": "dot_strip",
+              "hide": true,
+              "order": 92,
+              "col_span": 12,
+              "label": "E. coli (CBT)",
+              "description": "Acceptance threshold \u2264 0 CFU/100mL",
+              "config": {
+                "title": "E. coli (CBT)",
+                "xAxisLabel": "CFU/100mL",
+                "entity_label": "WTP"
+              },
+              "threshold": {
+                "max": 0
+              },
+              "api": {
+                "question_name": "e_coli_count_cbt",
                 "group_by": "parent_id",
                 "monitoring": "latest"
               }
