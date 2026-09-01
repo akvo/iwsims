@@ -13,6 +13,8 @@ import { computeAccessibilityBucket } from "./compute/accessibility";
 import { computeKpiStack } from "./compute/kpiStack";
 import { computeProcessCounts } from "./compute/processCounts";
 import { computeGroupedStack } from "./compute/groupedStack";
+import { isComputeReady } from "./compute/computeReady";
+import { chartPropsEqual } from "./compute/chartMemo";
 import { computeBucketBar } from "./compute/bucketBar";
 import { computeScoreHistogram } from "./compute/scoreHistogram";
 import { computeDateHistogram } from "./compute/dateHistogram";
@@ -853,6 +855,12 @@ const ChartRenderer = ({
   if (apiLoading) {
     return <Skeleton active paragraph={{ rows: 4 }} />;
   }
+  // Derived charts fetch one response per segment and each lands separately,
+  // so without this the chart paints empty and then repaints on every arrival.
+  // apiLoading cannot cover it: that hook is disabled whenever compute is set.
+  if (!isComputeReady(item, computeResponses, complianceResponses)) {
+    return <Skeleton active paragraph={{ rows: 4 }} />;
+  }
   if (apiError) {
     return (
       <Alert
@@ -984,4 +992,9 @@ ChartRenderer.propTypes = {
 };
 
 export { useDashboardProgress };
-export default ChartRenderer;
+// Memoised on the response slices this chart actually reads. The page's
+// `computeResponses` object is rebuilt whenever ANY request on the dashboard
+// resolves — roughly 100 times on the WTP dashboard — and akvo-charts calls
+// setOption on every render it performs, so without this each chart re-draws
+// once per unrelated request.
+export default React.memo(ChartRenderer, chartPropsEqual);

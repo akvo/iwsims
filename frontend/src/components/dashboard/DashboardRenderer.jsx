@@ -27,6 +27,31 @@ const { Paragraph } = Typography;
 // have nothing to draw. `hide: true` already keeps them off the grid; naming
 // the types here means a definition added without that flag still cannot
 // render as a broken tile.
+/**
+ * The card renders `config.title` itself, so the chart underneath receives a
+ * copy of the item with that key removed — otherwise the title is drawn twice.
+ *
+ * Cached per source item, because the derived object's IDENTITY matters:
+ * ChartRenderer is wrapped in React.memo and compares `item` by reference, so
+ * building a fresh copy on every render would defeat the memo entirely and
+ * every chart would re-draw on every unrelated request. Keyed by the config
+ * item in a WeakMap, so entries disappear with the config rather than
+ * accumulating per dashboard.
+ */
+const chartItemCache = new WeakMap();
+
+export const toChartItem = (item) => {
+  const cached = chartItemCache.get(item);
+  if (cached) {
+    return cached;
+  }
+  const restConfig = { ...(item.config || {}) };
+  delete restConfig.title;
+  const derived = { ...item, config: restConfig };
+  chartItemCache.set(item, derived);
+  return derived;
+};
+
 const HIDDEN_TYPES = new Set([
   "progress_definition",
   "water_quality_globals",
@@ -196,8 +221,8 @@ const DashboardRenderer = ({
     }
 
     if (CHART_TYPES.has(type)) {
-      const { title: cardTitle, ...restConfig } = item.config || {};
-      const itemForChart = { ...item, config: restConfig };
+      const cardTitle = item.config?.title;
+      const itemForChart = toChartItem(item);
       return (
         <Card
           title={

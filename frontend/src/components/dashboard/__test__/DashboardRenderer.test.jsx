@@ -87,3 +87,34 @@ describe("DashboardRenderer", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("toChartItem", () => {
+  const { toChartItem } = require("../DashboardRenderer");
+
+  it("strips the card title but returns the same object every time", () => {
+    // ChartRenderer is memoised and compares `item` by reference. Building a
+    // fresh copy per render silently defeats that memo, so every chart
+    // re-draws on every unrelated request on the dashboard.
+    const item = {
+      id: "chart",
+      chart_type: "bar",
+      config: { title: "Effluent Compliance", xAxisLabel: "mg/L" },
+    };
+    const first = toChartItem(item);
+    const second = toChartItem(item);
+    expect(second).toBe(first);
+    expect(first.config).toEqual({ xAxisLabel: "mg/L" });
+    expect(item.config.title).toBe("Effluent Compliance");
+  });
+
+  it("gives a different config object a different result", () => {
+    const a = { id: "a", config: { title: "A" } };
+    const b = { id: "b", config: { title: "B" } };
+    expect(toChartItem(a)).not.toBe(toChartItem(b));
+  });
+
+  it("tolerates an item with no config", () => {
+    const item = { id: "bare" };
+    expect(toChartItem(item).config).toEqual({});
+  });
+});
