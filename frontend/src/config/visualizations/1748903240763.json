@@ -1851,19 +1851,19 @@
     },
     {
       "id": "chart_ohs_score_distribution",
-      "info": "Score each plant out of 8 on its latest monitoring, then count plants per score:\n  • Do you have an OHS Policy for the Plant? = Yes\n  • Do your staff use OHS equipment at the workplace? = Yes\n  • Do plant staff comply with the requirements of the OHS Policy? = Yes\n  • Working tools? = Yes\n  • OHS equipment available? = Yes\n  • Do you have urgent maintenance programs? = No — inverted, an outstanding urgent job is a warning, matching the tone the condition matrix already gives it\n  • Do you have planned preventative maintenance programs? = Yes\n  • Do you have any upgrading programs? = Yes\nPlants that did not answer all 8 are excluded rather than scored out of 8 — the OHS questions are split across the Comprehensive and Quick monitoring forms, so a plant answering 2 of 8 perfectly would otherwise render next to a genuinely poor 2/8.",
+      "info": "Count, per plant, how many OHS and maintenance checks its latest monitoring confirms in the healthy state:\n  • Do you have an OHS Policy for the Plant? = Yes\n  • Do your staff use OHS equipment at the workplace? = Yes\n  • Do plant staff comply with the requirements of the OHS Policy? = Yes\n  • Working tools? = Yes\n  • OHS equipment available? = Yes\n  • Do you have urgent maintenance programs? = No — inverted, an outstanding urgent job is a warning, matching the tone the condition matrix already gives it\n  • Do you have planned preventative maintenance programs? = Yes\n  • Do you have any upgrading programs? = Yes\nThis counts confirmed assurance; it is not a score out of 8, so the bars are not a performance ranking. The checks sit in two question groups — three in Staff and general information, five in Plant conditions — and a plant whose submission covers only the second is asked five, not eight. A bar therefore makes no claim about questions nobody put to that plant. All eight are asked on the Comprehensive monitoring form only, so a plant whose monitoring is all Quick is absent from the chart rather than scoring low.\nA check counts only when it is confirmed healthy. Unanswered and answered-badly both read as not confirmed — a deliberate merge, so a low bar means little assurance rather than proven failure.",
       "chart_type": "bar",
       "compute": "score_histogram",
       "order": 10,
       "col_span": 24,
-      "description": "Plants scored on all 8 OHS and maintenance checks from the Comprehensive monitoring form. Plants with an incomplete OHS section are not scored.",
+      "description": "How many OHS and maintenance checks each plant has confirmed compliant on its latest monitoring. Every plant answering at least one check is counted; a plant is asked five or eight depending on which question groups its submission covers.",
       "config": {
-        "title": "OHS Compliance Score Distribution",
-        "xAxisLabel": "Items compliant out of 8",
+        "title": "OHS Items Confirmed Compliant",
+        "xAxisLabel": "OHS items confirmed compliant",
         "yAxisLabel": "# of plants"
       },
       "display": {
-        "label_suffix": "/8"
+        "partial": true
       },
       "segments": [
         {

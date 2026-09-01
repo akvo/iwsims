@@ -13,15 +13,21 @@
  * programs?" is a warning when answered yes, which is why the condition
  * matrix already tones it `yes: mid` rather than `yes: good`.
  *
- * Entities that did not answer every segment are excluded by default. Scoring
- * them out of N would punish them for questions they were never asked: on the
- * WWTP form the OHS questions are split across the Comprehensive and Quick
- * monitoring forms, so a plant answering 2 of 8 perfectly would otherwise
- * render as 2/8 next to a genuinely poor 2/8. Set `partial: true` to score
- * every entity that answered at least one segment.
+ * Entities that did not answer every segment are excluded by default, because
+ * a bar labelled `2/8` claims something about the other six. Set
+ * `partial: true` to count every entity that answered at least one segment;
+ * the axis then has to drop its denominator too, so that a bar reads "two
+ * checks were confirmed" rather than "two of eight passed". The two flags go
+ * together — `partial` with a `label_suffix` still prints the fraction it was
+ * meant to retire.
  *
- * Callers should surface `excluded` so a dropped population is never silently
- * invisible.
+ * Excluding is the more costly option of the two, and how costly depends on
+ * the dataset rather than on the chart: the WWTP OHS section is split across
+ * two question groups, so the share of plants answering only one of them
+ * moves with the data. That is the argument for counting — a chart whose
+ * population swings with form-filling habits describes those habits, not the
+ * fleet. Callers should surface `excluded` whenever they keep the default, so
+ * a dropped population is never silently invisible.
  */
 
 /** Normalise an answer cell for comparison. /values returns option answers as
