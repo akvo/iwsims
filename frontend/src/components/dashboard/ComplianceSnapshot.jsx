@@ -62,40 +62,66 @@ const ComplianceSnapshot = ({ item, computeResponses }) => {
   const results = useMemo(
     () =>
       domains.map((domain) => {
-        if (domain.families) {
-          const scoped = domain.families.filter(
-            (f) => asset === ALL || f.key === asset
-          );
-          const counts = scoped
-            .map((f) => formulaCounts[domain.id]?.[f.key])
-            .filter(Boolean);
-          const pass = counts.reduce((n, c) => n + c.pass, 0);
-          const fail = counts.reduce((n, c) => n + c.fail, 0);
-          const notAssessed = counts.reduce((n, c) => n + c.notAssessed, 0);
-          return {
-            domain,
-            meta: {
-              pass,
-              fail,
-              notAssessed,
-              assessed: pass + fail,
-              total: pass + fail + notAssessed,
-              applicable: scoped.length > 0,
-              passRate:
-                pass + fail > 0
-                  ? Math.round((100 * pass) / (pass + fail))
-                  : null,
-            },
-          };
-        }
+        // A domain may declare families, segments, or both. Both is what a
+        // domain looks like when its families do not all answer the same
+        // way: the operational domain reads a single status question on RWS,
+        // EPS and Pump Stations (segments), while WWTP and WTP have no such
+        // question and are judged by a derived rule instead (families). The
+        // two sets are disjoint by construction — a family belongs to one
+        // mechanism or the other — so their counts simply add up.
+        const scopedFamilies = (domain.families || []).filter(
+          (f) => asset === ALL || f.key === asset
+        );
+        const familyCounts = scopedFamilies
+          .map((f) => formulaCounts[domain.id]?.[f.key])
+          .filter(Boolean);
+        const fromFamilies = {
+          pass: familyCounts.reduce((n, c) => n + c.pass, 0),
+          fail: familyCounts.reduce((n, c) => n + c.fail, 0),
+          notAssessed: familyCounts.reduce((n, c) => n + c.notAssessed, 0),
+        };
+
+        const segmentResult = domain.segments
+          ? computeComplianceDonut(
+              domain.segments,
+              computeResponses?.compliance_donut?.[domain.id],
+              domain.labels,
+              asset === ALL ? null : asset
+            )
+          : null;
+        const fromSegments = segmentResult?.meta || {
+          pass: 0,
+          fail: 0,
+          notAssessed: 0,
+          applicable: false,
+        };
+
+        const pass = fromFamilies.pass + (fromSegments.pass || 0);
+        const fail = fromFamilies.fail + (fromSegments.fail || 0);
+        const notAssessed =
+          fromFamilies.notAssessed + (fromSegments.notAssessed || 0);
+        // "Applicable" is about whether this domain measures the selected
+        // asset at all, not about whether any data has arrived — a domain
+        // that applies but has no submissions yet must read as unmeasured,
+        // never as "not applicable to this asset".
+        const applicable =
+          scopedFamilies.length > 0 || Boolean(fromSegments.applicable);
+
+        // computeComplianceDonut also returns `rows`, which this widget does
+        // not read. Deliberately not forwarded: it describes the segment
+        // families alone and would contradict the merged meta below.
         return {
           domain,
-          ...computeComplianceDonut(
-            domain.segments,
-            computeResponses?.compliance_donut?.[domain.id],
-            domain.labels,
-            asset === ALL ? null : asset
-          ),
+          meta: {
+            pass,
+            fail,
+            notAssessed,
+            assessed: pass + fail,
+            total: pass + fail + notAssessed,
+            applicable,
+            passRate:
+              pass + fail > 0 ? Math.round((100 * pass) / (pass + fail)) : null,
+          },
         };
       }),
     [domains, computeResponses, asset, formulaCounts]

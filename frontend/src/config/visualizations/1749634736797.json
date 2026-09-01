@@ -15,6 +15,71 @@
       "monitoring_form_id": 1749652214711
     },
     {
+      "id": "operational_globals",
+      "chart_type": "operational_globals",
+      "hide": true,
+      "order": 0,
+      "info": "The plant-level operational rule for WTP, held here so the WTP dashboard and the National Compliance Snapshot cannot drift apart. Per the DWS calculation sheet a plant is operational when it reports no production constraints, produces more than zero megalitres a day, and registers no risk on whichever pumps carry its raw water.\nThe three pump conditions are written as option_not_contains rather than option_contains: a plant that does not use a given transport mode is never asked that question, and an unasked question must not fail it.",
+      "compliance_formula": {
+        "buckets": [
+          {
+            "value": "_no_info",
+            "label": "No information available",
+            "any_of": [
+              {
+                "question_name": "has_production_constraints",
+                "op": "is_empty"
+              },
+              {
+                "question_name": "daily_production_megalitres",
+                "op": "is_empty"
+              }
+            ]
+          },
+          {
+            "value": "non_compliant",
+            "label": "No",
+            "any_of": [
+              {
+                "question_name": "has_production_constraints",
+                "op": "option_contains",
+                "value": "yes",
+                "label": "Production constraints reported"
+              },
+              {
+                "question_name": "daily_production_megalitres",
+                "op": "<=",
+                "value": 0,
+                "label": "No daily production"
+              },
+              {
+                "question_name": "pumps_rising_main_has_risks",
+                "op": "option_contains",
+                "value": "yes",
+                "label": "Rising main pump risks"
+              },
+              {
+                "question_name": "borehole_pump_has_risks",
+                "op": "option_contains",
+                "value": "yes",
+                "label": "Borehole pump risks"
+              },
+              {
+                "question_name": "borehole_gallery_pumps_has_risks",
+                "op": "option_contains",
+                "value": "yes",
+                "label": "Borehole gallery pump risks"
+              }
+            ]
+          }
+        ],
+        "default": {
+          "value": "compliant",
+          "label": "Yes"
+        }
+      }
+    },
+    {
       "id": "filters_main",
       "chart_type": "filter_bar",
       "order": 1,
@@ -64,19 +129,47 @@
     },
     {
       "id": "kpi_operational",
-      "info": "Plant is OPERATIONAL when :\n  • Have you noted any production constraints? = No (no production constraints), AND\n  • What is the average daily production of the plant in megalitres? > 0, AND\n  • Are there any risks associated with the Pumps/Rising Main? = No (where Pumps/Rising Main is part of transport), AND\n  • Are there any risks associated with the Borehole Pump? = No (where Borehole Pump is part of transport), AND\n  • Are there any risks associated with the Borehole Gallery Pumps? = No (where Borehole Gallery Pumps part of transport).\n% = operational / total plants.",
-      "chart_type": "metric_card",
+      "info": "Plant is OPERATIONAL when :\n  • Have you noted any production constraints? = No (no production constraints), AND\n  • What is the average daily production of the plant in megalitres? > 0, AND\n  • Are there any risks associated with the Pumps/Rising Main? = No (where Pumps/Rising Main is part of transport), AND\n  • Are there any risks associated with the Borehole Pump? = No (where Borehole Pump is part of transport), AND\n  • Are there any risks associated with the Borehole Gallery Pumps? = No (where Borehole Gallery Pumps part of transport).\n% = operational / total plants.\nThe three pump conditions use option_not_equals, which passes on an unanswered question: a plant is only asked about a transport mode it actually uses, and an unasked question must not fail it.\nThis is the same rule the National Compliance Snapshot applies to WTP, declared once on operational_globals.",
+      "chart_type": "card",
+      "compute": "rules_kpi",
       "order": 4,
       "col_span": 5,
       "label": "% Operational",
       "color": "#0ca30c",
-      "api": {
-        "question_name": "has_production_constraints",
-        "group_by": "option",
-        "include_unanswered": true
+      "denominator_api": {
+        "ignore_date_filter": true
       },
-      "show_percentage": true,
-      "target_group": "no"
+      "rules": [
+        {
+          "all_of": [
+            {
+              "question_name": "has_production_constraints",
+              "op": "option_not_equals",
+              "value": "yes"
+            },
+            {
+              "question_name": "daily_production_megalitres",
+              "op": "gt",
+              "value": 0
+            },
+            {
+              "question_name": "pumps_rising_main_has_risks",
+              "op": "option_not_equals",
+              "value": "yes"
+            },
+            {
+              "question_name": "borehole_pump_has_risks",
+              "op": "option_not_equals",
+              "value": "yes"
+            },
+            {
+              "question_name": "borehole_gallery_pumps_has_risks",
+              "op": "option_not_equals",
+              "value": "yes"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "kpi_dw_compliance",
