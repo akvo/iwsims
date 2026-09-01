@@ -420,7 +420,7 @@
     {
       "id": "main_tabs",
       "chart_type": "tabs",
-      "order": 17,
+      "order": 18,
       "col_span": 24,
       "items": [
         {
@@ -1343,12 +1343,61 @@
       ]
     },
     {
+      "id": "chart_ohs_score_distribution",
+      "info": "Count, per plant, how many OHS checks its latest monitoring confirms in the healthy state:\n  • Do you have a OHS policy for the Plant? = Yes\n  • Do your staff use OHS equipment at the work place? = Yes\n  • Do plant staff comply to the requirements of the OHS Policy? = Yes\nThis counts confirmed assurance; it is not a score out of 3, so the bars are not a performance ranking. All three checks are asked on the Comprehensive monitoring form only, so a plant whose monitoring is all Quick is absent from the chart rather than scoring low.\nA check counts only when it is confirmed healthy. Unanswered and answered-badly both read as not confirmed — a deliberate merge, so a low bar means little assurance rather than proven failure.\nThis is not a restatement of the OHS Policy Flow above. That Sankey is sequential — a plant reaches the second stage only by passing the first — so a plant with no policy whose staff nonetheless use equipment is invisible there and scores 1 here.",
+      "chart_type": "bar",
+      "compute": "score_histogram",
+      "order": 14,
+      "col_span": 24,
+      "description": "How many OHS checks each plant has confirmed compliant on its latest monitoring. Every plant answering at least one check is counted.",
+      "config": {
+        "title": "OHS Items Confirmed Compliant",
+        "xAxisLabel": "OHS items confirmed compliant",
+        "yAxisLabel": "# of plants"
+      },
+      "display": {
+        "partial": true
+      },
+      "segments": [
+        {
+          "key": "has_ohs_policy",
+          "label": "OHS policy in place",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "has_ohs_policy",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "staff_use_ohs_equipment",
+          "label": "Staff use OHS equipment",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "staff_use_ohs_equipment",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        },
+        {
+          "key": "staff_comply_ohs_policy",
+          "label": "Staff comply with OHS policy",
+          "pass_value": "yes",
+          "api": {
+            "question_name": "staff_comply_ohs_policy",
+            "group_by": "parent_id",
+            "monitoring": "latest"
+          }
+        }
+      ]
+    },
+    {
       "id": "chart_pumps_dosing_functioning",
       "info": "Per subsystem, plants whose latest monitoring registered no risk against it versus plants that did.\n  • Raw water pumps — Are there risks associated with the rising main pumps?\n  • High-lift pumps — Are there risks associated with the high lift pumps?\n  • Pre-chlorination / Alum / Soda ash / Polymer / Lime — the dosing risk question for each chemical\nDenominators differ per subsystem: a plant is only asked about a chemical it actually doses, so each bar counts only the plants using that subsystem. Borehole and borehole-gallery pumps are omitted — no plant has answered their risk questions yet.",
       "chart_type": "stack_bar",
       "compute": "grouped_stack",
       "orientation": "horizontal",
-      "order": 14,
+      "order": 15,
       "col_span": 24,
       "description": "Green = subsystem in use with no risk registered · Red = risk registered. Both pumps and dosing are High-priority DWS indicators.",
       "config": {
@@ -1548,7 +1597,7 @@
       "id": "chart_raw_water_source",
       "info": "Count of plants per option of What is the raw water source? (multi-select — a plant drawing from both sources counts in both bars). Comprehensive monitoring form only.\nThe design also splits each source by whether a risk is registered against it, but issues_risk_associated_with_surface_water_source and ...ground_water_source have no submissions yet, so that split is not shown — rendering it would assert \"no risks\" where the truth is \"not yet asked\".",
       "chart_type": "bar",
-      "order": 15,
+      "order": 16,
       "col_span": 24,
       "description": "Surface versus ground water across the fleet. The risk overlay is pending data on the source-risk questions.",
       "config": {
@@ -1574,7 +1623,7 @@
       "info": "Group monitoring submissions by month over the last 12 months. Per month, each line is the % of plants passing that domain:\n  • Drinking water — Turbidity < 5 NTU AND Total coliform = 0 cfu/100ml\n  • Disinfection — Do you have SOPs for disinfection? = Yes\n  • Operational — Do you have SOPs? = Yes\n  • OHS — Do you have an OHS policy? = Yes\nE. coli is not in the drinking-water rule: e_coli_cfu_100ml has no submissions, so including it would drop every plant out of the denominator.",
       "chart_type": "custom_component",
       "component": "ComplianceTrendWidget",
-      "order": 16,
+      "order": 17,
       "col_span": 24,
       "title": "Compliance Trend",
       "subtitle": "last 12 months · % plants passing each domain",
@@ -1630,7 +1679,7 @@
       "id": "table_all_sites",
       "info": "Every registered site in this family — including sites never monitored, which the previous match-all criteria silently excluded.\nNo criteria are sent, so the backend slices the query directly instead of matching every parent id per request.\nOne page is fetched at a time; changing page fetches only that page.",
       "chart_type": "table",
-      "order": 18,
+      "order": 19,
       "col_span": 24,
       "label": "All Water Treatment Plants",
       "description": "Every registered site in this family. Click a row to open its site profile.",
