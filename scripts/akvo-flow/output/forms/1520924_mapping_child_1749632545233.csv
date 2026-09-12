@@ -16,8 +16,6 @@ Why the water sample could not be taken?",1749632887312,100.0,high,text_similari
 Are you able to collect the water sample?",1749632647507,100.0,high,text_similarity,2002
 1520924,Water Quality Testing,Take Photo of Sampling Point,1820930,1749632545233,Water Quality Testing,"Water Quality Testing |
 Take Photo of Sampling Point",1749633073911,100.0,high,text_similarity,2006
-1520924,Water Quality Testing,What is the E.Coli Count using CBT Bags?,297860920,1749632545233,Water Quality Testing,"Water Quality Testing |
-What is the E. coli Count using CBT Bags?",1749633325456,97.5,high,text_similarity,2008
 1520924,Water Quality Testing,The current status of this system?,360140967,1749632545233,General Remarks,"General Remarks |
 The current status of this system?",1749633373968,100.0,high,text_similarity,4001
 1520924,Water Quality Testing,Signature of Officer,480942,1749632545233,General Remarks,"General Remarks |
@@ -44,3 +42,9 @@ Weather Condition",1749632196724,0.0,none,manual,2001
 Take photo of the EPS",1749730785260,0.0,none,manual,3001
 1520924,EPS Photos,Comment on Photo taken,1700923,1749632545233,Photo of the EPS,"Photo of the EPS |
 Description of the photo",1749730785261,0.0,none,manual,3002
+1520924,Water Quality Testing,What is the E.Coli Count using CBT Bags?,297860920,1749632545233,Water Quality Testing,"Water Quality Testing |
+Risk Level for CBT Test",1749633325457,100,high,manual,2009
+1520924,Water Quality Testing,What is the E.Coli Count using CBT Bags?,297860920,1749632545233,Water Quality Testing,"Water Quality Testing |
+Take photo of the CBT Bags",1749633325462,100,high,manual,2010
+1520924,Water Quality Testing,What is the E.Coli Count using CBT Bags?,297860920,1749632545233,Water Quality Testing,"Water Quality Testing |
+What is the E. coli Count using CBT Bags?",1749633325456,100,high,manual,2008

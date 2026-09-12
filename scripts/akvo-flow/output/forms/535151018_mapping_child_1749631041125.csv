@@ -1,0 +1,109 @@
+flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
+535151018,General Remarks,Provide any other relevant information relevant to the water and sanitation of the village/settlement,525330963,1749631041125,General Remarks and Recommendations,"General Remarks and Recommendations |
+General Remarks",1749631041159,100,high,manual,4005
+535151018,Profile Information,What is the total population?,469691016,,,,,67.92,none,none,
+535151018,Profile Information,Designation of the Contact Person,469691017,,,,,84.21,low,manual,
+535151018,Profile Information,Are you able to provide the breakdown of population?,469691018,,,,,67.69,none,none,
+535151018,Profile Information,Name of Settlement,469691019,,,,,71.43,none,none,
+535151018,Profile Information,Name of Village,469691020,,,,,69.57,none,none,
+535151018,Profile Information,Contact number of the Contact Person,469691021,1749631041125,Inspection Info,"Inspection Info |
+Phone number of Contact Person",1749631041129,84.75,low,text_similarity,1003
+535151018,Profile Information,In which division-province-tikina are you in?,469691022,,,,,60.47,none,none,
+535151018,Profile Information,Name of Contact Person,469691023,1749631041125,Inspection Info,"Inspection Info |
+Name of Contact Person",1749631041128,100,high,text_similarity,1002
+535151018,Profile Information,How many male children are under 5 years old?,469691024,,,,,66.67,none,none,
+535151018,Profile Information,How many children are under 5 years old?,469691025,,,,,66.67,none,none,
+535151018,Profile Information,What is the number of female population?,535141017,,,,,65.38,none,none,
+535151018,Profile Information,How many female children are under 5 years old?,535141018,,,,,66.67,none,none,
+535151018,Profile Information,What is the number of male population?,535141019,,,,,65.38,none,none,
+535151018,Profile Information,Please mention the source/s from where the information has been provided by the contact person,535141020,,,,,84.21,low,manual,
+535151018,Profile Information,How many households are included in this village/settlement?,535141021,,,,,66.67,none,none,
+535151018,Profile Information,Is this a village or settlement?,535141022,,,,,51.85,none,none,
+535151018,Profile Information,GPS of the village/settlement?,535141023,,,,,55.32,none,none,
+535151018,Profile Information,Alternative Contact number of the Contact Person,535141024,,,,,84.75,low,manual,
+535151018,Profile Information,What is the Date of Inspection?,538821077,1749631041125,Inspection Info,"Inspection Info |
+Inspection Date",1749631041127,100,high,manual,1001
+535151018,Sanitation Information,What is the other type of toilet?,513321015,,,,,70.27,none,none,
+535151018,Sanitation Information,Are there toilets in other places such as churches community hall or communal toillet?,519781094,,,,,61.11,none,none,
+535151018,Sanitation Information,How many households share toilet facilities?,527251013,,,,,66.67,none,none,
+535151018,Sanitation Information,Is there a separate toilet or special arrangement for physically challenged members of the community?,527251014,,,,,100,high,manual,
+535151018,Sanitation Information,Number of households that have hand washing facilities with soap in or near (on premise) their sanitation facilities?,527251015,,,,,61.11,none,none,
+535151018,Sanitation Information,How many households have no toilets?,527251016,,,,,66.67,none,none,
+535151018,Sanitation Information,Total number of toilets in other places such as church and community Hall and communal toilets?,527251017,,,,,58.33,none,none,
+535151018,Sanitation Information,What is the number of compost toilets?,527251018,,,,,67.92,none,none,
+535151018,Sanitation Information,Does the households in your community have handwashing facilties?,527251019,,,,,57.14,none,none,
+535151018,Sanitation Information,What is the number of flush toilets?,527251020,,,,,65.38,none,none,
+535151018,Sanitation Information,What is the number of water seal toilets?,527251021,,,,,65.45,none,none,
+535151018,Sanitation Information,Indicate if households in the community dispose their faecal sludge in the following ways. Choose all that apply?,527251022,,,,,55.56,none,none,
+535151018,Sanitation Information,"Types of toilets in other places such as churches,community hall or communal toilets?",527691131,,,,,64.86,none,none,
+535151018,Sanitation Information,"Number of compost toilets in churches,community hall or communal toilets?",527691132,,,,,62.22,none,none,
+535151018,Sanitation Information,What is the disposal system for flush toilets?,529581008,,,,,63.83,none,none,
+535151018,Sanitation Information,Provide the number of the other type of toilet?,536671028,,,,,70.27,none,none,
+535151018,Sanitation Information,Do you have physically challenged members in the community?,536671029,,,,,100,high,manual,
+535151018,Sanitation Information,Which of the following sanitation facilities are used by the households in this village/settlement? (Select all that apply),536671030,,,,,53.33,none,none,
+535151018,Sanitation Information,How many households practice open defecation?,536671031,,,,,66.67,none,none,
+535151018,Sanitation Information,How many households generally use household toilet?,536671032,,,,,66.67,none,none,
+535151018,Sanitation Information,How many households generally use community toilet?,536671034,,,,,66.67,none,none,
+535151018,Sanitation Information,What is the number of pit toilets?,536671035,,,,,65.45,none,none,
+535151018,Sanitation Information,Is there any other types of Toilet?,536671036,,,,,68.42,none,none,
+535151018,Sanitation Information,What are the different types of toilets that households use in the village/settlement? Choose all that apply.,536671037,,,,,56.76,none,none,
+535151018,Sanitation Information,What is the number of cesspit?,541850995,,,,,67.92,none,none,
+535151018,Sanitation Information,"Number of flush toilets in churches,community hall or communal toilet?",544621133,,,,,57.89,none,none,
+535151018,Sanitation Information,What is the number of septic tanks,546301016,,,,,65.38,none,none,
+535151018,Sanitation Information,What is the number of drums?,546320929,,,,,66.67,none,none,
+535151018,Sanitation Information,"Number of pit toilets in churches,community hall or communal toilet?",549801112,,,,,57.89,none,none,
+535151018,Sanitation Information,"Number of water seal toilets in churches,community hall or communal toilet?",549831156,,,,,63.83,none,none,
+535151018,Village Level Water Information,What is the number of private water supply?,415601047,,,,,65.38,none,none,
+535151018,Village Level Water Information,What is the total number of water points for Rural Water Scheme?,529311013,,,,,63.64,none,none,
+535151018,Village Level Water Information,What is the total number of water points for MRD Borehole Scheme?,529311015,,,,,63.64,none,none,
+535151018,Village Level Water Information,How many storage tanks are there in this village/settlement?,529311016,,,,,66.67,none,none,
+535151018,Village Level Water Information,Which of the following water supply systems are present in the village/settlement?,529311018,,,,,53.33,none,none,
+535151018,Village Level Water Information,How many reservoirs are there in this village/settlement?,529311021,,,,,66.67,none,none,
+535151018,Village Level Water Information,What is the total number of water points for WAF Urban Water Supply?,529311022,,,,,63.64,none,none,
+535151018,Village Level Water Information,Has there been a recent outbreak of water borne diseases in your village?,535151023,,,,,66.67,none,none,
+535151018,Village Level Water Information,What is the total number of private water points for rainwater harvesting systems?,535470960,,,,,62.22,none,none,
+535151018,Village Level Water Information,What was the water borne disease?,536671014,,,,,57.69,none,none,
+535151018,Village Level Water Information,What is the total number of public water points for rainwater harvesting systems?,541070973,,,,,62.22,none,none,
+535151018,Village Level Water Information,What is the total number of rainwater harvesting tanks in the village/settlement?,544470993,,,,,65.52,none,none,
+535151018,Water System Information & Water Quality Test,Take GPS location of the water system,415600933,,,,,63.16,none,none,
+535151018,Water System Information & Water Quality Test,What is the Risk Level for the CBT value obtained?,497160931,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the risk level of CBT?",1749631041142,100,high,manual,2009
+535151018,Water System Information & Water Quality Test,Is this a primary or secondary water system?,519610967,,,,,60,none,none,
+535151018,Water System Information & Water Quality Test,What is the method of water testing to be used?,530860978,1749631041125,Water Quality Testing,"Water Quality Testing |
+Method of water testing used?",1749631041138,100,high,manual,2005
+535151018,Water System Information & Water Quality Test,What is the result of CBT Bag  Test?,532450932,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the E- Coli count from CBT Bags?",1749631041141,100,high,manual,2008
+535151018,Water System Information & Water Quality Test,Type of improved water system,535141029,,,,,64.86,none,none,
+535151018,Water System Information & Water Quality Test,Who is responsible for the maintenance of the water system? (Select all that apply),535141030,,,,,59.09,none,none,
+535151018,Water System Information & Water Quality Test,What is the main source of drinking water in dry season?,535141031,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,What is your main source of drinking water in wet season?,535141032,,,,,65.31,none,none,
+535151018,Water System Information & Water Quality Test,Is your water system affected during dry season?,535141033,,,,,53.33,none,none,
+535151018,Water System Information & Water Quality Test,What is the type of water supply for this water system?,535141034,1749631041125,Inspection Info,"Inspection Info |
+Type of Water Project?",1749631041130,100,high,manual,1004
+535151018,Water System Information & Water Quality Test,How is your water system affected in wet season?,535141035,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,How is your water system affected in dry season?,535151020,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,Is your water system affected in wet season?,535151022,,,,,62.5,none,none,
+535151018,Water System Information & Water Quality Test,Who is the provider of the piped water supply?,535151024,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,What is the type of water system?,535151025,,,,,74.42,none,none,
+535151018,Water System Information & Water Quality Test,Is this water system shared with other institutions?,535151026,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,Is there a tariff and levy collection for  this water system?,535151027,,,,,55.32,none,none,
+535151018,Water System Information & Water Quality Test,What is the flow/discharge rate from this system? (Calculate by measuring the amount of liters per second),535151028,,,,,62.5,none,none,
+535151018,Water System Information & Water Quality Test,Is the water from this water system treated?,535151029,,,,,58.54,none,none,
+535151018,Water System Information & Water Quality Test,Is the water supply from this system available 24/7 or are there interruptions in supply?,536671015,,,,,58.54,none,none,
+535151018,Water System Information & Water Quality Test,Can you measure the flow/discharge rate from this water system?,536671016,,,,,57.14,none,none,
+535151018,Water System Information & Water Quality Test,What is the nearest known landmark to this water system?,536671017,,,,,61.22,none,none,
+535151018,Water System Information & Water Quality Test,How long does the furthest house take to reach water system? (in minutes),536671018,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,How many households use this water system?,536671019,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,Type of unimproved water system,536671020,,,,,61.54,none,none,
+535151018,Water System Information & Water Quality Test,What type of water treatment technology is used?,536671021,,,,,77.27,none,none,
+535151018,Water System Information & Water Quality Test,"Is the water system shared with any institution i.e. a school, healthcare centre, common place etc.? (Select all that apply)",536671022,,,,,60,none,none,
+535151018,Water System Information & Water Quality Test,How much tariff/levy is paid per month?,536671023,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,Take the photo of the water quality sampling  point?,536930972,1749631041125,Water Quality Testing,"Water Quality Testing |
+Take photo of sampling point",1749631041136,100,high,manual,2003
+535151018,Water System Information & Water Quality Test,What is the source for the rural water scheme?,546361121,,,,,66.67,none,none,
+535151018,Water System Information & Water Quality Test,Conduct E.Coli test using Aguagenx CBT Bag Test,541050982,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the E- Coli count from CBT Bags?",1749631041141,100,high,manual,2008
+535151018,Water System Information & Water Quality Test,Conduct E.Coli test using Aguagenx CBT Bag Test,541050982,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the risk level of CBT?",1749631041142,100,high,manual,2009
+535151018,Water System Information & Water Quality Test,Conduct E.Coli test using Aguagenx CBT Bag Test,541050982,1749631041125,Water Quality Testing,"Water Quality Testing |
+Take photo of CBT Bag",1749631041140,100,high,manual,2007

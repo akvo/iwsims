@@ -91,103 +91,43 @@ cat .env
 
 ## Target Survey Configuration
 
-Before executing the Jupyter notebooks, you must specify which Akvo Flow surveys/forms to process. This configuration is required for both downloading data and creating question mappings.
+All notebooks and the backend seeder read the same JSON file that lists the
+Flow surveys and the MIS forms they map to:
 
-### Configure Survey IDs for Download
-
-In [`af_downloader.ipynb`](./af_downloader.ipynb), locate the `flow_ids` list variable and update it with the survey IDs you want to download:
-
-```python
-flow_ids = [
-    8520967,   # WTP - Water Treatment Plant
-    17260923,  # WWTP - Wastewater Treatment Plant
-    27040920,  # SPS - Pump Station
-    1520924,   # EPS Water quality
-    5530933,   # EPS Project Construction
-    2490944,   # RWS - Rural Water Supply
-]
+```bash
+cd scripts/akvo-flow
+cp flow_forms.example.json ../../storage/akvo-flow/flow_forms.json   # outside git
 ```
 
-**Purpose**: This list defines which Akvo Flow surveys will be downloaded and processed. Each ID corresponds to a specific survey form in your Akvo Flow instance.
-
-**How to Find Survey IDs**:
-1. Log in to your Akvo Flow instance
-2. Navigate to the survey you want to download
-3. The survey ID is typically visible in the URL or survey properties
-4. Add the ID to the `flow_ids` list with a descriptive comment
-
-### Configure Form Pairs for Mapping
-
-In [`af_forms_mapping.ipynb`](./af_forms_mapping.ipynb), locate the `flow_ids` dictionary variable and update it with the form ID pairs:
-
-```python
-flow_ids = {
-    "8520967": 1749634736797,   # WTP
-    "17260923": 1748903240763,  # WWTP
-    "27040920": 1749611049520,  # SPS (Pump Station)
-    "1520924": 1749623934933,   # EPS Water quality
-    "5530933": 1749623934933,   # EPS Project Construction
-    "2490944": 1749621221728,   # RWS
+```json
+{
+  "active": ["535151018", "540671011"],
+  "forms": {
+    "2490944": {
+      "name": "Rural Water Project Inspection (RWS)",
+      "mis_form_id": 1749621221728,
+      "mis_child_form_ids": [1749621962296, 1749631041125]
+    }
+  }
 }
 ```
 
-**Purpose**: This dictionary maps Akvo Flow form IDs to their corresponding IWSIMS form IDs. This mapping is essential for correctly associating questions between the two systems.
+| Key | Meaning |
+|-----|---------|
+| `forms.<flow_form_id>.mis_form_id` | MIS parent (registration) form |
+| `forms.<flow_form_id>.mis_child_form_ids` | MIS monitoring forms matched separately |
+| `active` | Flow form ids the notebooks process; empty means all |
 
-**Dictionary Structure**:
-- **Key**: Akvo Flow form ID (string) - The ID from your Akvo Flow instance
-- **Value**: IWSIMS form ID (integer) - The corresponding form ID in IWSIMS
+- [`af_downloader.ipynb`](./af_downloader.ipynb) downloads every active form.
+- [`af_forms_mapping.ipynb`](./af_forms_mapping.ipynb) maps every active form
+  against its parent and child MIS forms.
+- [`af_data_registration_monitoring.ipynb`](./af_data_registration_monitoring.ipynb)
+  processes one form per run: the first active id, or set `flow_form_id`
+  in the configuration cell.
+- `flow_data_seeder` and `predownload_photos` resolve `--form` through the
+  same file (`utils/seeder_config.py`, with a built-in fallback map).
 
-**How to Find Form IDs**:
-- **Akvo Flow IDs**: Same as the survey IDs used in [`af_downloader.ipynb`](./af_downloader.ipynb)
-- **IWSIMS IDs**: Log in to IWSIMS, navigate to Forms, and find the form ID in the form details or URL
-
-### Configuration Requirements
-
-- **Consistency**: Ensure the Akvo Flow IDs in both notebooks match exactly
-- **Complete Mapping**: Every survey you download must have a corresponding entry in the mapping dictionary
-- **Valid MIS Forms**: The MIS form IDs must exist in your IWSIMS instance
-- **Order Independence**: The order of entries in both variables does not matter
-
-### Verification
-
-After configuring both variables:
-
-1. Verify all Akvo Flow IDs are present in both notebooks
-2. Confirm each Akvo Flow ID has a corresponding MIS form ID in [`af_forms_mapping.ipynb`](./af_forms_mapping.ipynb)
-3. Check that the MIS form IDs reference valid forms in your IWSIMS system
-4. Run the notebooks and review the output for any mapping errors
-
-### Example Workflow
-
-If you want to add a new survey called "Sanitation Survey" with Flow ID `9999999` and MIS ID `1999999999`:
-
-1. **Update [`af_downloader.ipynb`](./af_downloader.ipynb)**:
-   ```python
-   flow_ids = [
-       8520967,   # WTP
-       17260923,  # WWTP
-       27040920,  # SPS
-       1520924,   # EPS Water quality
-       5530933,   # EPS Project Construction
-       2490944,   # RWS
-       9999999,   # Sanitation Survey
-   ]
-   ```
-
-2. **Update [`af_forms_mapping.ipynb`](./af_forms_mapping.ipynb)**:
-   ```python
-   flow_ids = {
-       "8520967": 1749634736797,   # WTP
-       "17260923": 1748903240763,  # WWTP
-       "27040920": 1749611049520,  # SPS
-       "1520924": 1749623934933,   # EPS Water quality
-       "5530933": 1749623934933,   # EPS Project Construction
-       "2490944": 1749621221728,   # RWS
-       "9999999": 1999999999,       # Sanitation Survey
-   }
-   ```
-
-3. **Run the notebooks** in order to download and map the new survey data.
+The loader lives in [`util/config.py`](./util/config.py).
 
 ---
 
@@ -293,6 +233,29 @@ Both directories should contain files corresponding to your Akvo Flow surveys.
 
 ---
 
+### Fallback: Convert a Flow Excel Export
+
+If the Flow data endpoint is unavailable (for example a `403` whose body says
+`accessing discovery url ... failed`), export the survey from the Flow
+dashboard (Excel, "Raw Data" sheet plus one sheet per repeatable group) and
+convert it into the same raw CSV the downloader would have written:
+
+```bash
+cd scripts/akvo-flow
+python af_export_to_raw.py <flow_form_id> /path/to/DATA_CLEANING-<flow_form_id>.xlsx
+```
+
+Requirements: the form definition must already exist in
+`output/flow_forms/` (the forms endpoint keeps working), and `pandas` with
+`openpyxl`. Values are encoded exactly like the downloader output (JSON for
+cascade, geo, option, photo and caddisfly answers), so Steps 2 to 5 run
+unchanged. Like the downloader, one row per submission is kept: for a repeat
+sheet the repeat marked `Primary` is used when that question exists,
+otherwise the first repeat, and the script prints how many extra repeats were
+dropped.
+
+---
+
 ## Step 2: Map Administration Data
 
 ### Purpose
@@ -342,6 +305,27 @@ ls -1 backend/source/akvo-flow
 **Expected Contents:**
 - Columns: Akvo Flow administration ID, name, level, parent hierarchy
 - Only contains unmapped/missing administrations
+
+### Importing an Official Administration List
+
+When the partner provides the official hierarchy (for Fiji:
+`backend/source/fiji.csv`, one column per level below National), import it
+additively. Nodes are matched by name, level **and parent**; missing ones are
+created, existing ones are never renamed, re-parented or deleted, so ids stay
+stable on every environment:
+
+```bash
+./dc.sh exec backend python manage.py administration_csv_seeder --file=./source/fiji.csv --dry-run
+./dc.sh exec backend python manage.py administration_csv_seeder --file=./source/fiji.csv
+./dc.sh exec backend python manage.py generate_sqlite   # refresh backend/source/administrator.sqlite
+```
+
+Then re-run the mapping notebook. It matches Flow values by name, level and
+parent (tikina names repeat across provinces), accepts merged province names
+such as `Nadroga/Navosa` for Flow's `Nadroga` or `Navosa`, only processes
+cascades backed by the administration cascade resource, and applies the
+`_administration` aliases from `label_aliases.json` for Flow typos
+(`Tawakw` to `Tawake`).
 
 ### Handling Missing Administrations
 
@@ -428,6 +412,16 @@ The notebook uses three matching methods:
 | `text_similarity` | Auto-matched via fuzzy text matching (score >= 80%) | Questions with high text similarity |
 | `none` | No match found (score < 80%) | Questions without suitable matches |
 | `manual` | User manually assigned | Preserved when notebook is re-run |
+
+### Caddisfly Fan-out
+
+A Flow `caddisfly` question (Aquagenx CBT test) is automatically mapped to
+up to three questions on each MIS child form, chosen by type and label:
+a `number` question mentioning CBT (not Lab), an `option` question mentioning
+risk, and a `photo` question mentioning CBT. The rows are written as `manual`
+so they survive re-runs; edit or delete them like any manual row. The data
+notebook fills them from the caddisfly result (MPN, health-risk category,
+test image).
 
 ### Manual Matching Workflow
 
@@ -542,6 +536,24 @@ Contains repeating group submissions with:
 - **Form metadata** - Form ID, identifier, creation date, datapoint ID
 - **Name** - Generated from meta questions
 - **Question responses** - All mapped question answers from repeating groups
+
+### Option Label Aliases
+
+Flow option labels that differ from the MIS option labels are resolved
+through `label_aliases.json` (gitignored). Create it once from the template
+and extend it whenever `invalid_values.csv` shows an option value that has a
+sensible MIS counterpart:
+
+```bash
+cp label_aliases.example.json label_aliases.json
+```
+
+Keys are Flow labels (matched case-insensitively), values are MIS option
+values to try in order; a candidate is only used when the target question
+offers it. Caddisfly answers are split by MIS question type: the MPN goes to
+a number question, the health-risk category to an option question and the
+test image to a photo question. See
+`doc/claude/flow-caddisfly-label-transform-plan.md`.
 
 ### Data Transformations
 

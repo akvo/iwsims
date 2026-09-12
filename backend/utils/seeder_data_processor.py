@@ -16,6 +16,7 @@ from .seeder_config import (
     CsvColumns,
     SeederConfig,
     FLOW_PREFIX,
+    parse_question_column,
 )
 from .seeder_answer_processor import AnswerProcessor
 
@@ -331,8 +332,16 @@ def prepare_answer_data(
     answer_records = []
     invalid_answers = []
 
-    for question_id, question in questions.items():
-        column_name = str(question_id)
+    # Columns are "<question_id>" or "<question_id>-<repeat_index>" for
+    # repeatable question groups (see parse_question_column).
+    for column_name in row.index:
+        parsed = parse_question_column(column_name)
+        if parsed is None:
+            continue
+        question_id, repeat_index = parsed
+        question = questions.get(question_id)
+        if question is None:
+            continue
 
         # Skip if value is NaN
         if pd.isna(row.get(column_name)):
@@ -370,6 +379,7 @@ def prepare_answer_data(
         answer_records.append(
             {
                 "question_id": question.pk,
+                "index": repeat_index,
                 "name": name,
                 "value": value,
                 "options": options,
@@ -399,17 +409,18 @@ def bulk_create_answers(
             Records are removed if the question already has an existing answer.
             Expected format: {"mis_question_id": int, ...}
     """
-    # Get existing answers indexed by question_id
+    # Get existing answers keyed by (question_id, repeat index)
     existing_answers = {
-        answer.question_id: answer
+        (answer.question_id, answer.index): answer
         for answer in data.data_answer.all()
     }
+    existing_question_ids = {qid for qid, _ in existing_answers}
 
     # Filter out invalid_records if question already has existing answer
     if invalid_records is not None:
         invalid_records[:] = [
             r for r in invalid_records
-            if r.get("mis_question_id") not in existing_answers
+            if r.get("mis_question_id") not in existing_question_ids
         ]
 
     if not answer_records:
@@ -422,10 +433,12 @@ def bulk_create_answers(
 
     for a in answer_records:
         question_id = a["question_id"]
+        repeat_index = a.get("index", 0)
+        key = (question_id, repeat_index)
 
-        if question_id in existing_answers:
+        if key in existing_answers:
             # Update existing answer
-            existing = existing_answers[question_id]
+            existing = existing_answers[key]
             existing.value = a["value"]
             existing.options = a["options"]
             existing.name = a["name"]
@@ -437,6 +450,7 @@ def bulk_create_answers(
                 AnswerModel(
                     data=data,
                     question_id=question_id,
+                    index=repeat_index,
                     value=a["value"],
                     options=a["options"],
                     name=a["name"],

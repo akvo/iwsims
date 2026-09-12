@@ -156,8 +156,6 @@ Are you able to take water sample?",1749640788183,100,high,text_similarity,2002
 8520967,Water Quality,What is the Total Coliform in cfu/100ml?,27470920,1749640508297,Water Quality,"Water Quality |
 What is the Total Coliform in cfu/100ml?",1749641401104,100,high,text_similarity,2016
 8520967,Water Quality,What is the pH?,28320926,,,,,88.89,medium,manual,
-8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749640508297,Water Quality,"Water Quality |
-What is the number of E.Coli (using CBT bag test)?",1749641099165,100,high,text_similarity,2008
 8520967,Water Quality,Which water quality checks are carried out at the plant?,3620927,1749640508297,Water Quality,"Water Quality |
 Which water quality checks are carried out at the plant?",1749640555052,100,high,text_similarity,2001
 8520967,Water Treatment Plant Registration,Do you have the relevant Standard Operating Procedures(SOPs) for the treatment plant?,11020944,,,,,74.14,none,none,
@@ -199,3 +197,9 @@ Date of inspection?",1749640508299,100,high,text_similarity,1001
 8520967,Raw Water Source,Are there any risk associated with the source?,1660920,,,,,80.39,low,manual,
 8520967,Raw Water Source,Are there any risks associated with the raw water gravity system?,5680921,,,,,82.54,low,manual,
 8520967,Raw Water Source,Are there any risks associated with the pumps?,7560922,,,,,80.39,low,manual,
+8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749640508297,Water Quality,"Water Quality |
+What is the risk level of E.Coli (using CBT bag test)?",1805756143036,100,high,manual,2007
+8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749640508297,Water Quality,"Water Quality |
+Take Photo of CBT Bag",1749641099265,100,high,manual,2006
+8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749640508297,Water Quality,"Water Quality |
+What is the number of E.Coli (using CBT bag test)?",1749641099165,100,high,manual,2008

@@ -209,8 +209,6 @@ What is the Feacal Coliform in cfu/100ml?",1749693362270,100,high,text_similarit
 Are you able to take water sample?",1749692856000,100,high,text_similarity,3003
 8520967,Water Quality,What is the Total Coliform in cfu/100ml?,27470920,1749652214711,Water Quality,"Water Quality |
 What is the Total Coliform in cfu/100ml?",1749693340552,100,high,text_similarity,3017
-8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749652214711,Water Quality,"Water Quality |
-What is the number of E.Coli (using CBT bag test)?",1749693051134,100,high,text_similarity,3008
 8520967,Water Quality,Which water quality checks are carried out at the plant?,3620927,1749652214711,Water Quality,"Water Quality |
 Which water quality checks are carried out at the plant?",1749692758275,100,high,text_similarity,3001
 8520967,Water Treatment Plant Registration,Do you have the relevant Standard Operating Procedures(SOPs) for the treatment plant?,11020944,1749652214711,General Information,"General Information |
@@ -286,3 +284,9 @@ Temperature \u00b0C - 2550B (APHA Method Code)",1754995300101,58.33,none,manual,
 Salinity PPT 2520B 0.2 (APHA Method Code)",1754995300104,77.19,none,manual,3016
 8520967,Water Quality,What is the pH?,28320926,1749652214711,Water Quality,"Water Quality |
 pH - 4500-H+B (APHA Method Code)",1754995300102,61.11,none,manual,3014
+8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749652214711,Water Quality,"Water Quality |
+What is the risk level of E.Coli (using CBT bag test)?",1754995400001,100,high,manual,3009
+8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749652214711,Water Quality,"Water Quality |
+Take Photo of CBT Bag",1749693052234,100,high,manual,3007
+8520967,Water Quality,What is the number of E.Coli (using CBT bag test)?,340940965,1749652214711,Water Quality,"Water Quality |
+What is the number of E.Coli (using CBT bag test)?",1749693051134,100,high,manual,3008

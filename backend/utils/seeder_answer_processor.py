@@ -187,7 +187,9 @@ class DownloadPhotoProcessor:
             logger.info(
                 f"Successfully downloaded and stored image: {stored_path}"
             )
-            return stored_path
+            # Same relative form as the pre-download log (/images/<file>),
+            # which resolves as a URL; storage.upload returns a local path.
+            return f"/images/{filename}"
 
         except Exception as e:
             logger.error(f"Error saving image to storage: {e}")

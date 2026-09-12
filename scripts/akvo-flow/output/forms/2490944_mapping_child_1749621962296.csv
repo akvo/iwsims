@@ -8,8 +8,6 @@ Are you able to take the sample?",1749622785185,100,high,text_similarity,1006
 Proposed Completion Date?",1749622695675,100,high,text_similarity,1004
 2490944,Location of Village,What is the Faecl Coliform Count?,349560987,1749621962296,Project Info,"Project Info |
 What is the Fecal Coliform Count?",1749623074194,96.97,high,text_similarity,1016
-2490944,Location of Village,E.coli Level using CBT?,383580938,1749621962296,Project Info,"Project Info |
-E.coli Level using CBT?",1749622982588,100,high,text_similarity,1011
 2490944,Location of Village,What is the Total Coliform count,389690950,1749621962296,Project Info,"Project Info |
 What is the Total Coliform count?",1749623024122,100,high,text_similarity,1015
 2490944,Location of Village,What is the Turbidity in NTU?,402300959,1749621962296,Project Info,"Project Info |
@@ -58,3 +56,9 @@ PH - 4500-H+B (APHA Method Code)",1723459200024,66.67,none,manual,1016
 Salinity PPT 2520B 0.2 (APHA Method Code)",1723459200026,77.19,none,manual,1018
 2490944,Location of Village,What is the Conductivity?,393260954,1749621962296,Project Info,"Project Info |
 Conductivity \u00b5S/cm - 2510B (APHA Method Code)",1723459200025,66.67,none,manual,1017
+2490944,Location of Village,E.coli Level using CBT?,383580938,1749621962296,Project Info,"Project Info |
+What is the risk level of E.Coli (using CBT)?",1849622785201,100,high,manual,1012
+2490944,Location of Village,E.coli Level using CBT?,383580938,1749621962296,Project Info,"Project Info |
+Take photo of CBT Bag",1749623001234,100,high,manual,1013
+2490944,Location of Village,E.coli Level using CBT?,383580938,1749621962296,Project Info,"Project Info |
+E.coli Level using CBT?",1749622982588,100,high,manual,1011

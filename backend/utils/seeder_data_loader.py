@@ -18,7 +18,7 @@ from api.v1.v1_profile.models import Administration
 from .seeder_config import (
     FilePaths,
     CsvColumns,
-    NON_QUESTION_COLUMNS,
+    parse_question_column,
     DataLoadError,
     AdministrationMappingError,
     SeederConfig,
@@ -206,11 +206,9 @@ def load_questions(df: Optional[pd.DataFrame]) -> Dict[int, Questions]:
     if df is None or df.empty:
         return {}
 
-    question_ids = [
-        int(float(col))
-        for col in df.columns
-        if col not in NON_QUESTION_COLUMNS
-    ]
+    # Columns may carry a repeat index ("<id>-<n>"); collect the base ids.
+    parsed_columns = [parse_question_column(col) for col in df.columns]
+    question_ids = list({qid for qid, _ in filter(None, parsed_columns)})
 
     if not question_ids:
         return {}

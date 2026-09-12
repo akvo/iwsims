@@ -5,9 +5,11 @@ This module provides configuration management and validation for the
 Flow Complete Seeder command.
 """
 
+import json
 import os
+import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from django.conf import settings
 from api.v1.v1_forms.models import Forms
@@ -109,6 +111,25 @@ NON_QUESTION_COLUMNS = [
 ]
 
 FLOW_PREFIX = "FLOW-"
+
+# Question column: "<question_id>" or "<question_id>-<repeat_index>"
+# (the same key format as Answers.to_key). A trailing ".0" is tolerated
+# because pandas may render integer columns as floats.
+QUESTION_COLUMN_RE = re.compile(r"^(\d+)(?:\.0+)?(?:-(\d+))?$")
+
+
+def parse_question_column(column: str) -> Optional[Tuple[int, int]]:
+    """Split a data CSV column name into (question_id, repeat_index).
+
+    Returns None for metadata columns and anything that is not a question
+    column. Index 0 is the first (or only) repeat instance.
+    """
+    if column in NON_QUESTION_COLUMNS:
+        return None
+    match = QUESTION_COLUMN_RE.match(str(column).strip())
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2) or 0)
 
 
 # =============================================================================
@@ -229,15 +250,37 @@ def get_user(email: str) -> "SystemUser":
     return user
 
 
-def get_form_by_flow_id(flow_form_id: int) -> Forms:
-    flow_ids = {
-        "8520967": 1749634736797,
-        "17260923": 1748903240763,
-        "27040920": 1749611049520,
-        "1520924": 1749623934933,
-        "5530933": 1749623934933,
-        "2490944": 1749621221728,
+# Fallback when storage/akvo-flow/flow_forms.json is absent
+DEFAULT_FLOW_FORM_IDS = {
+    "8520967": 1749634736797,
+    "17260923": 1748903240763,
+    "27040920": 1749611049520,
+    "1520924": 1749623934933,
+    "5530933": 1749623934933,
+    "2490944": 1749621221728,
+}
+FLOW_FORMS_CONFIG = os.path.join(STORAGE_PATH, "akvo-flow", "flow_forms.json")
+
+
+def load_flow_form_ids(config_path: str = FLOW_FORMS_CONFIG) -> dict:
+    """Flow form id -> MIS form id, from the shared JSON config.
+
+    The same file drives the Jupyter notebooks (see
+    scripts/akvo-flow/flow_forms.example.json). Falls back to the built-in
+    map when the file is missing.
+    """
+    if not os.path.exists(config_path):
+        return dict(DEFAULT_FLOW_FORM_IDS)
+    with open(config_path, encoding="utf-8") as f:
+        forms = json.load(f).get("forms", {})
+    return {
+        str(flow_id): int(entry["mis_form_id"])
+        for flow_id, entry in forms.items()
     }
+
+
+def get_form_by_flow_id(flow_form_id: int) -> Forms:
+    flow_ids = load_flow_form_ids()
     if str(flow_form_id) not in flow_ids:
         raise ValidationError(
             f"Flow form ID {flow_form_id} not mapped to any form"
