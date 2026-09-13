@@ -39,8 +39,6 @@ Take a photo",1749631041152,100.0,high,manual,3001
 Fecal Coliform in 1cfu/ 100ml",1749631041146,68.49,none,manual,2013
 2490944,Location of Village,What is the pH level?,379720947,1749631041125,Water Quality Testing,"Water Quality Testing |
 PH",1749631041148,74.51,none,manual,2015
-2490944,Location of Village,E.coli Level using CBT?,383580938,1749631041125,Water Quality Testing,"Water Quality Testing |
-What is the E- Coli count from CBT Bags?",1749631041141,52.83,none,manual,2008
 2490944,Location of Village,What is the salinity in ppt?,389680956,1749631041125,Water Quality Testing,"Water Quality Testing |
 Salinity PPT",1749631041150,62.07,none,manual,2017
 2490944,Location of Village,What is the Total Coliform count,389690950,1749631041125,Water Quality Testing,"Water Quality Testing |
@@ -49,3 +47,9 @@ Total Coliform in 1cfu/ 100ml",1749631041145,63.89,none,manual,2012
 Conductivity in µS/ cm",1749631041149,60.47,none,manual,2016
 2490944,Location of Village,What is the Turbidity in NTU?,402300959,1749631041125,Water Quality Testing,"Water Quality Testing |
 Turbidity in NTU",1749631041144,71.11,none,manual,2011
+2490944,Location of Village,E.coli Level using CBT?,383580938,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the risk level of CBT?",1749631041142,100,high,manual,2009
+2490944,Location of Village,E.coli Level using CBT?,383580938,1749631041125,Water Quality Testing,"Water Quality Testing |
+Take photo of CBT Bag",1749631041140,100,high,manual,2007
+2490944,Location of Village,E.coli Level using CBT?,383580938,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the E- Coli count from CBT Bags?",1749631041141,100,high,manual,2008

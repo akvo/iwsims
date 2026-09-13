@@ -28,7 +28,7 @@ from utils.seeder_config import (
     ConfigurationError,
     validate_configuration,
     get_form_by_flow_id,
-    NON_QUESTION_COLUMNS,
+    parse_question_column,
 )
 from utils.seeder_data_loader import load_and_prepare_data
 from utils.seeder_photo_downloader import PhotoPreDownloader
@@ -201,26 +201,16 @@ class Command(BaseCommand):
         # Collect all question IDs from parent and all child DataFrames
         question_ids = set()
 
-        # Process parent DataFrame
-        if parent_df is not None and not parent_df.empty:
-            for col in parent_df.columns:
-                if col not in NON_QUESTION_COLUMNS:
-                    try:
-                        question_ids.add(int(float(col)))
-                    except (ValueError, TypeError):
-                        continue
-
-        # Process child DataFrames (dict)
-        if child_data_dict:
-            for form_id, child_df in child_data_dict.items():
-                if child_df is None or child_df.empty:
-                    continue
-                for col in child_df.columns:
-                    if col not in NON_QUESTION_COLUMNS:
-                        try:
-                            question_ids.add(int(float(col)))
-                        except (ValueError, TypeError):
-                            continue
+        # Parent plus every child DataFrame; columns may carry a repeat
+        # index ("<id>-<n>"), so parse them instead of casting directly.
+        frames = [parent_df] + list((child_data_dict or {}).values())
+        for df in frames:
+            if df is None or df.empty:
+                continue
+            for col in df.columns:
+                parsed = parse_question_column(col)
+                if parsed is not None:
+                    question_ids.add(parsed[0])
 
         if not question_ids:
             return []

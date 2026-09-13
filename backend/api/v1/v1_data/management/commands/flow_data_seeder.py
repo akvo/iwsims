@@ -396,11 +396,22 @@ class Command(BaseCommand):
                 FilePaths.OUTPUT_DIR,
                 f"{config.flow_form_id}_parent_data.csv",
             )
-            parent_df.to_csv(parent_csv_path, index=False, encoding="utf-8")
-            self._log_info(f"Updated parent CSV: {parent_csv_path}")
+            if config.limit:
+                # A limited run holds only the first N rows; writing them
+                # back would truncate the data files.
+                self._log_info("Limited run: data CSVs left unchanged")
+            else:
+                parent_df.to_csv(
+                    parent_csv_path, index=False, encoding="utf-8"
+                )
+                self._log_info(f"Updated parent CSV: {parent_csv_path}")
 
             # Write child CSVs (one per form)
-            if not registration_only and len(child_data_dict) > 0:
+            write_children = (
+                not registration_only and len(child_data_dict) > 0
+                and not config.limit
+            )
+            if write_children:
                 for form_id, child_df in child_data_dict.items():
                     if child_df is not None and not child_df.empty:
                         child_csv_path = os.path.join(

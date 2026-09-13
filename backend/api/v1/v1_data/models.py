@@ -1,4 +1,5 @@
 import os
+import tempfile
 import uuid
 import json
 from django.db import models
@@ -121,13 +122,21 @@ class FormData(SoftDeletes, Draft):
             answers.update(a.to_key)
         data.update({"answers": answers})
         json_data = json.dumps(data)
-        file_name = f"{str(self.uuid)}.json"
-        # write to json file
-        with open(file_name, "w") as f:
+        # Write to a private temp file: a fixed name in the working
+        # directory races when several processes save the same uuid.
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as f:
             f.write(json_data)
-        storage.upload(file=file_name, folder="datapoints")
-        # delete file
-        os.remove(file_name)
+            tmp_name = f.name
+        try:
+            storage.upload(
+                file=tmp_name,
+                folder="datapoints",
+                filename=f"{str(self.uuid)}.json",
+            )
+        finally:
+            os.remove(tmp_name)
         return data
 
     @property

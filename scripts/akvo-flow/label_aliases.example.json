@@ -1,0 +1,97 @@
+{
+  "_comment": [
+    "Flow option labels that differ from the MIS option labels.",
+    "Copy to label_aliases.json (gitignored) and edit per deployment.",
+    "Key: Flow label, matched case- and whitespace-insensitively.",
+    "Value: MIS option values to try in order; a candidate is used only when",
+    "the target MIS question actually offers it, so entries are safe to share.",
+    "\"_administration\": Flow administration names (typos) mapped to MIS names; used by af_administration_mapping.ipynb."
+  ],
+  "village": [
+    "villages"
+  ],
+  "settlement": [
+    "settlements"
+  ],
+  "compartment bag test (cbt)": [
+    "cbt_test"
+  ],
+  "cbt bag test": [
+    "cbt_test"
+  ],
+  "intermediate risk": [
+    "medium_risk",
+    "moderate_risk"
+  ],
+  "moderate risk": [
+    "moderate_risk",
+    "medium_risk"
+  ],
+  "medium risk": [
+    "medium_risk",
+    "moderate_risk"
+  ],
+  "rural water scheme": [
+    "surface_water_project"
+  ],
+  "mrd borehole scheme": [
+    "borehole"
+  ],
+  "mrd borehole": [
+    "borehole"
+  ],
+  "sea water desalination system": [
+    "desalination"
+  ],
+  "desalinated water": [
+    "desalination"
+  ],
+  "rainwater harvesting system": [
+    "rainwater_harvesting"
+  ],
+  "rain water": [
+    "rainwater"
+  ],
+  "river": [
+    "surface_water_river"
+  ],
+  "creek": [
+    "surface_water_creek"
+  ],
+  "stream": [
+    "surface_water_stream_spring"
+  ],
+  "spring": [
+    "surface_water_stream_spring"
+  ],
+  "well": [
+    "ground_water"
+  ],
+  "very high risk": [
+    "high_risk"
+  ],
+  "low risk / safe": [
+    "low_risk"
+  ],
+  "intermediate risk / probably safe": [
+    "medium_risk",
+    "moderate_risk"
+  ],
+  "intermediate risk / possibly safe": [
+    "medium_risk",
+    "moderate_risk"
+  ],
+  "high risk / possibly unsafe": [
+    "high_risk"
+  ],
+  "high risk / probably unsafe": [
+    "high_risk"
+  ],
+  "very high risk / unsafe": [
+    "high_risk"
+  ],
+  "_administration": {
+    "Tawakw": "Tawake",
+    "Navalou": "Navolau"
+  }
+}

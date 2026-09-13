@@ -17,6 +17,7 @@ import pandas as pd
 
 from mis.settings import STORAGE_PATH
 from utils.seeder_answer_processor import DownloadPhotoProcessor
+from utils.seeder_config import parse_question_column
 
 
 class PhotoPreDownloader:
@@ -261,12 +262,22 @@ class PhotoPreDownloader:
         """
         result = []
 
-        for question in photo_questions:
-            col_id = str(question.pk)
-            if col_id not in df.columns:
-                continue
+        # A photo question may span several columns when its group is
+        # repeatable: "<id>", "<id>-1", "<id>-2", ...
+        columns_by_question: Dict[int, List[str]] = {}
+        for col in df.columns:
+            parsed = parse_question_column(col)
+            if parsed is not None:
+                columns_by_question.setdefault(parsed[0], []).append(col)
 
-            for idx, row in df.iterrows():
+        for question in photo_questions:
+            question_columns = [
+                (col_id, row)
+                for col_id in columns_by_question.get(question.pk, [])
+                for _, row in df.iterrows()
+            ]
+
+            for col_id, row in question_columns:
                 value = row.get(col_id)
                 # Skip None/NaN values
                 if pd.isna(value) or value is None:

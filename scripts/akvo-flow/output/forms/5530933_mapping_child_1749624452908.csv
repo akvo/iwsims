@@ -36,8 +36,6 @@ Concrete Base Construction",1849633456789,100.0,high,text_similarity,3001
 Construction Start Date?",1749624452910,0.0,none,manual,1002
 5530933,Location of Village,Proposed Completion Date?,8540921,1749624452908,Project Info,"Project Info |
 Proposed Completion Date?",1749630516825,0.0,none,manual,1004
-5530933,Location of Village,Level of Contamination using CBT bags?,410050993,1749624452908,Project Info,"Project Info | 
-Level of Contamination using CBT bags?",1749630906302,0.0,none,manual,1010
 5530933,Location of Village,What is the Total Coliform Level?,398340987,1749624452908,Project Info,"Project Info |
 What is the Total Coliform Level?",1749631093126,0.0,none,manual,1014
 5530933,Location of Village,What is the Faecal Coliform Level?,405990956,1749624452908,Project Info,"Project Info |
@@ -52,3 +50,9 @@ Conductivity \u00b5S/cm - 2510B (APHA Method Code)",1754995200103,0.0,none,manua
 Salinity PPT 2520B 0.2 (APHA Method Code)",1754995200104,0.0,none,manual,1020
 5530933,Project Scope,What percentage of project is complete?,1009150932,1749624452908,Project Info,"Project Info |
 Percentage of Project Completion",1849635800001,0.0,none,manual,1202
+5530933,Location of Village,Level of Contamination using CBT bags?,410050993,1749624452908,Project Info,"Project Info |
+Risk Levels",1749630906304,100,high,manual,1014
+5530933,Location of Village,Level of Contamination using CBT bags?,410050993,1749624452908,Project Info,"Project Info |
+Photo of the CBT Bag",1749630906303,100,high,manual,1012
+5530933,Location of Village,Level of Contamination using CBT bags?,410050993,1749624452908,Project Info,"Project Info |
+Level of Contamination using CBT bags?",1749630906302,100,high,manual,1013

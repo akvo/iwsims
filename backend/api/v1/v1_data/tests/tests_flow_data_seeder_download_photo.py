@@ -239,7 +239,9 @@ class DownloadPhotoProcessorProcessTestCase(TestCase):
         )
 
         self.assertIsNotNone(result)
-        self.assertTrue(result.startswith('./storage/images/'))
+        # stored as a URL path like the pre-download log, not a local path
+        self.assertTrue(result.startswith('/images/seeder_'))
+        self.assertTrue(result.endswith('.jpg'))
         mock_download.assert_called_once_with('https://example.com/image.jpg')
         mock_upload.assert_called_once()
 

@@ -1,0 +1,86 @@
+flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
+540671011,General Remarks,List down any water and sanitation related issues,530701024,1749631041125,General Remarks and Recommendations,"General Remarks and Recommendations |
+General Remarks",1749631041159,100,high,manual,4005
+540671011,School Information,Number of Staff Quarters?,475531011,,,,,65.31,none,none,
+540671011,School Information,What is the school name? (for unregistered),475531012,,,,,63.64,none,none,
+540671011,School Information,Number of Boys Students,475531013,,,,,60.87,none,none,
+540671011,School Information,Number of staff in the school?,475531014,,,,,61.11,none,none,
+540671011,School Information,School Category (Boarding/DayScholar),475531015,,,,,53.85,none,none,
+540671011,School Information,School Level,475531016,,,,,58.33,none,none,
+540671011,School Information,Number of boys in hostel,475531018,,,,,59.09,none,none,
+540671011,School Information,Number of Girls Students,475531019,,,,,56.25,none,none,
+540671011,School Information,Occupants in Quarters that are non staffs and students?,475531020,,,,,56.25,none,none,
+540671011,School Information,Total Population of the School?,513320999,,,,,69.77,none,none,
+540671011,School Information,Is the site location Urban or Rural?,513321000,,,,,55.32,none,none,
+540671011,School Information,Is the school registered?,513321001,,,,,53.33,none,none,
+540671011,School Information,School Gender Type,513321002,,,,,53.85,none,none,
+540671011,School Information,Contact Details of the Contact person?,513321004,1749631041125,Inspection Info,"Inspection Info |
+Phone number of Contact Person",1749631041129,100,high,manual,1003
+540671011,School Information,Number of girls in hostel,513321005,,,,,56.25,none,none,
+540671011,School Information,Number of students in hostel,513321006,,,,,56.25,none,none,
+540671011,School Information,GPS Location of the School,513321007,,,,,72.73,none,none,
+540671011,School Information,School Ownership Type,513321008,,,,,51.28,none,none,
+540671011,School Information,Contact Person Name?,525291016,1749631041125,Inspection Info,"Inspection Info |
+Name of Contact Person",1749631041128,82.35,low,text_similarity,1002
+540671011,School Information,Location,525291017,,,,,66.67,none,none,
+540671011,School Information,What is the school name and code?,525291018,,,,,65.45,none,none,
+540671011,School Information,What is the school code? (for unregistered),525291019,,,,,64.1,none,none,
+540671011,School Information,Does the School Have Staff Quarters?,525291020,,,,,57.89,none,none,
+540671011,WASH Information,How many flush toilets?,519410968,,,,,66.67,none,none,
+540671011,WASH Information,Does the girls toilet have menstrual Hygiene facilities such as proper disposal bins and changing room?,519410969,,,,,50,none,none,
+540671011,WASH Information,Are there separate toilets for students and staff?,519410970,,,,,56.82,none,none,
+540671011,WASH Information,Is drinking water from the main source available at the school on the day of the visit?,519410971,,,,,58.33,none,none,
+540671011,WASH Information,How many toilets are at the school?,519410972,,,,,66.67,none,none,
+540671011,WASH Information,How many toilets are currently usable?,519410973,,,,,66.67,none,none,
+540671011,WASH Information,What type of toilets is at the school?,519410974,,,,,58.54,none,none,
+540671011,WASH Information,Are there hand washing facilities at the school?,519410975,,,,,57.47,none,none,
+540671011,WASH Information,Is there any other drinking water source for the school?,519410977,,,,,58.33,none,none,
+540671011,WASH Information,What was the type of Water Borne Disease Outbreak?,525320956,,,,,72.73,none,none,
+540671011,WASH Information,Has there been any Water Borne Disease Outbreak at the School recently?,525320957,,,,,66.67,none,none,
+540671011,WASH Information,What is the main source of drinking water provided by the school?,525320958,,,,,66.67,none,none,
+540671011,WASH Information,Types of Toilets in Teachers Quarters?,525320960,,,,,64.86,none,none,
+540671011,WASH Information,Are you able to  take the picture of the Hand washing facility?,525320961,,,,,69.84,none,none,
+540671011,WASH Information,How many storage tank does the school have?,525320962,,,,,66.67,none,none,
+540671011,WASH Information,How many water seal toilets?,525320963,,,,,66.67,none,none,
+540671011,WASH Information,What is the water treatment technology used?,525320964,,,,,61.22,none,none,
+540671011,WASH Information,How many compost toilets?,525320965,,,,,66.67,none,none,
+540671011,WASH Information,Is the drinking water at school treated?,527231006,,,,,66.67,none,none,
+540671011,WASH Information,How many rainwater harvesting system does the school have?,527231007,,,,,66.67,none,none,
+540671011,WASH Information,Is Drinking Water from the main source typically available throughout the year?,527231008,,,,,53.85,none,none,
+540671011,WASH Information,What is the other source of  water?,527231009,,,,,66.67,none,none,
+540671011,WASH Information,Are both soap and water currently available at the hand washing facilities?,527231010,,,,,54.55,none,none,
+540671011,WASH Information,Are you able to take the picture of the school toilet?,527231011,,,,,69.84,none,none,
+540671011,WASH Information,Are the toilets separate for girls and boys?,527231012,,,,,56.25,none,none,
+540671011,WASH Information,Number of Toilets in Teachers Quarters?,527231013,,,,,61.02,none,none,
+540671011,WASH Information,How many drinking water points (eg. taps are at the school)?,527231014,,,,,66.67,none,none,
+540671011,WASH Information,Is there any rainwater harvesting system in the school?,527231015,,,,,58.62,none,none,
+540671011,WASH Information,What is the source for the rural water scheme?,529621155,,,,,66.67,none,none,
+540671011,WASH Information,Are the toilet facilities accessible to those with limited mobility or vision,535141013,,,,,54.55,none,none,
+540671011,WASH Information,Take a picture of the school toilet,535141014,1749631041125,Inspection Photos,"Inspection Photos |
+Take a photo",1749631041152,100,high,manual,3001
+540671011,WASH Information,How many pit toilets?,535141015,,,,,66.67,none,none,
+540671011,WASH Information,Is this source improved or unimproved?,545931014,,,,,51.28,none,none,
+540671011,Water Quality Test,Take the geolocation of the sampling point?,499000964,,,,,79.31,none,none,
+540671011,Water Quality Test,What type of water quality test was conducted?,536681023,1749631041125,Water Quality Testing,"Water Quality Testing |
+Method of water testing used?",1749631041138,100,high,manual,2005
+540671011,Water Quality Test,Reason for not being able to collect the sample?,536681024,,,,,83.08,low,manual,
+540671011,Water Quality Test,What is the type of water source?,536681025,1749631041125,Inspection Info,"Inspection Info |
+Type of Water Project?",1749631041130,100,high,manual,1004
+540671011,Water Quality Test,Take a picture of the water point from where the sample has been collected,536681026,1749631041125,Water Quality Testing,"Water Quality Testing |
+Take photo of sampling point",1749631041136,100,high,manual,2003
+540671011,Water Quality Test,What are the results of the CBT Bag test (MPN Number)?,536681027,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the E- Coli count from CBT Bags?",1749631041141,100,high,manual,2008
+540671011,Water Quality Test,Where was the sample taken from?,536681028,1749631041125,Water Quality Testing,"Water Quality Testing |
+Description of sampling point",1749631041137,100,high,manual,2004
+540671011,Water Quality Test,Are you able to take the sample?,536681029,1749631041125,Water Quality Testing,"Water Quality Testing |
+Are you able to collect water sample?",1749631041135,100,high,manual,2002
+540671011,Water Quality Test,What is the Risk Level of CBT value obtained?,536681030,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the risk level of CBT?",1749631041142,100,high,manual,2009
+540671011,Water Quality Test,The test conducted with Caddisfly?,536681031,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the E- Coli count from CBT Bags?",1749631041141,100,high,manual,2008
+540671011,Water Quality Test,The test conducted with Caddisfly?,536681031,1749631041125,Water Quality Testing,"Water Quality Testing |
+What is the risk level of CBT?",1749631041142,100,high,manual,2009
+540671011,Water Quality Test,The test conducted with Caddisfly?,536681031,1749631041125,Water Quality Testing,"Water Quality Testing |
+Take photo of CBT Bag",1749631041140,100,high,manual,2007
+540671011,WASH Information,Take a picture of the school hand washing facility,535141016,1749631041125,Inspection Photos,"Inspection Photos |
+Take a photo",1749631041152,100,high,manual,3001
