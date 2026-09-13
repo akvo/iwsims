@@ -154,3 +154,39 @@ class RepeatIndexSeederTestCase(TestCase):
             data=self.form_data, question=self.question
         )
         self.assertEqual(answer.index, 0)
+
+
+@override_settings(USE_TZ=False, TEST_ENV=True)
+class RowFailureKeepsTransactionUsableTestCase(TestCase):
+    """A row that fails inside the DB must not break the surrounding
+    transaction (a TestCase runs inside one; so does any caller that wraps
+    the seeder in atomic())."""
+
+    def setUp(self):
+        super().setUp()
+        call_command("administration_seeder", "--test")
+        call_command("form_seeder", "--test", 4)
+        self.user = SystemUser.objects.create_user(
+            email="test@example.com",
+            first_name="Test",
+            last_name="User",
+            password="testpass123",
+        )
+        self.admin = Administration.objects.filter(name="Kramat Jati").first()
+
+    def test_bad_row_returns_none_and_queries_still_work(self):
+        from utils.seeder_data_processor import create_form_data
+
+        row = pd.Series({
+            "datapoint_id": "9001",
+            "identifier": "bad-row",
+            "name": "Bad row",
+            "form_id": 4,
+            "created_at": "not-a-date",  # rejected by the database
+        })
+        result = create_form_data(
+            row=row, user=self.user, administration_id=self.admin.id
+        )
+        self.assertIsNone(result)
+        # Without a savepoint this raises TransactionManagementError
+        self.assertEqual(FormData.objects.filter(pk=9001).count(), 0)

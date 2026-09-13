@@ -69,6 +69,30 @@ class AdministrationCsvSeederTestCase(TestCase):
         self.assertEqual(Administration.objects.count(), count)
         self.assertIn("Created 0 Village", output)
 
+    def test_levels_option_imports_upper_levels_only(self):
+        output = self.run_seeder("--levels=3")
+        self.assertIn("Created 1 Province", output)
+        self.assertIn("Created 1 District", output)
+        self.assertIn("Created 2 Subdistrict", output)
+        self.assertNotIn("Village", output)
+        self.assertFalse(
+            Administration.objects.filter(name="Legian").exists()
+        )
+        self.assertTrue(
+            Administration.objects.filter(name="Kuta").exists()
+        )
+
+    def test_too_many_levels_fails_before_writing(self):
+        from django.core.management.base import CommandError
+        from api.v1.v1_profile.models import Levels
+        # hierarchy stops at Subdistrict
+        Levels.objects.filter(level=4).delete()
+        count = Administration.objects.count()
+        with self.assertRaises(CommandError) as ctx:
+            self.run_seeder()
+        self.assertIn("--levels=3", str(ctx.exception))
+        self.assertEqual(Administration.objects.count(), count)
+
     def test_dry_run_writes_nothing(self):
         count = Administration.objects.count()
         output = self.run_seeder("--dry-run")

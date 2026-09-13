@@ -320,6 +320,10 @@ stable on every environment:
 ./dc.sh exec backend python manage.py generate_sqlite   # refresh backend/source/administrator.sqlite
 ```
 
+Where the hierarchy is shallower than the file (production keeps three
+sub-national levels), add `--levels=3` to import only the first three
+columns; the command refuses a deeper file before writing anything.
+
 Then re-run the mapping notebook. It matches Flow values by name, level and
 parent (tikina names repeat across provinces), accepts merged province names
 such as `Nadroga/Navosa` for Flow's `Nadroga` or `Navosa`, only processes

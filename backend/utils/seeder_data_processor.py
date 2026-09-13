@@ -8,6 +8,7 @@ import logging
 from typing import Dict, Optional, Any, List, Tuple
 
 import pandas as pd
+from django.db import transaction
 
 from api.v1.v1_data.models import FormData
 from api.v1.v1_forms.models import QuestionTypes, Forms
@@ -60,56 +61,57 @@ def process_data_rows(
 
     for _, row in df.iterrows():
         try:
-            # Prepare and create answers
-            answers, row_invalid_answers = prepare_answer_data(
-                row=row,
-                questions=questions,
-                administration_id=administration_id,
-                answer_processor=answer_processor,
-            )
-
-            # Create child FormData
-            datapoint_id = str(row[CsvColumns.DATAPOINT_ID])
-            parent_pk = parent.pk if parent else None
-
-            # Find matching existing record
-            matching = [
-                er for er in (existing_records or [])
-                if datapoint_id in er.name and er.parent_id == parent_pk
-            ]
-
-            existing_record = matching[0] if matching else None
-            form_data = create_form_data(
-                row=row,
-                user=config.user,
-                administration_id=administration_id,
-                parent=parent,
-                existing_record=existing_record,
-            )
-
-            if not form_data:
-                continue
-
-            is_incomplete = True
-            if len(answers):
-                # Pass row_invalid_answers to
-                # filter out records with existing answers
-                bulk_create_answers(
-                    form_data, answers, config.user, row_invalid_answers
+            with transaction.atomic():
+                # Prepare and create answers
+                answers, row_invalid_answers = prepare_answer_data(
+                    row=row,
+                    questions=questions,
+                    administration_id=administration_id,
+                    answer_processor=answer_processor,
                 )
-                is_incomplete = False
 
-            # Extend invalid_answers after filtering by bulk_create_answers
-            invalid_answers.extend(row_invalid_answers)
+                # Create child FormData
+                datapoint_id = str(row[CsvColumns.DATAPOINT_ID])
+                parent_pk = parent.pk if parent else None
 
-            seeded_records.append(
-                {
-                    "flow_data_id": row[CsvColumns.DATAPOINT_ID],
-                    "mis_data_id": form_data.pk,
-                    "is_new": existing_record is None,
-                    "is_incomplete": is_incomplete,
-                }
-            )
+                # Find matching existing record
+                matching = [
+                    er for er in (existing_records or [])
+                    if datapoint_id in er.name and er.parent_id == parent_pk
+                ]
+
+                existing_record = matching[0] if matching else None
+                form_data = create_form_data(
+                    row=row,
+                    user=config.user,
+                    administration_id=administration_id,
+                    parent=parent,
+                    existing_record=existing_record,
+                )
+
+                if not form_data:
+                    continue
+
+                is_incomplete = True
+                if len(answers):
+                    # Pass row_invalid_answers to
+                    # filter out records with existing answers
+                    bulk_create_answers(
+                        form_data, answers, config.user, row_invalid_answers
+                    )
+                    is_incomplete = False
+
+                # Extend invalid_answers after filtering by bulk_create_answers
+                invalid_answers.extend(row_invalid_answers)
+
+                seeded_records.append(
+                    {
+                        "flow_data_id": row[CsvColumns.DATAPOINT_ID],
+                        "mis_data_id": form_data.pk,
+                        "is_new": existing_record is None,
+                        "is_incomplete": is_incomplete,
+                    }
+                )
 
         except Exception as e:
             logger.error(
@@ -216,66 +218,67 @@ def create_form_data(
         Created or updated FormData instance or None if failed
     """
     try:
-        geo_value = None
-        uuid_value = row[CsvColumns.IDENTIFIER]
-        if CsvColumns.GEO in row and pd.notna(row[CsvColumns.GEO]):
-            geo_value = [
-                float(g) for g in
-                str(row[CsvColumns.GEO]).split("|")
-            ]
-        if parent and not geo_value:
-            geo_value = parent.geo
-            uuid_value = parent.uuid
+        with transaction.atomic():
+            geo_value = None
+            uuid_value = row[CsvColumns.IDENTIFIER]
+            if CsvColumns.GEO in row and pd.notna(row[CsvColumns.GEO]):
+                geo_value = [
+                    float(g) for g in
+                    str(row[CsvColumns.GEO]).split("|")
+                ]
+            if parent and not geo_value:
+                geo_value = parent.geo
+                uuid_value = parent.uuid
 
-        flow_data_id = int(row[CsvColumns.DATAPOINT_ID])
+            flow_data_id = int(row[CsvColumns.DATAPOINT_ID])
 
-        # Sanitize name by replacing pipe characters
-        dp_name = row[CsvColumns.NAME].replace("|", " - ")
-        # Add FLOW-{flow_data_id} prefix to name
-        dp_name = f"{FLOW_PREFIX}{flow_data_id} - {dp_name}"
+            # Sanitize name by replacing pipe characters
+            dp_name = row[CsvColumns.NAME].replace("|", " - ")
+            # Add FLOW-{flow_data_id} prefix to name
+            dp_name = f"{FLOW_PREFIX}{flow_data_id} - {dp_name}"
 
-        # Check if record already exists
-        if existing_record:
-            # Update existing record
-            existing_record.name = dp_name
-            existing_record.administration_id = administration_id
-            existing_record.geo = geo_value
-            existing_record.submitter = row.get(CsvColumns.SUBMITTER, None)
-            if parent:
-                existing_record.parent = parent
-            existing_record.save()
+            # Check if record already exists
+            if existing_record:
+                # Update existing record
+                existing_record.name = dp_name
+                existing_record.administration_id = administration_id
+                existing_record.geo = geo_value
+                existing_record.submitter = row.get(CsvColumns.SUBMITTER, None)
+                if parent:
+                    existing_record.parent = parent
+                existing_record.save()
+                logger.info(
+                    f"Updated existing FormData {existing_record.pk} "
+                    f"for flow_data_id {flow_data_id}"
+                )
+                return existing_record
+
+            # Create new record
+            new_data_id = None
+            if not parent and flow_data_id:
+                new_data_id = flow_data_id
+            data = FormData.objects.create(
+                id=new_data_id,
+                form_id=row[CsvColumns.FORM_ID],
+                uuid=uuid_value,
+                name=dp_name,
+                administration_id=administration_id,
+                geo=geo_value,
+                created_by=user,
+                parent=parent,
+                submitter=row.get(CsvColumns.SUBMITTER, None),
+            )
+            # Set created timestamp from source data
+            data.created = row[CsvColumns.CREATED_AT]
+            data.save()
             logger.info(
-                f"Updated existing FormData {existing_record.pk} "
+                f"Created new FormData {data.pk} "
                 f"for flow_data_id {flow_data_id}"
             )
-            return existing_record
-
-        # Create new record
-        new_data_id = None
-        if not parent and flow_data_id:
-            new_data_id = flow_data_id
-        data = FormData.objects.create(
-            id=new_data_id,
-            form_id=row[CsvColumns.FORM_ID],
-            uuid=uuid_value,
-            name=dp_name,
-            administration_id=administration_id,
-            geo=geo_value,
-            created_by=user,
-            parent=parent,
-            submitter=row.get(CsvColumns.SUBMITTER, None),
-        )
-        # Set created timestamp from source data
-        data.created = row[CsvColumns.CREATED_AT]
-        data.save()
-        logger.info(
-            f"Created new FormData {data.pk} "
-            f"for flow_data_id {flow_data_id}"
-        )
-        # Save to datapoint json file if parent is None (Registration)
-        if data.parent is None:
-            data.save_to_file
-        return data
+            # Save to datapoint json file if parent is None (Registration)
+            if data.parent is None:
+                data.save_to_file
+            return data
     except Exception as e:
         logger.error(
             f"Error creating/updating FormData for row "

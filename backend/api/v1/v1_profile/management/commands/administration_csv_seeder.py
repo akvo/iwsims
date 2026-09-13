@@ -16,8 +16,12 @@ from django.db import transaction
 from api.v1.v1_profile.models import Administration, Levels
 
 
-def load_rows(file_path: str) -> pd.DataFrame:
+def load_rows(file_path: str, levels: int = None) -> pd.DataFrame:
+    """Read the CSV; `levels` keeps only the first N columns (deduplicated),
+    for deployments whose hierarchy is shallower than the file."""
     df = pd.read_csv(file_path, dtype=str)
+    if levels:
+        df = df.iloc[:, :levels]
     df = df.apply(lambda s: s.str.strip())
     return df.dropna(how="all").drop_duplicates()
 
@@ -34,14 +38,20 @@ class Command(BaseCommand):
             "--dry-run", action="store_true", default=False,
             help="Report what would be created without writing",
         )
+        parser.add_argument(
+            "--levels", type=int, default=None,
+            help="Import only the first N CSV columns (e.g. 3 to skip "
+                 "villages where that level does not exist)",
+        )
 
     def handle(self, *args, **options):
-        df = load_rows(options["file"])
+        df = load_rows(options["file"], options["levels"])
         levels = list(Levels.objects.order_by("level"))
         if len(df.columns) > len(levels) - 1:
             raise CommandError(
                 f"CSV has {len(df.columns)} levels but only "
-                f"{len(levels) - 1} sub-national levels exist"
+                f"{len(levels) - 1} sub-national levels exist; "
+                f"pass --levels={len(levels) - 1} to import the upper levels"
             )
         country = Administration.objects.filter(
             level=levels[0], name=settings.COUNTRY_NAME.capitalize()
