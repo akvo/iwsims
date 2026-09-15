@@ -6,47 +6,80 @@
     "and by the backend flow_data_seeder / predownload_photos commands.",
     "'active' lists the Flow form ids to process; empty means all forms."
   ],
-  "active": ["535151018", "540671011"],
+  "active": [
+    "535151018",
+    "540671011"
+  ],
   "forms": {
     "8520967": {
       "name": "WAF Water Treatment Plant Inspection (WTP)",
       "mis_form_id": 1749634736797,
-      "mis_child_form_ids": [1749640508297, 1749652214711]
+      "mis_child_form_ids": [
+        1749640508297,
+        1749652214711
+      ]
     },
     "17260923": {
       "name": "WAF Wastewater Treatment Plant Inspection (WWTP)",
       "mis_form_id": 1748903240763,
-      "mis_child_form_ids": [1748905550055, 1748918946591]
+      "mis_child_form_ids": [
+        1748905550055,
+        1748918946591
+      ]
     },
     "27040920": {
       "name": "Inspection of Wastewater Pump Station (SPS)",
       "mis_form_id": 1749611049520,
-      "mis_child_form_ids": [1749611905372, 1749627302948]
+      "mis_child_form_ids": [
+        1749611905372,
+        1749627302948
+      ]
     },
     "1520924": {
       "name": "EPS Water Quality Testing",
       "mis_form_id": 1749623934933,
-      "mis_child_form_ids": [1749632545233]
+      "mis_child_form_ids": [
+        1749632545233
+      ]
     },
     "5530933": {
       "name": "EPS Projects Construction Monitoring",
       "mis_form_id": 1749623934933,
-      "mis_child_form_ids": [1749624452908]
+      "mis_child_form_ids": [
+        1749624452908
+      ]
     },
     "2490944": {
       "name": "Rural Water Project Inspection (RWS)",
       "mis_form_id": 1749621221728,
-      "mis_child_form_ids": [1749621962296, 1749631041125]
+      "mis_child_form_ids": [
+        1749621962296,
+        1749631041125
+      ]
     },
     "535151018": {
       "name": "Rural Water Point Survey (RWS)",
-      "mis_form_id": 1749621221728,
-      "mis_child_form_ids": [1749621962296, 1749631041125]
+      "mis_form_id": 1789351200000,
+      "mis_child_form_ids": [],
+      "generate": {
+        "mis_form_id": 1789351200000,
+        "prefix": 6,
+        "form_name": "Rural Water Point Survey",
+        "description": "Rural Water Point Survey - Registration",
+        "administration_cascade": "cascade-5430921-v6.sqlite"
+      }
     },
     "540671011": {
       "name": "School Form 2021-2022 (RWS)",
-      "mis_form_id": 1749621221728,
-      "mis_child_form_ids": [1749621962296, 1749631041125]
+      "mis_form_id": 1789351201000,
+      "mis_child_form_ids": [],
+      "generate": {
+        "mis_form_id": 1789351201000,
+        "prefix": 7,
+        "form_name": "School Form 2021-2022",
+        "description": "School Form 2021-2022 - Registration",
+        "administration_cascade": "cascade-5430921-v6.sqlite"
+      }
     }
   }
 }
