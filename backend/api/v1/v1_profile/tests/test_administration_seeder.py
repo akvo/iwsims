@@ -86,3 +86,61 @@ class AdministrationSeederTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["children"]), 1)
+
+    def test_same_name_at_different_levels(self):
+        """A name repeated down the chain gets a row per level.
+
+        Rotuma is both a province and the tikina beneath it. Keying the
+        upsert on name alone collapsed the two into one row, so the path
+        Eastern|Rotuma|Rotuma could never resolve.
+        """
+        administration_seeder.seed_administration_test(rows=[{
+            "id": 1,
+            "code_0": "FJ",
+            "National_0": "Fiji",
+            "code_1": "FJ-E",
+            "Province_1": "Eastern",
+            "code_2": "FJ-E-R",
+            "District_2": "Rotuma",
+            "code_3": "FJ-E-R-R",
+            "Subdistrict_3": "Rotuma",
+            "code_4": "FJ-E-R-R-L",
+            "Village_4": "Lopta",
+        }])
+
+        rotumas = Administration.objects.filter(name="Rotuma")
+        self.assertEqual(rotumas.count(), 2)
+
+        province = rotumas.get(level__level=2)
+        tikina = rotumas.get(level__level=3)
+        self.assertEqual(province.parent.name, "Eastern")
+        self.assertEqual(tikina.parent_id, province.pk)
+        self.assertEqual(tikina.full_path_name, "Fiji|Eastern|Rotuma|Rotuma")
+
+    def test_same_name_under_different_parents(self):
+        """Duplicate names on one level stay attached to their own parent."""
+        shared = {
+            "id": 1,
+            "code_0": "FJ",
+            "National_0": "Fiji",
+            "code_3": "FJ-X",
+            "Subdistrict_3": "Somewhere",
+            "code_4": "FJ-X-N",
+            "Village_4": "Nasau",
+        }
+        administration_seeder.seed_administration_test(rows=[
+            {**shared, "Province_1": "Eastern", "District_2": "Lau"},
+            {**shared, "Province_1": "Northern", "District_2": "Bua"},
+        ])
+
+        villages = Administration.objects.filter(
+            name="Nasau", level__level=4
+        )
+        self.assertEqual(villages.count(), 2)
+        self.assertCountEqual(
+            [v.full_path_name for v in villages],
+            [
+                "Fiji|Eastern|Lau|Somewhere|Nasau",
+                "Fiji|Northern|Bua|Somewhere|Nasau",
+            ],
+        )

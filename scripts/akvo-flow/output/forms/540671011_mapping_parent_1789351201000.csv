@@ -1,0 +1,141 @@
+flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
+540671011,School Information,Location,525291017,1789351201000,School Information,"School Information |
+Location",525291017,100.0,high,identity,1001
+540671011,School Information,GPS Location of the School,513321007,1789351201000,School Information,"School Information |
+GPS Location of the School",513321007,100.0,high,identity,1002
+540671011,School Information,Is the site location Urban or Rural?,513321000,1789351201000,School Information,"School Information |
+Is the site location Urban or Rural?",513321000,100.0,high,identity,1003
+540671011,School Information,Is the school registered?,513321001,1789351201000,School Information,"School Information |
+Is the school registered?",513321001,100.0,high,identity,1004
+540671011,School Information,What is the school name and code?,525291018,1789351201000,School Information,"School Information |
+What is the school name and code?",525291018,100.0,high,identity,1005
+540671011,School Information,What is the school name? (for unregistered),475531012,1789351201000,School Information,"School Information |
+What is the school name? (for unregistered)",475531012,100.0,high,identity,1006
+540671011,School Information,What is the school code? (for unregistered),525291019,1789351201000,School Information,"School Information |
+What is the school code? (for unregistered)",525291019,100.0,high,identity,1007
+540671011,School Information,Contact Person Name?,525291016,1789351201000,School Information,"School Information |
+Contact Person Name?",525291016,100.0,high,identity,1008
+540671011,School Information,Contact Details of the Contact person?,513321004,1789351201000,School Information,"School Information |
+Contact Details of the Contact person?",513321004,100.0,high,identity,1009
+540671011,School Information,School Ownership Type,513321008,1789351201000,School Information,"School Information |
+School Ownership Type",513321008,100.0,high,identity,1010
+540671011,School Information,School Gender Type,513321002,1789351201000,School Information,"School Information |
+School Gender Type",513321002,100.0,high,identity,1011
+540671011,School Information,Total Population of the School?,513320999,1789351201000,School Information,"School Information |
+Total Population of the School?",513320999,100.0,high,identity,1012
+540671011,School Information,Number of Girls Students,475531019,1789351201000,School Information,"School Information |
+Number of Girls Students",475531019,100.0,high,identity,1013
+540671011,School Information,Number of Boys Students,475531013,1789351201000,School Information,"School Information |
+Number of Boys Students",475531013,100.0,high,identity,1014
+540671011,School Information,School Category (Boarding/DayScholar),475531015,1789351201000,School Information,"School Information |
+School Category (Boarding/DayScholar)",475531015,100.0,high,identity,1015
+540671011,School Information,Number of students in hostel,513321006,1789351201000,School Information,"School Information |
+Number of students in hostel",513321006,100.0,high,identity,1016
+540671011,School Information,Number of girls in hostel,513321005,1789351201000,School Information,"School Information |
+Number of girls in hostel",513321005,100.0,high,identity,1017
+540671011,School Information,Number of boys in hostel,475531018,1789351201000,School Information,"School Information |
+Number of boys in hostel",475531018,100.0,high,identity,1018
+540671011,School Information,School Level,475531016,1789351201000,School Information,"School Information |
+School Level",475531016,100.0,high,identity,1019
+540671011,School Information,Does the School Have Staff Quarters?,525291020,1789351201000,School Information,"School Information |
+Does the School Have Staff Quarters?",525291020,100.0,high,identity,1020
+540671011,School Information,Number of Staff Quarters?,475531011,1789351201000,School Information,"School Information |
+Number of Staff Quarters?",475531011,100.0,high,identity,1021
+540671011,School Information,Occupants in Quarters that are non staffs and students?,475531020,1789351201000,School Information,"School Information |
+Occupants in Quarters that are non staffs and students?",475531020,100.0,high,identity,1022
+540671011,School Information,Number of staff in the school?,475531014,1789351201000,School Information,"School Information |
+Number of staff in the school?",475531014,100.0,high,identity,1023
+540671011,WASH Information,What is the main source of drinking water provided by the school?,525320958,1789351201000,WASH Information,"WASH Information |
+What is the main source of drinking water provided by the school?",525320958,100.0,high,identity,2001
+540671011,WASH Information,What is the source for the rural water scheme?,529621155,1789351201000,WASH Information,"WASH Information |
+What is the source for the rural water scheme?",529621155,100.0,high,identity,2002
+540671011,WASH Information,Is this source improved or unimproved?,545931014,1789351201000,WASH Information,"WASH Information |
+Is this source improved or unimproved?",545931014,100.0,high,identity,2003
+540671011,WASH Information,Is drinking water from the main source available at the school on the day of the visit?,519410971,1789351201000,WASH Information,"WASH Information |
+Is drinking water from the main source available at the school on the day of the visit?",519410971,100.0,high,identity,2004
+540671011,WASH Information,Is there any rainwater harvesting system in the school?,527231015,1789351201000,WASH Information,"WASH Information |
+Is there any rainwater harvesting system in the school?",527231015,100.0,high,identity,2005
+540671011,WASH Information,How many rainwater harvesting system does the school have?,527231007,1789351201000,WASH Information,"WASH Information |
+How many rainwater harvesting system does the school have?",527231007,100.0,high,identity,2006
+540671011,WASH Information,Is there any other drinking water source for the school?,519410977,1789351201000,WASH Information,"WASH Information |
+Is there any other drinking water source for the school?",519410977,100.0,high,identity,2007
+540671011,WASH Information,What is the other source of  water?,527231009,1789351201000,WASH Information,"WASH Information |
+What is the other source of  water?",527231009,100.0,high,identity,2008
+540671011,WASH Information,How many drinking water points (eg. taps are at the school)?,527231014,1789351201000,WASH Information,"WASH Information |
+How many drinking water points (eg. taps are at the school)?",527231014,100.0,high,identity,2009
+540671011,WASH Information,Is Drinking Water from the main source typically available throughout the year?,527231008,1789351201000,WASH Information,"WASH Information |
+Is Drinking Water from the main source typically available throughout the year?",527231008,100.0,high,identity,2010
+540671011,WASH Information,Is the drinking water at school treated?,527231006,1789351201000,WASH Information,"WASH Information |
+Is the drinking water at school treated?",527231006,100.0,high,identity,2011
+540671011,WASH Information,What is the water treatment technology used?,525320964,1789351201000,WASH Information,"WASH Information |
+What is the water treatment technology used?",525320964,100.0,high,identity,2012
+540671011,WASH Information,How many storage tank does the school have?,525320962,1789351201000,WASH Information,"WASH Information |
+How many storage tank does the school have?",525320962,100.0,high,identity,2013
+540671011,WASH Information,How many toilets are at the school?,519410972,1789351201000,WASH Information,"WASH Information |
+How many toilets are at the school?",519410972,100.0,high,identity,2014
+540671011,WASH Information,What type of toilets is at the school?,519410974,1789351201000,WASH Information,"WASH Information |
+What type of toilets is at the school?",519410974,100.0,high,identity,2015
+540671011,WASH Information,How many flush toilets?,519410968,1789351201000,WASH Information,"WASH Information |
+How many flush toilets?",519410968,100.0,high,identity,2016
+540671011,WASH Information,How many water seal toilets?,525320963,1789351201000,WASH Information,"WASH Information |
+How many water seal toilets?",525320963,100.0,high,identity,2017
+540671011,WASH Information,How many pit toilets?,535141015,1789351201000,WASH Information,"WASH Information |
+How many pit toilets?",535141015,100.0,high,identity,2018
+540671011,WASH Information,How many compost toilets?,525320965,1789351201000,WASH Information,"WASH Information |
+How many compost toilets?",525320965,100.0,high,identity,2019
+540671011,WASH Information,How many toilets are currently usable?,519410973,1789351201000,WASH Information,"WASH Information |
+How many toilets are currently usable?",519410973,100.0,high,identity,2020
+540671011,WASH Information,Are there separate toilets for students and staff?,519410970,1789351201000,WASH Information,"WASH Information |
+Are there separate toilets for students and staff?",519410970,100.0,high,identity,2021
+540671011,WASH Information,Are the toilets separate for girls and boys?,527231012,1789351201000,WASH Information,"WASH Information |
+Are the toilets separate for girls and boys?",527231012,100.0,high,identity,2022
+540671011,WASH Information,Are the toilet facilities accessible to those with limited mobility or vision,535141013,1789351201000,WASH Information,"WASH Information |
+Are the toilet facilities accessible to those with limited mobility or vision",535141013,100.0,high,identity,2023
+540671011,WASH Information,Are you able to take the picture of the school toilet?,527231011,1789351201000,WASH Information,"WASH Information |
+Are you able to take the picture of the school toilet?",527231011,100.0,high,identity,2024
+540671011,WASH Information,Take a picture of the school toilet,535141014,1789351201000,WASH Information,"WASH Information |
+Take a picture of the school toilet",535141014,100.0,high,identity,2025
+540671011,WASH Information,Are there hand washing facilities at the school?,519410975,1789351201000,WASH Information,"WASH Information |
+Are there hand washing facilities at the school?",519410975,100.0,high,identity,2026
+540671011,WASH Information,Are both soap and water currently available at the hand washing facilities?,527231010,1789351201000,WASH Information,"WASH Information |
+Are both soap and water currently available at the hand washing facilities?",527231010,100.0,high,identity,2027
+540671011,WASH Information,Are you able to  take the picture of the Hand washing facility?,525320961,1789351201000,WASH Information,"WASH Information |
+Are you able to  take the picture of the Hand washing facility?",525320961,100.0,high,identity,2028
+540671011,WASH Information,Take a picture of the school hand washing facility,535141016,1789351201000,WASH Information,"WASH Information |
+Take a picture of the school hand washing facility",535141016,100.0,high,identity,2029
+540671011,WASH Information,Does the girls toilet have menstrual Hygiene facilities such as proper disposal bins and changing room?,519410969,1789351201000,WASH Information,"WASH Information |
+Does the girls toilet have menstrual Hygiene facilities such as proper disposal bins and changing room?",519410969,100.0,high,identity,2030
+540671011,WASH Information,Number of Toilets in Teachers Quarters?,527231013,1789351201000,WASH Information,"WASH Information |
+Number of Toilets in Teachers Quarters?",527231013,100.0,high,identity,2031
+540671011,WASH Information,Types of Toilets in Teachers Quarters?,525320960,1789351201000,WASH Information,"WASH Information |
+Types of Toilets in Teachers Quarters?",525320960,100.0,high,identity,2032
+540671011,WASH Information,Has there been any Water Borne Disease Outbreak at the School recently?,525320957,1789351201000,WASH Information,"WASH Information |
+Has there been any Water Borne Disease Outbreak at the School recently?",525320957,100.0,high,identity,2033
+540671011,WASH Information,What was the type of Water Borne Disease Outbreak?,525320956,1789351201000,WASH Information,"WASH Information |
+What was the type of Water Borne Disease Outbreak?",525320956,100.0,high,identity,2034
+540671011,Water Quality Test,Are you able to take the sample?,536681029,1789351201000,Water Quality Test,"Water Quality Test |
+Are you able to take the sample?",536681029,100.0,high,identity,3001
+540671011,Water Quality Test,Reason for not being able to collect the sample?,536681024,1789351201000,Water Quality Test,"Water Quality Test |
+Reason for not being able to collect the sample?",536681024,100.0,high,identity,3002
+540671011,Water Quality Test,What is the type of water source?,536681025,1789351201000,Water Quality Test,"Water Quality Test |
+What is the type of water source?",536681025,100.0,high,identity,3003
+540671011,Water Quality Test,Where was the sample taken from?,536681028,1789351201000,Water Quality Test,"Water Quality Test |
+Where was the sample taken from?",536681028,100.0,high,identity,3004
+540671011,Water Quality Test,What type of water quality test was conducted?,536681023,1789351201000,Water Quality Test,"Water Quality Test |
+What type of water quality test was conducted?",536681023,100.0,high,identity,3005
+540671011,Water Quality Test,The test conducted with Caddisfly?,536681031,1789351201000,Water Quality Test,"Water Quality Test |
+E.Coli CBT test result (MPN/100ml)",1789351201101,100.0,high,identity,3006
+540671011,Water Quality Test,The test conducted with Caddisfly?,536681031,1789351201000,Water Quality Test,"Water Quality Test |
+E.Coli CBT test health risk category",1789351201102,100.0,high,identity,3007
+540671011,Water Quality Test,The test conducted with Caddisfly?,536681031,1789351201000,Water Quality Test,"Water Quality Test |
+E.Coli CBT test result photo",1789351201103,100.0,high,identity,3008
+540671011,Water Quality Test,What are the results of the CBT Bag test (MPN Number)?,536681027,1789351201000,Water Quality Test,"Water Quality Test |
+What are the results of the CBT Bag test (MPN Number)?",536681027,100.0,high,identity,3009
+540671011,Water Quality Test,What is the Risk Level of CBT value obtained?,536681030,1789351201000,Water Quality Test,"Water Quality Test |
+What is the Risk Level of CBT value obtained?",536681030,100.0,high,identity,3010
+540671011,Water Quality Test,Take a picture of the water point from where the sample has been collected,536681026,1789351201000,Water Quality Test,"Water Quality Test |
+Take a picture of the water point from where the sample has been collected",536681026,100.0,high,identity,3011
+540671011,Water Quality Test,Take the geolocation of the sampling point?,499000964,1789351201000,Water Quality Test,"Water Quality Test |
+Take the geolocation of the sampling point?",499000964,100.0,high,identity,3012
+540671011,General Remarks,List down any water and sanitation related issues,530701024,1789351201000,General Remarks,"General Remarks |
+List down any water and sanitation related issues",530701024,100.0,high,identity,4001
