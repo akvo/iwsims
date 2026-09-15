@@ -1,0 +1,2830 @@
+{
+  "id": 1789351200000,
+  "form": "Rural Water Point Survey",
+  "description": "Rural Water Point Survey - Registration",
+  "defaultLanguage": "en",
+  "languages": [
+    "en"
+  ],
+  "version": 1,
+  "type": 1,
+  "question_groups": [
+    {
+      "id": 1789351200001,
+      "name": "profile_information",
+      "label": "Profile Information",
+      "description": null,
+      "order": 1,
+      "repeatable": false,
+      "questions": [
+        {
+          "id": 469691022,
+          "name": "in_which_division_province_tikina_are_you_in",
+          "label": "In which division-province-tikina are you in?",
+          "order": 1,
+          "type": "administration",
+          "required": true,
+          "meta": true,
+          "api": {
+            "max_level": 3
+          }
+        },
+        {
+          "id": 535141022,
+          "name": "is_this_a_village_or_settlement",
+          "label": "Is this a village or settlement?",
+          "order": 2,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "village",
+              "label": "Village",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "settlement",
+              "label": "Settlement",
+              "order": 2,
+              "color": "#d95f02"
+            }
+          ]
+        },
+        {
+          "id": 469691020,
+          "name": "name_of_village",
+          "label": "Name of Village",
+          "order": 3,
+          "type": "input",
+          "required": true,
+          "meta": true,
+          "dependency": [
+            {
+              "id": 535141022,
+              "options": [
+                "village"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 469691019,
+          "name": "name_of_settlement",
+          "label": "Name of Settlement",
+          "order": 4,
+          "type": "input",
+          "required": true,
+          "meta": true,
+          "dependency": [
+            {
+              "id": 535141022,
+              "options": [
+                "settlement"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535141023,
+          "name": "gps_of_the_village_settlement",
+          "label": "GPS of the village/settlement?",
+          "order": 5,
+          "type": "geo",
+          "required": true,
+          "meta": true,
+          "tooltip": {
+            "text": "please try to take this point at the center of village"
+          }
+        },
+        {
+          "id": 469691023,
+          "name": "name_of_contact_person",
+          "label": "Name of Contact Person",
+          "order": 6,
+          "type": "text",
+          "required": true,
+          "meta": false
+        },
+        {
+          "id": 469691017,
+          "name": "designation_of_the_contact_person",
+          "label": "Designation of the Contact Person",
+          "order": 7,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "turuga_ni_koro_village_head",
+              "label": "Turuga ni Koro (Village Head)",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "village_nurse",
+              "label": "Village Nurse",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "district_advisory_councillor",
+              "label": "District Advisory Councillor",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "head_of_water_committee",
+              "label": "Head of Water Committee",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 5,
+              "color": "#66a61e"
+            }
+          ]
+        },
+        {
+          "id": 469691021,
+          "name": "contact_number_of_the_contact_person",
+          "label": "Contact number of the Contact Person",
+          "order": 8,
+          "type": "text",
+          "required": true,
+          "meta": false
+        },
+        {
+          "id": 535141024,
+          "name": "alternative_contact_number_of_the_contact_person",
+          "label": "Alternative Contact number of the Contact Person",
+          "order": 9,
+          "type": "text",
+          "required": false,
+          "meta": false
+        },
+        {
+          "id": 469691016,
+          "name": "what_is_the_total_population",
+          "label": "What is the total population?",
+          "order": 10,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false,
+            "min": 1
+          },
+          "tooltip": {
+            "text": "This is the total population of the village the male and female population should add up"
+          }
+        },
+        {
+          "id": 469691018,
+          "name": "are_you_able_to_provide_the_breakdown_of",
+          "label": "Are you able to provide the breakdown of population?",
+          "order": 11,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 535141019,
+          "name": "what_is_the_number_of_male_population",
+          "label": "What is the number of male population?",
+          "order": 12,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false,
+            "min": 0
+          },
+          "dependency": [
+            {
+              "id": 469691018,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535141017,
+          "name": "what_is_the_number_of_female_population",
+          "label": "What is the number of female population?",
+          "order": 13,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false,
+            "min": 0
+          },
+          "dependency": [
+            {
+              "id": 469691018,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 469691025,
+          "name": "how_many_children_are_under_5_years_old",
+          "label": "How many children are under 5 years old?",
+          "order": 14,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false,
+            "min": 0
+          },
+          "dependency": [
+            {
+              "id": 469691018,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 469691024,
+          "name": "how_many_male_children_are_under_5_years_old",
+          "label": "How many male children are under 5 years old?",
+          "order": 15,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false,
+            "min": 0
+          },
+          "dependency": [
+            {
+              "id": 469691018,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535141018,
+          "name": "how_many_female_children_are_under_5_years_old",
+          "label": "How many female children are under 5 years old?",
+          "order": 16,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false,
+            "min": 0
+          },
+          "dependency": [
+            {
+              "id": 469691018,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535141021,
+          "name": "how_many_households_are_included_in_this_village",
+          "label": "How many households are included in this village/settlement?",
+          "order": 17,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          }
+        },
+        {
+          "id": 535141020,
+          "name": "please_mention_the_source_s_from_where_the",
+          "label": "Please mention the source/s from where the information has been provided by the contact person",
+          "order": 18,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "government_records",
+              "label": "Government records",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "turaga_ni_koros_report",
+              "label": "Turaga Ni Koro's Report",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "village_nurses_record",
+              "label": "Village Nurse's Record",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 4,
+              "color": "#e7298a"
+            }
+          ]
+        },
+        {
+          "id": 538821077,
+          "name": "what_is_the_date_of_inspection",
+          "label": "What is the Date of Inspection?",
+          "order": 19,
+          "type": "date",
+          "required": true,
+          "meta": false
+        }
+      ],
+      "repeat_text": null
+    },
+    {
+      "id": 1789351200002,
+      "name": "village_level_water_information",
+      "label": "Village Level Water Information",
+      "description": null,
+      "order": 2,
+      "repeatable": false,
+      "questions": [
+        {
+          "id": 529311021,
+          "name": "how_many_reservoirs_are_there_in_this_village",
+          "label": "How many reservoirs are there in this village/settlement?",
+          "order": 1,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "provide the ones that are currently in use"
+          }
+        },
+        {
+          "id": 529311016,
+          "name": "how_many_storage_tanks_are_there_in_this_village",
+          "label": "How many storage tanks are there in this village/settlement?",
+          "order": 2,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "ones that are currently in use"
+          }
+        },
+        {
+          "id": 544470993,
+          "name": "what_is_the_total_number_of_rainwater_harvesting",
+          "label": "What is the total number of rainwater harvesting tanks in the village/settlement?",
+          "order": 3,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "write the total number of RWH if there is one RWH shared by 5 HH then your number of RWH tank will be 1 and not 5.Houses with individual tanks can be counted as 1 per HH"
+          }
+        },
+        {
+          "id": 529311018,
+          "name": "which_of_the_following_water_supply_systems_are",
+          "label": "Which of the following water supply systems are present in the village/settlement?",
+          "order": 4,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "waf_urban_water_supply",
+              "label": "WAF Urban Water Supply",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "rural_water_scheme",
+              "label": "Rural Water Scheme",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "mrd_borehole_scheme",
+              "label": "MRD Borehole Scheme",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "privately_owned_supply",
+              "label": "Privately owned/supply",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "eps_ecological_purification_system",
+              "label": "EPS - Ecological Purification system",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "sea_water_desalination_system",
+              "label": "Sea water desalination system",
+              "order": 6,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "rainwater_harvesting_system",
+              "label": "Rainwater harvesting system",
+              "order": 7,
+              "color": "#a6761d"
+            }
+          ],
+          "tooltip": {
+            "text": "you can select all the drinking water sources here but if its the WAF supply ,focus on WAF as the only supply.In rural if there is more then one type of rural supply repeat the water point information group to get data and water quality of all the  drinking water source"
+          }
+        },
+        {
+          "id": 529311022,
+          "name": "what_is_the_total_number_of_water_points_for_waf",
+          "label": "What is the total number of water points for WAF Urban Water Supply?",
+          "order": 5,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 529311018,
+              "options": [
+                "waf_urban_water_supply"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 529311013,
+          "name": "what_is_the_total_number_of_water_points_for",
+          "label": "What is the total number of water points for Rural Water Scheme?",
+          "order": 6,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 529311018,
+              "options": [
+                "rural_water_scheme"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 529311015,
+          "name": "what_is_the_total_number_of_water_points_for_mrd",
+          "label": "What is the total number of water points for MRD Borehole Scheme?",
+          "order": 7,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 529311018,
+              "options": [
+                "mrd_borehole_scheme"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 415601047,
+          "name": "what_is_the_number_of_private_water_supply",
+          "label": "What is the number of private water supply?",
+          "order": 8,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "dependency": [
+            {
+              "id": 529311018,
+              "options": [
+                "privately_owned_supply"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 541070973,
+          "name": "what_is_the_total_number_of_public_water_points",
+          "label": "What is the total number of public water points for rainwater harvesting systems?",
+          "order": 9,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "public:one tank shared by many HH"
+          },
+          "dependency": [
+            {
+              "id": 529311018,
+              "options": [
+                "rainwater_harvesting_system"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535470960,
+          "name": "what_is_the_total_number_of_private_water_points",
+          "label": "What is the total number of private water points for rainwater harvesting systems?",
+          "order": 10,
+          "type": "number",
+          "required": false,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "Private:one HH with RWH tank for individual use"
+          },
+          "dependency": [
+            {
+              "id": 529311018,
+              "options": [
+                "rainwater_harvesting_system"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535151023,
+          "name": "has_there_been_a_recent_outbreak_of_water_borne",
+          "label": "Has there been a recent outbreak of water borne diseases in your village?",
+          "order": 11,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 536671014,
+          "name": "what_was_the_water_borne_disease",
+          "label": "What was the water borne disease?",
+          "order": 12,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "typhoid",
+              "label": "Typhoid",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "cholera",
+              "label": "Cholera",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "malaria",
+              "label": "Malaria",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "giardiasis",
+              "label": "Giardiasis",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "diarrhea",
+              "label": "Diarrhea",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 6,
+              "color": "#e6ab02"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535151023,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        }
+      ],
+      "repeat_text": null
+    },
+    {
+      "id": 1789351200003,
+      "name": "water_system_information_water_quality_test",
+      "label": "Water System Information & Water Quality Test",
+      "description": null,
+      "order": 3,
+      "repeatable": true,
+      "questions": [
+        {
+          "id": 519610967,
+          "name": "is_this_a_primary_or_secondary_water_system",
+          "label": "Is this a primary or secondary water system?",
+          "order": 1,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "primary",
+              "label": "Primary",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "secondary",
+              "label": "Secondary",
+              "order": 2,
+              "color": "#d95f02"
+            }
+          ],
+          "tooltip": {
+            "text": "Primary is the main source of drinking water while secondary is the second source.The first group of Water Information Data will be on primary/main source of drinking water.If there is a secondary/second or more source of drinking water then this groups gets repeated for water point information and water quality"
+          }
+        },
+        {
+          "id": 536671017,
+          "name": "what_is_the_nearest_known_landmark_to_this_water",
+          "label": "What is the nearest known landmark to this water system?",
+          "order": 2,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "tooltip": {
+            "text": "Try to choose a place center of the village where possible"
+          }
+        },
+        {
+          "id": 415600933,
+          "name": "take_gps_location_of_the_water_system",
+          "label": "Take GPS location of the water system",
+          "order": 3,
+          "type": "geo",
+          "required": false,
+          "meta": false
+        },
+        {
+          "id": 535141034,
+          "name": "what_is_the_type_of_water_supply_for_this_water",
+          "label": "What is the type of water supply for this water system?",
+          "order": 4,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "waf_urban_water_supply",
+              "label": "WAF Urban Water Supply",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "rural_water_scheme",
+              "label": "Rural Water Scheme",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "mrd_borehole_scheme",
+              "label": "MRD Borehole Scheme",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "privately_owned_supply_system",
+              "label": "Privately owned/supply system",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "eps_ecological_purification_system",
+              "label": "EPS - Ecological Purification System",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "sea_water_desalination_system",
+              "label": "Sea water desalination system",
+              "order": 6,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "rainwater_harvesting_system",
+              "label": "Rainwater harvesting system",
+              "order": 7,
+              "color": "#a6761d"
+            }
+          ]
+        },
+        {
+          "id": 546361121,
+          "name": "what_is_the_source_for_the_rural_water_scheme",
+          "label": "What is the source for the rural water scheme?",
+          "order": 5,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "river",
+              "label": "River",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "creek",
+              "label": "Creek",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "stream",
+              "label": "Stream",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "spring",
+              "label": "Spring",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "well",
+              "label": "Well",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 6,
+              "color": "#e6ab02"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535141034,
+              "options": [
+                "rural_water_scheme"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535151025,
+          "name": "what_is_the_type_of_water_system",
+          "label": "What is the type of water system?",
+          "order": 6,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "improved",
+              "label": "Improved",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "unimproved",
+              "label": "Unimproved",
+              "order": 2,
+              "color": "#d95f02"
+            }
+          ]
+        },
+        {
+          "id": 535141029,
+          "name": "type_of_improved_water_system",
+          "label": "Type of improved water system",
+          "order": 7,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "metered_piped_water_inside_dwelling",
+              "label": "Metered Piped water inside dwelling",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "piped_water_inside_dwelling",
+              "label": "Piped water inside dwelling",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "piped_water_to_yard_plot",
+              "label": "Piped water to yard /plot",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "public_tap_standpipe",
+              "label": "Public tap/ Standpipe",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "borehole_water",
+              "label": "Borehole water",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "protected_dug_well",
+              "label": "Protected dug well",
+              "order": 6,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "protected_spring",
+              "label": "Protected spring",
+              "order": 7,
+              "color": "#a6761d"
+            },
+            {
+              "value": "desalination_system",
+              "label": "Desalination System",
+              "order": 8,
+              "color": "#666666"
+            },
+            {
+              "value": "rainwater_system",
+              "label": "Rainwater System",
+              "order": 9,
+              "color": "#1f78b4"
+            },
+            {
+              "value": "carted_water",
+              "label": "Carted Water",
+              "order": 10,
+              "color": "#a65628"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535151025,
+              "options": [
+                "improved"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671020,
+          "name": "type_of_unimproved_water_system",
+          "label": "Type of unimproved water system",
+          "order": 8,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "unprotected_spring",
+              "label": "Unprotected Spring",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "river",
+              "label": "River",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "creek",
+              "label": "Creek",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "lake",
+              "label": "Lake",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "pond",
+              "label": "Pond",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "stream",
+              "label": "Stream",
+              "order": 6,
+              "color": "#e6ab02"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535151025,
+              "options": [
+                "unimproved"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535151024,
+          "name": "who_is_the_provider_of_the_piped_water_supply",
+          "label": "Who is the provider of the piped water supply?",
+          "order": 9,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "waf_supply",
+              "label": "WAF Supply",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "rural_water_scheme",
+              "label": "Rural Water Scheme",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "mrd_borehole",
+              "label": "MRD Borehole",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "private",
+              "label": "Private",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "others",
+              "label": "Others",
+              "order": 5,
+              "color": "#66a61e"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535141029,
+              "options": [
+                "metered_piped_water_inside_dwelling",
+                "piped_water_to_yard_plot",
+                "public_tap_standpipe"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671019,
+          "name": "how_many_households_use_this_water_system",
+          "label": "How many households use this water system?",
+          "order": 10,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          }
+        },
+        {
+          "id": 535151026,
+          "name": "is_this_water_system_shared_with_other",
+          "label": "Is this water system shared with other institutions?",
+          "order": 11,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 536671022,
+          "name": "is_the_water_system_shared_with_any_institution",
+          "label": "Is the water system shared with any institution i.e. a school, healthcare centre, common place etc.? (Select all that apply)",
+          "order": 12,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "school",
+              "label": "School",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "hospital",
+              "label": "Hospital",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "health_centre",
+              "label": "Health centre",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "market_place",
+              "label": "Market place",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "other_government_office",
+              "label": "Other government office",
+              "order": 5,
+              "color": "#66a61e"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535151026,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535141030,
+          "name": "who_is_responsible_for_the_maintenance_of_the",
+          "label": "Who is responsible for the maintenance of the water system? (Select all that apply)",
+          "order": 13,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "government_department",
+              "label": "Government Department",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "water_committee",
+              "label": "Water Committee",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "private_individual",
+              "label": "Private/Individual",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "waf",
+              "label": "WAF",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "mrd",
+              "label": "MRD",
+              "order": 5,
+              "color": "#66a61e"
+            }
+          ]
+        },
+        {
+          "id": 536671015,
+          "name": "is_the_water_supply_from_this_system_available_24",
+          "label": "Is the water supply from this system available 24/7 or are there interruptions in supply?",
+          "order": 14,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "continuous_supply_available",
+              "label": "Continuous supply available",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "sometimes_interrupted",
+              "label": "Sometimes interrupted",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "frequent_interruptions",
+              "label": "Frequent interruptions",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "supply_not_available",
+              "label": "Supply not available",
+              "order": 4,
+              "color": "#e7298a"
+            }
+          ]
+        },
+        {
+          "id": 535151027,
+          "name": "is_there_a_tariff_and_levy_collection_for_this",
+          "label": "Is there a tariff and levy collection for  this water system?",
+          "order": 15,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 536671023,
+          "name": "how_much_tariff_levy_is_paid_per_month",
+          "label": "How much tariff/levy is paid per month?",
+          "order": 16,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "fjd_1_20",
+              "label": "$FJD 1-20",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "fjd_20_50",
+              "label": "$FJD 20-50",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "fjd_50_100",
+              "label": "$FJD 50-100",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "above_fjd_100",
+              "label": "Above $FJD 100",
+              "order": 4,
+              "color": "#e7298a"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535151027,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671016,
+          "name": "can_you_measure_the_flow_discharge_rate_from_this",
+          "label": "Can you measure the flow/discharge rate from this water system?",
+          "order": 17,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 535151028,
+          "name": "what_is_the_flow_discharge_rate_from_this_system",
+          "label": "What is the flow/discharge rate from this system? (Calculate by measuring the amount of liters per second)",
+          "order": 18,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": true
+          },
+          "tooltip": {
+            "text": "Tool tip for measuring flow of water - using of a 2L bottle or 10L bucket to get the time taken to fill it in seconds.Enter 0 for the places where you are not able to take the flow rate due to no water available?"
+          },
+          "dependency": [
+            {
+              "id": 536671016,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671018,
+          "name": "how_long_does_the_furthest_house_take_to_reach",
+          "label": "How long does the furthest house take to reach water system? (in minutes)",
+          "order": 19,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          }
+        },
+        {
+          "id": 535151029,
+          "name": "is_the_water_from_this_water_system_treated",
+          "label": "Is the water from this water system treated?",
+          "order": 20,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 536671021,
+          "name": "what_type_of_water_treatment_technology_is_used",
+          "label": "What type of water treatment technology is used?",
+          "order": 21,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "waf_full_conventional_plant",
+              "label": "WAF full Conventional Plant",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "waf_plain_chlorination_system",
+              "label": "WAF Plain Chlorination System",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "ecological_purification_system",
+              "label": "Ecological Purification System",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "ultrafiltration_system",
+              "label": "Ultrafiltration System",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "nano_filtration_system",
+              "label": "Nano Filtration System",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "sand_filtration",
+              "label": "Sand Filtration",
+              "order": 6,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "bucket_filtration",
+              "label": "Bucket filtration",
+              "order": 7,
+              "color": "#a6761d"
+            },
+            {
+              "value": "desalination",
+              "label": "Desalination",
+              "order": 8,
+              "color": "#666666"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 9,
+              "color": "#1f78b4"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535151029,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535141032,
+          "name": "what_is_your_main_source_of_drinking_water_in_wet",
+          "label": "What is your main source of drinking water in wet season?",
+          "order": 22,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "metered_piped_water_inside_dwelling",
+              "label": "Metered Piped Water inside dwelling",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "piped_water_inside_dwelling",
+              "label": "Piped Water Inside Dwelling",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "piped_water_to_yard_plot",
+              "label": "Piped Water to yard/plot",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "public_tap_standpipe",
+              "label": "Public Tap/Standpipe",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "borehole_water",
+              "label": "Borehole Water",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "protected_dug_well",
+              "label": "Protected Dug well",
+              "order": 6,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "protected_spring",
+              "label": "Protected Spring",
+              "order": 7,
+              "color": "#a6761d"
+            },
+            {
+              "value": "desalination_system",
+              "label": "Desalination System",
+              "order": 8,
+              "color": "#666666"
+            },
+            {
+              "value": "rainwater_system",
+              "label": "Rainwater System",
+              "order": 9,
+              "color": "#1f78b4"
+            },
+            {
+              "value": "water_carting",
+              "label": "Water Carting",
+              "order": 10,
+              "color": "#a65628"
+            },
+            {
+              "value": "unprotected_spring",
+              "label": "Unprotected Spring",
+              "order": 11,
+              "color": "#377eb8"
+            },
+            {
+              "value": "river",
+              "label": "River",
+              "order": 12,
+              "color": "#003f5c"
+            },
+            {
+              "value": "creek",
+              "label": "Creek",
+              "order": 13,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "stream",
+              "label": "Stream",
+              "order": 14,
+              "color": "#d95f02"
+            },
+            {
+              "value": "pond",
+              "label": "Pond",
+              "order": 15,
+              "color": "#7570b3"
+            },
+            {
+              "value": "lake",
+              "label": "Lake",
+              "order": 16,
+              "color": "#e7298a"
+            },
+            {
+              "value": "spring",
+              "label": "Spring",
+              "order": 17,
+              "color": "#66a61e"
+            },
+            {
+              "value": "bottled_water",
+              "label": "Bottled Water",
+              "order": 18,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 19,
+              "color": "#a6761d"
+            }
+          ]
+        },
+        {
+          "id": 535141031,
+          "name": "what_is_the_main_source_of_drinking_water_in_dry",
+          "label": "What is the main source of drinking water in dry season?",
+          "order": 23,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "metered_piped_water_inside_the_dwelling",
+              "label": "Metered Piped Water Inside the Dwelling",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "piped_water_inside_the_dwelling",
+              "label": "Piped Water Inside the dwelling",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "piped_water_to_yard_plot",
+              "label": "Piped Water to yard/plot",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "public_tap_standpipe",
+              "label": "Public Tap/Standpipe",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "borehole_water",
+              "label": "Borehole Water",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "protected_dug_well",
+              "label": "Protected Dug Well",
+              "order": 6,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "protected_spring",
+              "label": "Protected Spring",
+              "order": 7,
+              "color": "#a6761d"
+            },
+            {
+              "value": "desalination_system",
+              "label": "Desalination System",
+              "order": 8,
+              "color": "#666666"
+            },
+            {
+              "value": "rainwater_system",
+              "label": "Rainwater System",
+              "order": 9,
+              "color": "#1f78b4"
+            },
+            {
+              "value": "water_carting",
+              "label": "Water Carting",
+              "order": 10,
+              "color": "#a65628"
+            },
+            {
+              "value": "unprotected_spring",
+              "label": "Unprotected Spring",
+              "order": 11,
+              "color": "#377eb8"
+            },
+            {
+              "value": "river",
+              "label": "River",
+              "order": 12,
+              "color": "#003f5c"
+            },
+            {
+              "value": "creek",
+              "label": "Creek",
+              "order": 13,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "stream",
+              "label": "Stream",
+              "order": 14,
+              "color": "#d95f02"
+            },
+            {
+              "value": "lake",
+              "label": "Lake",
+              "order": 15,
+              "color": "#7570b3"
+            },
+            {
+              "value": "pond",
+              "label": "Pond",
+              "order": 16,
+              "color": "#e7298a"
+            },
+            {
+              "value": "spring",
+              "label": "Spring",
+              "order": 17,
+              "color": "#66a61e"
+            },
+            {
+              "value": "bottled_water",
+              "label": "Bottled Water",
+              "order": 18,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 19,
+              "color": "#a6761d"
+            }
+          ]
+        },
+        {
+          "id": 535141033,
+          "name": "is_your_water_system_affected_during_dry_season",
+          "label": "Is your water system affected during dry season?",
+          "order": 24,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 535151020,
+          "name": "how_is_your_water_system_affected_in_dry_season",
+          "label": "How is your water system affected in dry season?",
+          "order": 25,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "intermittent_supply",
+              "label": "Intermittent Supply",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "reduce_low_supply",
+              "label": "Reduce/Low Supply",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "no_supply",
+              "label": "No Supply",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "salinity",
+              "label": "Salinity",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "taste_odor_issues",
+              "label": "Taste/odor issues",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 6,
+              "color": "#e6ab02"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535141033,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 535151022,
+          "name": "is_your_water_system_affected_in_wet_season",
+          "label": "Is your water system affected in wet season?",
+          "order": 26,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 535141035,
+          "name": "how_is_your_water_system_affected_in_wet_season",
+          "label": "How is your water system affected in wet season?",
+          "order": 27,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "flooding",
+              "label": "Flooding",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "reduce_low_supply",
+              "label": "Reduce/Low Supply",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "high_turbidity",
+              "label": "High Turbidity",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "algae_in_water",
+              "label": "Algae in Water",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "taste_odor",
+              "label": "Taste/odor",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "no_water_supply",
+              "label": "No Water Supply",
+              "order": 6,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 7,
+              "color": "#a6761d"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 535151022,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536930972,
+          "name": "take_the_photo_of_the_water_quality_sampling_point",
+          "label": "Take the photo of the water quality sampling  point?",
+          "order": 28,
+          "type": "photo",
+          "required": true,
+          "meta": false
+        },
+        {
+          "id": 530860978,
+          "name": "what_is_the_method_of_water_testing_to_be_used",
+          "label": "What is the method of water testing to be used?",
+          "order": 29,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "lab_test",
+              "label": "Lab Test",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "h2s",
+              "label": "H2S",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "compartment_bag_test_cbt",
+              "label": "Compartment Bag Test (CBT)",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 4,
+              "color": "#e7298a"
+            }
+          ]
+        },
+        {
+          "id": 1789351200101,
+          "name": "ecoli_cbt_mpn",
+          "label": "E.Coli CBT test result (MPN/100ml)",
+          "order": 30,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "tooltip": {
+            "text": "Conduct E.Coli test using Aguagenx CBT Bag Test"
+          },
+          "rule": {
+            "allowDecimal": true
+          },
+          "dependency": [
+            {
+              "id": 530860978,
+              "options": [
+                "compartment_bag_test_cbt"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 1789351200102,
+          "name": "ecoli_cbt_risk_category",
+          "label": "E.Coli CBT test health risk category",
+          "order": 31,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "tooltip": {
+            "text": "Conduct E.Coli test using Aguagenx CBT Bag Test"
+          },
+          "options": [
+            {
+              "value": "no_risk",
+              "label": "No risk",
+              "color": "#64A73B",
+              "order": 1
+            },
+            {
+              "value": "low_risk",
+              "label": "Low risk",
+              "color": "#1f78b4",
+              "order": 2
+            },
+            {
+              "value": "moderate_risk",
+              "label": "Moderate Risk",
+              "color": "#d95f02",
+              "order": 3
+            },
+            {
+              "value": "high_risk",
+              "label": "High Risk",
+              "color": "#e41a1c",
+              "order": 4
+            }
+          ],
+          "dependency": [
+            {
+              "id": 530860978,
+              "options": [
+                "compartment_bag_test_cbt"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 1789351200103,
+          "name": "ecoli_cbt_photo",
+          "label": "E.Coli CBT test result photo",
+          "order": 32,
+          "type": "photo",
+          "required": true,
+          "meta": false,
+          "tooltip": {
+            "text": "Conduct E.Coli test using Aguagenx CBT Bag Test"
+          },
+          "dependency": [
+            {
+              "id": 530860978,
+              "options": [
+                "compartment_bag_test_cbt"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 532450932,
+          "name": "what_is_the_result_of_cbt_bag_test",
+          "label": "What is the result of CBT Bag  Test?",
+          "order": 33,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": true
+          },
+          "dependency": [
+            {
+              "id": 530860978,
+              "options": [
+                "compartment_bag_test_cbt"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 497160931,
+          "name": "what_is_the_risk_level_for_the_cbt_value_obtained",
+          "label": "What is the Risk Level for the CBT value obtained?",
+          "order": 34,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "no_risk",
+              "label": "No Risk",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "low_risk",
+              "label": "Low Risk",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "intermediate_risk",
+              "label": "Intermediate Risk",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "high_risk",
+              "label": "High Risk",
+              "order": 4,
+              "color": "#e7298a"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 530860978,
+              "options": [
+                "compartment_bag_test_cbt"
+              ]
+            }
+          ]
+        }
+      ],
+      "repeat_text": "Add another"
+    },
+    {
+      "id": 1789351200004,
+      "name": "sanitation_information",
+      "label": "Sanitation Information",
+      "description": null,
+      "order": 4,
+      "repeatable": false,
+      "questions": [
+        {
+          "id": 536671030,
+          "name": "which_of_the_following_sanitation_facilities_are",
+          "label": "Which of the following sanitation facilities are used by the households in this village/settlement? (Select all that apply)",
+          "order": 1,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "household_toilet",
+              "label": "Household toilet",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "community_toilet",
+              "label": "Community toilet",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "shared_toilets",
+              "label": "Shared Toilets",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "no_toilets",
+              "label": "No Toilets",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "open_defecation",
+              "label": "Open Defecation",
+              "order": 5,
+              "color": "#66a61e"
+            }
+          ]
+        },
+        {
+          "id": 536671032,
+          "name": "how_many_households_generally_use_household_toilet",
+          "label": "How many households generally use household toilet?",
+          "order": 2,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "this is the number of house that have toilets attached or inside their house"
+          },
+          "dependency": [
+            {
+              "id": 536671030,
+              "options": [
+                "household_toilet"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671034,
+          "name": "how_many_households_generally_use_community_toilet",
+          "label": "How many households generally use community toilet?",
+          "order": 3,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "This does not include toilet use during functions.This refers to people who permanently use community toilet if they have no toilets?"
+          },
+          "dependency": [
+            {
+              "id": 536671030,
+              "options": [
+                "community_toilet"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 527251013,
+          "name": "how_many_households_share_toilet_facilities",
+          "label": "How many households share toilet facilities?",
+          "order": 4,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "households that do not have toilets and have to share toilets"
+          },
+          "dependency": [
+            {
+              "id": 536671030,
+              "options": [
+                "shared_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 527251016,
+          "name": "how_many_households_have_no_toilets",
+          "label": "How many households have no toilets?",
+          "order": 5,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "HH that have no toilets but they may be sharing or using community toilets or practicing open defecation"
+          },
+          "dependency": [
+            {
+              "id": 536671030,
+              "options": [
+                "no_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671031,
+          "name": "how_many_households_practice_open_defecation",
+          "label": "How many households practice open defecation?",
+          "order": 6,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 536671030,
+              "options": [
+                "open_defecation"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671037,
+          "name": "what_are_the_different_types_of_toilets_that",
+          "label": "What are the different types of toilets that households use in the village/settlement? Choose all that apply.",
+          "order": 7,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "flush_toilets",
+              "label": "Flush Toilets",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "water_seal_toilets",
+              "label": "Water Seal Toilets",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "pit_toilets",
+              "label": "Pit Toilets",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "compost_toilets",
+              "label": "Compost Toilets",
+              "order": 4,
+              "color": "#e7298a"
+            }
+          ]
+        },
+        {
+          "id": 527251020,
+          "name": "what_is_the_number_of_flush_toilets",
+          "label": "What is the number of flush toilets?",
+          "order": 8,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "number of Toilet in HH + other places as community Hall and churches if they all have flush toilets"
+          },
+          "dependency": [
+            {
+              "id": 536671037,
+              "options": [
+                "flush_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 529581008,
+          "name": "what_is_the_disposal_system_for_flush_toilets",
+          "label": "What is the disposal system for flush toilets?",
+          "order": 9,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "septic_tanks",
+              "label": "Septic Tanks",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "drums",
+              "label": "Drums",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "cesspit",
+              "label": "Cesspit",
+              "order": 3,
+              "color": "#7570b3"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 536671037,
+              "options": [
+                "flush_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 546301016,
+          "name": "what_is_the_number_of_septic_tanks",
+          "label": "What is the number of septic tanks",
+          "order": 10,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 529581008,
+              "options": [
+                "septic_tanks"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 546320929,
+          "name": "what_is_the_number_of_drums",
+          "label": "What is the number of drums?",
+          "order": 11,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 529581008,
+              "options": [
+                "drums"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 541850995,
+          "name": "what_is_the_number_of_cesspit",
+          "label": "What is the number of cesspit?",
+          "order": 12,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 529581008,
+              "options": [
+                "cesspit"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 527251021,
+          "name": "what_is_the_number_of_water_seal_toilets",
+          "label": "What is the number of water seal toilets?",
+          "order": 13,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "number of Toilet in HH + other places as community Hall and churches if they have water seal toilets"
+          },
+          "dependency": [
+            {
+              "id": 536671037,
+              "options": [
+                "water_seal_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671035,
+          "name": "what_is_the_number_of_pit_toilets",
+          "label": "What is the number of pit toilets?",
+          "order": 14,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 536671037,
+              "options": [
+                "pit_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 527251018,
+          "name": "what_is_the_number_of_compost_toilets",
+          "label": "What is the number of compost toilets?",
+          "order": 15,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 536671037,
+              "options": [
+                "compost_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671036,
+          "name": "is_there_any_other_types_of_toilet",
+          "label": "Is there any other types of Toilet?",
+          "order": 16,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 513321015,
+          "name": "what_is_the_other_type_of_toilet",
+          "label": "What is the other type of toilet?",
+          "order": 17,
+          "type": "text",
+          "required": true,
+          "meta": false,
+          "dependency": [
+            {
+              "id": 536671036,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 536671028,
+          "name": "provide_the_number_of_the_other_type_of_toilet",
+          "label": "Provide the number of the other type of toilet?",
+          "order": 18,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 536671036,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 519781094,
+          "name": "are_there_toilets_in_other_places_such_as",
+          "label": "Are there toilets in other places such as churches community hall or communal toillet?",
+          "order": 19,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ],
+          "tooltip": {
+            "text": "communal toilet-public toilet"
+          }
+        },
+        {
+          "id": 527691131,
+          "name": "types_of_toilets_in_other_places_such_as",
+          "label": "Types of toilets in other places such as churches,community hall or communal toilets?",
+          "order": 20,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "flush_toilets",
+              "label": "Flush toilets",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "water_seal_toilets",
+              "label": "Water seal toilets",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "pit_toilets",
+              "label": "Pit toilets",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "compost_toilet",
+              "label": "Compost toilet",
+              "order": 4,
+              "color": "#e7298a"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 519781094,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 544621133,
+          "name": "number_of_flush_toilets_in_churchescommunity_hall",
+          "label": "Number of flush toilets in churches,community hall or communal toilet?",
+          "order": 21,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 527691131,
+              "options": [
+                "flush_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 549831156,
+          "name": "number_of_water_seal_toilets_in_churchescommunity",
+          "label": "Number of water seal toilets in churches,community hall or communal toilet?",
+          "order": 22,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 527691131,
+              "options": [
+                "water_seal_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 549801112,
+          "name": "number_of_pit_toilets_in_churchescommunity_hall",
+          "label": "Number of pit toilets in churches,community hall or communal toilet?",
+          "order": 23,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 527691131,
+              "options": [
+                "pit_toilets"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 527691132,
+          "name": "number_of_compost_toilets_in_churchescommunity",
+          "label": "Number of compost toilets in churches,community hall or communal toilets?",
+          "order": 24,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 527691131,
+              "options": [
+                "compost_toilet"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 527251017,
+          "name": "total_number_of_toilets_in_other_places_such_as",
+          "label": "Total number of toilets in other places such as church and community Hall and communal toilets?",
+          "order": 25,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "tooltip": {
+            "text": "total number of  toilets at other locations apart from HH toilets"
+          }
+        },
+        {
+          "id": 536671029,
+          "name": "do_you_have_physically_challenged_members_in_the",
+          "label": "Do you have physically challenged members in the community?",
+          "order": 26,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 527251014,
+          "name": "is_there_a_separate_toilet_or_special_arrangement",
+          "label": "Is there a separate toilet or special arrangement for physically challenged members of the community?",
+          "order": 27,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ],
+          "dependency": [
+            {
+              "id": 536671029,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        },
+        {
+          "id": 527251022,
+          "name": "indicate_if_households_in_the_community_dispose",
+          "label": "Indicate if households in the community dispose their faecal sludge in the following ways. Choose all that apply?",
+          "order": 28,
+          "type": "multiple_option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "cover_the_pit_with_soil_and_dig_new_pit",
+              "label": "Cover the pit with soil and dig new pit",
+              "order": 1,
+              "color": "#1b9e77"
+            },
+            {
+              "value": "collected_by_bail_out_trucks_and_disposed_at_the_wastewater_treatment_plants",
+              "label": "Collected by Bail Out trucks and disposed at the Wastewater Treatment Plants",
+              "order": 2,
+              "color": "#d95f02"
+            },
+            {
+              "value": "collected_by_bail_out_trucks_and_disposed_elsewhere",
+              "label": "Collected by Bail Out trucks and disposed elsewhere",
+              "order": 3,
+              "color": "#7570b3"
+            },
+            {
+              "value": "pit_hasnt_filled_up_till_now_so_have_not_thought_about_it_option",
+              "label": "Pit hasn’t filled up till now, so have not thought about it option",
+              "order": 4,
+              "color": "#e7298a"
+            },
+            {
+              "value": "build_a_new_septic",
+              "label": "Build a New Septic",
+              "order": 5,
+              "color": "#66a61e"
+            },
+            {
+              "value": "septic_tank_hasnt_filled_up_so_havent_thought_about_it",
+              "label": "Septic Tank hasn't filled up so haven't thought about it",
+              "order": 6,
+              "color": "#e6ab02"
+            },
+            {
+              "value": "reuse_septic_after_manual_bail_out_and_disposal",
+              "label": "Reuse septic after manual bail out and disposal",
+              "order": 7,
+              "color": "#a6761d"
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "order": 8,
+              "color": "#666666"
+            }
+          ]
+        },
+        {
+          "id": 527251019,
+          "name": "does_the_households_in_your_community_have",
+          "label": "Does the households in your community have handwashing facilties?",
+          "order": 29,
+          "type": "option",
+          "required": true,
+          "meta": false,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes",
+              "order": 1,
+              "color": "#64A73B"
+            },
+            {
+              "value": "no",
+              "label": "No",
+              "order": 2,
+              "color": "#e41a1c"
+            }
+          ]
+        },
+        {
+          "id": 527251015,
+          "name": "number_of_households_that_have_hand_washing",
+          "label": "Number of households that have hand washing facilities with soap in or near (on premise) their sanitation facilities?",
+          "order": 30,
+          "type": "number",
+          "required": true,
+          "meta": false,
+          "rule": {
+            "allowDecimal": false
+          },
+          "dependency": [
+            {
+              "id": 527251019,
+              "options": [
+                "yes"
+              ]
+            }
+          ]
+        }
+      ],
+      "repeat_text": null
+    },
+    {
+      "id": 1789351200005,
+      "name": "general_remarks",
+      "label": "General Remarks",
+      "description": null,
+      "order": 5,
+      "repeatable": false,
+      "questions": [
+        {
+          "id": 525330963,
+          "name": "provide_any_other_relevant_information_relevant",
+          "label": "Provide any other relevant information relevant to the water and sanitation of the village/settlement",
+          "order": 1,
+          "type": "text",
+          "required": true,
+          "meta": false
+        }
+      ],
+      "repeat_text": null
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+flow_form_id,flow_question_group,flow_question_label,flow_question_id,mis_form_id,mis_question_group,mis_question_label,mis_question_id,match_score,match_confidence,match_method,mis_question_order
+535151018,Profile Information,In which division-province-tikina are you in?,469691022,1789351200000,Profile Information,"Profile Information |
+In which division-province-tikina are you in?",469691022,100.0,high,identity,1001
+535151018,Profile Information,Is this a village or settlement?,535141022,1789351200000,Profile Information,"Profile Information |
+Is this a village or settlement?",535141022,100.0,high,identity,1002
+535151018,Profile Information,Name of Village,469691020,1789351200000,Profile Information,"Profile Information |
+Name of Village",469691020,100.0,high,identity,1003
+535151018,Profile Information,Name of Settlement,469691019,1789351200000,Profile Information,"Profile Information |
+Name of Settlement",469691019,100.0,high,identity,1004
+535151018,Profile Information,GPS of the village/settlement?,535141023,1789351200000,Profile Information,"Profile Information |
+GPS of the village/settlement?",535141023,100.0,high,identity,1005
+535151018,Profile Information,Name of Contact Person,469691023,1789351200000,Profile Information,"Profile Information |
+Name of Contact Person",469691023,100.0,high,identity,1006
+535151018,Profile Information,Designation of the Contact Person,469691017,1789351200000,Profile Information,"Profile Information |
+Designation of the Contact Person",469691017,100.0,high,identity,1007
+535151018,Profile Information,Contact number of the Contact Person,469691021,1789351200000,Profile Information,"Profile Information |
+Contact number of the Contact Person",469691021,100.0,high,identity,1008
+535151018,Profile Information,Alternative Contact number of the Contact Person,535141024,1789351200000,Profile Information,"Profile Information |
+Alternative Contact number of the Contact Person",535141024,100.0,high,identity,1009
+535151018,Profile Information,What is the total population?,469691016,1789351200000,Profile Information,"Profile Information |
+What is the total population?",469691016,100.0,high,identity,1010
+535151018,Profile Information,Are you able to provide the breakdown of population?,469691018,1789351200000,Profile Information,"Profile Information |
+Are you able to provide the breakdown of population?",469691018,100.0,high,identity,1011
+535151018,Profile Information,What is the number of male population?,535141019,1789351200000,Profile Information,"Profile Information |
+What is the number of male population?",535141019,100.0,high,identity,1012
+535151018,Profile Information,What is the number of female population?,535141017,1789351200000,Profile Information,"Profile Information |
+What is the number of female population?",535141017,100.0,high,identity,1013
+535151018,Profile Information,How many children are under 5 years old?,469691025,1789351200000,Profile Information,"Profile Information |
+How many children are under 5 years old?",469691025,100.0,high,identity,1014
+535151018,Profile Information,How many male children are under 5 years old?,469691024,1789351200000,Profile Information,"Profile Information |
+How many male children are under 5 years old?",469691024,100.0,high,identity,1015
+535151018,Profile Information,How many female children are under 5 years old?,535141018,1789351200000,Profile Information,"Profile Information |
+How many female children are under 5 years old?",535141018,100.0,high,identity,1016
+535151018,Profile Information,How many households are included in this village/settlement?,535141021,1789351200000,Profile Information,"Profile Information |
+How many households are included in this village/settlement?",535141021,100.0,high,identity,1017
+535151018,Profile Information,Please mention the source/s from where the information has been provided by the contact person,535141020,1789351200000,Profile Information,"Profile Information |
+Please mention the source/s from where the information has been provided by the contact person",535141020,100.0,high,identity,1018
+535151018,Profile Information,What is the Date of Inspection?,538821077,1789351200000,Profile Information,"Profile Information |
+What is the Date of Inspection?",538821077,100.0,high,identity,1019
+535151018,Village Level Water Information,How many reservoirs are there in this village/settlement?,529311021,1789351200000,Village Level Water Information,"Village Level Water Information |
+How many reservoirs are there in this village/settlement?",529311021,100.0,high,identity,2001
+535151018,Village Level Water Information,How many storage tanks are there in this village/settlement?,529311016,1789351200000,Village Level Water Information,"Village Level Water Information |
+How many storage tanks are there in this village/settlement?",529311016,100.0,high,identity,2002
+535151018,Village Level Water Information,What is the total number of rainwater harvesting tanks in the village/settlement?,544470993,1789351200000,Village Level Water Information,"Village Level Water Information |
+What is the total number of rainwater harvesting tanks in the village/settlement?",544470993,100.0,high,identity,2003
+535151018,Village Level Water Information,Which of the following water supply systems are present in the village/settlement?,529311018,1789351200000,Village Level Water Information,"Village Level Water Information |
+Which of the following water supply systems are present in the village/settlement?",529311018,100.0,high,identity,2004
+535151018,Village Level Water Information,What is the total number of water points for WAF Urban Water Supply?,529311022,1789351200000,Village Level Water Information,"Village Level Water Information |
+What is the total number of water points for WAF Urban Water Supply?",529311022,100.0,high,identity,2005
+535151018,Village Level Water Information,What is the total number of water points for Rural Water Scheme?,529311013,1789351200000,Village Level Water Information,"Village Level Water Information |
+What is the total number of water points for Rural Water Scheme?",529311013,100.0,high,identity,2006
+535151018,Village Level Water Information,What is the total number of water points for MRD Borehole Scheme?,529311015,1789351200000,Village Level Water Information,"Village Level Water Information |
+What is the total number of water points for MRD Borehole Scheme?",529311015,100.0,high,identity,2007
+535151018,Village Level Water Information,What is the number of private water supply?,415601047,1789351200000,Village Level Water Information,"Village Level Water Information |
+What is the number of private water supply?",415601047,100.0,high,identity,2008
+535151018,Village Level Water Information,What is the total number of public water points for rainwater harvesting systems?,541070973,1789351200000,Village Level Water Information,"Village Level Water Information |
+What is the total number of public water points for rainwater harvesting systems?",541070973,100.0,high,identity,2009
+535151018,Village Level Water Information,What is the total number of private water points for rainwater harvesting systems?,535470960,1789351200000,Village Level Water Information,"Village Level Water Information |
+What is the total number of private water points for rainwater harvesting systems?",535470960,100.0,high,identity,2010
+535151018,Village Level Water Information,Has there been a recent outbreak of water borne diseases in your village?,535151023,1789351200000,Village Level Water Information,"Village Level Water Information |
+Has there been a recent outbreak of water borne diseases in your village?",535151023,100.0,high,identity,2011
+535151018,Village Level Water Information,What was the water borne disease?,536671014,1789351200000,Village Level Water Information,"Village Level Water Information |
+What was the water borne disease?",536671014,100.0,high,identity,2012
+535151018,Water System Information & Water Quality Test,Is this a primary or secondary water system?,519610967,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Is this a primary or secondary water system?",519610967,100.0,high,identity,3001
+535151018,Water System Information & Water Quality Test,What is the nearest known landmark to this water system?,536671017,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the nearest known landmark to this water system?",536671017,100.0,high,identity,3002
+535151018,Water System Information & Water Quality Test,Take GPS location of the water system,415600933,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Take GPS location of the water system",415600933,100.0,high,identity,3003
+535151018,Water System Information & Water Quality Test,What is the type of water supply for this water system?,535141034,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the type of water supply for this water system?",535141034,100.0,high,identity,3004
+535151018,Water System Information & Water Quality Test,What is the source for the rural water scheme?,546361121,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the source for the rural water scheme?",546361121,100.0,high,identity,3005
+535151018,Water System Information & Water Quality Test,What is the type of water system?,535151025,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the type of water system?",535151025,100.0,high,identity,3006
+535151018,Water System Information & Water Quality Test,Type of improved water system,535141029,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Type of improved water system",535141029,100.0,high,identity,3007
+535151018,Water System Information & Water Quality Test,Type of unimproved water system,536671020,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Type of unimproved water system",536671020,100.0,high,identity,3008
+535151018,Water System Information & Water Quality Test,Who is the provider of the piped water supply?,535151024,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Who is the provider of the piped water supply?",535151024,100.0,high,identity,3009
+535151018,Water System Information & Water Quality Test,How many households use this water system?,536671019,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+How many households use this water system?",536671019,100.0,high,identity,3010
+535151018,Water System Information & Water Quality Test,Is this water system shared with other institutions?,535151026,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Is this water system shared with other institutions?",535151026,100.0,high,identity,3011
+535151018,Water System Information & Water Quality Test,"Is the water system shared with any institution i.e. a school, healthcare centre, common place etc.? (Select all that apply)",536671022,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Is the water system shared with any institution i.e. a school, healthcare centre, common place etc.? (Select all that apply)",536671022,100.0,high,identity,3012
+535151018,Water System Information & Water Quality Test,Who is responsible for the maintenance of the water system? (Select all that apply),535141030,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Who is responsible for the maintenance of the water system? (Select all that apply)",535141030,100.0,high,identity,3013
+535151018,Water System Information & Water Quality Test,Is the water supply from this system available 24/7 or are there interruptions in supply?,536671015,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Is the water supply from this system available 24/7 or are there interruptions in supply?",536671015,100.0,high,identity,3014
+535151018,Water System Information & Water Quality Test,Is there a tariff and levy collection for  this water system?,535151027,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Is there a tariff and levy collection for  this water system?",535151027,100.0,high,identity,3015
+535151018,Water System Information & Water Quality Test,How much tariff/levy is paid per month?,536671023,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+How much tariff/levy is paid per month?",536671023,100.0,high,identity,3016
+535151018,Water System Information & Water Quality Test,Can you measure the flow/discharge rate from this water system?,536671016,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Can you measure the flow/discharge rate from this water system?",536671016,100.0,high,identity,3017
+535151018,Water System Information & Water Quality Test,What is the flow/discharge rate from this system? (Calculate by measuring the amount of liters per second),535151028,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the flow/discharge rate from this system? (Calculate by measuring the amount of liters per second)",535151028,100.0,high,identity,3018
+535151018,Water System Information & Water Quality Test,How long does the furthest house take to reach water system? (in minutes),536671018,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+How long does the furthest house take to reach water system? (in minutes)",536671018,100.0,high,identity,3019
+535151018,Water System Information & Water Quality Test,Is the water from this water system treated?,535151029,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Is the water from this water system treated?",535151029,100.0,high,identity,3020
+535151018,Water System Information & Water Quality Test,What type of water treatment technology is used?,536671021,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What type of water treatment technology is used?",536671021,100.0,high,identity,3021
+535151018,Water System Information & Water Quality Test,What is your main source of drinking water in wet season?,535141032,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is your main source of drinking water in wet season?",535141032,100.0,high,identity,3022
+535151018,Water System Information & Water Quality Test,What is the main source of drinking water in dry season?,535141031,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the main source of drinking water in dry season?",535141031,100.0,high,identity,3023
+535151018,Water System Information & Water Quality Test,Is your water system affected during dry season?,535141033,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Is your water system affected during dry season?",535141033,100.0,high,identity,3024
+535151018,Water System Information & Water Quality Test,How is your water system affected in dry season?,535151020,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+How is your water system affected in dry season?",535151020,100.0,high,identity,3025
+535151018,Water System Information & Water Quality Test,Is your water system affected in wet season?,535151022,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Is your water system affected in wet season?",535151022,100.0,high,identity,3026
+535151018,Water System Information & Water Quality Test,How is your water system affected in wet season?,535141035,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+How is your water system affected in wet season?",535141035,100.0,high,identity,3027
+535151018,Water System Information & Water Quality Test,Take the photo of the water quality sampling  point?,536930972,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+Take the photo of the water quality sampling  point?",536930972,100.0,high,identity,3028
+535151018,Water System Information & Water Quality Test,What is the method of water testing to be used?,530860978,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the method of water testing to be used?",530860978,100.0,high,identity,3029
+535151018,Water System Information & Water Quality Test,Conduct E.Coli test using Aguagenx CBT Bag Test,541050982,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+E.Coli CBT test result (MPN/100ml)",1789351200101,100.0,high,identity,3030
+535151018,Water System Information & Water Quality Test,Conduct E.Coli test using Aguagenx CBT Bag Test,541050982,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+E.Coli CBT test health risk category",1789351200102,100.0,high,identity,3031
+535151018,Water System Information & Water Quality Test,Conduct E.Coli test using Aguagenx CBT Bag Test,541050982,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+E.Coli CBT test result photo",1789351200103,100.0,high,identity,3032
+535151018,Water System Information & Water Quality Test,What is the result of CBT Bag  Test?,532450932,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the result of CBT Bag  Test?",532450932,100.0,high,identity,3033
+535151018,Water System Information & Water Quality Test,What is the Risk Level for the CBT value obtained?,497160931,1789351200000,Water System Information & Water Quality Test,"Water System Information & Water Quality Test |
+What is the Risk Level for the CBT value obtained?",497160931,100.0,high,identity,3034
+535151018,Sanitation Information,Which of the following sanitation facilities are used by the households in this village/settlement? (Select all that apply),536671030,1789351200000,Sanitation Information,"Sanitation Information |
+Which of the following sanitation facilities are used by the households in this village/settlement? (Select all that apply)",536671030,100.0,high,identity,4001
+535151018,Sanitation Information,How many households generally use household toilet?,536671032,1789351200000,Sanitation Information,"Sanitation Information |
+How many households generally use household toilet?",536671032,100.0,high,identity,4002
+535151018,Sanitation Information,How many households generally use community toilet?,536671034,1789351200000,Sanitation Information,"Sanitation Information |
+How many households generally use community toilet?",536671034,100.0,high,identity,4003
+535151018,Sanitation Information,How many households share toilet facilities?,527251013,1789351200000,Sanitation Information,"Sanitation Information |
+How many households share toilet facilities?",527251013,100.0,high,identity,4004
+535151018,Sanitation Information,How many households have no toilets?,527251016,1789351200000,Sanitation Information,"Sanitation Information |
+How many households have no toilets?",527251016,100.0,high,identity,4005
+535151018,Sanitation Information,How many households practice open defecation?,536671031,1789351200000,Sanitation Information,"Sanitation Information |
+How many households practice open defecation?",536671031,100.0,high,identity,4006
+535151018,Sanitation Information,What are the different types of toilets that households use in the village/settlement? Choose all that apply.,536671037,1789351200000,Sanitation Information,"Sanitation Information |
+What are the different types of toilets that households use in the village/settlement? Choose all that apply.",536671037,100.0,high,identity,4007
+535151018,Sanitation Information,What is the number of flush toilets?,527251020,1789351200000,Sanitation Information,"Sanitation Information |
+What is the number of flush toilets?",527251020,100.0,high,identity,4008
+535151018,Sanitation Information,What is the disposal system for flush toilets?,529581008,1789351200000,Sanitation Information,"Sanitation Information |
+What is the disposal system for flush toilets?",529581008,100.0,high,identity,4009
+535151018,Sanitation Information,What is the number of septic tanks,546301016,1789351200000,Sanitation Information,"Sanitation Information |
+What is the number of septic tanks",546301016,100.0,high,identity,4010
+535151018,Sanitation Information,What is the number of drums?,546320929,1789351200000,Sanitation Information,"Sanitation Information |
+What is the number of drums?",546320929,100.0,high,identity,4011
+535151018,Sanitation Information,What is the number of cesspit?,541850995,1789351200000,Sanitation Information,"Sanitation Information |
+What is the number of cesspit?",541850995,100.0,high,identity,4012
+535151018,Sanitation Information,What is the number of water seal toilets?,527251021,1789351200000,Sanitation Information,"Sanitation Information |
+What is the number of water seal toilets?",527251021,100.0,high,identity,4013
+535151018,Sanitation Information,What is the number of pit toilets?,536671035,1789351200000,Sanitation Information,"Sanitation Information |
+What is the number of pit toilets?",536671035,100.0,high,identity,4014
+535151018,Sanitation Information,What is the number of compost toilets?,527251018,1789351200000,Sanitation Information,"Sanitation Information |
+What is the number of compost toilets?",527251018,100.0,high,identity,4015
+535151018,Sanitation Information,Is there any other types of Toilet?,536671036,1789351200000,Sanitation Information,"Sanitation Information |
+Is there any other types of Toilet?",536671036,100.0,high,identity,4016
+535151018,Sanitation Information,What is the other type of toilet?,513321015,1789351200000,Sanitation Information,"Sanitation Information |
+What is the other type of toilet?",513321015,100.0,high,identity,4017
+535151018,Sanitation Information,Provide the number of the other type of toilet?,536671028,1789351200000,Sanitation Information,"Sanitation Information |
+Provide the number of the other type of toilet?",536671028,100.0,high,identity,4018
+535151018,Sanitation Information,Are there toilets in other places such as churches community hall or communal toillet?,519781094,1789351200000,Sanitation Information,"Sanitation Information |
+Are there toilets in other places such as churches community hall or communal toillet?",519781094,100.0,high,identity,4019
+535151018,Sanitation Information,"Types of toilets in other places such as churches,community hall or communal toilets?",527691131,1789351200000,Sanitation Information,"Sanitation Information |
+Types of toilets in other places such as churches,community hall or communal toilets?",527691131,100.0,high,identity,4020
+535151018,Sanitation Information,"Number of flush toilets in churches,community hall or communal toilet?",544621133,1789351200000,Sanitation Information,"Sanitation Information |
+Number of flush toilets in churches,community hall or communal toilet?",544621133,100.0,high,identity,4021
+535151018,Sanitation Information,"Number of water seal toilets in churches,community hall or communal toilet?",549831156,1789351200000,Sanitation Information,"Sanitation Information |
+Number of water seal toilets in churches,community hall or communal toilet?",549831156,100.0,high,identity,4022
+535151018,Sanitation Information,"Number of pit toilets in churches,community hall or communal toilet?",549801112,1789351200000,Sanitation Information,"Sanitation Information |
+Number of pit toilets in churches,community hall or communal toilet?",549801112,100.0,high,identity,4023
+535151018,Sanitation Information,"Number of compost toilets in churches,community hall or communal toilets?",527691132,1789351200000,Sanitation Information,"Sanitation Information |
+Number of compost toilets in churches,community hall or communal toilets?",527691132,100.0,high,identity,4024
+535151018,Sanitation Information,Total number of toilets in other places such as church and community Hall and communal toilets?,527251017,1789351200000,Sanitation Information,"Sanitation Information |
+Total number of toilets in other places such as church and community Hall and communal toilets?",527251017,100.0,high,identity,4025
+535151018,Sanitation Information,Do you have physically challenged members in the community?,536671029,1789351200000,Sanitation Information,"Sanitation Information |
+Do you have physically challenged members in the community?",536671029,100.0,high,identity,4026
+535151018,Sanitation Information,Is there a separate toilet or special arrangement for physically challenged members of the community?,527251014,1789351200000,Sanitation Information,"Sanitation Information |
+Is there a separate toilet or special arrangement for physically challenged members of the community?",527251014,100.0,high,identity,4027
+535151018,Sanitation Information,Indicate if households in the community dispose their faecal sludge in the following ways. Choose all that apply?,527251022,1789351200000,Sanitation Information,"Sanitation Information |
+Indicate if households in the community dispose their faecal sludge in the following ways. Choose all that apply?",527251022,100.0,high,identity,4028
+535151018,Sanitation Information,Does the households in your community have handwashing facilties?,527251019,1789351200000,Sanitation Information,"Sanitation Information |
+Does the households in your community have handwashing facilties?",527251019,100.0,high,identity,4029
+535151018,Sanitation Information,Number of households that have hand washing facilities with soap in or near (on premise) their sanitation facilities?,527251015,1789351200000,Sanitation Information,"Sanitation Information |
+Number of households that have hand washing facilities with soap in or near (on premise) their sanitation facilities?",527251015,100.0,high,identity,4030
+535151018,General Remarks,Provide any other relevant information relevant to the water and sanitation of the village/settlement,525330963,1789351200000,General Remarks,"General Remarks |
+Provide any other relevant information relevant to the water and sanitation of the village/settlement",525330963,100.0,high,identity,5001

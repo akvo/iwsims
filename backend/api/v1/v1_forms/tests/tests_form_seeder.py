@@ -77,6 +77,8 @@ class FormSeederTestCase(TestCase):
             "WAF Wastewater Treatment Plant - Quick Monitoring",
             "EPS Water Quality Testing - Monitoring",
             "WAF Water Treatment Plant - Quick Monitoring",
+            "Rural Water Point Survey",
+            "School Form 2021-2022",
         ]
 
         # RUN SEED NEW FORM
