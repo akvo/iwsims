@@ -24,28 +24,14 @@ def seed_administration(row: dict, geo_config: list = []) -> None:
     :param row: A dictionary containing the row data.
     :param geo_config: A list of dictionaries containing the geo configuration.
     """
-    for geo in geo_config:
+    country_root = None
+    parent = None
+    # Walk shallowest level first so each administration is parented to the
+    # one this same row created for the level above it. Looking the parent up
+    # by name is not enough: the same name can appear under more than one
+    # parent, and .first() would then pick an arbitrary branch.
+    for geo in sorted(geo_config, key=lambda g: g["level"]):
         col_level = f"{geo['alias']}_{geo['level']}"
-        parent = None
-        if geo["level"] > 0:
-            # Get parent Level
-            prev_level = geo["level"] - 1
-            parent_level = Levels.objects.filter(
-                level=prev_level
-            ).first()
-            if parent_level:
-                parent_key = f"{parent_level.name}_{parent_level.level}"
-                parent_name = row.get(parent_key)
-                if parent_name:
-                    parent = Administration.objects.filter(
-                        name=parent_name,
-                        level=parent_level
-                    ).first()
-                else:
-                    parent = Administration.objects.filter(
-                        name=COUNTRY_NAME.capitalize()
-                    ).first()
-
         # Get the level from the geo_config
         level = Levels.objects.filter(level=geo["level"]).first()
         # Get the code from the row
@@ -54,15 +40,28 @@ def seed_administration(row: dict, geo_config: list = []) -> None:
         name = row.get(col_level)
         if not name and geo["level"] == 0:
             name = COUNTRY_NAME.capitalize()
-        if name:
-            Administration.objects.update_or_create(
-                name=name,
-                defaults={
-                    "level": level,
-                    "code": code,
-                    "parent": parent,
-                },
-            )
+        if not name:
+            continue
+
+        if geo["level"] > 0 and parent is None:
+            # No ancestor was created for this row yet; fall back to the
+            # country root, as before.
+            if country_root is None:
+                country_root = Administration.objects.filter(
+                    name=COUNTRY_NAME.capitalize()
+                ).first()
+            parent = country_root
+
+        # Key on the full identity. A name alone is not unique: Rotuma is
+        # both a province and the tikina beneath it, and keying on name
+        # collapsed the two into a single row.
+        administration, _ = Administration.objects.update_or_create(
+            name=name,
+            level=level,
+            parent=parent,
+            defaults={"code": code},
+        )
+        parent = administration
 
 
 def seed_administration_test(
