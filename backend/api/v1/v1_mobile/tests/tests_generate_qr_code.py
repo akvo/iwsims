@@ -1,22 +1,36 @@
-import os
 import shutil
+import tempfile
 from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase
 
-from mis.settings import STORAGE_PATH
+COMMAND_MODULE = (
+    "api.v1.v1_mobile.management.commands.generate_qr_code.STORAGE_PATH"
+)
 
 
 class GenerateQrCodeCommandTest(TestCase):
-    def setUp(self):
-        self.images_dir = Path(f"{STORAGE_PATH}/images")
-        self.output_file = self.images_dir / "download-app.png"
+    """Run the command against a throwaway storage directory.
 
-    def tearDown(self):
-        if self.output_file.exists():
-            os.remove(self.output_file)
+    STORAGE_PATH/images is the live image store: on a dev machine it is
+    bind-mounted straight into the frontend container as /app/public/images.
+    test_generate_qr_code_creates_images_directory deletes that directory to
+    prove the command recreates it, which against the real path wipes every
+    downloaded datapoint photo.
+    """
+
+    def setUp(self):
+        self.storage = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.storage, True)
+        patcher = patch(COMMAND_MODULE, self.storage)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+        self.images_dir = Path(self.storage) / "images"
+        self.output_file = self.images_dir / "download-app.png"
 
     def test_generate_qr_code_default_url(self):
         out = StringIO()
