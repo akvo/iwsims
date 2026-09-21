@@ -31,8 +31,6 @@ services:
       - APP_NAME=$APP_NAME
       - APP_SHORT_NAME=$APP_SHORT_NAME
       - GOOGLE_APPLICATION_CREDENTIALS=/credentials/iwsims-service-account.json
-      - MAILJET_APIKEY=$MAILJET_APIKEY
-      - MAILJET_SECRET=$MAILJET_SECRET
       - WEBDOMAIN=http://localhost:3000
   backend:
     volumes:
@@ -44,8 +42,6 @@ services:
       - APK_SHORT_NAME=$APK_SHORT_NAME
       - APK_NAME=$APK_NAME
       - GOOGLE_APPLICATION_CREDENTIALS=/credentials/iwsims-service-account.json
-      - MAILJET_APIKEY=$MAILJET_APIKEY
-      - MAILJET_SECRET=$MAILJET_SECRET
       - WEBDOMAIN=$WEBDOMAIN
     network_mode: service:mainnetwork
   pgadmin:
