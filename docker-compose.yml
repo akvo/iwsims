@@ -18,6 +18,15 @@ services:
       - DB_HOST=db
       - DEBUG=True
       - DJANGO_SECRET=local-secret
+      # Mail. Unset EMAIL_HOST means sends fail fast, not real recipients.
+      - EMAIL_HOST
+      - EMAIL_PORT
+      - EMAIL_HOST_USER
+      - EMAIL_HOST_PASSWORD
+      - EMAIL_USE_SSL
+      - EMAIL_USE_TLS
+      - EMAIL_TIMEOUT
+      - EMAIL_FROM
       - APK_UPLOAD_SECRET
       - STORAGE_PATH
       - SENTRY_DSN
@@ -38,6 +47,15 @@ services:
       - DB_HOST=db
       - DEBUG=True
       - DJANGO_SECRET=local-secret
+      # Mail. Unset EMAIL_HOST means sends fail fast, not real recipients.
+      - EMAIL_HOST
+      - EMAIL_PORT
+      - EMAIL_HOST_USER
+      - EMAIL_HOST_PASSWORD
+      - EMAIL_USE_SSL
+      - EMAIL_USE_TLS
+      - EMAIL_TIMEOUT
+      - EMAIL_FROM
       - APK_UPLOAD_SECRET
       - STORAGE_PATH
       - SENTRY_DSN

@@ -239,9 +239,32 @@ FORM_GEO_VALUE = {"lat": -18.1236015, "lng": 178.3805867}  # Fiji coordinates
 BUCKET_NAME = "mis"
 FAKE_STORAGE = False
 
-EMAIL_BACKEND = "django_mailjet.backends.MailjetBackend"
-MAILJET_API_KEY = environ["MAILJET_APIKEY"]
-MAILJET_API_SECRET = environ["MAILJET_SECRET"]
+# Mail goes out over plain SMTP, through Django's own backend. Everything
+# is read with .get and a default: unlike the MAILJET_* pair this replaces,
+# a deployment missing a mail variable must still boot.
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(environ.get("EMAIL_PORT") or 587)
+EMAIL_HOST_USER = environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = environ.get("EMAIL_HOST_PASSWORD", "")
+
+
+def env_flag(name: str, default: bool) -> bool:
+    # A helper rather than an inline expression because bool("false") is
+    # True, which would enable implicit SSL on a server that cannot speak it.
+    raw = environ.get(name, "").strip().lower()
+    if not raw:
+        return default
+    return raw in ("1", "true", "yes")
+
+
+# Port 465 is implicit SSL, 587 is STARTTLS, and Django raises if both flags
+# are set. Deriving TLS from SSL means a move to 465 sets EMAIL_USE_SSL and
+# nothing else.
+EMAIL_USE_SSL = env_flag("EMAIL_USE_SSL", default=False)
+EMAIL_USE_TLS = env_flag("EMAIL_USE_TLS", default=not EMAIL_USE_SSL)
+# Seconds. Django defaults to None, i.e. a hung relay holds the worker.
+EMAIL_TIMEOUT = int(environ.get("EMAIL_TIMEOUT") or 10)
 EMAIL_FROM = environ.get("EMAIL_FROM", "noreply@akvo.org")
 
 COUNTRY_NAME = "fiji"
