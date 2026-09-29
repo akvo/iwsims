@@ -597,6 +597,30 @@ class MobileAssignmentViewSet(ModelViewSet):
         return qs
 
 
+def _assignment_datapoint_scope(assignment: MobileAssignment, forms) -> Q:
+    """FormData filter for what an assignment syncs: rows in ``forms`` under
+    the assignment's administrations (the administrations themselves plus
+    every descendant by path)."""
+    administrations = [
+        {
+            "id": a.id,
+            "path": f"{a.path}{a.id}." if a.path else f"{a.id}."
+        }
+        for a in assignment.administrations.all()
+    ]
+    admin_id_query = Q(
+        administration_id__in=[a["id"] for a in administrations],
+        form_id__in=forms,
+    )
+    # Build path query by combining conditions for all administration paths
+    path_query = Q()
+    for admin in administrations:
+        path_query |= Q(
+            administration__path__startswith=admin["path"]
+        )
+    return admin_id_query | (path_query & Q(form_id__in=forms))
+
+
 @extend_schema(
     # Add form_id as query parameter for
     # filtering datapoints related to a specific form
@@ -627,13 +651,6 @@ class MobileAssignmentViewSet(ModelViewSet):
 def get_datapoint_download_list(request, version):
     assignment = cast(MobileAssignmentToken, request.auth).assignment
     forms = assignment.forms.values("id")
-    administrations = [
-        {
-            "id": a.id,
-            "path": f"{a.path}{a.id}." if a.path else f"{a.id}."
-        }
-        for a in assignment.administrations.all()
-    ]
     paginator = Pagination()
 
     # Start with base query for administration IDs
@@ -649,19 +666,8 @@ def get_datapoint_download_list(request, version):
                 status=status.HTTP_404_NOT_FOUND,
             )
         forms = [find_form.pk]
-    admin_id_query = Q(
-        administration_id__in=[a["id"] for a in administrations],
-        form_id__in=forms,
-    )
-    # Build path query by combining conditions for all administration paths
-    path_query = Q()
-    for admin in administrations:
-        path_query |= Q(
-            administration__path__startswith=admin["path"]
-        )
-    # Combine both queries with the form filter
     queryset = FormData.objects.filter(
-        admin_id_query | (path_query & Q(form_id__in=forms))
+        _assignment_datapoint_scope(assignment, forms)
     )
     if assignment.last_synced_at:
         queryset = queryset.filter(
@@ -693,6 +699,65 @@ def get_datapoint_download_list(request, version):
         assignment.last_synced_at = timezone.now()
         assignment.save()
     return response
+
+
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="form_id",
+            required=True,
+            type=OpenApiTypes.NUMBER,
+            location=OpenApiParameter.QUERY,
+        )
+    ],
+    responses={
+        (200, "application/json"): inline_serializer(
+            "MobileDeviceDeletedDatapointListResponse",
+            fields={"uuids": serializers.ListField(
+                child=serializers.CharField()
+            )},
+        )
+    },
+    tags=["Mobile Device Form"],
+    summary="GET uuids of deleted datapoints to remove from the device",
+)
+@api_view(["GET"])
+@permission_classes([IsMobileAssignment])
+def get_deleted_datapoint_list(request, version):
+    """Soft-deleted registration datapoints in the assignment's scope.
+
+    Read-only: last_synced_at is only the cut-off (None = every deletion),
+    it is never advanced here.
+    """
+    assignment = cast(MobileAssignmentToken, request.auth).assignment
+    form_id = request.GET.get("form_id", "")
+    form = Forms.objects.filter(
+        id=form_id if form_id.isdigit() else None,
+        parent__isnull=True,
+        pk__in=assignment.forms.values("id"),
+    ).first()
+    if not form:
+        return Response(
+            {"message": "Form not found in this assignment."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    deleted = FormData.objects_deleted.filter(
+        _assignment_datapoint_scope(assignment, [form.pk]),
+        is_draft=False,
+    )
+    if assignment.last_synced_at:
+        deleted = deleted.filter(deleted_at__gte=assignment.last_synced_at)
+    # Never report a uuid that still has a live row in this form
+    live = FormData.objects.filter(form_id=form.pk, is_draft=False)
+    # ponytail: unpaginated (~60 rows today), paginate if it reaches thousands
+    uuids = (
+        deleted.exclude(uuid__in=live.values("uuid"))
+        .values_list("uuid", flat=True)
+        .distinct()
+    )
+    return Response(
+        {"uuids": [str(u) for u in uuids]}, status=status.HTTP_200_OK
+    )
 
 
 @extend_schema(

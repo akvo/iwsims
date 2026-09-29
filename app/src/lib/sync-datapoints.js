@@ -1,6 +1,7 @@
-import { crudDataPoints, crudForms } from '../database/crud';
+import { crudDataPoints, crudForms, crudSyncQueue } from '../database/crud';
 import sql from '../database/sql';
 import api from './api';
+import { SYNC_STATUS } from './constants';
 
 /**
  * Iteratively fetches datapoints page by page, calling the processor callback
@@ -107,11 +108,95 @@ export const fetchFormDatapointsPageByPage = async (
 };
 
 /**
+ * Saves a form's resume point in the sync queue. lastPage only advances while
+ * every page so far succeeded: after a page with a failed item, later pages
+ * still download, but the queue keeps pointing before the failed page so the
+ * form stays incomplete and the next sync resumes there.
+ *
+ * @param {Object} db - database connection
+ * @param {number} formId - backend registration form ID
+ * @returns {Function} async (page, pageHasErrors) => void
+ */
+export const createPageProgressSaver = (db, formId) => {
+  let failed = false;
+  return async (page, pageHasErrors) => {
+    failed = failed || pageHasErrors;
+    if (!failed) {
+      await crudSyncQueue.updateLastPage(db, formId, page);
+    }
+  };
+};
+
+/**
  * Marks datapoint sync as complete on the backend.
  * Updates last_synced_at so the next sync only gets new/updated datapoints.
  */
 export const markSyncComplete = async () => {
   await api.post('/sync-complete');
+};
+
+/**
+ * Drops local copies of registration datapoints the server soft-deleted.
+ * Throws on request failure so the caller keeps the sync incomplete and retries.
+ *
+ * @param {Object} db - database connection
+ * @param {number} formId - backend registration form ID
+ */
+export const removeDeletedDatapoints = async (db, formId) => {
+  const { data } = await api.get(`/deleted-datapoints?form_id=${formId}`);
+  const uuids = data?.uuids || [];
+  if (!uuids.length) {
+    return;
+  }
+  const form = await crudForms.getByFormId(db, { formId });
+  if (!form?.id) {
+    return;
+  }
+  await crudDataPoints.deleteSyncedByUUIDs(db, { form: form.id, uuids });
+};
+
+/**
+ * Final step of a datapoint sync, once every queued form has all its pages:
+ * drop server-deleted rows, advance last_synced_at, clear the queue.
+ * Deletions run BEFORE markSyncComplete so a failure leaves last_synced_at
+ * where it was and the next sync reports them again. Throws on failure; the
+ * queue then stays, which is what marks the sync as incomplete.
+ *
+ * @param {Object} db - database connection
+ */
+export const finishDatapointSync = async (db) => {
+  const formIds = Object.keys(await crudSyncQueue.getAllProgress(db));
+  await formIds.reduce(async (prev, formId) => {
+    await prev;
+    await removeDeletedDatapoints(db, Number(formId));
+  }, Promise.resolve());
+  await markSyncComplete();
+  await crudSyncQueue.clearQueue(db);
+};
+
+/**
+ * Status-bar state for a datapoint sync that stopped before completing.
+ * The queue is only cleared once the whole sync succeeds, so any queued row
+ * means "incomplete", whatever the cause (failed items, killed app, retries
+ * exhausted).
+ *
+ * @param {Object} db - database connection
+ * @param {number} user - active user id
+ * @returns {Promise<Object|null>} statusBar object, or null when nothing is pending
+ */
+export const getIncompleteSyncStatus = async (db, user) => {
+  const { queued, done } = await crudSyncQueue.getFormsProgress(db);
+  if (!queued) {
+    return null;
+  }
+  const forms = await crudForms.selectLatestFormVersion(db, { user });
+  return {
+    type: SYNC_STATUS.incomplete,
+    bgColor: '#d97706',
+    icon: 'alert-circle',
+    done,
+    total: Math.max(forms?.length || 0, queued),
+  };
 };
 
 /**
@@ -151,6 +236,11 @@ export const downloadDatapointsJson = async (
     return;
   }
   if (existing?.syncedAt && lastUpdated && existing.syncedAt >= lastUpdated) {
+    // Served by datapoint-list, so it counts as downloaded now. Also repairs
+    // downloads that migration 05 back-filled as locallyCreated = 1.
+    if (existing.locallyCreated === 1) {
+      await sql.updateRow(db, 'datapoints', { id: existing.id }, { locallyCreated: 0 });
+    }
     return;
   }
 

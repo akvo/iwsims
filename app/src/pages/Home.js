@@ -112,7 +112,9 @@ const Home = ({ navigation, route }) => {
   };
 
   const syncUserForms = async () => {
-    const { data: apiData } = await api.post('/auth?keep_last_synced_at=true', { code: passcode });
+    // Full list on a manual sync: every served row is re-marked as downloaded
+    // (locallyCreated = 0) and every deleted uuid is reported again
+    const { data: apiData } = await api.post('/auth?keep_last_synced_at=false', { code: passcode });
     api.setToken(apiData.syncToken);
 
     const myForms = await crudForms.getMyForms(db);

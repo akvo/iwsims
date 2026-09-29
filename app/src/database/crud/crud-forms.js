@@ -11,14 +11,15 @@ const formsQuery = () => ({
           f.version,
           f.name,
           f.json,
-          -- Card title suffix: registration datapoints the backend holds,
-          -- whoever made them (downloaded + this device's synced submissions).
+          -- Card title suffix: registration datapoints the server listed in
+          -- datapoint-list (locallyCreated flips to 0 on download), whoever made them.
           COUNT(
             DISTINCT CASE WHEN dp.submitted = 1 AND dp.syncedAt IS NOT NULL
+              AND dp.locallyCreated = 0
             THEN dp.id END
           ) AS registered,
           -- "Submitted": this device's submissions still waiting to upload.
-          -- Drains as syncedAt fills in; the origin flag stays 1 (APP-255 D-17).
+          -- Drains as syncedAt fills in (locallyCreated stays 1 until downloaded).
           COUNT(
             DISTINCT CASE WHEN dp.submitted = 1
               AND dp.locallyCreated = 1
@@ -45,7 +46,8 @@ const formsQuery = () => ({
               AND mdp.user = ?
               AND mdp.submitted = 0
           ), 0) AS draft,
-          -- "Synced": this device's submissions that reached the server.
+          -- "Synced": this device's uploads the server does not list yet
+          -- (awaiting approval); they move to the card title once downloaded.
           COUNT(
             DISTINCT CASE WHEN dp.submitted = 1
               AND dp.locallyCreated = 1

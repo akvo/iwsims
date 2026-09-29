@@ -7,9 +7,10 @@ import api from './api';
 import { openDatabase } from '../database';
 import { crudForms, crudDataPoints, crudUsers, crudConfig, crudSyncQueue } from '../database/crud';
 import {
+  createPageProgressSaver,
   downloadDatapointsJson,
   fetchFormDatapointsPageByPage,
-  markSyncComplete,
+  finishDatapointSync,
 } from './sync-datapoints';
 import notification from './notification';
 import cascades from './cascades';
@@ -498,8 +499,7 @@ const syncDatapointsBackground = async () => {
     if (!incompleteForms.length) {
       await crudJobs.deleteJob(db, activeJob.id);
       try {
-        await markSyncComplete();
-        await crudSyncQueue.clearQueue(db);
+        await finishDatapointSync(db);
       } catch (err) {
         Sentry.captureException(err);
       }
@@ -511,6 +511,7 @@ const syncDatapointsBackground = async () => {
     const { formId } = queueRow;
     const startPage = queueRow.lastPage + 1;
     const formCache = new Map();
+    const savePageProgress = createPageProgressSaver(db, formId);
 
     await fetchFormDatapointsPageByPage(
       formId,
@@ -544,10 +545,8 @@ const syncDatapointsBackground = async () => {
             Sentry.captureException(err);
           }
         }, Promise.resolve());
-        // Only advance page if all items succeeded
-        if (!pageHasErrors) {
-          await crudSyncQueue.updateLastPage(db, formId, page);
-        }
+        // Stops advancing at the first failed page (see createPageProgressSaver)
+        await savePageProgress(page, pageHasErrors);
       },
       startPage,
       100,

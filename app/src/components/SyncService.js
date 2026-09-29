@@ -8,10 +8,12 @@ import { refreshStorageWarning } from '../lib/submission-fallback';
 import crudJobs from '../database/crud/crud-jobs';
 import { crudConfig, crudDataPoints, crudForms, crudSyncQueue } from '../database/crud';
 import {
+  createPageProgressSaver,
   downloadDatapointsJson,
   fetchFormDatapointsPageByPage,
   fetchDraftDatapointsPageByPage,
-  markSyncComplete,
+  finishDatapointSync,
+  getIncompleteSyncStatus,
 } from '../lib/sync-datapoints';
 import {
   jobStatus,
@@ -30,6 +32,7 @@ const SyncService = () => {
   const syncInterval = BuildParamsState.useState((s) => s.dataSyncInterval);
   const syncInSecond = parseInt(syncInterval, 10) * 1000;
   const userId = UserState.useState((s) => s.id);
+  const statusBarType = UIState.useState((s) => s.statusBar?.type);
   const db = useSQLiteContext();
   const syncLockRef = useRef(false);
   const onSyncLockRef = useRef(false);
@@ -246,6 +249,12 @@ const SyncService = () => {
         }, Promise.resolve());
 
         if (!hasNewData) {
+          // Pages are all in, but a failed final step would otherwise never be retried
+          try {
+            await finishDatapointSync(db);
+          } catch (error) {
+            Sentry.captureException(error);
+          }
           await crudJobs.deleteJob(db, activeJob.id);
           DatapointSyncState.update((s) => {
             s.inProgress = false;
@@ -293,6 +302,7 @@ const SyncService = () => {
         // Fresh cache for THIS form only
         const formCache = new Map();
         let formItemsProcessed = queueRow ? allProgress[formId]?.processed || 0 : 0;
+        const savePageProgress = createPageProgressSaver(db, formId);
 
         await fetchFormDatapointsPageByPage(
           formId,
@@ -359,10 +369,9 @@ const SyncService = () => {
               });
             }, Promise.resolve());
 
-            // Only advance page if all items succeeded — failed pages retry
-            if (!pageHasErrors) {
-              await crudSyncQueue.updateLastPage(db, formId, page);
-            }
+            // Stops advancing at the first failed page, so a later good page
+            // can't mark the form complete and the next sync resumes there
+            await savePageProgress(page, pageHasErrors);
           },
           startPage,
           SYNC_PAGE_SIZE,
@@ -383,10 +392,7 @@ const SyncService = () => {
       if (!hasErrors) {
         // All forms done without errors — notify backend to update last_synced_at
         try {
-          await markSyncComplete();
-          // Clear queue after successful sync so next sync starts fresh
-          // (backend uses last_synced_at to return only new data)
-          await crudSyncQueue.clearQueue(db);
+          await finishDatapointSync(db);
         } catch (error) {
           Sentry.captureMessage('Failed to mark sync complete on backend');
           Sentry.captureException(error);
@@ -574,11 +580,17 @@ const SyncService = () => {
       // space" visibly true rather than just advice.
       await refreshStorageWarning();
 
-      // All phases complete
+      // All phases complete — but a queue left behind means the download stopped early
+      let incomplete = null;
+      try {
+        incomplete = await getIncompleteSyncStatus(db, userId);
+      } catch (error) {
+        Sentry.captureException(error);
+      }
       UIState.update((s) => {
         s.isManualSynced = false;
         s.refreshPage = true;
-        s.statusBar = {
+        s.statusBar = incomplete || {
           type: SYNC_STATUS.success,
           bgColor: '#16a34a',
           icon: 'checkmark-done',
@@ -587,7 +599,33 @@ const SyncService = () => {
     } finally {
       syncLockRef.current = false;
     }
-  }, [onSync, onSyncDraftDatapoint, onSyncDataPoint]);
+  }, [db, userId, onSync, onSyncDraftDatapoint, onSyncDataPoint]);
+
+  /**
+   * Whenever the banner is empty (app start, or after "Done" auto-dismisses),
+   * surface a datapoint download that stopped early so it isn't silently lost.
+   */
+  const showIncompleteSync = useCallback(async () => {
+    try {
+      const incomplete = await getIncompleteSyncStatus(db, userId);
+      if (!incomplete || DatapointSyncState.getRawState().inProgress) {
+        return;
+      }
+      UIState.update((s) => {
+        if (!s.statusBar) {
+          s.statusBar = incomplete;
+        }
+      });
+    } catch (error) {
+      Sentry.captureException(error);
+    }
+  }, [db, userId]);
+
+  useEffect(() => {
+    if (userId && !statusBarType) {
+      showIncompleteSync();
+    }
+  }, [userId, statusBarType, showIncompleteSync]);
 
   useEffect(() => {
     const unsubsDataSync = DatapointSyncState.subscribe(

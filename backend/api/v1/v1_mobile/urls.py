@@ -9,6 +9,7 @@ from .views import (
     download_apk_file,
     get_datapoint_download_list,
     mark_sync_complete,
+    get_deleted_datapoint_list,
     MobileAssignmentViewSet,
     check_apk_version,
     UploadAttachmentsView,
@@ -50,6 +51,10 @@ urlpatterns = [
     re_path(
         r"^(?P<version>(v1))/device/datapoint-list",
         get_datapoint_download_list,
+    ),
+    re_path(
+        r"^(?P<version>(v1))/device/deleted-datapoints",
+        get_deleted_datapoint_list,
     ),
     re_path(
         r"^(?P<version>(v1))/device/apk/version/(?P<current_version>[^/]+)",

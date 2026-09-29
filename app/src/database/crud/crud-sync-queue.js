@@ -30,6 +30,18 @@ const syncQueueQuery = () => ({
     );
     return rows;
   },
+  // Forms queued this sync and how many finished all their pages
+  getFormsProgress: async (db) => {
+    const res = await sql.safeGetFirstRow(
+      db,
+      `SELECT COUNT(*) AS queued,
+        COALESCE(SUM(CASE WHEN lastPage >= totalPage THEN 1 ELSE 0 END), 0) AS done
+       FROM ${tableName}`,
+      [],
+      'getFormsProgress',
+    );
+    return { queued: res?.queued || 0, done: res?.done || 0 };
+  },
   getAllProgress: async (db) => {
     const rows = await sql.safeExecuteQuery(db, `SELECT * FROM ${tableName}`, [], 'getAllProgress');
     const result = {};
