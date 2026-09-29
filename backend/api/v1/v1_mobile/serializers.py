@@ -281,7 +281,10 @@ class DraftFormDataSerializer(serializers.ModelSerializer):
         queryset=Administration.objects.all(),
         source="administration_id"
     )
-    datapoint_name = CustomCharField(source="name")
+    datapoint_name = serializers.SerializerMethodField(
+        read_only=True,
+        help_text="Name of the datapoint associated with this form data."
+    )
     geolocation = CustomListField(
         source="geo",
         required=False,
@@ -320,6 +323,11 @@ class DraftFormDataSerializer(serializers.ModelSerializer):
             if group_id:
                 repeats_count[group_id] = repeats_count.get(group_id, 0) + 1
         return repeats_count
+
+    def get_datapoint_name(self, obj):
+        if obj.parent:
+            return "{0}\n{1}".format(obj.parent.name, obj.name)
+        return obj.name
 
     class Meta:
         model = FormData
