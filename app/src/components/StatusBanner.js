@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -114,19 +114,29 @@ const StatusBanner = () => {
         marginBottom: insets.bottom,
       }}
     >
-      <Icon name={banner.icon} testID="offline-icon" style={styles.icon} />
-      <Text style={styles.text} testID="offline-text">
-        {banner.text}
-      </Text>
+      {/* Scrolls sideways when a message (e.g. FR) is wider than the screen */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
+        <Icon name={banner.icon} testID="offline-icon" style={styles.icon} />
+        <Text style={styles.text} testID="offline-text" numberOfLines={1}>
+          {banner.text}
+        </Text>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 4,
     paddingVertical: 10,
-    display: 'flex',
+  },
+  // flexGrow keeps short messages centred; longer ones overflow and scroll
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 12,
     gap: 8,
     flexDirection: 'row',
     alignItems: 'center',

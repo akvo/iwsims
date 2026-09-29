@@ -167,6 +167,7 @@ The banner shows a **forms** count: "Download incomplete: 2 of 5 forms. Press Sy
   - `syncIncompleteShortText` with no count
 - `components/StatusBanner.js`: amber (`#d97706`, icon `alert-circle`), sticky (only `success` auto-dismisses).
   - Precedence: sync activity > low storage > **incomplete** > failed > offline.
+  - The icon and text sit in a horizontal `ScrollView` (one line, no scroll indicator). Short messages stay centred; a message wider than the screen, such as the FR text on a narrow phone, can be swiped sideways instead of being cut off. This applies to every banner message.
 
 ### Step 2: build the status
 
