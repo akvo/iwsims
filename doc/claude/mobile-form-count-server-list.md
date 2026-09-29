@@ -13,7 +13,7 @@ Causes found:
 | The card title `(N)` counts every `submitted=1 AND syncedAt IS NOT NULL` row, including the device's own uploads that are still **pending approval** | The bracket is higher than the server count on devices that submit data |
 | Migration 05 back-filled `locallyCreated = 1` on **all** existing rows, including rows downloaded from the server | "Synced" is inflated on devices that upgraded across migration 05 |
 | Rows soft-deleted on the server are never removed from devices. The web delete only sets `deleted_at` (it doesn't bump `updated`), so `datapoint-list` never reports them | The bracket or Synced is higher than the server count |
-| Some datapoint JSON files were stored with mode 0600, so nginx returns 403 | Devices are short by exactly the unreadable rows. Separate backend fix (`storage.upload` → `shutil.copyfile`) |
+| Some datapoint JSON files were stored with mode 0600, so nginx returns 403 | Devices are short by exactly the unreadable rows, and their sync can never finish. Fixed in Part 3 |
 
 ### Decision: a "server-list" meaning for the counts
 
@@ -114,7 +114,7 @@ On a device that upgraded across migration 05, using a dev build:
 1. Note the Home cards before the change.
 2. Install the build and press **Sync**. Wait for the datapoint sync to finish.
 3. Expect, for each form:
-   - `(N)` = the server's count of live, non-pending, non-draft rows in scope, less any rows whose JSON still returns 403
+   - `(N)` = the server's count of live, non-pending, non-draft rows in scope
    - Synced = this device's own submissions still pending approval
    - Submitted and Draft unchanged
 4. Submit one new registration → Submitted +1. Press Sync → Submitted −1, Synced +1, `(N)` unchanged.
@@ -126,7 +126,6 @@ On a device that upgraded across migration 05, using a dev build:
 
 - Hard-deleted rows (only drafts use `hard_delete`) leave no trace on the server, so they can't be reported. Registration datapoints are only soft-deleted, so they are covered.
 - Local monitoring (child) rows of a deleted parent are kept.
-- 403 on datapoint JSON files (0600 permissions): a backend fix plus a `chmod` repair, tracked separately.
 
 ---
 
@@ -217,9 +216,48 @@ Nothing resumes automatically. Pressing Sync creates a new job if needed, and it
 1. Press Sync, and switch to another app during the download. Come back after the sync ends → amber "Download incomplete: X of Y forms", not "Done".
 2. Kill the app mid-download and reopen it → the same banner appears on start.
 3. Press Sync and let it finish → green "Done", then no banner.
-4. With the 403 files still unreadable → it always ends in the incomplete banner (expected until the permission fix).
+4. If a datapoint file returns 403 (see Part 3), the sync always ends in the incomplete banner, because that item fails on every attempt.
 5. If one item fails partway through a form (e.g. a network drop), the banner shows "X of Y forms", with that form counted as not done. The next Sync resumes that form from the failed page.
 
 ### Not included
 
 - The banner can't be tapped. Resuming stays on the existing Sync button.
+
+---
+
+## Part 3: datapoint files the web server couldn't read
+
+### Problem
+
+The app downloads each datapoint from `/datapoints/<uuid>.json`, which nginx in the `frontend` container serves from the shared storage volume. Many of these files returned **403**:
+
+- `FormData.save_to_file` writes the JSON to a `tempfile.NamedTemporaryFile` (mode 0600), then calls `storage.upload`.
+- `storage.upload` used `shutil.copy2`, which copies permission bits. The stored file ended up `-rw------- root`, which nginx (uid 101) can't read. `seeder_answer_processor` stored images the same way.
+
+With Parts 1 and 2 in place, those items fail on every sync:
+
+- the forms containing them never finish, and neither does the sync;
+- server deletions are never applied, and `last_synced_at` never advances;
+- the incomplete banner stays up.
+
+A device compared against the server showed its missing rows were exactly the unreadable files.
+
+### Fix
+
+- `backend/utils/storage.py` (`upload`): `shutil.copyfile` (content only), then `os.chmod(location, 0o644)`.
+  - The explicit `chmod` also covers an **overwrite**: `copyfile` into an existing file keeps that file's old mode, and re-saving an edited datapoint overwrites its JSON.
+- `backend/api/v1/v1_data/tests/tests_storage.py`: a 0600 source, and an overwrite of an existing 0600 file, both end up `0644`.
+
+### One-off repair of files already stored
+
+Run in the backend container. `/app/storage` is the same NFS volume nginx serves, so the change persists across pod restarts:
+
+```bash
+kubectl -n iwsims-namespace exec -it deploy/iwsims -c backend -- bash
+find /app/storage/datapoints /app/storage/images -type f ! -perm -o=r | wc -l          # count
+find /app/storage/datapoints /app/storage/images -type f ! -perm -o=r -exec chmod go+r {} +
+find /app/storage/datapoints /app/storage/images -type f ! -perm -o=r | wc -l          # expect 0
+```
+
+- It has been applied on the test cluster: 2,746 files (2,582 datapoints and 164 images), now 0. Devices then finished their sync.
+- Run it again after deploying the code fix, to catch files written in between.
