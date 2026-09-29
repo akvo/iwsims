@@ -147,6 +147,8 @@ const uiText = {
     uploadingSubmissionsText: 'Uploading submissions...',
     syncingDraftsText: 'Syncing drafts...',
     downloadingDatapointsText: 'Downloading datapoints...',
+    syncIncompleteText: 'Download incomplete: {done} of {total} forms. Press Sync to resume.',
+    syncIncompleteShortText: 'Download not finished. Press Sync to resume.',
     about: 'About',
     autoSyncInProgress: 'Auto sync is in progress',
     connectToInternet: 'Connect to the internet to sync',
@@ -326,6 +328,9 @@ const uiText = {
     uploadingSubmissionsText: 'Envoi des soumissions...',
     syncingDraftsText: 'Synchronisation des brouillons...',
     downloadingDatapointsText: 'Téléchargement des données...',
+    syncIncompleteText:
+      'Téléchargement incomplet : {done} sur {total} formulaires. Appuyez sur Sync pour reprendre.',
+    syncIncompleteShortText: 'Téléchargement non terminé. Appuyez sur Sync pour reprendre.',
     autoSyncInProgress: 'La synchronisation automatique est en cours',
     loadMore: 'Charger plus',
     updateApp: "Met à jour l'application",

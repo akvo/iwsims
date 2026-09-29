@@ -9,6 +9,7 @@ export const SYNC_STATUS = {
   re_sync: 2,
   success: 3,
   failed: 4,
+  incomplete: 5,
 };
 
 export const SUBMISSION_TYPES = {

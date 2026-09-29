@@ -1,6 +1,7 @@
-import { crudDataPoints, crudForms } from '../database/crud';
+import { crudDataPoints, crudForms, crudSyncQueue } from '../database/crud';
 import sql from '../database/sql';
 import api from './api';
+import { SYNC_STATUS } from './constants';
 
 /**
  * Iteratively fetches datapoints page by page, calling the processor callback
@@ -115,6 +116,70 @@ export const markSyncComplete = async () => {
 };
 
 /**
+ * Drops local copies of registration datapoints the server soft-deleted.
+ * Throws on request failure so the caller keeps the sync incomplete and retries.
+ *
+ * @param {Object} db - database connection
+ * @param {number} formId - backend registration form ID
+ */
+export const removeDeletedDatapoints = async (db, formId) => {
+  const { data } = await api.get(`/deleted-datapoints?form_id=${formId}`);
+  const uuids = data?.uuids || [];
+  if (!uuids.length) {
+    return;
+  }
+  const form = await crudForms.getByFormId(db, { formId });
+  if (!form?.id) {
+    return;
+  }
+  await crudDataPoints.deleteSyncedByUUIDs(db, { form: form.id, uuids });
+};
+
+/**
+ * Final step of a datapoint sync, once every queued form has all its pages:
+ * drop server-deleted rows, advance last_synced_at, clear the queue.
+ * Deletions run BEFORE markSyncComplete so a failure leaves last_synced_at
+ * where it was and the next sync reports them again. Throws on failure; the
+ * queue then stays, which is what marks the sync as incomplete.
+ *
+ * @param {Object} db - database connection
+ */
+export const finishDatapointSync = async (db) => {
+  const formIds = Object.keys(await crudSyncQueue.getAllProgress(db));
+  await formIds.reduce(async (prev, formId) => {
+    await prev;
+    await removeDeletedDatapoints(db, Number(formId));
+  }, Promise.resolve());
+  await markSyncComplete();
+  await crudSyncQueue.clearQueue(db);
+};
+
+/**
+ * Status-bar state for a datapoint sync that stopped before completing.
+ * The queue is only cleared once the whole sync succeeds, so any queued row
+ * means "incomplete", whatever the cause (failed items, killed app, retries
+ * exhausted).
+ *
+ * @param {Object} db - database connection
+ * @param {number} user - active user id
+ * @returns {Promise<Object|null>} statusBar object, or null when nothing is pending
+ */
+export const getIncompleteSyncStatus = async (db, user) => {
+  const { queued, done } = await crudSyncQueue.getFormsProgress(db);
+  if (!queued) {
+    return null;
+  }
+  const forms = await crudForms.selectLatestFormVersion(db, { user });
+  return {
+    type: SYNC_STATUS.incomplete,
+    bgColor: '#d97706',
+    icon: 'alert-circle',
+    done,
+    total: Math.max(forms?.length || 0, queued),
+  };
+};
+
+/**
  * Downloads and saves a single datapoint's JSON data.
  * Network call is outside the transaction to avoid holding DB lock during I/O.
  *
@@ -151,6 +216,11 @@ export const downloadDatapointsJson = async (
     return;
   }
   if (existing?.syncedAt && lastUpdated && existing.syncedAt >= lastUpdated) {
+    // Served by datapoint-list, so it counts as downloaded now. Also repairs
+    // downloads that migration 05 back-filled as locallyCreated = 1.
+    if (existing.locallyCreated === 1) {
+      await sql.updateRow(db, 'datapoints', { id: existing.id }, { locallyCreated: 0 });
+    }
     return;
   }
 

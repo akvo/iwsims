@@ -35,11 +35,21 @@ const StatusBanner = () => {
       : trans.syncingText;
   };
 
+  const getIncompleteLabel = () => {
+    const { done = 0, total = 0 } = statusBar || {};
+    // Every form fetched but the final step failed: a count would read "5 of 5"
+    if (!total || done >= total) {
+      return trans.syncIncompleteShortText;
+    }
+    return trans.syncIncompleteText.replace('{done}', done).replace('{total}', total);
+  };
+
   const statusText = {
     1: getSyncPhaseLabel(),
     2: trans.reSyncingText,
     3: trans.doneText,
     4: trans.syncErrorText,
+    5: getIncompleteLabel(),
   };
 
   const handleOnResetStatusBar = useCallback(() => {
@@ -63,8 +73,9 @@ const StatusBanner = () => {
    * Precedence: events interrupt, conditions resume.
    * 1. sync activity — transient, and it shows progress the user asked for
    * 2. low storage — a condition, and the only message here that predicts data loss
-   * 3. sync failed — sticky and unactionable from this bar, so it must not mask (2)
-   * 4. offline — normal in the field, so it sits below (2) as well
+   * 3. sync incomplete — sticky until a sync finishes; resumable, so below (2)
+   * 4. sync failed — sticky and unactionable from this bar, so it must not mask (2)
+   * 5. offline — normal in the field, so it sits below (2) as well
    */
   const syncType = isOnline ? statusBar?.type : null;
   const isSyncEvent = [SYNC_STATUS.on_progress, SYNC_STATUS.re_sync, SYNC_STATUS.success].includes(
@@ -82,6 +93,8 @@ const StatusBanner = () => {
     // useless to a signed-in one with nothing pending. Freeing device storage always
     // works.
     banner = { bg: '#f59e0b', icon: 'warning', text: trans.lowStorageText, isLowStorage: true };
+  } else if (syncType === SYNC_STATUS.incomplete) {
+    banner = { bg: statusBg, icon: statusIc, text: statusText[syncType] };
   } else if (syncType === SYNC_STATUS.failed) {
     banner = { bg: statusBg, icon: statusIc, text: statusText?.[syncType] };
   } else if (!isOnline) {

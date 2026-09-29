@@ -163,9 +163,9 @@ const dataPointsQuery = () => ({
   /**
    * Confirms an upload by stamping syncedAt. Writes only that one column —
    * passing a raw row through updateDataPoint would re-stringify its
-   * already-serialised json. locallyCreated is an immutable origin flag and is
-   * deliberately NOT touched: a device-created row stays locallyCreated = 1
-   * after syncing, so "device data that reached the server" remains queryable.
+   * already-serialised json. locallyCreated is deliberately NOT touched: an
+   * uploaded row stays locallyCreated = 1 ("Synced") until the server returns
+   * it in datapoint-list, which flips it to 0 (see downloadDatapointsJson).
    */
   markSynced: async (db, id, draftId = null) => {
     // draftId is the backend row id returned by /sync. Storing it right away
@@ -286,10 +286,30 @@ const dataPointsQuery = () => ({
       {
         json: JSON.stringify(json).replace(/'/g, "''"),
         syncedAt: syncedAt || new Date().toISOString(),
+        // Only called for rows served by datapoint-list: now a downloaded row
+        locallyCreated: 0,
         ...repeatsVal,
       },
     );
     return res;
+  },
+  /**
+   * Removes rows the server soft-deleted. Only uploaded submissions go:
+   * drafts and rows with unsent changes (syncedAt NULL) are never touched.
+   */
+  deleteSyncedByUUIDs: async (db, { form, uuids }) => {
+    if (!uuids?.length) {
+      return;
+    }
+    // ponytail: one IN list per form; chunk if a form ever exceeds SQLite's 32766 params
+    const placeholders = uuids.map(() => '?').join(', ');
+    await db.runAsync(
+      `DELETE FROM datapoints
+       WHERE form = ? AND submitted = 1 AND syncedAt IS NOT NULL
+         AND uuid IN (${placeholders})`,
+      form,
+      ...uuids,
+    );
   },
   totalSavedData: async (db, formDBId, uuid = null) => {
     try {
