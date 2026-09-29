@@ -108,6 +108,26 @@ export const fetchFormDatapointsPageByPage = async (
 };
 
 /**
+ * Saves a form's resume point in the sync queue. lastPage only advances while
+ * every page so far succeeded: after a page with a failed item, later pages
+ * still download, but the queue keeps pointing before the failed page so the
+ * form stays incomplete and the next sync resumes there.
+ *
+ * @param {Object} db - database connection
+ * @param {number} formId - backend registration form ID
+ * @returns {Function} async (page, pageHasErrors) => void
+ */
+export const createPageProgressSaver = (db, formId) => {
+  let failed = false;
+  return async (page, pageHasErrors) => {
+    failed = failed || pageHasErrors;
+    if (!failed) {
+      await crudSyncQueue.updateLastPage(db, formId, page);
+    }
+  };
+};
+
+/**
  * Marks datapoint sync as complete on the backend.
  * Updates last_synced_at so the next sync only gets new/updated datapoints.
  */

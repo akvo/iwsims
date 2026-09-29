@@ -146,6 +146,7 @@ The sync can resume (`datapoint_sync_queue` keeps each form's `lastPage` until t
 | Some items fail (e.g. JSON files returning 403) | `hasErrors` → job back to PENDING; `runSyncSequence` still shows the green **"Done"** banner |
 | Android kills the app in the background, or it crashes | on reopen nothing is shown |
 | Retries exhausted (`MAX_ATTEMPT`) | the job is deleted silently; the queue stays incomplete |
+| One item fails on page 2, page 3 succeeds | page 3 overwrote `lastPage`, so the queue says the form is complete; the sync is flagged as having errors, so the final step is skipped. Result: every form "done", sync never finished, and the failed page is not the resume point |
 | Deleted-uuid removal or `markSyncComplete` fails (Part 1) | the job is deleted and the queue is not cleared; still shows "Done". The next run's "quick check" then deletes the job again without ever retrying that step |
 
 ### Decision
@@ -183,6 +184,12 @@ It's used in three places:
 - the "quick check" shortcut (all pages already in), which used to delete the job without retrying the final step
 - `background-task.js`
 
+### Step 3b: never save progress past a failed page
+
+- `lib/sync-datapoints.js` gets `createPageProgressSaver(db, formId)`, used per form by both `SyncService.js` and `background-task.js`.
+- `lastPage` only advances while every page so far succeeded. After a page with a failed item, later pages still download, but the queue keeps pointing before the failed page.
+- The form then stays incomplete, the banner shows the real "X of Y forms", and the next Sync resumes from the failed page.
+
 ### Step 4: set the status instead of a false "Done"
 
 `components/SyncService.js`:
@@ -196,6 +203,7 @@ Nothing resumes automatically. Pressing Sync creates a new job if needed, and it
 - `sync-datapoints.test.js`:
   - `finishDatapointSync`: deletions for every queued form, then `sync-complete`, then clear. A failure skips both.
   - `getIncompleteSyncStatus`: `null` when the queue is empty; otherwise `done`/`total` from the queue and the forms.
+  - `createPageProgressSaver`: advances while pages succeed; a good page after a failed one doesn't move `lastPage`.
 - `StatusBanner.test.js` covers:
   - "X of Y forms"
   - the short text when X ≥ Y
@@ -209,6 +217,7 @@ Nothing resumes automatically. Pressing Sync creates a new job if needed, and it
 2. Kill the app mid-download and reopen it → the same banner appears on start.
 3. Press Sync and let it finish → green "Done", then no banner.
 4. With the 403 files still unreadable → it always ends in the incomplete banner (expected until the permission fix).
+5. If one item fails partway through a form (e.g. a network drop), the banner shows "X of Y forms", with that form counted as not done. The next Sync resumes that form from the failed page.
 
 ### Not included
 

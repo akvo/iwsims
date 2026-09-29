@@ -7,6 +7,7 @@ import api from './api';
 import { openDatabase } from '../database';
 import { crudForms, crudDataPoints, crudUsers, crudConfig, crudSyncQueue } from '../database/crud';
 import {
+  createPageProgressSaver,
   downloadDatapointsJson,
   fetchFormDatapointsPageByPage,
   finishDatapointSync,
@@ -510,6 +511,7 @@ const syncDatapointsBackground = async () => {
     const { formId } = queueRow;
     const startPage = queueRow.lastPage + 1;
     const formCache = new Map();
+    const savePageProgress = createPageProgressSaver(db, formId);
 
     await fetchFormDatapointsPageByPage(
       formId,
@@ -543,10 +545,8 @@ const syncDatapointsBackground = async () => {
             Sentry.captureException(err);
           }
         }, Promise.resolve());
-        // Only advance page if all items succeeded
-        if (!pageHasErrors) {
-          await crudSyncQueue.updateLastPage(db, formId, page);
-        }
+        // Stops advancing at the first failed page (see createPageProgressSaver)
+        await savePageProgress(page, pageHasErrors);
       },
       startPage,
       100,

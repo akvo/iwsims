@@ -8,6 +8,7 @@ import { refreshStorageWarning } from '../lib/submission-fallback';
 import crudJobs from '../database/crud/crud-jobs';
 import { crudConfig, crudDataPoints, crudForms, crudSyncQueue } from '../database/crud';
 import {
+  createPageProgressSaver,
   downloadDatapointsJson,
   fetchFormDatapointsPageByPage,
   fetchDraftDatapointsPageByPage,
@@ -301,6 +302,7 @@ const SyncService = () => {
         // Fresh cache for THIS form only
         const formCache = new Map();
         let formItemsProcessed = queueRow ? allProgress[formId]?.processed || 0 : 0;
+        const savePageProgress = createPageProgressSaver(db, formId);
 
         await fetchFormDatapointsPageByPage(
           formId,
@@ -367,10 +369,9 @@ const SyncService = () => {
               });
             }, Promise.resolve());
 
-            // Only advance page if all items succeeded — failed pages retry
-            if (!pageHasErrors) {
-              await crudSyncQueue.updateLastPage(db, formId, page);
-            }
+            // Stops advancing at the first failed page, so a later good page
+            // can't mark the form complete and the next sync resumes there
+            await savePageProgress(page, pageHasErrors);
           },
           startPage,
           SYNC_PAGE_SIZE,

@@ -1,4 +1,5 @@
 import {
+  createPageProgressSaver,
   downloadDatapointsJson,
   finishDatapointSync,
   getIncompleteSyncStatus,
@@ -16,7 +17,12 @@ jest.mock('../../database/crud', () => ({
     deleteSyncedByUUIDs: jest.fn(),
   },
   crudForms: { getByFormId: jest.fn(), selectLatestFormVersion: jest.fn() },
-  crudSyncQueue: { getAllProgress: jest.fn(), getFormsProgress: jest.fn(), clearQueue: jest.fn() },
+  crudSyncQueue: {
+    getAllProgress: jest.fn(),
+    getFormsProgress: jest.fn(),
+    clearQueue: jest.fn(),
+    updateLastPage: jest.fn(),
+  },
 }));
 jest.mock('../../database/sql', () => ({
   updateRow: jest.fn(),
@@ -158,5 +164,26 @@ describe('getIncompleteSyncStatus', () => {
       expect.objectContaining({ type: 5, done: 2, total: 5 }),
     );
     expect(crudForms.selectLatestFormVersion).toHaveBeenCalledWith(db, { user: 1 });
+  });
+});
+
+describe('createPageProgressSaver', () => {
+  test('advances lastPage while every page succeeds', async () => {
+    const save = createPageProgressSaver(db, 111);
+    await save(1, false);
+    await save(2, false);
+    expect(crudSyncQueue.updateLastPage.mock.calls).toEqual([
+      [db, 111, 1],
+      [db, 111, 2],
+    ]);
+  });
+
+  test('a later good page does not skip over a failed one', async () => {
+    const save = createPageProgressSaver(db, 111);
+    await save(1, false);
+    await save(2, true);
+    await save(3, false);
+    // Stays at 1, so the form remains incomplete and resumes at page 2
+    expect(crudSyncQueue.updateLastPage.mock.calls).toEqual([[db, 111, 1]]);
   });
 });
