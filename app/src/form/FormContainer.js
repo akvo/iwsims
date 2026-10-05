@@ -194,10 +194,13 @@ const FormContainer = ({
       ?.flatMap((qg) => qg.question)
       ?.reduce((map, question) => {
         if (question.name && question.id) {
-          map[question.name] = question.id;
+          map[question.name] = question;
         }
         return map;
       }, {});
+    // Stored answers flatten cascades to their last value (transformAnswers) and may
+    // hold options as plain strings; the form and its Yup schemas expect arrays.
+    const arrayTypes = ['cascade', 'option', 'multiple_option'];
 
     const findDatapoint = await crudDataPoints.getByUUID(db, { uuid: route?.params?.uuid });
     if (findDatapoint?.json && !datapoint) {
@@ -226,11 +229,13 @@ const FormContainer = ({
             ?.question_group?.flatMap((qg) => qg?.question)
             ?.find((q) => q.id === parseInt(qId, 10))?.name;
           if (questionsMap?.[qName]) {
-            const currentQuestion = questionsMap[qName];
+            const { id: currentQuestion, type } = questionsMap[qName];
+            const isScalar = value !== null && value !== undefined && !Array.isArray(value);
+            const fieldValue = arrayTypes.includes(type) && isScalar ? [value] : value;
             if (qIndex) {
-              initialValues[`${currentQuestion}-${qIndex}`] = value;
+              initialValues[`${currentQuestion}-${qIndex}`] = fieldValue;
             } else {
-              initialValues[currentQuestion] = value;
+              initialValues[currentQuestion] = fieldValue;
             }
           }
         });
