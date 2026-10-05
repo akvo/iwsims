@@ -5,17 +5,20 @@
   },
   "build": {
     "development": {
+      "node": "22.20.0",
       "android": {
         "buildType": "apk"
       }
     },
     "release": {
+      "node": "22.20.0",
       "channel": "release",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "node": "22.20.0",
       "android": {
         "buildType": "apk"
       }
