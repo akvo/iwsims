@@ -1,6 +1,6 @@
 {
   "name": "dws-datapro-mobile",
-  "version": "4.2.3",
+  "version": "4.2.4",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start --port 19000",
@@ -24,7 +24,7 @@
     "@react-navigation/native-stack": "^6.9.12",
     "@rneui/base": "^4.0.0-rc.8",
     "@rneui/themed": "^4.0.0-rc.8",
-    "@sentry/react-native": "^6.14.0",
+    "@sentry/react-native": "^8.29.0",
     "axios": "^1.4.0",
     "expo": "~53.0.27",
     "expo-application": "~6.1.5",
