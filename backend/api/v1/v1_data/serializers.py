@@ -592,8 +592,12 @@ class ListPendingFormDataSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_answer_history(self, instance: FormData):
-        # Annotated by PendingFormDataView to avoid a query per row
-        return instance.has_answer_history
+        # PendingFormDataView annotates this to avoid a query per row;
+        # fall back to a query when the queryset was not annotated
+        history = getattr(instance, "has_answer_history", None)
+        if history is None:
+            history = instance.data_answer_history.exists()
+        return history
 
     @extend_schema_field(ParentFormDataSerializer)
     def get_parent(self, instance: FormData):

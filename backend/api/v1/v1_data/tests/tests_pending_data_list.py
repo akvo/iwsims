@@ -3,6 +3,7 @@ from django.db import connection
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext, override_settings
 from api.v1.v1_data.models import AnswerHistory, FormData
+from api.v1.v1_data.serializers import ListPendingFormDataSerializer
 from api.v1.v1_forms.models import Forms, Questions
 from api.v1.v1_profile.models import Administration
 from api.v1.v1_profile.tests.mixins import ProfileTestHelperMixin
@@ -204,9 +205,26 @@ class PendingDataListTestCase(TestCase, ProfileTestHelperMixin):
             )
         res, queries_five_rows = self._list_with_query_count()
         self.assertEqual(res["total"], 5)
-        self.assertEqual(queries_five_rows, queries_one_row)
+        # More rows must not add queries (N+1); fewer is fine, e.g. when
+        # the first request warmed a cache
+        self.assertLessEqual(queries_five_rows, queries_one_row)
         by_id = {item["id"]: item for item in res["data"]}
         self.assertTrue(by_id[self.data.id]["answer_history"])
         self.assertEqual(
             sum(item["answer_history"] for item in res["data"]), 1
+        )
+
+    def test_serializer_answer_history_without_annotation(self):
+        data = FormData.objects.get(pk=self.data.id)
+        self.assertFalse(
+            ListPendingFormDataSerializer(data).data["answer_history"]
+        )
+        AnswerHistory.objects.create(
+            data=data,
+            question=Questions.objects.filter(form=self.form).first(),
+            name="old value",
+            created_by=self.submitter,
+        )
+        self.assertTrue(
+            ListPendingFormDataSerializer(data).data["answer_history"]
         )
