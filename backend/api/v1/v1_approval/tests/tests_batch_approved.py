@@ -1,12 +1,13 @@
 import os
 from io import StringIO
+from unittest.mock import patch
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.core.management import call_command
 
 from api.v1.v1_approval.constants import DataApprovalStatus
 from api.v1.v1_data.models import FormData
-from api.v1.v1_data.tasks import seed_approved_data
+from api.v1.v1_data.tasks import seed_approved_data, finalize_batch_approval
 from api.v1.v1_users.models import SystemUser
 from api.v1.v1_profile.constants import DataAccessTypes
 from api.v1.v1_profile.models import Role
@@ -262,12 +263,39 @@ class DataBatchApprovedTestCase(TestCase, ProfileTestHelperMixin):
             self.batch.approved
         )
 
+        # is_pending must flip in the same request as batch.approved, so a
+        # down worker can no longer strand data as approved-but-pending.
+        # This holds without running the async seed_approved_data task.
+        self.data.refresh_from_db()
+        self.assertFalse(
+            self.data.is_pending
+        )
+
+        # Still invoke the task to exercise the idempotent side-effects
+        # (JSON export / materialized view refresh) used by the file test.
         seed_approved_data(self.data)
 
         self.data.refresh_from_db()
         self.assertFalse(
             self.data.is_pending
         )
+
+    def test_finalize_batch_approval_runs_side_effects_once(self):
+        # Post-approval side-effects run once per batch: a single
+        # materialized view refresh (not one per datapoint) and a JSON
+        # export attempt for every datapoint in the batch.
+        batch_data_count = self.batch.batch_data_list.count()
+        self.assertGreater(batch_data_count, 0)
+
+        with patch(
+            "api.v1.v1_data.tasks.refresh_mv_concurrency"
+        ) as mock_refresh, patch(
+            "api.v1.v1_data.tasks.generate_data_as_json"
+        ) as mock_json:
+            finalize_batch_approval(self.batch.id)
+
+        self.assertEqual(mock_refresh.call_count, 1)
+        self.assertEqual(mock_json.call_count, batch_data_count)
 
 
 class DataBatchApprovedTestCaseWithFileSaving(DataBatchApprovedTestCase):
