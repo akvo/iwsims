@@ -63,6 +63,11 @@ docker volume create iwsims-docker-sync
 
 Note: On some linux systems, you may need to change the permissions of the directory where the volume is stored.
 
+> **Already have a `pg-data` volume from before the PostgreSQL 18 bump?** It
+> holds a PostgreSQL 12 data directory, which 18 will not read, and the mount
+> point moved to `/var/lib/postgresql`. Dump it once before switching:
+> [doc/notes/postgres-18-upgrade.md](doc/notes/postgres-18-upgrade.md).
+
 The development site should be running at: [localhost:3000](http://localhost:3000). Any endpoints with prefix
 
 - `^/api/*` is redirected to [localhost:8000/api](http://localhost:8000/api)

@@ -666,7 +666,7 @@ def purge_queued_task(task_id: str) -> int:
         return 0
     removed = 0
     for row in OrmQ.objects.all():
-        if row.task().get("id") == task_id:
+        if row.task.get("id") == task_id:
             row.delete()
             removed += 1
     return removed

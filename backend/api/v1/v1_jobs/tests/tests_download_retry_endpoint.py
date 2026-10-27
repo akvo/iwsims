@@ -165,7 +165,7 @@ class DownloadRetryAPITestCase(TestCase, ProfileTestHelperMixin):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        queued = [row.task() for row in OrmQ.objects.all()]
+        queued = [row.task for row in OrmQ.objects.all()]
         self.assertEqual(len(queued), 1)
         kwargs = queued[0]["kwargs"]
         self.assertEqual(kwargs["use_label"], False)
@@ -191,7 +191,7 @@ class DownloadRetryAPITestCase(TestCase, ProfileTestHelperMixin):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        queued = [row.task() for row in OrmQ.objects.all()]
+        queued = [row.task for row in OrmQ.objects.all()]
         self.assertEqual(len(queued), 1, "one task per job id")
         self.assertNotEqual(queued[0]["id"], stale_id)
 
@@ -204,7 +204,7 @@ class DownloadRetryAPITestCase(TestCase, ProfileTestHelperMixin):
             HTTP_AUTHORIZATION=f"Bearer {self.token}",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        queued = [row.task() for row in OrmQ.objects.all()][0]
+        queued = [row.task for row in OrmQ.objects.all()][0]
         persisted = Jobs.objects.get(pk=queued["args"][0])
         expected = response.data["file_url"].split("/")[-1]
         self.assertEqual(persisted.result, expected)
