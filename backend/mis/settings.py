@@ -69,6 +69,7 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
 ]
 
 # Add third party apps below
@@ -100,6 +101,11 @@ API_APPS = [
 ]
 
 INSTALLED_APPS = DJANGO_APPS + API_APPS + EXTERNAL_APPS
+
+# DRF 3.17.2+ reads JSON bodies through HttpRequest.body, which enforces
+# this limit; match nginx's client_max_body_size instead of Django's
+# 2.5 MiB default so large form saves keep working.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
