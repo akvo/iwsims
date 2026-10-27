@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+import importlib.util
 from datetime import timedelta
 from os import environ
 from pathlib import Path
@@ -75,9 +76,13 @@ EXTERNAL_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_spectacular",
-    "django_dbml",
-    "django_extensions",
     "django_q",
+]
+# Dev-only apps (the `dev` dependency group); absent in production
+# images. CI installs the group, so `manage.py dbml` still runs there.
+EXTERNAL_APPS += [
+    app for app in ("django_dbml", "django_extensions")
+    if importlib.util.find_spec(app)
 ]
 
 # Add API apps below
