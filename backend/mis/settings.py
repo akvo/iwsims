@@ -140,6 +140,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS":
     "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
+    "EXCEPTION_HANDLER": "utils.exception_handler.exception_handler",
 }
 SPECTACULAR_SETTINGS = {
     "TITLE": APP_NAME,
