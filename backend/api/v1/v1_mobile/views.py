@@ -73,6 +73,10 @@ from utils.custom_serializer_fields import (
 )
 from utils import storage
 
+# Python's built-in table has no .apk; the full Debian image supplied it
+# through /etc/mime.types, which the slim image does not ship.
+mimetypes.add_type("application/vnd.android.package-archive", ".apk")
+
 apk_path = os.path.join(BASE_DIR, MASTER_DATA)
 
 

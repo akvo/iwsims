@@ -4,6 +4,8 @@ set -eu
 
 ./wait-for-it.sh -h "${DB_HOST}" -p 5432 -- echo "Database is up and running"
 
+uv sync --locked --inexact
+
 echo "Running lint"
 flake8
 

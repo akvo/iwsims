@@ -493,9 +493,11 @@ class AddEditUserSerializer(serializers.ModelSerializer):
             if not serializer.is_valid():
                 errors = {}
                 # Process role validation errors
-                if any('role' in item for item in serializer.errors):
+                if any(
+                    'role' in item for item in serializer.errors.values()
+                ):
                     role_errors = []
-                    for i, error_item in enumerate(serializer.errors):
+                    for i, error_item in serializer.errors.items():
                         if 'role' in error_item:
                             for err in error_item['role']:
                                 if 'does not exist' in str(err):
@@ -512,9 +514,12 @@ class AddEditUserSerializer(serializers.ModelSerializer):
                         errors['role'] = role_errors
 
                 # Process administration validation errors
-                if any('administration' in item for item in serializer.errors):
+                if any(
+                    'administration' in item
+                    for item in serializer.errors.values()
+                ):
                     admin_errors = []
-                    for i, error_item in enumerate(serializer.errors):
+                    for i, error_item in serializer.errors.items():
                         if 'administration' in error_item:
                             for err in error_item['administration']:
                                 if 'does not exist' in str(err):

@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+import importlib.util
 from datetime import timedelta
 from os import environ
 from pathlib import Path
@@ -68,6 +69,7 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
 ]
 
 # Add third party apps below
@@ -75,9 +77,13 @@ EXTERNAL_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_spectacular",
-    "django_dbml",
-    "django_extensions",
     "django_q",
+]
+# Dev-only apps (the `dev` dependency group); absent in production
+# images. CI installs the group, so `manage.py dbml` still runs there.
+EXTERNAL_APPS += [
+    app for app in ("django_dbml", "django_extensions")
+    if importlib.util.find_spec(app)
 ]
 
 # Add API apps below
@@ -95,6 +101,11 @@ API_APPS = [
 ]
 
 INSTALLED_APPS = DJANGO_APPS + API_APPS + EXTERNAL_APPS
+
+# DRF 3.17.2+ reads JSON bodies through HttpRequest.body, which enforces
+# this limit; match nginx's client_max_body_size instead of Django's
+# 2.5 MiB default so large form saves keep working.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -140,6 +151,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS":
     "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
+    "EXCEPTION_HANDLER": "utils.exception_handler.exception_handler",
 }
 SPECTACULAR_SETTINGS = {
     "TITLE": APP_NAME,

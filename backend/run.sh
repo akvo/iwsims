@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2155
-
 ./wait-for-it.sh -h "${DB_HOST}" -p 5432 -- echo "Database is up and running"
 
-rm /var/tmp/cache/*.djcache
+rm -f /var/tmp/cache/*.djcache 2>/dev/null || true
 
 set -eu
-pip -q install --upgrade pip
-pip -q install --cache-dir=.pip -r requirements.txt
+pip -q install uv==0.13.0
+uv sync --locked --inexact
 pip check
 
 python manage.py migrate
