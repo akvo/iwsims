@@ -26,14 +26,19 @@ from api.v1.v1_forms.models import (
     QuestionOptions,
 )
 from api.v1.v1_forms.constants import QuestionTypes
-from api.v1.v1_data.models import FormData, option_answer_text
+from django.db.models import Prefetch
+from api.v1.v1_data.models import FormData, Answers, option_answer_text
 from api.v1.v1_jobs.constants import JobStatus, JobTypes
 
 from api.v1.v1_jobs.models import Jobs
 from api.v1.v1_jobs.seed_data import seed_excel_data
 from api.v1.v1_jobs.validate_upload import validate
 from api.v1.v1_jobs.constants import DataDownloadTypes
-from api.v1.v1_profile.models import Administration, EntityData
+from api.v1.v1_profile.models import (
+    Administration,
+    EntityData,
+    with_administration_column_cache,
+)
 from api.v1.v1_users.models import SystemUser
 from utils import storage
 from utils.email_helper import send_email, EmailTypes
@@ -72,6 +77,7 @@ def _build_date_filter(date_from=None, date_to=None):
     return date_filter
 
 
+@with_administration_column_cache
 def download_data(
     form: Forms,
     administration_ids: list = None,
@@ -317,6 +323,7 @@ def generate_data_sheet(
         blank_data_template(form=form, writer=writer)
 
 
+@with_administration_column_cache
 def download_monitoring_data(
     parent_form: Forms,
     child_form: Forms,
@@ -342,7 +349,22 @@ def download_monitoring_data(
 
     queryset = FormData.objects.filter(
         **filter_data
-    ).select_related("parent", "parent__administration", "created_by")
+    ).select_related(
+        "parent", "parent__administration", "created_by",
+        "administration", "updated_by",
+    ).prefetch_related(
+        # to_data_frame reads each answer's question and question group;
+        # prefetch them joined and pre-ordered so the whole sheet is a
+        # couple of queries instead of one per answer.
+        Prefetch(
+            "data_answer",
+            queryset=Answers.objects.select_related(
+                "question", "question__question_group"
+            ).order_by(
+                "question__question_group_id", "question__order", "index"
+            ),
+        )
+    )
 
     if download_type == DataDownloadTypes.recent:
         # Get latest monitoring submission per parent
